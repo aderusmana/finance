@@ -193,13 +193,6 @@ Route::middleware('auth')->group(function () {
         Route::put('items/{item_id}/details/{id}', [ItemController::class, 'updateDetail'])->name('items.details.update');
         Route::delete('items/{item_id}/details/{id}', [ItemController::class, 'destroyDetail'])->name('items.details.destroy');
 
-        Route::resource('branches', BranchController::class);
-        Route::resource('regions', RegionsController::class);
-        Route::resource('account-groups', AccountGroupController::class);
-        Route::resource('tops', TOPController::class);
-        Route::resource('sales', SalesController::class);
-        Route::resource('positions', PositionController::class);
-        Route::resource('customer-classes', CustomerClassController::class);
 
 
     });
