@@ -1,19 +1,17 @@
 <?php
 
-namespace App\Http\Controllers\Requisition;
+namespace App\Http\Controllers\Master;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\approvalpathRequest;
-use App\Models\Requisition\ApprovalPath;
+use App\Models\Master\ApprovalPath;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Spatie\Permission\Models\Role;
-use Illuminate\Validation\Rule;
 
-class RequisitionPath extends Controller
+class ApprovalPathController extends Controller
 {
     public function index()
     {
@@ -129,14 +127,11 @@ class RequisitionPath extends Controller
     public function categories()
     {
         $categories = [
-            'Sample',
-            'Complain',
-            'Free Goods',
+            'BG',
+            'Customer',
         ];
         $subCategories = [
-            'Packaging',
-            'Finished Goods',
-            'Special Order',
+            'CBD',
         ];
 
         $existingPaths = ApprovalPath::select('category', 'sub_category')->get();

@@ -17,7 +17,6 @@
                     <li><a href="{{ route('users.index') }}">Users</a></li>
                     <li><a href="{{ route('departments.index') }}">Department</a></li>
                     <li><a href="{{ route('positions.index') }}">Position</a></li>
-                    <li><a href="{{ route('customers.index') }}">Customer (Master)</a></li>
                     <li><a href="{{ route('permissions.index') }}">Permission</a></li>
                     <li><a href="{{ route('roles.index') }}">Role</a></li>
                 </ul>
@@ -29,14 +28,14 @@
                     <i class="iconoir-settings"></i> Master Management
                 </a>
                 <ul class="collapse" id="master-management">
-                    <li><a href="{{ route('requisition.path') }}">Approval Path</a></li>
-                        <li><a href="{{ route('master.revision.index') }}">Revision</a></li>
-                        <li><a href="{{ route('account-groups.index') }}">Account Group</a></li>
-                        <li><a href="{{ route('regions.index') }}">Region</a></li>
-                        <li><a href="{{ route('branches.index') }}">Branch</a></li>
-                        <li><a href="{{ route('sales.index') }}">Sales</a></li>
-                        <li><a href="{{ route('tops.index') }}">TOP</a></li>
-                        <li><a href="{{ route('customer-classes.index') }}">Customer Class</a></li>
+                    <li><a href="{{ route('approval.path') }}">Approval Path</a></li>
+                    <li><a href="{{ route('revision.index') }}">Revision</a></li>
+                    <li><a href="{{ route('account-groups.index') }}">Account Group</a></li>
+                    <li><a href="{{ route('regions.index') }}">Region</a></li>
+                    <li><a href="{{ route('branches.index') }}">Branch</a></li>
+                    <li><a href="{{ route('sales.index') }}">Sales</a></li>
+                    <li><a href="{{ route('tops.index') }}">TOP</a></li>
+                    <li><a href="{{ route('customer-classes.index') }}">Customer Class</a></li>
 
                 </ul>
             </li>

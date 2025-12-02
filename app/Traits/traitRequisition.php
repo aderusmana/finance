@@ -2,8 +2,8 @@
 
 namespace App\Traits;
 
-use App\Models\Requisition\ApprovalLog;
-use App\Models\Requisition\ApprovalPath;
+use App\Models\Master\ApprovalLog;
+use App\Models\Master\ApprovalPath;
 use App\Models\User;
 
 trait traitRequisition

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Customer\AccountGroupController;
+use App\Http\Controllers\Master\ApprovalPathController;
 use App\Http\Controllers\Customer\BranchController;
 use App\Http\Controllers\Customer\CustomerClassController;
 use App\Http\Controllers\DashboardController;
@@ -22,9 +23,7 @@ use App\Http\Controllers\Requisition\ComplainController;
 use App\Http\Controllers\Requisition\ComplainLogController;
 use App\Http\Controllers\Requisition\FreeGoodsController;
 use App\Http\Controllers\Requisition\ItemController;
-use App\Http\Controllers\Requisition\RequisitionPath;
 use App\Http\Controllers\Requisition\SampleController;
-use App\Models\Requisition\Requisition;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Route;
 
@@ -84,6 +83,14 @@ Route::middleware('auth')->group(function () {
         Route::get('/recent-bgs', [DashboardController::class, 'recentBgs'])->name('recent-bgs');
         Route::get('/top-customers-bg', [DashboardController::class, 'topCustomersByBg'])->name('top-customers-bg');
     });
+
+    Route::resource('revision', RevisionController::class);
+    Route::resource('account-groups', AccountGroupController::class);
+    Route::resource('regions', RegionsController::class);
+    Route::resource('branches', BranchController::class);
+    Route::resource('sales', SalesController::class);
+    Route::resource('tops', TOPController::class);
+    Route::resource('customer-classes', CustomerClassController::class);
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -207,15 +214,17 @@ Route::group(['middleware' => ['role:super-admin|admin']], function () {
     Route::resource('customers', CustomerController::class);
     Route::resource('permissions', PermissionController::class);
     Route::resource('roles', RoleController::class);
+    Route::resource('positions', RoleController::class);
+
     Route::get('roles/{roleId}/give-permissions', [RoleController::class, 'addPermissionToRole'])->name('roles.give-permissions');
     Route::post('roles/{roleId}/give-permissions', [RoleController::class, 'givePermissionToRole'])->name('roles.give-permission');
 
     // --- Requisition Path (Approvers) ---
-    Route::get('/requisition/path', [RequisitionPath::class, 'index'])->name('requisition.path');
-    Route::get('/getapproverlist', [RequisitionPath::class, 'approverList'])->name('get.approverlist');
-    Route::resource('/approvers', RequisitionPath::class);
-    Route::get('/categories', [RequisitionPath::class, 'categories'])->name('get.categories');
-    Route::get('/approver-name', [RequisitionPath::class, 'approverName'])->name('get.approver.name');
+    Route::get('/approval/path', [ApprovalPathController::class, 'index'])->name('approval.path');
+    Route::get('/getapproverlist', [ApprovalPathController::class, 'approverList'])->name('get.approverlist');
+    Route::resource('/approvers', ApprovalPathController::class);
+    Route::get('/categories', [ApprovalPathController::class, 'categories'])->name('get.categories');
+    Route::get('/approver-name', [ApprovalPathController::class, 'approverName'])->name('get.approver.name');
 
     Route::get('/master/revision', [RevisionController::class, 'index'])->name('master.revision.index');
     Route::post('/master/revision/update', [RevisionController::class, 'update'])->name('master.revision.update');
