@@ -17,8 +17,6 @@ return new class extends Migration
             $table->foreignId('account_group_id')->nullable()->constrained('account_groups');
             $table->foreignId('branch_id')->nullable()->constrained('branches');
             $table->foreignId('region_id')->nullable()->constrained('regions');
-            $table->string('sales_code')->unique();
-            $table->string('sales_name');
             $table->timestamps();
         });
     }

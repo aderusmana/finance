@@ -32,7 +32,6 @@ class User extends Authenticatable
         'atasan_nik',
         'password',
         'status',
-        'atasan_nik'
     ];
 
     /**
