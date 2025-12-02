@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use App\Models\User;
-use App\Models\Requisition\ApprovalLog;
+use App\Models\Master\ApprovalLog;
 use App\Jobs\CustomerJob;
 class CustomerController extends Controller
 {
