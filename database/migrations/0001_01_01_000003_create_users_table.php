@@ -21,6 +21,7 @@ return new class extends Migration
             $table->unsignedBigInteger('department_id');
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            $table->string('atasan_nik');
             $table->rememberToken();
             $table->timestamps();
 

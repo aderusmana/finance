@@ -214,7 +214,7 @@ Route::group(['middleware' => ['role:super-admin|admin']], function () {
     Route::resource('customers', CustomerController::class);
     Route::resource('permissions', PermissionController::class);
     Route::resource('roles', RoleController::class);
-    Route::resource('positions', RoleController::class);
+    Route::resource('positions', PositionController::class);
 
     Route::get('roles/{roleId}/give-permissions', [RoleController::class, 'addPermissionToRole'])->name('roles.give-permissions');
     Route::post('roles/{roleId}/give-permissions', [RoleController::class, 'givePermissionToRole'])->name('roles.give-permission');

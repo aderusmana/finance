@@ -8,8 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Sales extends Model
 {
     protected $fillable = [
-        'user_id', 'account_group_id', 'branch_id', 'region_id',
-        'sales_code', 'sales_name'
+        'user_id', 'account_group_id', 'branch_id', 'region_id'
     ];
 
     public function user() {
