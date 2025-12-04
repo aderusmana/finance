@@ -28,7 +28,9 @@ class CustomerMail extends Mailable implements ShouldQueue
 
     public function envelope(): Envelope
     {
-        $subject = $this->data['subject'] ?? ('Approval Request: ' . ($this->customer->name ?? 'Customer'));
+        // Subjek email yang lebih informatif
+        $status = $this->data['mail_type'] == 'approval' ? 'Approval Required' : 'Notification';
+        $subject = "[{$status}] New Customer: " . ($this->customer->name ?? 'Unknown');
 
         return new Envelope(
             subject: $subject,
@@ -37,10 +39,13 @@ class CustomerMail extends Mailable implements ShouldQueue
 
     public function content(): Content
     {
-        // Use a simple view. If not present, developer can create `mail.customer-approval` view.
         return new Content(
-            view: $this->data['view'] ?? 'mail.customer-approval',
-            with: $this->data
+            view: 'mail.customer-mail',
+            with: [
+                'approver_name' => $this->data['approver_name'] ?? 'User',
+                'token' => $this->data['token'] ?? null,
+                'mail_type' => $this->data['mail_type'] ?? 'approval',
+            ]
         );
     }
 

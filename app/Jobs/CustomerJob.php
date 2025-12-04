@@ -29,7 +29,7 @@ class CustomerJob implements ShouldQueue
         $this->mailType = $mailType;
 
         // Job should be queued; configuration controls queue connection
-        $this->onQueue('emails');
+        // $this->onQueue('emails');
     }
 
     public function handle()
@@ -65,7 +65,7 @@ class CustomerJob implements ShouldQueue
                         'approver_name' => $name,
                     ];
 
-                    Mail::to($email)->queue(new CustomerMail($customer, $approver, $data));
+                    Mail::to($email)->send(new CustomerMail($customer, $approver, $data));
                 } catch (\Exception $e) {
                     Log::error('CustomerJob: error sending mail to recipient', ['recipient' => $r, 'error' => $e->getMessage()]);
                 }

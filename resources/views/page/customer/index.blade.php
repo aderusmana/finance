@@ -89,7 +89,7 @@
                         {{-- STEP 1: Select User --}}
                         <div class="card mb-3 border-primary">
                             <div class="card-header bg-light-primary">
-                                <h6 class="mb-2 fw-bold text-primary">Requester</h6>
+                                <h6 class="mb-2 fw-bold text-primary">Requester Info</h6>
                             </div>
                             <div class="card-body">
                                 <div class="row">
@@ -97,9 +97,8 @@
                                         <label for="user_id" class="form-label">Select User <span
                                                 class="text-danger">*</span></label>
                                         <select class="form-select select2-styled" id="user_id" name="user_id"
-                                            style="width: 100%;">
-                                            {{-- <option></option> --}}
-                                            {{-- Loop user dari controller jika ada, contoh: --}}
+                                            style="width: 100%;" required>
+                                            <option></option>
                                             @foreach ($sales as $user)
                                                 <option value="{{ $user->id }}"
                                                     data-pos="{{ $user->user->position?->position_name ?? ($user->user->position_name ?? '') }}"
@@ -121,24 +120,22 @@
                                         <div class="col-md-4">
                                             <label class="small text-muted">Position</label>
                                             <input type="text" class="form-control form-control-sm"
-                                                id="user_position" readonly>
+                                                id="user_position" readonly placeholder="Auto-filled">
                                         </div>
                                         <div class="col-md-4">
                                             <label class="small text-muted">Branch</label>
                                             <input type="text" class="form-control form-control-sm" id="user_branch"
-                                                readonly>
+                                                readonly placeholder="Auto-filled">
                                         </div>
                                         <div class="col-md-4">
                                             <label class="small text-muted">Region</label>
                                             <input type="text" class="form-control form-control-sm" id="user_region"
-                                                readonly>
+                                                readonly placeholder="Auto-filled">
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-
-                        {{-- NOTE: account_group and customer_class moved into the main form section below so they are part of customer details --}}
 
                         {{-- STEP 4: Main Form Details --}}
                         <div id="main-form-section" style="display: none;">
@@ -147,14 +144,14 @@
                                     <h6 class="mb-2 fw-bold text-white">Customer Detail</h6>
                                 </div>
 
-                                {{-- Account group & Class (moved here) --}}
+                                {{-- Account Group & Class --}}
                                 <div class="card-body">
                                     <div class="row g-3 mb-3">
                                         <div class="col-md-6">
                                             <label for="account_group" class="form-label">Account Group <span
                                                     class="text-danger">*</span></label>
                                             <select class="form-select select2-styled" id="account_group"
-                                                name="account_group" style="width: 100%;">
+                                                name="account_group" style="width: 100%;" required>
                                                 <option></option>
                                                 @foreach ($accountgroup as $ag)
                                                     <option value="{{ $ag->id }}"
@@ -169,7 +166,7 @@
                                             <label for="customer_class" class="form-label">Customer Class <span
                                                     class="text-danger">*</span></label>
                                             <select class="form-select select2-styled" id="customer_class"
-                                                name="customer_class" style="width: 100%;">
+                                                name="customer_class" style="width: 100%;" required>
                                                 <option></option>
                                                 @foreach ($customerClass as $cc)
                                                     <option value="{{ $cc->id }}">
@@ -180,64 +177,88 @@
                                     </div>
                                 </div>
 
+                                <hr>
+
+                                {{-- D. Documents Upload (MOVED UP HERE) --}}
+                                <div class="card-body bg-opacity-10">
+                                    <div class="row g-3 mb-4">
+                                        <h6 class="fw-bold text-secondary"><i class="ph-bold ph-upload-simple"></i>
+                                            Document Uploads (Auto-fill Support)</h6>
+                                        <div class="col-md-4">
+                                            <label class="form-label">Upload NPWP <span
+                                                    class="text-danger">*</span></label>
+                                            <input type="file" class="form-control" name="file_npwp" required>
+                                            <small class="text-muted f-s-11">Upload NPWP untuk auto-fill nama &
+                                                alamat.</small>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label">Upload NIB/SIUP <span
+                                                    class="text-danger">*</span></label>
+                                            <input type="file" class="form-control" name="file_nib" required>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label">Upload KTP <span
+                                                    class="text-danger">*</span></label>
+                                            <input type="file" class="form-control" name="file_ktp" required>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <hr>
+
                                 {{-- A. General Info --}}
                                 <div class="card-body">
                                     <div class="row g-3 mb-4">
+                                        <h6 class="fw-bold text-secondary">General Information</h6>
                                         <div class="col-md-12">
                                             <label class="form-label">Customer Name <span
                                                     class="text-danger">*</span></label>
                                             <input type="text" class="form-control" name="name" id="name"
-                                                required>
+                                                placeholder="e.g. PT. Maju Mundur Cantik" required>
                                         </div>
                                         <div class="col-md-12">
                                             <label class="form-label">Sort Name</label>
-                                            <input type="text" class="form-control" name="sort_name" id="sort_name">
+                                            <input type="text" class="form-control" name="sort_name" id="sort_name"
+                                                placeholder="e.g. MMC">
                                         </div>
-                                        {{-- <div class="col-md-4">
-                                        <label class="form-label">Customer Code</label>
-                                        <input type="text" class="form-control" name="code" id="code"
-                                            placeholder="Auto / Input">
-                                    </div> --}}
+
                                         <div class="col-md-12">
-                                            <label class="form-label">Address <span
-                                                    class="text-danger">*</span></label>
+                                            <label class="form-label">Address <span class="text-danger">*</span></label>
                                             <input type="text" class="form-control mb-2" name="address1"
-                                                id="address1" placeholder="Line 1">
+                                                id="address1" placeholder="Address Line 1 (Required)" required>
                                             <input type="text" class="form-control mb-2" name="address2"
-                                                id="address2" placeholder="Line 2">
-                                            <input type="text" class="form-control" name="address3"
-                                                id="address3" placeholder="Line 3">
+                                                id="address2" placeholder="Address Line 2 (Optional)">
+                                            <input type="text" class="form-control" name="address3" id="address3"
+                                                placeholder="Address Line 3 (Optional)">
                                         </div>
                                         <div class="col-md-4">
-                                            <label class="form-label">City</label>
-                                            <input type="text" class="form-control" name="city"
-                                                id="city">
+                                            <label class="form-label">City <span class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" name="city" id="city"
+                                                placeholder="e.g. Jakarta Selatan" required>
                                         </div>
                                         <div class="col-md-4">
-                                            <label class="form-label">Postal Code</label>
+                                            <label class="form-label">Postal Code <span
+                                                    class="text-danger">*</span></label>
                                             <input type="text" class="form-control" name="postal_code"
-                                                id="postal_code">
+                                                id="postal_code" placeholder="e.g. 12345" required>
                                         </div>
                                         <div class="col-md-4">
-                                            <label class="form-label">Country</label>
+                                            <label class="form-label">Country <span
+                                                    class="text-danger">*</span></label>
                                             <input type="text" class="form-control" name="country" id="country"
-                                                value="Indonesia">
+                                                value="Indonesia" placeholder="Country" required>
                                         </div>
-                                        <div class="col-md-4">
-                                            <label class="form-label">Email (General)</label>
-                                            <input type="email" class="form-control" name="email"
-                                                id="email">
+                                        <div class="col-md-6">
+                                            <label class="form-label">Email (General) <span
+                                                    class="text-danger">*</span></label>
+                                            <input type="email" class="form-control" name="email" id="email"
+                                                placeholder="e.g. info@company.com" required>
                                         </div>
-                                        <div class="col-md-4">
-                                            <label class="form-label">Area</label>
-                                            <input type="text" class="form-control" name="area"
-                                                id="area">
+                                        <div class="col-md-6">
+                                            <label class="form-label">Area <span class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" name="area" id="area"
+                                                placeholder="e.g. Jabodetabek" required>
                                         </div>
-                                        {{-- <div class="col-md-4">
-                                            <label class="form-label">Join Date</label>
-                                            <input type="date" class="form-control" name="join_date"
-                                                id="join_date">
-                                        </div> --}}
                                     </div>
                                 </div>
 
@@ -248,34 +269,42 @@
                                     <div class="row g-3 mb-4">
                                         <h6 class="fw-bold text-secondary">Shipping & Key Personnel</h6>
                                         <div class="col-md-6">
-                                            <label class="form-label">Shipping To (Name)</label>
+                                            <label class="form-label">Shipping To (Name) <span
+                                                    class="text-danger">*</span></label>
                                             <input type="text" class="form-control" name="shipping_to_name"
-                                                id="shipping_to_name">
+                                                id="shipping_to_name" placeholder="Recipient Name" required>
                                         </div>
                                         <div class="col-md-6">
-                                            <label class="form-label">Shipping To (Address)</label>
-                                            <textarea class="form-control" name="shipping_to_address" id="shipping_to_address" rows="1"></textarea>
+                                            <label class="form-label">Shipping To (Address) <span
+                                                    class="text-danger">*</span></label>
+                                            <textarea class="form-control" name="shipping_to_address" id="shipping_to_address" rows="1"
+                                                placeholder="Full Shipping Address" required></textarea>
                                         </div>
 
                                         <div class="col-md-3">
-                                            <label class="form-label">Purchasing Mgr Name</label>
+                                            <label class="form-label">Purchasing Mgr Name <span
+                                                    class="text-danger">*</span></label>
                                             <input type="text" class="form-control" name="purchasing_manager_name"
-                                                id="purchasing_manager_name">
+                                                id="purchasing_manager_name" placeholder="Full Name" required>
                                         </div>
                                         <div class="col-md-3">
-                                            <label class="form-label">Purchasing Mgr Email</label>
-                                            <input type="email" class="form-control"
-                                                name="purchasing_manager_email" id="purchasing_manager_email">
+                                            <label class="form-label">Purchasing Mgr Email <span
+                                                    class="text-danger">*</span></label>
+                                            <input type="email" class="form-control" name="purchasing_manager_email"
+                                                id="purchasing_manager_email" placeholder="email@example.com"
+                                                required>
                                         </div>
                                         <div class="col-md-3">
-                                            <label class="form-label">Finance Mgr Name</label>
+                                            <label class="form-label">Finance Mgr Name <span
+                                                    class="text-danger">*</span></label>
                                             <input type="text" class="form-control" name="finance_manager_name"
-                                                id="finance_manager_name">
+                                                id="finance_manager_name" placeholder="Full Name" required>
                                         </div>
                                         <div class="col-md-3">
-                                            <label class="form-label">Finance Mgr Email</label>
+                                            <label class="form-label">Finance Mgr Email <span
+                                                    class="text-danger">*</span></label>
                                             <input type="email" class="form-control" name="finance_manager_email"
-                                                id="finance_manager_email">
+                                                id="finance_manager_email" placeholder="email@example.com" required>
                                         </div>
                                     </div>
                                 </div>
@@ -287,86 +316,78 @@
                                     <div class="row g-3 mb-4">
                                         <h6 class="fw-bold text-secondary">Billing (Penagihan) & Tax</h6>
                                         <div class="col-md-4">
-                                            <label class="form-label">Kontak Penagihan</label>
+                                            <label class="form-label">Kontak Penagihan <span
+                                                    class="text-danger">*</span></label>
                                             <input type="text" class="form-control" name="penagihan_nama_kontak"
-                                                id="penagihan_nama_kontak">
+                                                id="penagihan_nama_kontak" placeholder="Contact Person Name" required>
                                         </div>
                                         <div class="col-md-4">
-                                            <label class="form-label">Telepon Penagihan</label>
+                                            <label class="form-label">Telepon Penagihan <span
+                                                    class="text-danger">*</span></label>
                                             <input type="text" class="form-control" name="penagihan_telepon"
-                                                id="penagihan_telepon">
+                                                id="penagihan_telepon" placeholder="e.g. 021-5555xxx" required>
                                         </div>
                                         <div class="col-md-4">
-                                            <label class="form-label">Alamat Penagihan</label>
-                                            <textarea class="form-control" name="penagihan_address" id="penagihan_address" rows="1"></textarea>
+                                            <label class="form-label">Alamat Penagihan <span
+                                                    class="text-danger">*</span></label>
+                                            <textarea class="form-control" name="penagihan_address" id="penagihan_address" rows="1"
+                                                placeholder="Billing Address" required></textarea>
                                         </div>
 
                                         <div class="col-md-12 mt-2">
-                                            <label class="form-label">Alamat Surat Menyurat</label>
-                                            <textarea class="form-control" name="surat_menyurat_address" id="surat_menyurat_address" rows="2"></textarea>
+                                            <label class="form-label">Alamat Surat Menyurat <span
+                                                    class="text-danger">*</span></label>
+                                            <textarea class="form-control" name="surat_menyurat_address" id="surat_menyurat_address" rows="2"
+                                                placeholder="Correspondence Address" required></textarea>
                                         </div>
 
                                         <div class="col-md-4">
-                                            <label class="form-label">Tax Contact Name</label>
+                                            <label class="form-label">Tax Contact Name <span
+                                                    class="text-danger">*</span></label>
                                             <input type="text" class="form-control" name="tax_contact_name"
-                                                id="tax_contact_name">
+                                                id="tax_contact_name" placeholder="Tax Person Name" required>
                                         </div>
                                         <div class="col-md-4">
-                                            <label class="form-label">Tax Contact Email</label>
+                                            <label class="form-label">Tax Contact Email <span
+                                                    class="text-danger">*</span></label>
                                             <input type="email" class="form-control" name="tax_contact_email"
-                                                id="tax_contact_email">
+                                                id="tax_contact_email" placeholder="tax@example.com" required>
                                         </div>
                                         <div class="col-md-4">
-                                            <label class="form-label">Tax Contact Phone</label>
+                                            <label class="form-label">Tax Contact Phone <span
+                                                    class="text-danger">*</span></label>
                                             <input type="text" class="form-control" name="tax_contact_phone"
-                                                id="tax_contact_phone">
+                                                id="tax_contact_phone" placeholder="Phone Number" required>
                                         </div>
 
                                         <div class="col-md-3">
-                                            <label class="form-label">No. NPWP</label>
-                                            <input type="text" class="form-control" name="npwp"
-                                                id="npwp">
+                                            <label class="form-label">No. NPWP <span
+                                                    class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" name="npwp" id="npwp"
+                                                placeholder="00.000.000.0-000.000" required>
                                         </div>
                                         <div class="col-md-3">
-                                            <label class="form-label">Tanggal NPWP</label>
+                                            <label class="form-label">Tanggal NPWP <span
+                                                    class="text-danger">*</span></label>
                                             <input type="date" class="form-control" name="tanggal_npwp"
-                                                id="tanggal_npwp">
+                                                id="tanggal_npwp" required>
                                         </div>
                                         <div class="col-md-3">
-                                            <label class="form-label">No. NPPKP</label>
-                                            <input type="text" class="form-control" name="nppkp"
-                                                id="nppkp">
+                                            <label class="form-label">No. NPPKP <span
+                                                    class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" name="nppkp" id="nppkp"
+                                                placeholder="NPPKP Number" required>
                                         </div>
                                         <div class="col-md-3">
-                                            <label class="form-label">Tanggal NPPKP</label>
+                                            <label class="form-label">Tanggal NPPKP <span
+                                                    class="text-danger">*</span></label>
                                             <input type="date" class="form-control" name="tanggal_nppkp"
-                                                id="tanggal_nppkp">
+                                                id="tanggal_nppkp" required>
                                         </div>
                                         <div class="col-md-3">
                                             <label class="form-label">No Pengukuhan Kaber</label>
                                             <input type="text" class="form-control" name="no_pengukuhan_kaber"
-                                                id="no_pengukuhan_kaber">
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <hr>
-
-                                {{-- D. Documents Upload --}}
-                                <div class="card-body">
-                                    <div class="row g-3 mb-4">
-                                        <h6 class="fw-bold text-secondary">Document Uploads</h6>
-                                        <div class="col-md-4">
-                                            <label class="form-label">Upload NPWP</label>
-                                            <input type="file" class="form-control" name="file_npwp">
-                                        </div>
-                                        <div class="col-md-4">
-                                            <label class="form-label">Upload NIB/SIUP</label>
-                                            <input type="file" class="form-control" name="file_nib">
-                                        </div>
-                                        <div class="col-md-4">
-                                            <label class="form-label">Upload KTP</label>
-                                            <input type="file" class="form-control" name="file_ktp">
+                                                id="no_pengukuhan_kaber" placeholder="Optional">
                                         </div>
                                     </div>
                                 </div>
@@ -377,47 +398,49 @@
                                 <div class="card-body">
                                     <div class="row g-3 mb-4">
                                         <h6 class="fw-bold text-secondary">Financial Terms</h6>
+
                                         <div class="col-md-4">
-                                            <label class="form-label">TOP (Term of Payment)</label>
-                                            <select class="form-select select2-styled" name="term_of_payment"
-                                                id="term_of_payment" style="width:100%">
+                                            <label class="form-label">TOP (Term of Payment) <span class="text-danger">*</span></label>
+                                            <select class="form-select select2-styled" name="term_of_payment" id="term_of_payment" style="width:100%" required>
                                                 <option></option>
                                                 @foreach ($top as $t)
                                                     <option value="{{ $t->name_top }}">{{ $t->desc_top }}</option>
                                                 @endforeach
                                             </select>
                                         </div>
+
                                         <div class="col-md-4">
-                                            <label class="form-label">Output Tax</label>
-                                            <select class="form-select select2-styled" name="output_tax"
-                                                id="output_tax" style="width:100%">
+                                            <label class="form-label">Output Tax <span class="text-danger">*</span></label>
+                                            <select class="form-select select2-styled" name="output_tax" id="output_tax" style="width:100%" required>
                                                 <option></option>
-                                                <option value="terhutang">Terhutang PPN</option>
-                                                <option value="tidak_terhutang">Tidak Terhutang</option>
+                                                <option value="Terhutang PPN">Terhutang PPN</option>
+                                                <option value="NON-PPN">Tidak Terhutang (NON-PPN)</option>
+                                                <option value="PPN">PPN</option>
                                             </select>
                                         </div>
+
                                         <input type="hidden" name="lead_time" id="lead_time" value="0">
+
                                         <div class="col-md-4">
-                                            <label class="form-label">Credit Limit</label>
-                                            <input type="text" class="form-control" name="credit_limit"
-                                                id="credit_limit">
+                                            <label class="form-label">Credit Limit <span class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" name="credit_limit" id="credit_limit" placeholder="Click to calculate" required readonly>
                                         </div>
+
                                         <div class="col-md-4">
-                                            <label class="form-label">CCAR</label>
-                                            <select class="form-select select2-styled" name="ccar" id="ccar"
-                                                style="width:100%">
+                                            <label class="form-label">CCAR <span class="text-danger">*</span></label>
+                                            <select class="form-select select2-styled" name="ccar" id="ccar" style="width:100%" required>
                                                 <option></option>
                                                 <option value="smd_idr">SMD (IDR)</option>
                                                 <option value="smd_usd">SMD USD</option>
                                             </select>
                                         </div>
+
                                         <div class="col-md-4">
-                                            <label class="form-label">Bank Garansi</label>
-                                            <select class="form-select select2-styled" name="bank_garansi"
-                                                id="bank_garansi" style="width:100%">
+                                            <label class="form-label">Bank Garansi <span class="text-danger">*</span></label>
+                                            <select class="form-select select2-styled" name="bank_garansi" id="bank_garansi" style="width:100%" required>
                                                 <option></option>
-                                                <option value="1">Yes</option>
-                                                <option value="0">No</option>
+                                                <option value="YA">Yes</option>
+                                                <option value="TIDAK">No</option>
                                             </select>
                                         </div>
                                     </div>
@@ -448,6 +471,94 @@
                 // 1. Initialize Select2
                 $('.select2').select2({
                     theme: 'bootstrap-5'
+                });
+
+                $('#user_id').select2({
+                    dropdownParent: $('#customerModal'),
+                    theme: 'bootstrap-5',
+                    placeholder: 'Search & Select User'
+                });
+
+                // Inisialisasi Select2 untuk Account Group, Class, dan SEMUA Financial Terms
+                $('#account_group, #customer_class, #term_of_payment, #output_tax, #ccar, #bank_garansi').select2({
+                    dropdownParent: $('#customerModal'),
+                    theme: 'bootstrap-5',
+                    placeholder: 'Select Option'
+                });
+
+                $('#customerForm').on('submit', function(e) {
+                    e.preventDefault(); // Mencegah submit default browser
+
+                    // Cek validasi HTML native (required, type, dll)
+                    if (!this.checkValidity()) {
+                        // Jika tidak valid, biarkan browser menampilkan pesan error default
+                        e.stopPropagation();
+                        this.reportValidity();
+                        return;
+                    }
+
+                    const formData = new FormData(this);
+                    // Untuk default saya set ke store (create), jika edit biasanya ada hidden input ID
+                    const url = "{{ route('customers.store') }}";
+
+                    // Tampilkan SweetAlert Konfirmasi
+                    Swal.fire({
+                        title: 'Konfirmasi Penyimpanan',
+                        text: "Pastikan seluruh data yang diinput sudah benar. Lanjutkan penyimpanan?",
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Ya, Simpan!',
+                        cancelButtonText: 'Batal'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            // Tampilkan Loading
+                            Swal.fire({
+                                title: 'Menyimpan Data...',
+                                html: 'Mohon tunggu sebentar.',
+                                allowOutsideClick: false,
+                                didOpen: () => {
+                                    Swal.showLoading();
+                                }
+                            });
+
+                            // Proses AJAX Request
+                            $.ajax({
+                                url: url,
+                                method: 'POST',
+                                data: formData,
+                                processData: false,
+                                contentType: false,
+                                success: function(response) {
+                                    Swal.close(); // Tutup loading
+
+                                    if(response.success) {
+                                        Swal.fire({
+                                            icon: 'success',
+                                            title: 'Berhasil!',
+                                            text: response.message,
+                                            timer: 2000,
+                                            showConfirmButton: false
+                                        }).then(() => {
+                                            $('#customerModal').modal('hide');
+                                            $('#customerTable').DataTable().ajax.reload();
+                                        });
+                                    } else {
+                                        Swal.fire('Gagal!', response.message || 'Terjadi kesalahan.', 'error');
+                                    }
+                                },
+                                error: function(xhr) {
+                                    Swal.close();
+                                    let errorMessage = 'Terjadi kesalahan pada server.';
+                                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                                        errorMessage = xhr.responseJSON.message;
+                                    }
+                                    Swal.fire('Error!', errorMessage, 'error');
+                                }
+                            });
+                        }
+                    });
                 });
 
                 // OCR handling for NPWP upload: extract NPWP number and address
@@ -746,13 +857,31 @@
                     const ag = $('#account_group').val();
                     const cc = $('#customer_class').val();
 
-                    // populate bank garansi and ccar from selected account_group option
+                    // Ambil option yang sedang dipilih
                     const selectedAg = $('#account_group').find(':selected');
+
                     if (selectedAg.length) {
-                        $('#bank_garansi').val(selectedAg.data('bank_garansi') || '');
-                        $('#ccar').val(selectedAg.data('ccar') || '');
+                        // Ambil data raw dari attribut (kemungkinan 1 atau 0)
+                        let rawBg = selectedAg.data('bank_garansi');
+                        let rawCcar = selectedAg.data('ccar');
+
+                        // 1. LOGIC KONVERSI: Ubah 1/0 menjadi 'YA'/'TIDAK'
+                        let bgValue = '';
+                        if (rawBg == 1 || rawBg === true || rawBg === '1') {
+                            bgValue = 'YA';
+                        } else {
+                            bgValue = 'TIDAK';
+                        }
+
+                        // 2. SET VALUE & TRIGGER CHANGE: Penting untuk Select2
+                        // Kita set valuenya ke 'YA'/'TIDAK' lalu panggil trigger('change')
+                        $('#bank_garansi').val(bgValue).trigger('change');
+
+                        // Untuk CCAR biasanya teksnya sama (smd_idr/smd_usd), tapi tetap perlu trigger
+                        $('#ccar').val(rawCcar).trigger('change');
                     }
 
+                    // Cek validasi tombol save
                     if (ag && cc) {
                         $('#btn-save-customer').prop('disabled', false);
                     } else {

@@ -175,7 +175,7 @@ class AllSeeder extends Seeder
                 'email_verified_at' => now(),
                 'department_id' => 1,
                 'status' => 'active',
-                'atasan_nik' => 'AG1111',
+                'atasan_nik' => 'AG2222',
                 'position_id' => $posDirector->id,
             ]
         );
@@ -191,7 +191,7 @@ class AllSeeder extends Seeder
                 'email_verified_at' => now(),
                 'department_id' => 2,
                 'status' => 'active',
-                'atasan_nik' => 'AG1111',
+                'atasan_nik' => 'AG3333',
                 'position_id' => $posGM->id,
             ]
         );

@@ -18,12 +18,7 @@ use App\Http\Controllers\Master\UserController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Master\PositionController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\Requisition\ComplainApprovalController;
-use App\Http\Controllers\Requisition\ComplainController;
-use App\Http\Controllers\Requisition\ComplainLogController;
-use App\Http\Controllers\Requisition\FreeGoodsController;
 use App\Http\Controllers\Requisition\ItemController;
-use App\Http\Controllers\Requisition\SampleController;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Route;
 
@@ -46,26 +41,6 @@ Route::get('/tes-403', function () {
     abort(403, 'Akses Ditolak'); // Menampilkan halaman 403 dengan pesan kustom
 });
 
-// --- mailing dan approval proses complain ---
-Route::get('/approval', [ComplainController::class, 'processApproval'])->name('approval.process');
-Route::get('/complain/approval-direct', [ComplainController::class, 'processApproval'])->name('approval.process.direct');
-Route::get('/complain/approval/review', [ComplainController::class, 'showReviewPage'])->name('complain.approval.review');
-Route::post('/complain/approval/process', [ComplainController::class, 'processApproval'])->name('complain.approval.process');
-Route::get('/complain/warehouse/approval', [ComplainController::class, 'processWarehouseApproval'])->name('complain.warehouse.approval');
-Route::get('/comclaim/warehouse/review', [ComplainController::class, 'showWarehouseReviewPage'])->name('complain.warehouse.review');
-Route::post('/comclaim/warehouse/process', [ComplainController::class, 'processWarehouseApproval'])->name('complain.warehouse.process');
-
-// Approval Link dari Email (Sample Requisition)
-Route::get('/approval/response/{token}', [SampleController::class, 'showResponseForm'])->name('approval.response');
-Route::post('/approvals/resend/{token}', [SampleController::class, 'resendApprovalEmail'])->name('approvals.resend');
-Route::post('/approval/process', [SampleController::class, 'processApproval'])->name('approval-sample.process-form');
-Route::get('/approval/success', [SampleController::class, 'showSuccessPage'])->name('approval.success');
-
-// Approval Link dari Email (Free Goods Requisition)
-Route::get('/fg-approval/response/{token}', [FreeGoodsController::class, 'showResponseForm'])->name('fg.approval.response');
-Route::post('/fg-approval/process', [FreeGoodsController::class, 'processApproval'])->name('fg.approval.process');
-Route::get('/fg-approval/success', [FreeGoodsController::class, 'showSuccessPage'])->name('fg.approval.success');
-
 Route::middleware('auth')->group(function () {
     Route::prefix('dashboard/data')->name('dashboard.data.')->group(function () {
         // Legacy endpoints repurposed for BG/Customer data
@@ -84,6 +59,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/top-customers-bg', [DashboardController::class, 'topCustomersByBg'])->name('top-customers-bg');
     });
 
+    Route::get('/customers/approval/{token}', [CustomerController::class, 'viewApprovalPage'])->name('customers.view_approval');
+    Route::post('/customers/{customer}/approval-action', [CustomerController::class, 'approvalAction'])->name('customers.approval_action');
+
     Route::resource('revision', RevisionController::class);
     Route::resource('account-groups', AccountGroupController::class);
     Route::resource('regions', RegionsController::class);
@@ -101,82 +79,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/notifications/fetch', [NotificationController::class, 'fetch'])->name('notifications.fetch');
     Route::post('/notifications/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
     Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.read.all');
-
-
-    // --- SAMPLE REQUISITION ROUTES ---
-    Route::get('/sample-form/approval', [SampleController::class, 'approvalPage'])->name('sample-form.approval');
-    Route::get('/sample-approval/data', [SampleController::class, 'getApprovalData'])->name('sample.approval.data');
-
-    Route::get('/sample-form-reports', [SampleController::class, 'reportsPage'])->name('sample-form.reports');
-    Route::get('/sample-reports/data', [SampleController::class, 'getReportsData'])->name('sample.reports.data');
-    Route::post('/sample-report/print', [SampleController::class, 'printMultipleReport'])->name('report_sample.print');
-    Route::get('/sample-report/{id}', [SampleController::class, 'printReport'])->name('sample.report');
-
-    Route::get('/sample-form/log', [SampleController::class, 'logPage'])->name('sample-form.log');
-    Route::get('/sample-log/data', [SampleController::class, 'getLogData'])->name('sample.log.data');
-
-    Route::resource('sample-form', SampleController::class);
-
-    Route::get('/sample-data', [SampleController::class, 'getData'])->name('sample.data');
-    Route::post('/sample-form/{id}/recall', [SampleController::class, 'recallRequisition'])->name('sample.recall');
-    Route::post('/get-products-by-material-types', [SampleController::class, 'getProductsByMaterialTypes'])->name('sample.getProductsByMaterialTypes');
-    Route::post('/get-item-details-by-products', [SampleController::class, 'getItemDetailsByProducts'])->name('sample.getItemDetailsByProducts');
-    Route::get('/get-all-item-masters', [SampleController::class, 'getAllItemMasters'])->name('sample.getAllItemMasters');
-
-
-    // --- FREE GOODS REQUISITION ROUTES ---
-    Route::prefix('freegoods-form')->name('freegoods-form.')->group(function () {
-        Route::get('/', [FreeGoodsController::class, 'index'])->name('index');
-        Route::get('/fg-approval', [FreeGoodsController::class, 'approvalPage'])->name('approval');
-        Route::get('/fg-reports', [FreeGoodsController::class, 'reports'])->name('reports');
-        Route::get('/fg-log', [FreeGoodsController::class, 'log'])->name('log');
-
-        // [FIX] Menambahkan route untuk recall yang hilang
-        Route::post('/{id}/recall', [FreeGoodsController::class, 'recallRequisition'])->name('recall');
-
-        Route::resource('/', FreeGoodsController::class)->except(['index'])->parameters(['' => 'id']);
-    });
-
-    Route::name('freegoods.')->group(function () {
-        Route::get('/freegoods-data', [FreeGoodsController::class, 'getData'])->name('data');
-        Route::get('/freegoods-approval/data', [FreeGoodsController::class, 'getApprovalData'])->name('approval.data');
-        Route::get('/freegoods-reports/data', [FreeGoodsController::class, 'getReportData'])->name('reports.data');
-        Route::get('/freegoods-log/data', [FreeGoodsController::class, 'getLogData'])->name('log.data');
-        Route::get('/freegoods/get-next-number', [FreeGoodsController::class, 'getNextFgNumber'])->name('get-next-number');
-        Route::get('/get-all-item-masters-fg', [FreeGoodsController::class, 'getAllItemMasters'])->name('getAllItemMasters');
-        Route::post('/freegoods-form/reports/print-batch', [FreeGoodsController::class, 'printBatch'])->name('report.print.batch');
-    });
-
-
-    // ! complain routes
-    Route::prefix('complain')->group(function () {
-        // * complain form
-        Route::resource('complain-form', ComplainController::class);
-
-        // * complain data
-        Route::get('/getSerial', [ComplainController::class, 'getSerial'])->name('get.serial');
-        Route::get('/getComplainData', [ComplainController::class, 'getData'])->name('get.complain.data');
-        Route::get('/getProductList', [ComplainController::class, 'getProductList'])->name('get.product.list');
-        Route::get('/getCostumerList', [ComplainController::class, 'getCustomerList'])->name('customers.list');
-        Route::get('/getformdetail/{id}', [ComplainController::class, 'getFormDetail'])->name('get.form.detail');
-        Route::post('/upload-payment-proof', [ComplainController::class, 'uploadPaymentProof'])->name('upload.payment.proof');
-
-        // * warehouse approval
-        Route::get('/test-warehouse/{id}', [ComplainController::class, 'testWarehouseTracking'])->name('complain.test.warehouse');
-
-        // * complain approval
-        Route::get('/complain-approval', [ComplainApprovalController::class, 'index'])->name('complain.approval');
-        Route::get('/getapproverdata/{id?}', [ComplainApprovalController::class, 'getData'])->name('get.approver.data');
-        Route::post('/approval/resend/{token}', [ComplainApprovalController::class, 'resendApprovalEmail'])->name('complain.approval.resend');
-
-        // * complain reports
-        Route::get('/complain-reports', [ComplainController::class, 'reports'])->name('complain.reports');
-        Route::post('/report/print-bulk', [ComplainController::class, 'printBulkReport'])->name('report.print.bulk');
-
-        // * complain log
-        Route::get('/complain-log', [ComplainLogController::class, 'index'])->name('complain.log');
-        Route::get('/log.data', [ComplainLogController::class, 'getData'])->name('complain.log.data');
-    });
 
     // --- MASTER DATA ROUTES ---
     Route::prefix('master')->group(function () {
@@ -199,9 +101,6 @@ Route::middleware('auth')->group(function () {
         Route::get('items/{item_id}/details/{id}/edit', [ItemController::class, 'editDetail'])->name('items.details.edit');
         Route::put('items/{item_id}/details/{id}', [ItemController::class, 'updateDetail'])->name('items.details.update');
         Route::delete('items/{item_id}/details/{id}', [ItemController::class, 'destroyDetail'])->name('items.details.destroy');
-
-
-
     });
 });
 

@@ -73,6 +73,8 @@ class CustomerController extends Controller
                 $dataAttrs .= ' data-area="' . e($row->area) . '"';
                 $dataAttrs .= ' data-join_date="' . e($row->join_date) . '"';
                 $dataAttrs .= ' data-status="' . e($row->status) . '"';
+                $dataAttrs .= ' data-route_to="' . e($row->route_to) . '"';
+                $dataAttrs .= ' data-status_approval="' . e($row->status_approval) . '"';
                 $dataAttrs .= ' data-created_by="' . e($row->created_by) . '"';
 
                 return '
@@ -122,12 +124,14 @@ class CustomerController extends Controller
 
             $createdCustomer = Customer::create($request->all());
 
-            $term = strtoupper(trim((string) $request->input('term_of_payment', '')));
-            $subCategory = ($term === 'CBD') ? $term : null;
+            // $term = strtoupper(trim((string) $request->input('term_of_payment', '')));
+            // $subCategory = ($term === 'CBD') ? $term : null;
 
-            $logs = $this->generateApprovalLogs($user, $createdCustomer->id, 'CUSTOMER', $subCategory);
+            $subCategory = 'CBD';
 
-            $firstLog = ApprovalLog::where('category', 'CUSTOMER')
+            $logs = $this->generateApprovalLogs($user, $createdCustomer->id, 'Customer', $subCategory);
+
+            $firstLog = ApprovalLog::where('category', 'Customer')
                 ->where('related_id', $createdCustomer->id)
                 ->orderBy('level', 'asc')
                 ->first();
@@ -135,13 +139,13 @@ class CustomerController extends Controller
             if ($firstLog) {
                 $firstApprover = User::where('nik', $firstLog->approver_nik)->first();
                 if ($firstApprover) {
-                    $createdCustomer->update(['route_to' => $firstApprover->name, 'status' => 'Pending']);
+                    $createdCustomer->update(['route_to' => $firstApprover->name, 'status_approval' => 'Pending']);
                 } else {
                     $createdCustomer->update(['status_approval' => 'Error', 'route_to' => 'Error: First Approver Not Found']);
                     Log::error("Approver pertama dengan NIK {$firstLog->approver_nik} tidak ditemukan.");
                 }
             } else {
-                $createdCustomer->update(['status' => 'Completed', 'route_to' => 'Finished (No Path)']);
+                $createdCustomer->update(['status_approval' => 'Completed', 'route_to' => 'Finished (No Path)']);
                 Log::warning("Tidak ada alur approval untuk kategori CUSTOMER yang cocok. Auto-complete Customer ID {$createdCustomer->id}.");
             }
         });
@@ -152,43 +156,53 @@ class CustomerController extends Controller
             return response()->json(['success' => false, 'message' => 'Failed to create customer'], 500);
         }
 
-        // After commit, prepare recipients and dispatch queued job to send mails
         try {
-            if ($logs && $logs->isNotEmpty()) {
-                $niks = collect($logs)->pluck('approver_nik')->unique()->filter()->values()->all();
-                $users = User::whereIn('nik', $niks)->get()->keyBy('nik');
+            // 1. Ambil Log Level 1 Saja
+            // Karena $logs adalah Collection of Arrays, kita akses pakai array key
+            $firstLog = $logs->firstWhere('level', 1);
 
-                $firstNik = $firstLog->approver_nik ?? null;
+            if ($firstLog) {
+                // PERBAIKAN DISINI: Akses pakai kurung siku ['approver_nik']
+                $approverNik = $firstLog['approver_nik'];
+                $approverUser = User::where('nik', $approverNik)->first();
 
-                $recipients = [];
-                foreach ($logs as $log) {
-                    $nik = $log['approver_nik'] ?? null;
-                    $u = $users->get($nik);
-                    $recipients[] = [
-                        'nik' => $nik,
-                        'email' => $u->email ?? null,
-                        'name' => $u->name ?? null,
-                        'level' => $log['level'] ?? null,
-                        'is_first' => ($nik === $firstNik),
+                if ($approverUser && $approverUser->email) {
+                    // Siapkan Data Penerima (Cuma 1 orang: Level 1)
+                    $recipients = [
+                        [
+                            'nik' => $approverUser->nik,
+                            'email' => $approverUser->email,
+                            'name' => $approverUser->name,
+                            'level' => $firstLog['level'], // Akses pakai array
+                            'is_first' => true,
+                        ]
                     ];
-                }
 
-                $adminEmail = config('mail.from.address');
-                if ($adminEmail) {
-                    $recipients[] = ['nik' => null, 'email' => $adminEmail, 'name' => config('mail.from.name'), 'level' => null, 'is_first' => false];
-                }
+                    // Ambil Token Level 1 (Akses pakai array)
+                    $token = $firstLog['token'];
 
-                $token = $firstLog->token ?? null;
+                    // Dispatch Job
+                    CustomerJob::dispatch($createdCustomer->id, $recipients, $token, 'approval');
 
-                CustomerJob::dispatch($createdCustomer->id, $recipients, $token, 'approval');
-            } else {
-                $adminEmail = config('mail.from.address');
-                if ($adminEmail) {
-                    CustomerJob::dispatch($createdCustomer->id, [['nik' => null, 'email' => $adminEmail, 'name' => config('mail.from.name'), 'level' => null, 'is_first' => false]], null, 'notification');
+                    Log::info("Email approval level 1 dikirim ke: " . $approverUser->email);
+                } else {
+                    Log::warning("User Level 1 tidak punya email atau NIK tidak ditemukan: " . $approverNik);
                 }
             }
+
+            // (Opsional) Notif ke Admin
+            $adminEmail = config('mail.from.address');
+            if ($adminEmail) {
+                // Uncomment jika ingin kirim notif ke admin juga
+                // CustomerJob::dispatch($createdCustomer->id, [['nik' => null, 'email' => $adminEmail, 'name' => 'Admin', 'level' => null, 'is_first' => false]], null, 'notification');
+            }
+
         } catch (\Exception $e) {
-            Log::error('Error dispatching CustomerJob', ['customer_id' => $createdCustomer->id ?? null, 'error' => $e->getMessage()]);
+            Log::error('Error dispatching CustomerJob', [
+                'customer_id' => $createdCustomer->id ?? null,
+                'error' => $e->getMessage(),
+                'line' => $e->getLine()
+            ]);
         }
 
         return response()->json(['success' => true, 'message' => 'Customer created successfully!', 'data' => $createdCustomer], 201);
@@ -225,5 +239,150 @@ class CustomerController extends Controller
         $file = CustomerFile::where('customer_id', $customer->id)->findOrFail($fileId);
         $file->delete();
         return response()->json(['success' => true, 'message' => 'File deleted successfully!']);
+    }
+
+    public function viewApprovalPage(Request $request, $token) // Tambahkan Request $request
+    {
+        $log = ApprovalLog::where('token', $token)->first();
+
+        if (!$log) {
+            abort(404, 'Token Approval Invalid atau Kadaluarsa.');
+        }
+
+        $customer = Customer::with(['user', 'accountGroup', 'customerClass'])
+                    ->findOrFail($log->related_id);
+
+        if ($log->status !== 'Pending') {
+             // return view('page.customer.already-processed');
+        }
+
+        // Tangkap parameter 'pre_action' dari URL (default ke 'approve' jika tidak ada)
+        $preSelectedAction = $request->query('pre_action', 'approve');
+
+        return view('page.customer.links.approval-form', [
+            'customer' => $customer,
+            'token' => $token,
+            'log' => $log,
+            'preSelectedAction' => $preSelectedAction // Kirim ke view
+        ]);
+    }
+
+    // Tambahkan method ini di dalam class CustomerController
+
+    public function approvalAction(Request $request, $customerId)
+    {
+        // 1. Validasi Input
+        $request->validate([
+            'token' => 'required|string',
+            'action' => 'required|in:approve,reject,review',
+            'notes' => 'nullable|string',
+        ]);
+
+        $token = $request->input('token');
+        $action = $request->input('action');
+        $notes = $request->input('notes');
+
+        // 2. Cek Token Valid & Status Masih Pending
+        $currentLog = ApprovalLog::where('token', $token)
+            ->where('related_id', $customerId)
+            ->where('category', 'Customer')
+            ->where('status', 'Pending') // Penting! Biar ga bisa diklik 2x
+            ->first();
+
+        if (!$currentLog) {
+            // Jika tidak ketemu atau status bukan pending, tampilkan halaman Invalid
+            return view('page.customer.links.approval-invalid');
+        }
+
+        $customer = Customer::findOrFail($customerId);
+
+        DB::beginTransaction();
+        try {
+            // 3. Update Log Saat Ini
+            $currentLog->update([
+                'status' => ucfirst($action), // Approve / Reject / Review
+                'notes' => $notes,
+                'updated_at' => now(),
+            ]);
+
+            // 4. Logika Percabangan (Decision Making)
+            if ($action === 'approve') {
+
+                // --- Cek Apakah Ada Level Selanjutnya? ---
+                $nextLevel = $currentLog->level + 1;
+
+                // Cari log berikutnya yang levelnya +1 dari yang sekarang
+                $nextLog = ApprovalLog::where('category', 'Customer')
+                    ->where('related_id', $customerId)
+                    ->where('level', $nextLevel)
+                    ->first();
+
+                if ($nextLog) {
+                    // A. JIKA ADA NEXT APPROVER (Estafet)
+                    $nextApproverUser = User::where('nik', $nextLog->approver_nik)->first();
+                    $nextApproverName = $nextApproverUser ? $nextApproverUser->name : $nextLog->approver_nik;
+
+                    // UPDATE ROUTE TO KE USER SELANJUTNYA
+                    $customer->update([
+                        'status_approval' => 'Processing',
+                        'route_to' => $nextApproverName // <--- Update Route To
+                    ]);
+
+                    if ($nextApproverUser && $nextApproverUser->email) {
+                        $recipients = [[
+                            'nik' => $nextApproverUser->nik,
+                            'email' => $nextApproverUser->email,
+                            'name' => $nextApproverUser->name,
+                            'level' => $nextLog->level,
+                            'is_first' => false
+                        ]];
+
+                        CustomerJob::dispatch($customer->id, $recipients, $nextLog->token, 'approval');
+                        Log::info("Estafet approval: Level {$currentLog->level} -> Level {$nextLog->level}");
+                    }
+
+                } else {
+                    // B. JIKA INI APPROVER TERAKHIR (Finish)
+
+                    $customer->update([
+                        'status_approval' => 'Approved',
+                        'route_to' => 'Finished',
+                        'status' => 'Active' // Opsional: Aktifkan customer
+                    ]);
+
+                    Log::info("Approval Completed for Customer ID: {$customer->id}");
+                }
+
+            } elseif ($action === 'reject') {
+                // C. JIKA REJECT
+
+                // Batalkan semua log sisa (opsional, tapi rapi)
+                ApprovalLog::where('category', 'Customer')
+                    ->where('related_id', $customerId)
+                    ->where('status', 'Pending')
+                    ->update(['status' => 'Canceled']);
+
+                $customer->update([
+                    'status_approval' => 'Rejected',
+                    'route_to' => 'Rejected by ' . $currentLog->approver_nik
+                ]);
+
+                Log::info("Approval Rejected by Level {$currentLog->level}");
+            }
+
+            DB::commit();
+
+            // 5. Tampilkan Halaman Success
+            return view('page.customer.links.approval-success', [
+                'action' => $action,
+                'customerName' => $customer->name,
+                'routeTo' => $customer->route_to
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Approval Action Error: ' . $e->getMessage());
+            return abort(500, 'Terjadi kesalahan saat memproses approval.');
+        }
     }
 }

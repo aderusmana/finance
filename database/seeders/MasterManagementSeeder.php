@@ -96,7 +96,7 @@ class MasterManagementSeeder extends Seeder
         // 4. Seed TOP (Terms of Payment)
         // ==========================================
         $tops = [
-            ['name_top' => 'CASH', 'desc_top' => 'Cash on Delivery / CBD'],
+            ['name_top' => 'CBD', 'desc_top' => 'Cash on Delivery / CBD'],
             ['name_top' => 'TOP 7', 'desc_top' => 'Net 7 Days'],
             ['name_top' => 'TOP 14', 'desc_top' => 'Net 14 Days'],
             ['name_top' => 'TOP 30', 'desc_top' => 'Net 30 Days'],
