@@ -45,6 +45,8 @@ return new class extends Migration
             $table->string('area', 100)->nullable();
             $table->date('join_date')->nullable();
             $table->enum('status', ['active', 'inactive'])->nullable();
+            $table->string('pembagian')->nullable();
+            $table->string('customer_total')->nullable();
             $table->unsignedBigInteger('created_by')->nullable();
             $table->timestamps();
         });

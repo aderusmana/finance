@@ -24,7 +24,7 @@ class Customer extends Model
         'penagihan_nama_kontak', 'penagihan_telepon', 'penagihan_address','surat_menyurat_address', 'email', 'tax_contact_name', 'tax_contact_email', 'tax_contact_phone',
         'npwp', 'tanggal_npwp', 'nppkp', 'tanggal_nppkp','no_pengukuhan_kaber', 'output_tax',
         'term_of_payment', 'lead_time', 'credit_limit', 'ccar', 'bank_garansi',
-        'area', 'join_date', 'status', 'status_approval', 'route_to', 'created_by'
+        'area', 'join_date', 'status', 'status_approval', 'route_to', 'pembagian', 'customer_total', 'created_by'
     ];
 
     protected $casts = [
@@ -82,4 +82,7 @@ class Customer extends Model
         return $this->belongsTo(CustomerClass::class, 'customer_class');
     }
 
+    public function items() {
+        return $this->hasMany(CustomerItem::class, 'customer_id');
+    }
 }

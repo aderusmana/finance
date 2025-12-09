@@ -156,6 +156,27 @@ class AllSeeder extends Seeder
         $atasanRole = Role::updateOrCreate(['name' => 'atasan']);
         $atasanRole->givePermissionTo(['view log', 'view requisition-form', 'view report', 'view requisition-approval', 'approve requisition', 'reject requisition']);
 
+        $managerFinanceRole = Role::updateOrCreate(['name' => 'manager-finance']);
+        $managerFinanceRole->givePermissionTo([
+            'view log', 'view requisition-form', 'view report', 'view approval',
+            'view requisition-approval', 'approve requisition', 'reject requisition',
+            'view customer', 'create customer', 'update customer'
+        ]);
+
+        $headFinanceRole = Role::updateOrCreate(['name' => 'head-finance']);
+        $headFinanceRole->givePermissionTo([
+            'view log', 'view requisition-form', 'view report', 'view approval',
+            'view requisition-approval', 'approve requisition', 'reject requisition',
+            'view customer', 'create customer', 'update customer'
+        ]);
+
+        $itRole = Role::updateOrCreate(['name' => 'it']);
+        $itRole->givePermissionTo([
+            'view log', 'view requisition-form', 'view report', 'view approval',
+            'view requisition-approval', 'approve requisition', 'reject requisition',
+            'view customer', 'create customer', 'update customer'
+        ]);
+
         // Assign basic permissions
         $userRequisitionRole->givePermissionTo(['view log', 'view requisition-form', 'view report', 'view requisition', 'create requisition', 'update requisition', 'delete requisition']);
         $approvalRole->givePermissionTo(['view log', 'view requisition-form', 'view report', 'view approval', 'view requisition-approval', 'approve requisition', 'reject requisition']);
@@ -212,6 +233,54 @@ class AllSeeder extends Seeder
             ]
         );
         $userApproval->assignRole($approvalRole);
+
+        $managerFinance = User::updateOrCreate(
+            ['email' => 'ziddanazzahra10@gmail.com'],
+            [
+                'name' => 'Manager Finance',
+                'nik' => 'MF001',
+                'username' => 'manager.finance',
+                'password' => Hash::make('password'),
+                'email_verified_at' => now(),
+                'department_id' => 2, // Finance Admin
+                'status' => 'active',
+                'atasan_nik' => 'HDFN01', // Asumsi atasan direktur
+                'position_id' => $posManager->id,
+            ]
+        );
+        $managerFinance->assignRole($managerFinanceRole);
+
+        $headFinance = User::updateOrCreate(
+            ['email' => 'head.finance@example.com'], // Email Login
+            [
+                'name' => 'Dept Head Finance',
+                'nik' => 'HDFIN01',
+                'username' => 'head.finance',
+                'password' => Hash::make('password'),
+                'email_verified_at' => now(),
+                'department_id' => 2, // Finance Admin
+                'status' => 'active',
+                'atasan_nik' => 'AG1111', // Asumsi atasan langsung Direktur
+                'position_id' => $posManager->id, // Level Manager/Dept Head
+            ]
+        );
+        $headFinance->assignRole($headFinanceRole);
+
+        $itEngineer = User::updateOrCreate(
+            ['email' => 'it.engineer@example.com'],
+            [
+                'name' => 'IT Engineer',
+                'nik' => 'IT001',
+                'username' => 'it.engineer',
+                'password' => Hash::make('password'),
+                'email_verified_at' => now(),
+                'department_id' => 1, // Engineering/IT
+                'status' => 'active',
+                'atasan_nik' => 'AG1111',
+                'position_id' => $posStaff->id,
+            ]
+        );
+        $itEngineer->assignRole($itRole);
 
         // --- WH Users ---
         $headWh = User::updateOrCreate(

@@ -97,11 +97,10 @@ class MasterManagementSeeder extends Seeder
         // ==========================================
         $tops = [
             ['name_top' => 'CBD', 'desc_top' => 'Cash on Delivery / CBD'],
-            ['name_top' => 'TOP 7', 'desc_top' => 'Net 7 Days'],
-            ['name_top' => 'TOP 14', 'desc_top' => 'Net 14 Days'],
-            ['name_top' => 'TOP 30', 'desc_top' => 'Net 30 Days'],
-            ['name_top' => 'TOP 45', 'desc_top' => 'Net 45 Days'],
-            ['name_top' => 'TOP 60', 'desc_top' => 'Net 60 Days'],
+            ['name_top' => '7', 'desc_top' => 'Net 7 Days'],
+            ['name_top' => '14', 'desc_top' => 'Net 14 Days'],
+            ['name_top' => '30', 'desc_top' => 'Net 30 Days'],
+            ['name_top' => '45', 'desc_top' => 'Net 45 Days'],
         ];
 
         foreach ($tops as $top) {

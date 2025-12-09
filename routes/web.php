@@ -41,6 +41,10 @@ Route::get('/tes-403', function () {
     abort(403, 'Akses Ditolak'); // Menampilkan halaman 403 dengan pesan kustom
 });
 
+    Route::get('/customers/approval/{token}', [CustomerController::class, 'viewApprovalPage'])->name('customers.view_approval');
+    Route::post('/customers/{customer}/approval-action', [CustomerController::class, 'approvalAction'])->name('customers.approval_action');
+
+
 Route::middleware('auth')->group(function () {
     Route::prefix('dashboard/data')->name('dashboard.data.')->group(function () {
         // Legacy endpoints repurposed for BG/Customer data
@@ -58,9 +62,6 @@ Route::middleware('auth')->group(function () {
         Route::get('/recent-bgs', [DashboardController::class, 'recentBgs'])->name('recent-bgs');
         Route::get('/top-customers-bg', [DashboardController::class, 'topCustomersByBg'])->name('top-customers-bg');
     });
-
-    Route::get('/customers/approval/{token}', [CustomerController::class, 'viewApprovalPage'])->name('customers.view_approval');
-    Route::post('/customers/{customer}/approval-action', [CustomerController::class, 'approvalAction'])->name('customers.approval_action');
 
     Route::resource('revision', RevisionController::class);
     Route::resource('account-groups', AccountGroupController::class);

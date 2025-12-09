@@ -17,9 +17,9 @@ class CustomerJob implements ShouldQueue
     use Dispatchable, Queueable, SerializesModels;
 
     public $customerId;
-    public $recipients; // array of ['nik','email','name','level','is_first']
+    public $recipients;
     public $token;
-    public $mailType;
+    public $mailType; // approval, completed, rejected
 
     public function __construct(int $customerId, array $recipients = [], ?string $token = null, string $mailType = 'approval')
     {
@@ -27,51 +27,41 @@ class CustomerJob implements ShouldQueue
         $this->recipients = $recipients;
         $this->token = $token;
         $this->mailType = $mailType;
-
-        // Job should be queued; configuration controls queue connection
-        // $this->onQueue('emails');
     }
 
     public function handle()
     {
         try {
             $customer = Customer::find($this->customerId);
-            if (! $customer) {
-                Log::warning('CustomerJob: customer not found', ['customer_id' => $this->customerId]);
-                return;
-            }
+            if (! $customer) return;
 
             foreach ($this->recipients as $r) {
                 try {
                     $email = $r['email'] ?? null;
-                    $name = $r['name'] ?? null;
-                    $nik = $r['nik'] ?? null;
-                    $level = $r['level'] ?? null;
-                    $isFirst = $r['is_first'] ?? false;
-
                     if (! $email) continue;
 
-                    // If possible, retrieve fresh user model
+                    // Cari User object jika ada NIK (untuk approver)
                     $approver = null;
-                    if (!empty($nik)) {
-                        $approver = User::where('nik', $nik)->first();
+                    if (!empty($r['nik'])) {
+                        $approver = User::where('nik', $r['nik'])->first();
                     }
 
                     $data = [
                         'mail_type' => $this->mailType,
                         'token' => $this->token,
-                        'level' => $level,
-                        'is_first' => $isFirst,
-                        'approver_name' => $name,
+                        'approver_name' => $r['name'] ?? 'User',
                     ];
 
+                    Log::info("QUEUE WORKER: Mengirim email tipe '{$this->mailType}' untuk Customer #{$this->customerId} ke: {$email}");
+
                     Mail::to($email)->send(new CustomerMail($customer, $approver, $data));
+
                 } catch (\Exception $e) {
-                    Log::error('CustomerJob: error sending mail to recipient', ['recipient' => $r, 'error' => $e->getMessage()]);
+                    Log::error('Mail Error: ' . $e->getMessage());
                 }
             }
         } catch (\Exception $e) {
-            Log::error('CustomerJob: unexpected error', ['error' => $e->getMessage()]);
+            Log::error('Job Error: ' . $e->getMessage());
         }
     }
 }

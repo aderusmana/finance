@@ -57,14 +57,14 @@
                     <table class="w-100 display" id="customerTable">
                         <thead>
                             <tr>
-                                <th>No.</th>
+                                <th width="5%" class="text-center">No</th>
                                 <th>Code</th>
-                                <th>Name</th>
-                                <th>Class</th>
-                                <th>Group</th>
-                                <th>City</th>
-                                <th>Status</th>
-                                <th>Action</th>
+                                <th>Customer</th>
+                                <th>Credit</th>
+                                <th>TOP</th>
+                                <th class="text-center">Status</th>
+                                <th>Route To</th>
+                                <th width="10%" class="text-center">Action</th>
                             </tr>
                         </thead>
                     </table>
@@ -190,16 +190,31 @@
                                             <input type="file" class="form-control" name="file_npwp" required>
                                             <small class="text-muted f-s-11">Upload NPWP untuk auto-fill nama &
                                                 alamat.</small>
+                                            <div id="preview_npwp" class="mt-2" style="display: none;">
+                                                <a href="#" target="_blank" class="btn btn-sm btn-outline-primary file-link">
+                                                    <i class="ph-bold ph-file-text me-1"></i> View Uploaded NPWP
+                                                </a>
+                                            </div>
                                         </div>
                                         <div class="col-md-4">
                                             <label class="form-label">Upload NIB/SIUP <span
                                                     class="text-danger">*</span></label>
                                             <input type="file" class="form-control" name="file_nib" required>
+                                            <div id="preview_nib" class="mt-2" style="display: none;">
+                                                <a href="#" target="_blank" class="btn btn-sm btn-outline-primary file-link">
+                                                    <i class="ph-bold ph-file-text me-1"></i> View Uploaded NIB
+                                                </a>
+                                            </div>
                                         </div>
                                         <div class="col-md-4">
                                             <label class="form-label">Upload KTP <span
                                                     class="text-danger">*</span></label>
                                             <input type="file" class="form-control" name="file_ktp" required>
+                                            <div id="preview_ktp" class="mt-2" style="display: none;">
+                                                <a href="#" target="_blank" class="btn btn-sm btn-outline-primary file-link">
+                                                    <i class="ph-bold ph-id-card me-1"></i> View Uploaded KTP
+                                                </a>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -770,54 +785,78 @@
                     processing: true,
                     serverSide: true,
                     ajax: {
-                        url: "{{ route('customers.index') }}", // Sesuaikan dengan route Anda
+                        url: "{{ route('customers.index') }}",
                         data: function(d) {
                             d.status = $('#statusFilter').val();
                         }
                     },
-                    columns: [{
+                    columns: [
+                        // NO
+                        {
                             data: 'DT_RowIndex',
                             name: 'DT_RowIndex',
                             orderable: false,
                             searchable: false,
-                            className: 'text-center'
+                            className: 'text-center dt-no-wrap' // Mencegah nomor turun baris
                         },
+                        // CODE
                         {
                             data: 'code',
-                            name: 'code'
-                        },
-                        {
-                            data: 'name',
-                            name: 'name'
-                        },
-                        {
-                            data: 'customer_class',
-                            name: 'customer_class',
-                            className: 'text-center'
-                        },
-                        {
-                            data: 'account_group',
-                            name: 'account_group'
-                        },
-                        {
-                            data: 'city',
-                            name: 'city'
-                        },
-                        {
-                            data: 'status',
-                            name: 'status',
+                            name: 'code',
+                            className: 'dt-no-wrap fw-bold',
                             render: function(data) {
-                                let badge = data === 'Active' ? 'bg-success' : 'bg-secondary';
-                                return `<span class="badge ${badge}">${data}</span>`;
+                                return data && data.trim() !== '' ? `<span class="fw-bold text-dark">${data}</span>` : `<span class="text-muted fst-italic">Auto-generated</span>`;
                             }
                         },
+                        // NAME
+                        {
+                            data: 'name',
+                            name: 'name',
+                            className: 'dt-no-wrap fw-bold',
+                            render: function(data) { return `<span class="fw-bold text-dark">${data}</span>`; }
+                        },
+
+                        // CREDIT LIMIT
+                        {
+                            data: 'credit_limit_formatted',
+                            name: 'credit_limit',
+                            className: 'dt-wrap'
+                        },
+
+                        // TOP & BG STATUS
+                        {
+                            data: 'financial_info',
+                            name: 'term_of_payment',
+                            className: 'dt-no-wrap text-center' // Jaga tetap satu blok
+                        },
+
+                        // STATUS APPROVAL
+                        {
+                            data: 'status_approval',
+                            name: 'status_approval',
+                            className: 'text-center dt-no-wrap' // Badge status jangan wrap
+                        },
+
+                        // ROUTE TO (POSISI)
+                        {
+                            data: 'route_to',
+                            name: 'route_to',
+                            className: 'text-center dt-wrap', // Izinkan nama orang panjang wrap
+                            width: '15%' // Beri lebar spesifik
+                        },
+
+                        // ACTION
                         {
                             data: 'action',
                             name: 'action',
                             orderable: false,
-                            searchable: false
+                            searchable: false,
+                            className: 'text-center dt-no-wrap'
                         }
-                    ]
+                    ],
+                    order: [[1, 'desc']],
+                    // Opsional: Atur lebar kolom otomatis
+                    autoWidth: false
                 });
 
                 $('#statusFilter').on('change', function() {
@@ -889,16 +928,27 @@
                     }
                 });
 
-                // 4. Modal Handler
+                // 4. Modal Handler - CREATE
                 $('#btn-create-customer').on('click', function() {
                     $('#customerForm')[0].reset();
                     $('.select2-styled').val(null).trigger('change');
 
-                    // Reset Visibility
+                    // --- PERBAIKAN: Enable semua inputan ---
+                    $('#customerForm').find('input, textarea, select').prop('disabled', false);
+
+                    // Pastikan field user info tetap readonly (karena auto-fill), bukan disabled
+                    $('#user_position, #user_branch, #user_region').prop('readonly', true);
+                    $('#credit_limit').prop('readonly', true); // Credit limit juga readonly
+
+                    $('#preview_npwp, #preview_nib, #preview_ktp').hide();
+                    $('input[type="file"]').prop('disabled', false).prop('required', true);
+
+                    // Tampilkan tombol Save
+                    $('#btn-save-customer').show().prop('disabled', true);
+
+                    // Reset Visibility Sections
                     $('#user-info-section').hide();
-                    // classification section moved into main form, no separate section to hide
                     $('#main-form-section').hide();
-                    $('#btn-save-customer').prop('disabled', true);
 
                     $('#customerModalLabel').text('Create New Customer');
                     $('#customerModal').modal('show');
@@ -909,27 +959,45 @@
                     const btn = $(this);
                     // Mengambil semua data-attribute yang dirender dari controller
 
-                    // Reset & Set Values
                     $('#customerForm')[0].reset();
-                    $('#customerModalLabel').text('View Customer Details');
+                    $('#customerModalLabel').html('<i class="ph-bold ph-eye"></i> View Customer Details (Read Only)');
 
-                    // Isi select2 User (Trigger change untuk memicu logika display)
+                    // Reset Preview File (Sembunyikan dulu)
+                    $('#preview_npwp, #preview_nib, #preview_ktp').hide();
+                    $('#preview_npwp a, #preview_nib a, #preview_ktp a').attr('href', '#'); // Reset link
+
+                    // Reset Validation state
+                    $('input[type="file"]').prop('required', false);
+
+                    // B. Isi Data User (Select2)
                     $('#user_id').val(btn.data('user_id')).trigger('change');
 
-                    // Isi select2 Klasifikasi (account_group and class moved into main form)
                     setTimeout(() => {
+                        // 1. Account Group & Class
                         $('#account_group').val(btn.data('account_group')).trigger('change');
                         $('#customer_class').val(btn.data('customer_class')).trigger('change');
-                        // ensure bank_garansi and ccar filled
-                        const agSel = $('#account_group').find(':selected');
-                        if (agSel.length) {
-                            $('#bank_garansi').val(agSel.data('bank_garansi') || btn.data(
-                                'bank_garansi') || '');
-                            $('#ccar').val(agSel.data('ccar') || btn.data('ccar') || '');
-                        } else {
-                            $('#bank_garansi').val(btn.data('bank_garansi') || '');
-                            $('#ccar').val(btn.data('ccar') || '');
+
+                        // 2. Financial Terms (Termasuk Output Tax)
+                        $('#term_of_payment').val(btn.data('term_of_payment')).trigger('change');
+
+                        let outTax = btn.data('output_tax');
+                        $('#output_tax').val(outTax).trigger('change');
+
+                        let bgVal = btn.data('bank_garansi');
+                        if(!bgVal) {
+                            const agSel = $('#account_group').find(':selected');
+                            bgVal = agSel.data('bank_garansi') == 1 ? 'YA' : 'TIDAK';
                         }
+                        $('#bank_garansi').val(bgVal).trigger('change');
+
+                        let ccarVal = btn.data('ccar');
+                        if(!ccarVal) {
+                            const agSel = $('#account_group').find(':selected');
+                            ccarVal = agSel.data('ccar');
+                        }
+                        $('#ccar').val(ccarVal).trigger('change');
+
+                        $('#customerForm').find('input, textarea, select').prop('disabled', true);
                     }, 100);
 
                     // Isi Field Text standar
@@ -973,6 +1041,7 @@
                     $('#tanggal_npwp').val(btn.data('tanggal_npwp'));
                     $('#nppkp').val(btn.data('nppkp'));
                     $('#tanggal_nppkp').val(btn.data('tanggal_nppkp'));
+                    $('#no_pengukuhan_kaber').val(btn.data('no_pengukuhan_kaber') || '-');
 
                     // Isi Financial
                     $('#output_tax').val(btn.data('output_tax'));
@@ -982,6 +1051,29 @@
                     $('#ccar').val(btn.data('ccar'));
                     $('#bank_garansi').val(btn.data('bank_garansi'));
 
+                    const npwpPath = btn.data('file_npwp_path');
+                    if (npwpPath && npwpPath.length > 10) { // Cek panjang string minimal
+                        $('#preview_npwp a.file-link').attr('href', npwpPath);
+                        $('#preview_npwp').show(); // Tampilkan tombol view
+                    }
+
+                    const nibPath = btn.data('file_nib_path');
+                    if (nibPath && nibPath.length > 10) {
+                        $('#preview_nib a.file-link').attr('href', nibPath);
+                        $('#preview_nib').show();
+                    }
+
+                    const ktpPath = btn.data('file_ktp_path');
+                    if (ktpPath && ktpPath.length > 10) {
+                        $('#preview_ktp a.file-link').attr('href', ktpPath);
+                        $('#preview_ktp').show();
+                    }
+
+                    $('input[type="file"]').prop('disabled', true); // Disable upload baru
+                    $('#btn-save-customer').hide(); // Sembunyikan tombol save
+                    $('#customerForm').find('input, textarea').prop('disabled', true); // Disable text input
+
+                    // Tampilkan Modal
                     $('#customerModal').modal('show');
                 });
 
@@ -1009,32 +1101,53 @@
                 // open modal when credit_limit input is focused or clicked
                 $(document).on('click focus', '#credit_limit', function(e) {
                     e.preventDefault();
-                    // clear existing product rows and add one empty row
-                    $('#calc_products').empty();
-                    addCalcRow();
 
-                    // require TOP selected; if not, prompt user to choose TOP first
-                    const termVal = $('#term_of_payment').val();
-                    if (!termVal) {
+                    // 1. Ambil Data TOP dari Luar (Dropdown)
+                    const termString = $('#term_of_payment').val();
+
+                    // Validasi: Jika TOP belum dipilih, warning
+                    if (!termString) {
                         Swal.fire({
                             icon: 'warning',
                             title: 'TOP belum dipilih',
-                            text: 'Pilih TOP terlebih dahulu sebelum membuka kalkulator kredit.'
+                            text: 'Harap pilih Term of Payment terlebih dahulu sebelum menghitung limit.'
                         });
+                        // Opsional: Buka dropdown TOP agar user langsung memilih
+                        $('#term_of_payment').select2('open');
                         return;
                     }
 
-                    // default TOP for calculation: read from term_of_payment select (value expected numeric days)
-                    let topVal = parseFloat(termVal) || 0;
+                    // 2. Reset Modal
+                    $('#calc_products').empty();
+                    addCalcRow();
+
+                    // 3. AUTO GENERATE TOP (DAYS)
+                    // Ekstrak angka dari string (misal: "Net 60 Days" -> ambil "60")
+                    let topVal = 0;
+                    const numberMatch = termString.match(/(\d+)/); // Regex cari angka
+
+                    if (numberMatch && numberMatch[0]) {
+                        topVal = parseInt(numberMatch[0]);
+                    }
+
+                    // Isi kolom TOP di dalam modal
                     $('#calc_top').val(topVal);
-                    // lead time
+
+                    // Opsional: Buat readonly agar user tidak bingung (karena sudah auto dari depan)
+                    // $('#calc_top').prop('readonly', true);
+
+                    // 4. Set Lead Time (Ambil dari input hidden/form lead_time jika ada)
                     let ltVal = parseFloat($('#lead_time').val()) || 0;
                     $('#calc_lt').val(ltVal);
-                    // initialize formatted preview (display only)
+
+                    // 5. Reset Preview Format
                     $('#calc_preview_formatted').val('0');
-                    // compute initial preview
+
+                    // 6. Hitung Awal (Jika iseng user sudah isi LT di luar)
                     const initialR = computeCreditValues();
                     $('#calc_preview_formatted').val(fmt(Math.round(initialR.val30 || 0)));
+
+                    // 7. Tampilkan Modal
                     new bootstrap.Modal(document.getElementById('creditCalcModal')).show();
                 });
 
@@ -1107,18 +1220,66 @@
                     $('#calc_products').trigger('input');
                 });
 
-                // calc_choice removed; preview uses 30-day default
-
                 // save calculated value into credit_limit input
                 $('#creditCalcForm').on('submit', function(e) {
                     e.preventDefault();
                     const r = computeCreditValues();
-                    // default to 30-day calculation when there's no UI choice
                     const chosen = r.val30 || 0;
 
-                    // set credit_limit input (rounded raw value for submission)
+                    // 1. Set Tampilan Credit Limit
                     $('#credit_limit').val(Math.round(chosen));
-                    // close modal robustly
+
+                    const ltVal = $('#calc_lt').val() || 0;
+                    const topVal = $('#calc_top').val() || 0;
+
+                    $('#lead_time').val(ltVal);
+
+                    // (Opsional) Update TOP Calc hidden jika Anda pakai
+                    if($('#top_calc_hidden').length === 0) {
+                        $('<input>').attr({type: 'hidden', id: 'top_calc_hidden', name: 'top_calc'}).appendTo('#customerForm');
+                    }
+                    $('#top_calc_hidden').val(topVal);
+
+                    // 2. BERSIHKAN Input Hidden Item Lama (Penting agar tidak duplikat saat edit/hitung ulang)
+                    $('#customerForm').find('.hidden-item-input').remove();
+
+                    // 3. GENERATE INPUT HIDDEN untuk setiap Item di Kalkulator
+                    $('#calc_products .calc-row').each(function(index) {
+                        const name = $(this).find('.calc-product-name').val();
+                        const qty = $(this).find('.calc-qty').val();
+                        const price = $(this).find('.calc-price').val();
+
+                        if(name && qty) {
+                            // Append ke Main Form (#customerForm)
+                            const container = $('#customerForm');
+
+                            // Item Name
+                            $('<input>').attr({
+                                type: 'hidden',
+                                class: 'hidden-item-input',
+                                name: `items[${index}][item_name]`,
+                                value: name
+                            }).appendTo(container);
+
+                            // Quantity
+                            $('<input>').attr({
+                                type: 'hidden',
+                                class: 'hidden-item-input',
+                                name: `items[${index}][quantity]`,
+                                value: qty
+                            }).appendTo(container);
+
+                            // Price
+                            $('<input>').attr({
+                                type: 'hidden',
+                                class: 'hidden-item-input',
+                                name: `items[${index}][price]`,
+                                value: price
+                            }).appendTo(container);
+                        }
+                    });
+
+                    // 4. Tutup Modal
                     const modalEl = document.getElementById('creditCalcModal');
                     const inst = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
                     try {
@@ -1140,7 +1301,7 @@
     @endpush
 
     <!-- Credit Limit Calculator Modal -->
-    <div class="modal fade" id="creditCalcModal" tabindex="-1" aria-hidden="true">
+    <div class="modal fade" id="creditCalcModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header bg-primary">
@@ -1168,7 +1329,7 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Lead Time (LT)</label>
-                                <input type="number" step="1" id="calc_lt" class="form-control" />
+                                <input type="text" step="1" id="calc_lt" class="form-control" readonly/>
                             </div>
                         </div>
 
