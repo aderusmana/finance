@@ -342,9 +342,9 @@
                                         <td
                                             style="padding: 10px; font-size: 11px; color: #475569; text-align: left; line-height: 1.6;">
                                             <strong>Panduan Keputusan:</strong><br>
-                                            <span style="color: #059669;">✅ <strong>Approve:</strong></span> Setujui
+                                            <span style="color: #059669;">✅ <strong>Approve not Review:</strong></span> Setujui
                                             permintaan langsung.<br>
-                                            <span style="color: #2563eb;">📝 <strong>Review:</strong></span> Setujui
+                                            <span style="color: #2563eb;">📝 <strong>Approve with Review:</strong></span> Setujui
                                             dengan catatan. <span style="color: #d97706;">(Khusus Manager Finance & Dept
                                                 Head: Dapat mengubah TOP & Credit Limit)</span>.<br>
                                             <span style="color: #dc2626;">⛔ <strong>Reject:</strong></span> Tolak
