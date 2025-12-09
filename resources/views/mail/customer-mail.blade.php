@@ -364,7 +364,7 @@
                                                     <td align="center" bgcolor="#10b981" style="border-radius: 4px;">
                                                         <a href="{{ route('customers.view_approval', ['token' => $token, 'pre_action' => 'approve']) }}"
                                                             style="display: inline-block; padding: 10px 18px; font-family: Arial, sans-serif; font-size: 12px; color: #ffffff; text-decoration: none; font-weight: bold; border: 1px solid #10b981; border-radius: 4px;">✅
-                                                            Approve</a>
+                                                            Approve not Review</a>
                                                     </td>
                                                 </tr>
                                             </table>
@@ -375,7 +375,7 @@
                                                     <td align="center" bgcolor="#3b82f6" style="border-radius: 4px;">
                                                         <a href="{{ route('customers.view_approval', ['token' => $token, 'pre_action' => 'review']) }}"
                                                             style="display: inline-block; padding: 10px 18px; font-family: Arial, sans-serif; font-size: 12px; color: #ffffff; text-decoration: none; font-weight: bold; border: 1px solid #3b82f6; border-radius: 4px;">📝
-                                                            Review</a>
+                                                            Approve with Review</a>
                                                     </td>
                                                 </tr>
                                             </table>
