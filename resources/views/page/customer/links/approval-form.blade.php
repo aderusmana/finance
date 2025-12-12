@@ -618,36 +618,91 @@
 
             // 4. SUBMIT HANDLER
             form.addEventListener('submit', function (e) {
-                const selected = document.querySelector('input[name="action"]:checked').value;
+                e.preventDefault(); // Stop default submit
 
-                // Validasi Notes
-                if (selected === 'review' || selected === 'reject') {
-                    const notesVal = notesField.value.trim();
-                    if (!notesVal || !/[a-zA-Z]/.test(notesVal)) {
-                        e.preventDefault();
-                        Swal.fire('Error', 'Notes wajib diisi dengan kalimat yang jelas.', 'warning');
-                        return;
-                    }
+                const selected = document.querySelector('input[name="action"]:checked').value;
+                const notesVal = notesField ? notesField.value.trim() : '';
+
+                // --- VALIDASI 1: NOTES (Review & Reject Wajib) ---
+                if ((selected === 'review' || selected === 'reject') && (!notesVal || !/[a-zA-Z]/.test(notesVal))) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Notes Required',
+                        text: 'Mohon isi catatan dengan jelas (harus mengandung huruf).',
+                        confirmButtonColor: '#3085d6'
+                    });
+                    return;
                 }
 
-                // Validasi IT
+                // --- VALIDASI 2: IT FIELDS ---
                 if (isITMode && selected !== 'reject') {
                     if (!itCodeInput.value.trim() || !itJoinInput.value) {
-                        e.preventDefault();
-                        Swal.fire({ icon: 'warning', title: 'Data Belum Lengkap', text: 'Anda wajib mengisi Customer Code dan Join Date.' });
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Data Incomplete',
+                            text: 'Sebagai IT, Anda wajib mengisi Customer Code dan Join Date.'
+                        });
                         if(!itCodeInput.value) itCodeInput.classList.add('is-invalid');
                         if(!itJoinInput.value) itJoinInput.classList.add('is-invalid');
                         return;
                     }
                 }
 
-                // PENTING: Enable field finance agar terkirim ke server (Hanya jika Finance)
-                if (selected === 'review' && canAdjust) {
-                    editableFields.forEach(el => el.disabled = false);
+                // --- KONFIGURASI ALERT ---
+                let title = '';
+                let text = '';
+                let icon = '';
+                let confirmBtnColor = '';
+                let confirmBtnText = '';
+
+                if (selected === 'reject') {
+                    title = 'Confirm Rejection?';
+                    text = 'Tindakan ini akan menolak pengajuan Customer. Apakah Anda yakin?';
+                    icon = 'warning';
+                    confirmBtnColor = '#d33';
+                    confirmBtnText = 'Yes, Reject it!';
+                } else {
+                    // Review / Approve
+                    title = 'Confirm Submission?';
+                    confirmBtnText = 'Yes, Submit!';
+                    confirmBtnColor = '#3085d6';
+                    icon = 'question';
+
+                    if (canAdjust) {
+                        const newLimit = displayLimitDiv.innerText;
+                        text = `Data akan disetujui dengan Credit Limit: ${newLimit}`;
+                    } else if (isITMode) {
+                        text = `Customer akan diaktifkan dengan Kode: ${itCodeInput.value}`;
+                    } else {
+                        text = 'Apakah Anda yakin ingin mengirim keputusan ini?';
+                    }
                 }
 
-                btnSubmit.disabled = true;
-                btnSubmit.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Processing...';
+                // --- EKSEKUSI SWEETALERT ---
+                Swal.fire({
+                    title: title,
+                    text: text,
+                    icon: icon,
+                    showCancelButton: true,
+                    confirmButtonColor: confirmBtnColor,
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: confirmBtnText,
+                    reverseButtons: true
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Tampilkan Loading
+                        loadingOverlay.style.display = 'flex';
+                        btnSubmit.disabled = true;
+
+                        // PENTING: Enable field finance agar value terkirim ke controller
+                        if (selected === 'review' && canAdjust) {
+                            editableFields.forEach(el => el.disabled = false);
+                        }
+
+                        // Submit Form secara manual setelah delay sedikit (opsional)
+                        form.submit();
+                    }
+                });
             });
         });
     </script>

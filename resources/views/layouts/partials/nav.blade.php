@@ -64,8 +64,27 @@
                     <i class="iconoir-community"></i> Customers
                 </a>
                 <ul class="collapse" id="customers-menu">
-                    <li><a href="{{ route('customers.index') }}">List</a></li>
-                    <li><a href="#">New Customer</a></li>
+                    <li><a href="{{ route('customers.index') }}">Customer List</a></li>
+                </ul>
+            </li>
+
+            <li class="menu-title"><span>Approvals</span></li>
+            <li>
+                <a aria-expanded="false" data-bs-toggle="collapse" href="#approvals-menu">
+                    <i class="iconoir-community"></i> Customer Approvals
+                </a>
+                <ul class="collapse" id="approvals-menu">
+                    <li><a href="{{ route('customers.approval') }}">Approvals list</a></li>
+                </ul>
+            </li>
+
+            <li class="menu-title"><span>Logs</span></li>
+            <li>
+                <a aria-expanded="false" data-bs-toggle="collapse" href="#logs-menu">
+                    <i class="iconoir-community"></i> Customer Logs
+                </a>
+                <ul class="collapse" id="logs-menu">
+                    <li><a href="{{ route('customers.log') }}">Customer Logs</a></li>
                 </ul>
             </li>
         </ul>

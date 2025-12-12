@@ -63,6 +63,13 @@ Route::middleware('auth')->group(function () {
         Route::get('/top-customers-bg', [DashboardController::class, 'topCustomersByBg'])->name('top-customers-bg');
     });
 
+    Route::get('/customers/approval', [CustomerController::class, 'approvalPage'])->name('customers.approval');
+    Route::get('/customers-approval/data', [CustomerController::class, 'getApprovalData'])->name('customers.approval.data');
+    Route::post('/approvals/resend/{token}', [CustomerController::class, 'resendApprovalEmail'])->name('approvals.resend');
+
+    Route::get('/customers/log', [CustomerController::class, 'logPage'])->name('customers.log');
+    Route::get('/customers-log/data', [CustomerController::class, 'getLogData'])->name('customers.log.data');
+
     Route::resource('revision', RevisionController::class);
     Route::resource('account-groups', AccountGroupController::class);
     Route::resource('regions', RegionsController::class);

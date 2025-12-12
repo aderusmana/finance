@@ -21,16 +21,17 @@ class CustomerWelcomeMail extends Mailable implements ShouldQueue
 
     public function __construct(Customer $customer)
     {
+        $customer->load(['createdBy', 'user']);
+
         $this->customer = $customer;
-        $this->salesRep = $customer->user;
+        $this->salesRep = $customer->createdBy ?? $customer->user;
         $this->managerFinance = User::role('manager-finance')->first();
     }
 
     public function envelope(): Envelope
     {
         return new Envelope(
-            // Subject sesuai dokumen [cite: 3]
-            subject: 'Welcome to SMII!',
+            subject: 'Welcome to Sinar Meadow!',
         );
     }
 

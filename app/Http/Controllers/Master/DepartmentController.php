@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Master\Department;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Auth; // Tambahkan ini
 use Yajra\DataTables\Facades\DataTables;
 
 class DepartmentController extends Controller
@@ -53,6 +54,15 @@ class DepartmentController extends Controller
             'slug' => Str::slug($request->name),
         ]);
 
+        // Activity Log
+        activity()
+            ->causedBy(Auth::user())
+            ->performedOn($department)
+            ->useLog('master_department')
+            ->event('create')
+            ->withProperties(['name' => $department->name])
+            ->log('Created new department: ' . $department->name);
+
         return response()->json(['success' => true, 'message' => 'Department created successfully!']);
     }
 
@@ -62,10 +72,24 @@ class DepartmentController extends Controller
             'name' => 'required|string|max:255|unique:departments,name,' . $department->id,
         ]);
 
+        $oldData = $department->getOriginal(); // Simpan data lama
+
         $department->update([
             'name' => $request->name,
             'slug' => Str::slug($request->name),
         ]);
+
+        // Activity Log
+        activity()
+            ->causedBy(Auth::user())
+            ->performedOn($department)
+            ->useLog('master_department')
+            ->event('update')
+            ->withProperties([
+                'old' => $oldData,
+                'attributes' => $department->getChanges()
+            ])
+            ->log('Updated department: ' . $department->name);
 
         return response()->json(['success' => true, 'message' => 'Department updated successfully!']);
     }
@@ -73,7 +97,17 @@ class DepartmentController extends Controller
     public function destroy($id)
     {
         $department = Department::findOrFail($id);
+        $oldData = $department->toArray(); // Simpan data sebelum hapus
+
         $department->delete();
+
+        // Activity Log
+        activity()
+            ->causedBy(Auth::user())
+            ->useLog('master_department')
+            ->event('delete')
+            ->withProperties(['deleted_data' => $oldData])
+            ->log('Deleted department: ' . $oldData['name']);
 
         return response()->json(['success' => true, 'message' => 'Department deleted successfully!']);
     }

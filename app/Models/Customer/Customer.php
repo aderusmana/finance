@@ -67,6 +67,11 @@ class Customer extends Model
         return $this->hasMany(CreditLimit::class, 'customer_id');
     }
 
+    public function sales()
+    {
+        return $this->belongsTo(Sales::class, 'user_id');
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');

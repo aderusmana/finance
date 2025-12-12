@@ -5,38 +5,51 @@
 
     @include('components.sample-table-styles')
 
-
     <div class="row m-1">
         <div class="col-12">
-            <h4 class="main-title">Customer Management</h4>
-            {{-- <ul class="app-line-breadcrumbs mb-3">
+            <h4 class="main-title">Approvals Management</h4>
+            <ul class="app-line-breadcrumbs mb-3">
                 <li>
                     <a class="f-s-14 f-w-500" href="#">
-                        <i class="ph-duotone ph-users f-s-16"></i> Master Data
+                        <i class="ph-duotone ph-address-book f-s-16"></i> Approvals
                     </a>
                 </li>
                 <li class="active">
-                    <a class="f-s-14 f-w-500" href="#">Customer List</a>
+                    <a class="f-s-14 f-w-500" href="#">Approvals List</a>
                 </li>
-            </ul> --}}
+            </ul>
         </div>
     </div>
 
     <div class="row">
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center mb-4">
-                {{-- Filter Section --}}
-                {{-- <div class="d-flex align-items-center gap-2">
-                    <span class="text-muted fw-bold">Filter:</span>
-                    <select id="statusFilter" class="form-select select2" style="width: 100px;">
-                        <option value="all">All Status</option>
-                        <option value="Active">Active</option>
-                        <option value="Inactive">Inactive</option>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="text-muted fw-bold me-1"><i class="ph-bold ph-funnel"></i> Filter:</span>
+                    
+                    {{-- Filter 1: Account Status (Active/Inactive) --}}
+                    <select id="statusFilter" class="form-select select2" style="width: 150px;">
+                        <option value="all">All Account</option>
+                        {{-- Looping Status Akun yang ada di DB --}}
+                        @foreach($accountStatuses as $status)
+                            <option value="{{ $status }}">{{ $status }}</option>
+                        @endforeach
                     </select>
-                    <button id="resetFilters" class="btn btn-secondary border" title="Reset">
+
+                    {{-- Filter 2: Approval Status (Pending/Processing/dll) --}}
+                    <select id="approvalStatusFilter" class="form-select select2" style="width: 175px;">
+                        <option value="all">All Approval</option>
+                        {{-- Looping Status Approval yang ada di DB --}}
+                        @foreach($approvalStatuses as $status)
+                            <option value="{{ $status }}">{{ $status }}</option>
+                        @endforeach
+                    </select>
+
+                    {{-- Reset Button --}}
+                    <button id="resetFilters" class="btn btn-sm btn-secondary border" title="Reset Filters">
                         <i class="ph-bold ph-arrow-counter-clockwise"></i>
                     </button>
-                </div> --}}
+                </div>
 
                 {{-- Create Button --}}
                 <div class="ms-auto d-flex">
@@ -48,11 +61,84 @@
             </div>
 
             <div class="main-table-container">
-                <div class="table-header-enhanced">
-                    <h4 class="table-title">
-                        <i class="ph-duotone ph-users-three"></i> Customer List
-                    </h4>
+                <div class="table-header-enhanced d-flex justify-content-between align-items-center">
+                    
+                    {{-- Kiri: Judul & Deskripsi Singkat --}}
+                    <div>
+                        <h4 class="table-title mb-1">
+                            <i class="ph-duotone ph-users-three me-2"></i> Customer List
+                        </h4>
+                        <small class="text-white opacity-75 f-s-12">
+                            Manage customer data, credit limits, and monitor approval progress.
+                        </small>
+                    </div>
+
+                    {{-- Kanan: Quick Stats --}}
+                    <div class="d-none d-md-flex gap-4 text-white align-items-center pe-2">
+                        
+                        {{-- Stat 1: Pending (Kuning - Jam) --}}
+                        <div class="d-flex align-items-center gap-2" data-bs-toggle="tooltip" title="Waiting for Approval">
+                            <div class="bg-white bg-opacity-25 rounded-circle p-1 d-flex justify-content-center align-items-center" style="width: 32px; height: 32px;">
+                                <i class="ph-fill ph-clock-countdown text-warning f-s-18"></i>
+                            </div>
+                            <div class="d-flex flex-column line-height-sm">
+                                <span class="f-s-11 opacity-75 text-uppercase fw-bold">Pending</span>
+                                <span class="f-s-14 fw-bold">{{ $pendingCount }}</span> 
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-items-center gap-2" data-bs-toggle="tooltip" title="Processing">
+                            <div class="bg-white bg-opacity-25 rounded-circle p-1 d-flex justify-content-center align-items-center" style="width: 32px; height: 32px;">
+                                <i class="ph-fill ph-gear text-info f-s-18"></i>
+                            </div>
+                            <div class="d-flex flex-column line-height-sm">
+                                <span class="f-s-11 opacity-75 text-uppercase fw-bold">Processing</span>
+                                <span class="f-s-14 fw-bold">{{ $processingCount }}</span> 
+                            </div>
+                        </div>
+
+                        {{-- Stat 2: Approved (Biru Muda - Segel/Stempel) --}}
+                        <div class="d-flex align-items-center gap-2" data-bs-toggle="tooltip" title="Approved (Administrative)">
+                             <div class="bg-white bg-opacity-25 rounded-circle p-1 d-flex justify-content-center align-items-center" style="width: 32px; height: 32px;">
+                                {{-- GANTI ICON & WARNA DISINI --}}
+                                <i class="ph-fill ph-seal-check text-success f-s-18"></i>
+                            </div>
+                            <div class="d-flex flex-column line-height-sm">
+                                <span class="f-s-11 opacity-75 text-uppercase fw-bold">Approved</span>
+                                <span class="f-s-14 fw-bold">{{ $approvedCount }}</span> 
+                            </div>
+                        </div>
+
+                        <div class="vr opacity-100 bg-white" style="height: 50px;"></div>
+
+                        {{-- Stat 3: Active (Hijau - Centang) --}}
+                        <div class="d-flex align-items-center gap-4">
+
+                            <div class="d-flex align-items-center gap-2" data-bs-toggle="tooltip" title="Active Customers">
+                                <div class="bg-white bg-opacity-10 rounded-circle p-1 d-flex justify-content-center align-items-center" style="width: 32px; height: 32px;">
+                                    <i class="ph-fill ph-check-circle text-success f-s-18"></i>
+                                </div>
+                                <div class="d-flex flex-column line-height-sm">
+                                    <span class="f-s-11 opacity-75 text-uppercase fw-bold">Active</span>
+                                    <span class="f-s-14 fw-bold">{{ $activeCount }}</span> 
+                                </div>
+                            </div>
+
+                            <div class="d-flex align-items-center gap-2" data-bs-toggle="tooltip" title="Inactive Customers">
+                                <div class="bg-white bg-opacity-10 rounded-circle p-1 d-flex justify-content-center align-items-center" style="width: 32px; height: 32px;">
+                                    <i class="ph-fill ph-x-circle text-danger f-s-18"></i>
+                                </div>
+                                <div class="d-flex flex-column line-height-sm">
+                                    <span class="f-s-11 opacity-75 text-uppercase fw-bold">Inactive</span>
+                                    <span class="f-s-14 fw-bold">{{ $inactiveCount }}</span> 
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </div>
                 </div>
+
                 <div class="table-responsive">
                     <table class="w-100 display" id="customerTable">
                         <thead>
@@ -859,14 +945,20 @@
                     autoWidth: false
                 });
 
-                $('#statusFilter').on('change', function() {
+                $('#statusFilter, #approvalStatusFilter').on('change', function() {
                     table.ajax.reload();
                 });
-                $('#resetFilters').on('click', function() {
-                    $('#statusFilter').val('all').trigger('change');
-                });
 
-                // 3. Logic: Progressive Form Display
+                $('#resetFilters').on('click', function() {
+                    $('#statusFilter').val('all'); 
+                    $('#approvalStatusFilter').val('all');
+
+                    $('#statusFilter').trigger('change');
+                    $('#approvalStatusFilter').trigger('change');
+
+                    // Reload tabel (opsional, karena trigger change di atas sudah memanggil reload)
+                    // table.ajax.reload();
+                });
 
                 // A. Saat User dipilih -> Tampilkan Detail User & Section Klasifikasi
                 $('#user_id').on('change', function() {
