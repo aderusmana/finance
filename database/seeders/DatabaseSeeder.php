@@ -13,5 +13,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call(AllSeeder::class);
         $this->call(MasterManagementSeeder::class);
+        $this->call(BankGaransiSeeder::class);
+        $this->call(TextsTableSeeder::class);
     }
 }

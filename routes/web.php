@@ -8,6 +8,10 @@ use App\Http\Controllers\Customer\CustomerClassController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Master\DepartmentController;
 use App\Http\Controllers\Customer\CustomerController;
+use App\Http\Controllers\BG\BankGaransiController;
+use App\Http\Controllers\BG\BgHistoryController;
+use App\Http\Controllers\BG\BgRecommendationController;
+use App\Http\Controllers\BG\BgSubmissionController;
 use App\Http\Controllers\Customer\RegionsController;
 use App\Http\Controllers\Customer\SalesController;
 use App\Http\Controllers\Customer\TOPController;
@@ -21,6 +25,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Requisition\ItemController;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Route;
+use Maatwebsite\Excel\Row;
 
 // Redirect root to the named login route (actual login routes are defined in routes/auth.php)
 Route::get('/', function () {
@@ -110,11 +115,18 @@ Route::middleware('auth')->group(function () {
         Route::put('items/{item_id}/details/{id}', [ItemController::class, 'updateDetail'])->name('items.details.update');
         Route::delete('items/{item_id}/details/{id}', [ItemController::class, 'destroyDetail'])->name('items.details.destroy');
     });
+
+    Route::group(['prefix' => 'bg'], function () {
+        Route::resource('bg-list', BankGaransiController::class);
+        Route::resource('bg-recommendations', BgRecommendationController::class);
+        Route::resource('bg-submissions', BgSubmissionController::class);
+        Route::resource('bg-histories', BgHistoryController::class)->only(['index', 'destroy']);
+        Route::get('customer/bg-form/{id}', [BgRecommendationController::class, 'showForm'])->name('customer.bg.form');
+        Route::post('customer/bg-form/{id}', [BgRecommendationController::class, 'submitDetails'])->name('customer.bg.submit');
+    });
 });
 
-
 Route::group(['middleware' => ['role:super-admin|admin']], function () {
-
     Route::resource('users', UserController::class);
     Route::get('/users-data', [UserController::class, 'getData'])->name('users.data');
     Route::resource('departments', DepartmentController::class);

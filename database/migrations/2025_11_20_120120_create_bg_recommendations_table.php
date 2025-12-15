@@ -17,7 +17,7 @@ class CreateBgRecommendationsTable extends Migration
             $table->id();
             $table->unsignedBigInteger('customer_id');
             $table->decimal('average', 18, 2)->nullable();
-            $table->decimal('average_increase_percent', 5, 2)->nullable();
+            $table->unsignedBigInteger('text_id')->nullable();
             $table->integer('top')->nullable();
             $table->integer('lead_time')->nullable();
             $table->decimal('inflation', 5, 2)->nullable();

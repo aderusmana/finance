@@ -40,24 +40,6 @@
                 </ul>
             </li>
 
-            <li class="menu-title"><span>Bank Garansi (BG)</span></li>
-            <li>
-                <a aria-expanded="false" data-bs-toggle="collapse" href="#bg-menu">
-                    <i class="iconoir-bank"></i> Bank Garansi
-                </a>
-                <ul class="collapse" id="bg-menu">
-                    <li><a href="#">BG List</a></li>
-                    <li><a href="#">BG Histories</a></li>
-                    <li><a href="#">Submissions</a></li>
-                    <li><a href="#">Recommendations</a></li>
-                    <li><a href="#">Lampiran D Overview</a></li>
-                    <li><a href="#">Lampiran D Versions</a></li>
-                    <li><a href="#">Credit Limits</a></li>
-                    <li><a href="#">Approvals / Inbox</a></li>
-                    <li><a href="#">Reports</a></li>
-                </ul>
-            </li>
-
             <li class="menu-title"><span>Customers</span></li>
             <li>
                 <a aria-expanded="false" data-bs-toggle="collapse" href="#customers-menu">
@@ -65,26 +47,26 @@
                 </a>
                 <ul class="collapse" id="customers-menu">
                     <li><a href="{{ route('customers.index') }}">Customer List</a></li>
-                </ul>
-            </li>
-
-            <li class="menu-title"><span>Approvals</span></li>
-            <li>
-                <a aria-expanded="false" data-bs-toggle="collapse" href="#approvals-menu">
-                    <i class="iconoir-community"></i> Customer Approvals
-                </a>
-                <ul class="collapse" id="approvals-menu">
-                    <li><a href="{{ route('customers.approval') }}">Approvals list</a></li>
-                </ul>
-            </li>
-
-            <li class="menu-title"><span>Logs</span></li>
-            <li>
-                <a aria-expanded="false" data-bs-toggle="collapse" href="#logs-menu">
-                    <i class="iconoir-community"></i> Customer Logs
-                </a>
-                <ul class="collapse" id="logs-menu">
+                    <li><a href="{{ route('customers.approval') }}">Approvals List</a></li>
                     <li><a href="{{ route('customers.log') }}">Customer Logs</a></li>
+                </ul>
+            </li>
+
+            <li class="menu-title"><span>Bank Garansi (BG)</span></li>
+            <li>
+                <a aria-expanded="false" data-bs-toggle="collapse" href="#bg-menu">
+                    <i class="iconoir-bank"></i> Bank Garansi
+                </a>
+                <ul class="collapse" id="bg-menu">
+                    <li><a href="{{ route('bg-list.index') }}">BG List</a></li>
+                    <li><a href="{{ route('bg-histories.index') }}">BG Histories</a></li>
+                        <li><a href="{{ route('bg-submissions.index') }}">Submissions</a></li>
+                    <li><a href="{{ route('bg-recommendations.index') }}">Recommendations</a></li>
+                    <li><a href="#">Lampiran D Overview</a></li>
+                    <li><a href="#">Lampiran D Versions</a></li>
+                    <li><a href="#">Credit Limits</a></li>
+                    <li><a href="#">Approvals / Inbox</a></li>
+                    <li><a href="#">Reports</a></li>
                 </ul>
             </li>
         </ul>
