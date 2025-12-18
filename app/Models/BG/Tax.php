@@ -5,13 +5,13 @@ namespace App\Models\BG;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Text extends Model
+class Tax extends Model
 {
     use HasFactory;
 
-    protected $table = 'texts';
+    protected $table = 'bg_taxs';
 
     protected $fillable = [
         'name', 'value'
-    ];  
+    ];
 }

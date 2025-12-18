@@ -22,6 +22,7 @@ class CreateBgSubmissionsTable extends Migration
             $table->timestamp('submitted_at')->nullable();
             $table->timestamp('upload_completed_at')->nullable();
             $table->enum('status', ['pending_print','awaiting_upload','uploaded','reviewed','completed'])->default('pending_print');
+            $table->string('token', 100)->unique();
             $table->timestamps();
 
             $table->foreign('bg_recommendation_id')->references('id')->on('bg_recommendations')->onDelete('cascade');

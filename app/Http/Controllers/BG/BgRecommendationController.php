@@ -4,121 +4,179 @@ namespace App\Http\Controllers\BG;
 
 use App\Http\Controllers\Controller;
 use App\Models\BG\BgRecommendation;
-use App\Models\BG\BankGaransi;
 use App\Models\Customer\Customer;
+use App\Models\BG\Tax;
+use App\Models\BG\BgLimitRule;
 use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
-use App\Mail\CustomerFillFormNotification; // Pastikan Mailable ini ada
+use App\Mail\CustomerFillFormNotification;
 use Carbon\Carbon;
 
 class BgRecommendationController extends Controller
 {
-    public function index(Request $request)
-    {
-        // 1. Ambil Nilai Persentase Kenaikan (11%) dari table Texts
-        $textPercent = DB::table('texts')->where('name', 'increase_percentage')->first();
-        $defaultPercent = $textPercent ? (float)$textPercent->value : 11; // Default 11 jika kosong
-
-        // 2. Jika Request AJAX untuk Datatable LIST REKOMENDASI (History)
-        if ($request->ajax() && $request->has('type') && $request->type == 'history') {
-            $query = BgRecommendation::with('customer')->select('bg_recommendations.*');
-            return DataTables::of($query)
-                ->addIndexColumn()
-                ->editColumn('recommended_credit_limit', function($row){
-                    return 'Rp ' . number_format($row->recommended_credit_limit, 0, ',', '.');
-                })
-                ->addColumn('customer_name', function($row){
-                    return $row->customer ? $row->customer->name : '-';
-                })
-                ->addColumn('status_badge', function($row){
-                    // Contoh badge sederhana
-                    return '<span class="badge bg-primary">'.$row->status.'</span>';
-                })
-                ->make(true);
+    private function getLimitRulePercent($customer) {
+        if (!$customer || !$customer->join_date) {
+            return 0;
         }
 
-        // 3. Jika Request AJAX untuk Datatable EXPIRING BGs (Action Needed)
-        if ($request->ajax() && $request->has('type') && $request->type == 'expiring') {
-            // Logika: Ambil BG yang expired dalam rentang 60 hari ke depan
-            // Atau ambil semua yang status approved dan mendekati expired
-            $startDate = Carbon::now()->format('Y-m-d');
-            $endDate = Carbon::now()->addDays(60)->format('Y-m-d');
+        $joinDate = Carbon::parse($customer->join_date);
+        $years    = (int) abs($joinDate->diffInYears(Carbon::now())); 
 
-            $query = BankGaransi::with('customer')
-                ->where('status', 'approved')
-                ->whereBetween('exp_date', [$startDate, $endDate])
-                ->select('bank_garansi.*');
+        $rule = BgLimitRule::where('min_year', '<=', $years)
+                        ->where('max_year', '>=', $years)
+                        ->orderBy('min_year', 'desc')
+                        ->first();
 
-            return DataTables::of($query)
-                ->addIndexColumn()
-                ->editColumn('bg_nominal', function($row){
-                    return 'Rp ' . number_format($row->bg_nominal, 0, ',', '.');
-                })
-                ->editColumn('exp_date', function($row){
-                    // Tandai merah jika < 30 hari (opsional style)
-                    return Carbon::parse($row->exp_date)->format('d M Y');
-                })
-                ->addColumn('action', function ($row) use ($defaultPercent) {
-                    // Tombol Process mengirim data customer & nominal ke Modal
-                    return '<button type="button" class="btn btn-sm btn-success btn-process text-white"
-                        data-id="'.$row->id.'"
-                        data-customer-id="'.$row->customer_id.'"
-                        data-customer-name="'.$row->customer->name.'"
-                        data-nominal="'.$row->bg_nominal.'"
-                        data-percent="'.$defaultPercent.'"
-                        title="Buat Rekomendasi"><i class="ph-bold ph-plus"></i> Process</button>';
-                })
-                ->rawColumns(['action'])
-                ->make(true);
-        }
+        // dd([
+        //     'customer' => $customer->name,
+        //     'join_date' => $customer->join_date,
+        //     'years_calculated' => $years,
+        //     'rule_found' => $rule
+        // ]);
 
-        $customers = Customer::all();
-
-        // Load view dengan data persentase untuk dilempar ke JS
-        return view('page.bg.bg_recommendations.index', compact('defaultPercent', 'customers'));
+        return $rule ? (float)$rule->percentage : 0;
     }
 
-    public function store(Request $request)
+    public function index(Request $request)
     {
-        // Validasi
+        $taxConfig = Tax::first(); 
+        if(!$taxConfig) {
+            $taxConfig = (object)['id' => null, 'value' => 0.11]; 
+        }
+
+        if ($request->ajax()) {
+            if ($request->has('type') && $request->type == 'expiring') {
+                
+                $query = BgRecommendation::with(['customer'])
+                    ->where('bg_recommendations.status', '=', 'pending'); 
+
+                return DataTables::of($query)
+                    ->addIndexColumn()
+                    ->addColumn('customer_name', fn($row) => $row->customer->name ?? '-')
+                    ->editColumn('current_bg', fn($row) => 'Rp ' . number_format($row->current_bg, 0, ',', '.'))
+                    ->addColumn('action', function ($row) {
+                        return '<button type="button" class="btn btn-sm btn-success btn-process text-white"
+                            data-id="'.$row->id.'" title="Process"><i class="ph-bold ph-play"></i> Process</button>';
+                    })
+                    ->rawColumns(['action'])->make(true);
+            }
+
+            if ($request->has('type') && $request->type == 'history') {
+                
+                $query = BgRecommendation::with('customer')
+                    ->where('bg_recommendations.status', '!=', 'pending'); 
+
+                return DataTables::of($query)
+                    ->addIndexColumn()
+                    ->addColumn('customer_name', fn($row) => $row->customer->name ?? '-')
+                    ->editColumn('average', fn($row) => 'Rp ' . number_format($row->average, 0, ',', '.'))
+                    ->editColumn('recommended_credit_limit', fn($row) => 'Rp ' . number_format($row->recommended_credit_limit, 0, ',', '.'))
+                    ->editColumn('set_bg', fn($row) => 'Rp ' . number_format($row->set_bg, 0, ',', '.'))
+                    
+                    ->editColumn('status', function($row){
+                        $color = $row->status == 'completed' ? 'success' : 'primary';
+                        return '<span class="badge bg-'.$color.'">'.ucfirst(str_replace('_', ' ', $row->status)).'</span>';
+                    })
+                    
+                    ->addColumn('action', function($row){
+                        return '<button class="btn btn-sm btn-warning btn-edit-rec text-white" data-id="'.$row->id.'"><i class="ph-bold ph-pencil-simple"></i></button>';
+                    })
+                    
+                    ->rawColumns(['status', 'action']) 
+                    ->make(true);
+            }
+        }
+
+        $customers = Customer::orderBy('name')->get();
+        return view('page.bg.bg_recommendations.index', compact('taxConfig', 'customers'));
+    }
+
+    public function show($id) {
+        $rec = BgRecommendation::with(['customer', 'tax'])->findOrFail($id);
+        
+        if ($rec->top == 0 && $rec->customer) {
+            $rec->top = $rec->customer->term_of_payment;
+        }
+        if ($rec->lead_time == 0 && $rec->customer) {
+            $rec->lead_time = $rec->customer->lead_time;
+        }
+
+        $data = $rec->toArray();
+        $data['calculated_rule_percent'] = $this->getLimitRulePercent($rec->customer);
+        $data['tax_value'] = $rec->tax ? $rec->tax->value : 0.11;
+        
+        return response()->json($data);
+    }
+
+    // Fungsi Update untuk Kalkulasi Final & Simpan
+    public function update(Request $request, $id)
+    {
         $request->validate([
-            'customer_id' => 'required',
             'average' => 'required|numeric',
-            // 'increase_percent' diambil dari input hidden atau db
+            'set_bg'  => 'required|numeric',
         ]);
 
         DB::beginTransaction();
         try {
-            // 1. Hitung Ulang (Backend Validation)
-            $average = (float)$request->average;
-            // Ambil persen dari DB lagi agar aman, atau dari request
-            $textPercent = DB::table('texts')->where('name', 'increase_percentage')->first();
-            $percent = $textPercent ? (float)$textPercent->value : 11;
+            $rec = BgRecommendation::findOrFail($id);
+            
+            $top        = (float)$rec->top;
+            if($top == 0 && $rec->customer) $top = $rec->customer->term_of_payment;
 
-            // Rumus: Average + (Average * 11%)
-            $recommended = $average + ($average * ($percent / 100));
+            $leadTime   = (float)$rec->lead_time;
+            if($leadTime == 0 && $rec->customer) $leadTime = $rec->customer->lead_time;
 
-            // 2. Simpan Rekomendasi
-            $rec = BgRecommendation::create([
-                'customer_id' => $request->customer_id,
-                'average' => $average,
-                'increase_percent' => $percent,
-                'recommended_credit_limit' => $recommended,
-                // field lain sesuai kebutuhan (inflation, rounded, dll)
-                'status' => 'sent_to_customer',
-                'notes' => $request->notes,
+            $inflation  = 130; // Data Paten 130%
+            $avg        = (float)$request->average;
+            $setBg      = (float)$request->set_bg;
+            $taxRate    = $rec->tax ? $rec->tax->value : 0.11; // 0.11
+            $rulePercent = $this->getLimitRulePercent($rec->customer);
+
+            // Rumus: Avg * (PPN/100) -> Avg * 0.11
+            $estPpnValue = $avg * $taxRate;
+            
+            // Rumus: "(top+lead time)/top x 130%" 
+            $timeFactor = $top > 0 ? ($top + $leadTime) / $top : 1;
+            $inflationFactor = $inflation / 100; // 1.3
+            
+            // Total = (Avg * 11%) * ((TOP+Lead)/TOP) * 1.3
+            $recLimit = $estPpnValue * $timeFactor * $inflationFactor;
+
+            // Rumus: RecLimit * (Rule/100)
+            $fkLimit = $recLimit * ($rulePercent / 100);
+
+            // D. Rounded (Jutaan)
+            $rounded = round($fkLimit, -6);
+
+            // Rumus: Set BG / (Rule/100)
+            if ($rulePercent > 0) {
+                 $limitUpdated = $setBg / ($rulePercent / 100);
+            } else {
+                 $limitUpdated = $setBg;
+            }
+
+            // Update DB
+            $rec->update([
+                'average'                   => $avg,
+                'top'                       => $top,      // Update jika sebelumnya 0
+                'lead_time'                 => $leadTime, // Update jika sebelumnya 0
+                'recommended_credit_limit'  => $recLimit,
+                'fk_with_limit'             => $fkLimit,
+                'rounded_credit_limit'      => $rounded,
+                'set_bg'                    => $setBg,
+                'credit_limit_updated'      => $limitUpdated,
+                'status'                    => 'process',
+                'notes'                     => $request->notes
             ]);
 
-            // 3. Kirim Email ke Customer
             if ($rec->customer && $rec->customer->email) {
-                // Pastikan Anda sudah membuat Mailable: CustomerFillFormNotification
                 Mail::to($rec->customer->email)->send(new CustomerFillFormNotification($rec));
             }
 
             DB::commit();
-            return response()->json(['success' => true, 'message' => 'Rekomendasi berhasil dibuat & Email terkirim ke Customer!']);
+            return response()->json(['success' => true, 'message' => 'Rekomendasi berhasil diproses!']);
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -126,21 +184,9 @@ class BgRecommendationController extends Controller
         }
     }
 
-    public function show($id)
-    {
-        return response()->json(BgRecommendation::findOrFail($id));
-    }
-
-    public function update(Request $request, $id)
-    {
-        $rec = BgRecommendation::findOrFail($id);
-        $rec->update($request->all());
-        return response()->json(['success' => true, 'message' => 'Recommendation updated!']);
-    }
-
     public function destroy($id)
     {
         BgRecommendation::findOrFail($id)->delete();
-        return response()->json(['success' => true, 'message' => 'Deleted successfully']);
+        return response()->json(['success' => true, 'message' => 'Data deleted']);
     }
-}
+}   

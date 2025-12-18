@@ -17,18 +17,17 @@ class CreateBgRecommendationsTable extends Migration
             $table->id();
             $table->unsignedBigInteger('customer_id');
             $table->decimal('average', 18, 2)->nullable();
-            $table->unsignedBigInteger('text_id')->nullable();
+            $table->unsignedBigInteger('tax_id')->nullable();
             $table->integer('top')->nullable();
             $table->integer('lead_time')->nullable();
             $table->decimal('inflation', 5, 2)->nullable();
-            $table->decimal('increase_percent', 5, 2)->nullable();
             $table->decimal('recommended_credit_limit', 18, 2)->nullable();
             $table->decimal('rounded_credit_limit', 18, 2)->nullable();
             $table->decimal('fk_with_limit', 18, 2)->nullable();
             $table->decimal('current_bg', 18, 2)->nullable();
             $table->decimal('set_bg', 18, 2)->nullable();
             $table->decimal('credit_limit_updated', 18, 2)->nullable();
-            $table->enum('status', ['draft','pending','approved','rejected'])->default('draft');
+            $table->enum('status', ['draft','pending', 'process', 'approved','rejected'])->default('draft');
             $table->text('notes')->nullable();
             $table->timestamps();
 

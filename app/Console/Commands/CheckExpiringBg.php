@@ -4,38 +4,74 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\Models\BG\BankGaransi;
+use App\Models\BG\BgRecommendation;
+use App\Models\BG\Tax;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\AdminExpiringNotification;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class CheckExpiringBg extends Command
 {
-    // Nama command yang nanti dipanggil oleh sistem
     protected $signature = 'bg:check-expired';
-
-    // Deskripsi command
-    protected $description = 'Cek Bank Garansi yang akan expired dalam 60 hari dan kirim email ke Firas';
+    protected $description = 'Cek BG expired, create draft rekomendasi (tanpa rule percent), kirim email';
 
     public function handle()
     {
-        // 1. Tentukan tanggal target (Hari ini + 60 hari)
-        $targetDate = Carbon::now()->addDays(60)->format('Y-m-d');
-
-        // 2. Query ke Database: Cari BG yang statusnya 'approved' DAN exp_date == targetDate
+        $today = Carbon::now()->startOfDay(); // Hari ini (00:00:00)
+        $upcomingDate = Carbon::now()->addDays(60)->endOfDay(); // 60 hari lagi (23:59:59)
+        
         $expiringBgs = BankGaransi::with('customer')
-            ->whereDate('exp_date', $targetDate)
-            ->where('status', 'approved')
-            ->get();
+        ->whereBetween('exp_date', [$today, $upcomingDate])
+        ->where('status', 'sent_to_customer')
+        ->get();
 
-        // 3. Cek apakah ada data?
         if ($expiringBgs->count() > 0) {
-            // Jika ADA, kirim email ke Firas
-            Mail::to('firas@admin.com')->send(new AdminExpiringNotification($expiringBgs));
+            DB::beginTransaction();
+            try {
+                // Config
+                $taxConfig = Tax::first();
+                $taxId     = $taxConfig ? $taxConfig->id : null;
+                $inflationFixed = 130;
 
-            $this->info("Email berhasil dikirim! Ada {$expiringBgs->count()} customer yang akan expired.");
+                foreach($expiringBgs as $bg) {
+                    $cust = $bg->customer;
+                    $top      = $cust->term_of_payment ?? 0;
+                    $leadTime = $cust->lead_time ?? 0;
+
+                    // Create Recommendation Awal
+                    BgRecommendation::create([
+                        'customer_id'       => $cust->id,
+                        'tax_id'            => $taxId,
+                        'top'               => $top,     
+                        'lead_time'         => $leadTime,
+                        'current_bg'        => $bg->bg_nominal,
+                        'inflation'         => $inflationFixed,
+                        'average'           => 0, 
+                        'recommended_credit_limit' => 0, 
+                        'rounded_credit_limit'     => 0,
+                        'fk_with_limit'            => 0,
+                        'set_bg'                   => 0, 
+                        'credit_limit_updated'     => 0,
+                        
+                        'status' => 'pending',
+                        'notes'  => 'Auto-generated on: ' . Carbon::now()->format('d M Y'),
+                    ]);
+                }
+
+                // Kirim Email
+                Mail::to('firas@admin.com')->send(new AdminExpiringNotification($expiringBgs));
+                
+                DB::commit();
+                $this->info("Success! {$expiringBgs->count()} BG diproses.");
+
+            } catch (\Exception $e) {
+                DB::rollBack();
+                $this->error("Error: " . $e->getMessage());
+            }
+
         } else {
-            // Jika TIDAK ADA, diam saja (tidak perlu spam email kosong)
-            $this->info("Tidak ada data yang expired pada tanggal $targetDate.");
+            $this->info('Tidak ada BG expired.');
         }
     }
 }

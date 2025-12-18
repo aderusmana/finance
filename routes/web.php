@@ -21,6 +21,8 @@ use App\Http\Controllers\Master\RoleController;
 use App\Http\Controllers\Master\UserController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Master\PositionController;
+use App\Http\Controllers\Master\BgTaxController;
+use App\Http\Controllers\Master\BgLimitRuleController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Requisition\ItemController;
 use Carbon\Carbon;
@@ -82,6 +84,8 @@ Route::middleware('auth')->group(function () {
     Route::resource('sales', SalesController::class);
     Route::resource('tops', TOPController::class);
     Route::resource('customer-classes', CustomerClassController::class);
+    Route::resource('tax', BgTaxController::class);
+    Route::resource('limit-rules', BgLimitRuleController::class);
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

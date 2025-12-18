@@ -36,7 +36,8 @@
                     <li><a href="{{ route('sales.index') }}">Sales</a></li>
                     <li><a href="{{ route('tops.index') }}">TOP</a></li>
                     <li><a href="{{ route('customer-classes.index') }}">Customer Class</a></li>
-
+                    <li><a href="{{ route('tax.index') }}">BG Tax Config</a></li>
+                    <li><a href="{{ route('limit-rules.index') }}">BG Limit Rules</a></li>
                 </ul>
             </li>
 

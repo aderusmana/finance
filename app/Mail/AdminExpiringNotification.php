@@ -19,7 +19,7 @@ class AdminExpiringNotification extends Mailable
 
     public function build()
     {
-        return $this->subject('ALERT: Daftar Customer Expired (H-60) - Perlu Tindakan')
+        return $this->subject('Peringatan: Bank Garansi Expiring (H-60)')
                     ->view('mail.admin-expiring-list');
     }
 }

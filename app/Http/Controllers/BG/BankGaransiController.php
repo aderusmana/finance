@@ -14,39 +14,44 @@ class BankGaransiController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $query = BankGaransi::with(['customer', 'details'])->select('bank_garansi.*');
+            $query = BankGaransi::leftJoin('customers', 'bank_garansi.customer_id', '=', 'customers.id')
+                ->with(['details']) // Tetap load details jika perlu
+                ->select([
+                    'bank_garansi.*',
+                    'customers.name as customer_name_real' // Alias nama dari tabel customers
+                ]);
 
             if ($request->has('status') && $request->status != 'all') {
-                $query->where('status', $request->status);
+                $query->where('bank_garansi.status', $request->status);
             }
             if ($request->has('bg_type') && $request->bg_type != 'all') {
-                $query->where('bg_type', $request->bg_type);
+                $query->where('bank_garansi.bg_type', $request->bg_type);
             }
 
             return DataTables::of($query)
                 ->addIndexColumn()
                 ->editColumn('issued_date', function($row){
-                    return $row->issued_date ? $row->issued_date->format('d M Y') : '-';
+                    return $row->issued_date ? date('d M Y', strtotime($row->issued_date)) : '-';
                 })
                 ->editColumn('exp_date', function($row){
-                    return $row->exp_date ? $row->exp_date->format('d M Y') : '-';
+                    return $row->exp_date ? date('d M Y', strtotime($row->exp_date)) : '-';
                 })
                 ->editColumn('bg_nominal', function($row){
                     return 'Rp ' . number_format($row->bg_nominal, 0, ',', '.');
                 })
                 ->addColumn('customer_name', function($row){
-                    return $row->customer ? $row->customer->name : 'N/A';
+                    return $row->customer_name_real ?? 'N/A';
+                })
+                ->filterColumn('customer_name', function($query, $keyword) {
+                    $query->where('customers.name', 'like', "%{$keyword}%");
+                })
+                ->orderColumn('customer_name', function ($query, $order) {
+                    $query->orderBy('customers.name', $order);
                 })
                 ->addColumn('action', function ($row) {
-                    // Tombol VIEW (Mata) -> Masuk ke halaman detail
                     $viewBtn = '<a href="' . route('bg-list.show', $row->id) . '" class="btn btn-sm btn-info text-white" title="View Detail"><i class="ph-bold ph-eye"></i></a>';
-
-                    // Tombol EDIT (Pensil) -> Buka Modal (logic JS tetap jalan)
                     $editBtn = '<button type="button" class="btn btn-sm btn-warning btn-edit-bg text-white" data-id="' . $row->id . '" title="Edit"><i class="ph-bold ph-pencil-simple"></i></button>';
-
-                    // Tombol DELETE
                     $deleteBtn = '<button type="button" class="btn btn-sm btn-danger btn-delete-bg text-white" data-id="' . $row->id . '" title="Delete"><i class="ph-bold ph-trash"></i></button>';
-
                     return '<div class="d-flex gap-2 justify-content-center">' . $viewBtn . $editBtn . $deleteBtn . '</div>';
                 })
                 ->rawColumns(['action'])
@@ -55,7 +60,6 @@ class BankGaransiController extends Controller
 
         $customers = Customer::select('id', 'name', 'code')->orderBy('name')->get();
 
-        // Statistik (tetap sama)
         $stats = [
             'total' => BankGaransi::count(),
             'active' => BankGaransi::where('status', 'approved')->count(),
@@ -74,8 +78,6 @@ class BankGaransiController extends Controller
             return response()->json($bg);
         }
 
-        // Jika request biasa (klik tombol View), tampilkan Halaman Detail
-        // Load relasi histories.user agar nama user muncul di tab history
         $bg = BankGaransi::with(['customer', 'details', 'histories.user', 'creator'])->findOrFail($id);
 
         return view('page.bg.bg_list.show', compact('bg'));
