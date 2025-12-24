@@ -11,81 +11,89 @@ class BankGaransiSeeder extends Seeder
 {
     public function run()
     {
-        // Ambil 5 Customer yang sudah disiapkan
-        $customers = [];
-        for ($i = 1; $i <= 5; $i++) {
-            $c = Customer::where('email', "customer.sejahtera{$i}@example.com")->first();
-            if ($c) $customers[] = $c;
-        }
+        $customers = Customer::where('bank_garansi', 'YA')->take(5)->get();
 
-        if (count($customers) < 5) {
-            $this->command->error("Jalankan CustomerSeeder dulu!");
+        if ($customers->count() < 5) {
+            $this->command->error("Data Customer kurang dari 5! Jalankan 'php artisan db:seed --class=CustomerSeeder' terlebih dahulu.");
             return;
         }
 
-        // 1. Skenario H-60 dari HARI INI (Untuk tes trigger notifikasi yang benar)
-        // Expired: Hari ini + 60 hari
+        // Simpan ke variabel $c agar mudah diakses indeksnya ($c[0], $c[1], dst)
+        $c = $customers;
+
+        // ==================================================================================
+        // 1. SKENARIO UTAMA: AKAN EXPIRED (H-60) -> TARGET NOTIFIKASI
+        // ==================================================================================
+        // Syarat Notif: Status 'approved' DAN Expired Date antara Hari Ini s/d H+60
         BankGaransi::create([
-            'customer_id' => $customers[0]->id,
-            'bg_number' => 'BG-TEST-TRIGGER-60',
-            'bg_type' => 'existing',
-            'bg_nominal' => 100000000,
+            'customer_id' => $c[0]->id,
+            'bg_number'   => 'BG-TEST-NOTIF-H60',
+            'bg_type'     => 'existing',
+            'bg_nominal'  => 150000000,
             'issued_date' => Carbon::now()->subMonths(10),
-            'exp_date' => Carbon::now()->addDays(60)->format('Y-m-d'), // PENTING: Ini yang akan kena trigger H-60
-            'status' => 'approved', // Status harus approved biar kebaca sistem
-            'created_by' => 1
+            // Expired tepat 60 hari lagi (Masuk radar notifikasi)
+            'exp_date'    => Carbon::now()->addDays(60)->format('Y-m-d'),
+            'status'      => 'approved', // WAJIB APPROVED agar dianggap "Masih Aktif tapi Mau Expired"
+            'created_by'  => 1
         ]);
 
-        // 2. Skenario H-30 dari HARI INI
+        // ==================================================================================
+        // 2. SKENARIO DARURAT: AKAN EXPIRED (H-10) -> TARGET NOTIFIKASI JUGA
+        // ==================================================================================
         BankGaransi::create([
-            'customer_id' => $customers[1]->id,
-            'bg_number' => 'BG-TEST-TRIGGER-30',
-            'bg_type' => 'existing',
-            'bg_nominal' => 50000000,
-            'issued_date' => Carbon::now()->subMonths(6),
-            'exp_date' => Carbon::now()->addDays(30)->format('Y-m-d'),
-            'status' => 'approved',
-            'created_by' => 1
+            'customer_id' => $c[1]->id,
+            'bg_number'   => 'BG-TEST-URGENT-H10',
+            'bg_type'     => 'existing',
+            'bg_nominal'  => 50000000,
+            'issued_date' => Carbon::now()->subMonths(11),
+            'exp_date'    => Carbon::now()->addDays(10)->format('Y-m-d'), // 10 hari lagi expired
+            'status'      => 'approved',
+            'created_by'  => 1
         ]);
 
-        // 3. Skenario SUDAH EXPIRED (H-10 kemarin)
+        // ==================================================================================
+        // 3. SKENARIO SUDAH EXPIRED (H-1 Kemarin)
+        // ==================================================================================
+        // Data ini TIDAK akan kena notif "Akan Expired" karena tanggalnya sudah lewat
         BankGaransi::create([
-            'customer_id' => $customers[2]->id,
-            'bg_number' => 'BG-TEST-EXPIRED',
-            'bg_type' => 'existing',
-            'bg_nominal' => 250000000,
+            'customer_id' => $c[2]->id,
+            'bg_number'   => 'BG-ALREADY-EXPIRED',
+            'bg_type'     => 'existing',
+            'bg_nominal'  => 250000000,
             'issued_date' => Carbon::now()->subMonths(12),
-            'exp_date' => Carbon::now()->subDays(10)->format('Y-m-d'), 
-            'status' => 'expired',
-            'created_by' => 1
+            'exp_date'    => Carbon::now()->subDays(1)->format('Y-m-d'),
+            'status'      => 'expired',
+            'created_by'  => 1
         ]);
 
-        // 4. Skenario AMAN (Masih 90 hari lagi)
+        // ==================================================================================
+        // 4. SKENARIO AMAN (Masih Lama H+90)
+        // ==================================================================================
+        // Data ini TIDAK akan kena notif karena > 60 hari
         BankGaransi::create([
-            'customer_id' => $customers[3]->id,
-            'bg_number' => 'BG-TEST-AMAN',
-            'bg_type' => 'existing',
-            'bg_nominal' => 75000000,
+            'customer_id' => $c[3]->id,
+            'bg_number'   => 'BG-SAFE-H90',
+            'bg_type'     => 'existing',
+            'bg_nominal'  => 75000000,
             'issued_date' => Carbon::now()->subMonths(2),
-            'exp_date' => Carbon::now()->addDays(90)->format('Y-m-d'),
-            'status' => 'approved',
-            'created_by' => 1
+            'exp_date'    => Carbon::now()->addDays(90)->format('Y-m-d'), // 90 hari lagi
+            'status'      => 'approved',
+            'created_by'  => 1
         ]);
 
-        // 5. SKENARIO REQUEST KHUSUS: Expired H+60 DARI JOIN DATE
-        // Misal Join Date: 1 Januari 2024 -> Expired: 1 Maret 2024
-        // (Data ini kemungkinan besar statusnya sudah Expired karena Join Date di CustomerSeeder pakai subYears)
-        $joinDateCust5 = Carbon::parse($customers[4]->join_date);
-        
+        // ==================================================================================
+        // 5. SKENARIO LAIN: Expired H+59
+        // ==================================================================================
         BankGaransi::create([
-            'customer_id' => $customers[4]->id,
-            'bg_number' => 'BG-REQ-JOIN-60',
-            'bg_type' => 'existing',
-            'bg_nominal' => 20000000,
-            'issued_date' => $joinDateCust5, // Terbit pas join
-            'exp_date' => $joinDateCust5->copy()->addDays(60)->format('Y-m-d'), // Expired 60 hari setelah join
-            'status' => 'expired', // Kemungkinan besar sudah expired
-            'created_by' => 1
+            'customer_id' => $c[4]->id,
+            'bg_number'   => 'BG-REQ-JOIN-REF',
+            'bg_type'     => 'existing',
+            'bg_nominal'  => 20000000,
+            'issued_date' => Carbon::now()->subMonths(5),
+            // Expired 59 hari lagi (Masuk radar notifikasi)
+            'exp_date'    => Carbon::now()->addDays(59)->format('Y-m-d'),
+            'status'      => 'approved',
+            'created_by'  => 1
         ]);
     }
 }

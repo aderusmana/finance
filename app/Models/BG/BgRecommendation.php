@@ -15,7 +15,7 @@ class BgRecommendation extends Model
     protected $fillable = [
         'customer_id', 'tax_id', 'average', 'top', 'lead_time',
         'inflation', 'recommended_credit_limit', 'rounded_credit_limit',
-        'fk_with_limit','current_bg','set_bg','credit_limit_updated','status','notes'
+        'fk_with_limit','current_bg','set_bg','credit_limit_updated','status','notes', 'token'
     ];
 
     protected $casts = [
@@ -43,5 +43,10 @@ class BgRecommendation extends Model
     public function submissions()
     {
         return $this->hasMany(BgSubmission::class, 'bg_recommendation_id');
+    }
+
+    public function periods()
+    {
+        return $this->hasMany(BgPeriod::class, 'bg_recommendation_id');
     }
 }

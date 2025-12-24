@@ -58,7 +58,10 @@ class BankGaransiController extends Controller
                 ->make(true);
         }
 
-        $customers = Customer::select('id', 'name', 'code')->orderBy('name')->get();
+        $customers = Customer::select('id', 'name', 'code')
+                        ->where('bank_garansi', 'YA')
+                        ->orderBy('name')
+                        ->get();
 
         $stats = [
             'total' => BankGaransi::count(),
@@ -72,8 +75,7 @@ class BankGaransiController extends Controller
 
     public function show($id)
     {
-        // Jika request AJAX (dari tombol Edit), kembalikan JSON
-        if (request()->wantsJson()) {
+        if (request()->ajax() || request()->wantsJson()) {
             $bg = BankGaransi::with(['details', 'customer'])->findOrFail($id);
             return response()->json($bg);
         }
@@ -87,45 +89,44 @@ class BankGaransiController extends Controller
     {
         $request->validate([
             'customer_id' => 'required',
-            'bg_number' => 'required|unique:bank_garansi,bg_number',
-            'bg_nominal' => 'required|numeric|min:0',
-            'bg_type' => 'required',
-            'status' => 'required',
-            'details' => 'array',
-            'details.*.bank_name' => 'required_with:details.*.nominal',
-            'details.*.nominal' => 'required_with:details.*.bank_name|numeric|min:0',
+            'items' => 'required|array',
+            'items.*.bg_number' => 'required|distinct|unique:bank_garansi,bg_number',
+            'items.*.nominal' => 'required|numeric|min:0',
+            'items.*.bank_name' => 'required',
         ]);
-
-        $totalDetailInfo = 0;
-        if ($request->has('details')) {
-            foreach ($request->details as $d) {
-                $totalDetailInfo += isset($d['nominal']) ? (float)$d['nominal'] : 0;
-            }
-        }
-
-        // Cek selisih (gunakan epsilon untuk floating point comparison)
-        if (abs((float)$request->bg_nominal - $totalDetailInfo) > 1.0) { // Toleransi Rp 1 perak
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation Error: Total Nominal Header (Rp '.number_format($request->bg_nominal).') tidak sama dengan total rincian bank (Rp '.number_format($totalDetailInfo).').'
-            ], 422);
-        }
 
         DB::beginTransaction();
         try {
-            $data = $request->except(['details', 'id', '_method', '_token', 'deleted_detail_ids']);
-            $data['created_by'] = auth()->id();
+            foreach ($request->items as $item) {
+                $latestBg = BankGaransi::where('customer_id', $request->customer_id)
+                                       ->orderBy('id', 'desc')
+                                       ->first();
 
-            // Observer 'created' akan jalan disini otomatis menyimpan log history
-            $bg = BankGaransi::create($data);
+                $baseBgId = $latestBg ? $latestBg->id : null;
 
-            // Simpan Details
-            if ($request->has('details')) {
-                foreach ($request->details as $detail) {
-                    if(!empty($detail['bank_name']) || !empty($detail['nominal'])) {
-                        $bg->details()->create($detail);
-                    }
+                $bg = BankGaransi::create([
+                    'customer_id' => $request->customer_id,
+                    'bg_number'   => $item['bg_number'],
+                    'bg_type'     => $item['bg_type'] ?? 'new',
+                    'bg_nominal'  => $item['nominal'],
+                    'base_bg_id'  => $baseBgId,
+                    'issued_date' => $item['issued_date'] ?? null,
+                    'exp_date'    => $item['exp_date'] ?? null,
+                    'status'      => 'draft',
+                    'created_by'  => auth()->id(),
+                ]);
+
+                if (!$baseBgId) {
+                    $bg->update(['base_bg_id' => $bg->id]);
                 }
+
+                $bg->details()->create([
+                    'bank_name'      => $item['bank_name'],
+                    'branch_name'    => $item['branch_name'] ?? null,
+                    'bank_address'   => $item['bank_address'] ?? null,
+                    'contact_person' => $item['contact_person'] ?? null,
+                    'nominal'        => $item['nominal'],
+                ]);
             }
 
             DB::commit();
@@ -138,90 +139,45 @@ class BankGaransiController extends Controller
 
     public function update(Request $request, $id)
     {
-        // 1. Validasi Input
+        $data = $request->input('items')[0] ?? null;
+
+        if (!$data) {
+            return response()->json(['success' => false, 'message' => 'Invalid data'], 422);
+        }
+
         $request->validate([
             'customer_id' => 'required',
-            // Unique check harus mengecualikan ID saat ini (ignore $id)
-            'bg_number' => 'required|unique:bank_garansi,bg_number,' . $id,
-            'bg_nominal' => 'required|numeric|min:0',
-            'bg_type' => 'required',
-            'status' => 'required',
-            // Validasi array details
-            'details' => 'array',
-            'details.*.bank_name' => 'required_with:details.*.nominal',
-            'details.*.nominal' => 'required_with:details.*.bank_name|numeric|min:0',
+            'items.0.bg_number' => 'required|unique:bank_garansi,bg_number,' . $id,
+            'items.0.nominal' => 'required|numeric|min:0',
+            'items.0.bank_name' => 'required',
         ]);
 
-        // 2. Validasi Konsistensi Data (Header vs Total Detail)
-        // Kita hitung total dari data details yang dikirim dari form (Front-end mengirim semua active rows)
-        $totalDetailInfo = 0;
-        if ($request->has('details')) {
-            foreach ($request->details as $d) {
-                // Skip baris kosong jika ada yang lolos
-                if (empty($d['bank_name']) && empty($d['nominal'])) continue;
-
-                $totalDetailInfo += isset($d['nominal']) ? (float)$d['nominal'] : 0;
-            }
-        }
-
-        // Cek selisih (gunakan toleransi 1 rupiah untuk keamanan floating point)
-        if (abs((float)$request->bg_nominal - $totalDetailInfo) > 1.0) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation Error: Total Nominal Header (Rp '.number_format($request->bg_nominal).') tidak sama dengan total rincian bank (Rp '.number_format($totalDetailInfo).'). Silakan cek kembali inputan Anda.'
-            ], 422);
-        }
-
-        // 3. Mulai Transaksi Database
         DB::beginTransaction();
         try {
             $bg = BankGaransi::findOrFail($id);
 
-            // Ambil data request kecuali data detail & token
-            $data = $request->except(['details', 'id', '_method', '_token', 'deleted_detail_ids']);
+            $bg->update([
+                'customer_id' => $request->customer_id,
+                'bg_number'   => $data['bg_number'],
+                'bg_type'     => $data['bg_type'],
+                'bg_nominal'  => $data['nominal'],
+                'issued_date' => $data['issued_date'],
+                'exp_date'    => $data['exp_date'],
+            ]);
 
-            // Update Header BG
-            // Note: Observer 'updated' akan otomatis jalan di sini jika ada perubahan pada nominal/exp_date/status
-            // Observer akan mencatat 'bg_histories' sesuai logic yang sudah kita buat sebelumnya
-            $bg->update($data);
+            $bg->details()->delete();
+            $bg->details()->create([
+                'bank_name'      => $data['bank_name'],
+                'branch_name'    => $data['branch_name'] ?? null,
+                'bank_address'   => $data['bank_address'] ?? null,
+                'contact_person' => $data['contact_person'] ?? null,
+                'nominal'        => $data['nominal'],
+            ]);
 
-            // 4. Handle Detail Deletion (Menghapus baris yang dibuang user di form)
-            if ($request->filled('deleted_detail_ids')) {
-                $deletedIds = explode(',', $request->deleted_detail_ids);
-                // Hapus detail yang ID-nya ada di list deleted
-                $bg->details()->whereIn('id', $deletedIds)->delete();
-            }
-
-            // 5. Handle Detail Update/Create (Looping data dari form)
-            if ($request->has('details')) {
-                foreach ($request->details as $detail) {
-                    // Skip row kosong
-                    if(empty($detail['bank_name']) && empty($detail['nominal'])) continue;
-
-                    if (isset($detail['id']) && $detail['id']) {
-                        // Jika ID ada, berarti data lama -> Update
-                        $bg->details()->where('id', $detail['id'])->update([
-                            'bank_name' => $detail['bank_name'],
-                            'branch_name' => $detail['branch_name'] ?? null,
-                            'bank_address' => $detail['bank_address'] ?? null,
-                            'contact_person' => $detail['contact_person'] ?? null,
-                            'nominal' => $detail['nominal'],
-                            'updated_at' => now(),
-                        ]);
-                    } else {
-                        // Jika ID kosong, berarti baris baru -> Create
-                        // Kita gunakan method create() dari relasi details() agar bg_id otomatis terisi
-                        $bg->details()->create($detail);
-                    }
-                }
-            }
-
-            // Commit Transaksi
             DB::commit();
             return response()->json(['success' => true, 'message' => 'Bank Garansi updated successfully!']);
 
         } catch (\Exception $e) {
-            // Rollback jika terjadi error
             DB::rollBack();
             return response()->json(['success' => false, 'message' => 'Error: ' . $e->getMessage()], 500);
         }

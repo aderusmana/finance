@@ -63,8 +63,8 @@
                     <li><a href="{{ route('bg-histories.index') }}">BG Histories</a></li>
                         <li><a href="{{ route('bg-submissions.index') }}">Submissions</a></li>
                     <li><a href="{{ route('bg-recommendations.index') }}">Recommendations</a></li>
-                    <li><a href="#">Lampiran D Overview</a></li>
-                    <li><a href="#">Lampiran D Versions</a></li>
+                    <li><a href="{{ route('lampiran-d.index') }}">Lampiran D</a></li>
+                    <!-- <li><a href="#">Lampiran D Versions</a></li> -->
                     <li><a href="#">Credit Limits</a></li>
                     <li><a href="#">Approvals / Inbox</a></li>
                     <li><a href="#">Reports</a></li>

@@ -27,8 +27,9 @@ class CreateBgRecommendationsTable extends Migration
             $table->decimal('current_bg', 18, 2)->nullable();
             $table->decimal('set_bg', 18, 2)->nullable();
             $table->decimal('credit_limit_updated', 18, 2)->nullable();
-            $table->enum('status', ['draft','pending', 'process', 'approved','rejected'])->default('draft');
+            $table->enum('status', ['draft','pending', 'process', 'waiting_upload', 'approved','rejected'])->default('draft');
             $table->text('notes')->nullable();
+            $table->string('token', 100)->nullable();
             $table->timestamps();
 
             $table->foreign('customer_id')->references('id')->on('customers')->onDelete('cascade');

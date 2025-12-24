@@ -25,6 +25,9 @@ use App\Http\Controllers\Master\BgTaxController;
 use App\Http\Controllers\Master\BgLimitRuleController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Requisition\ItemController;
+use App\Http\Controllers\BG\CustomerBgPortalController;
+use App\Http\Controllers\BG\ApprovalProcessController;
+use App\Http\Controllers\BG\LampiranDController;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Route;
 use Maatwebsite\Excel\Row;
@@ -48,13 +51,23 @@ Route::get('/tes-403', function () {
     abort(403, 'Akses Ditolak'); // Menampilkan halaman 403 dengan pesan kustom
 });
 
-    Route::get('/customers/approval/{token}', [CustomerController::class, 'viewApprovalPage'])->name('customers.view_approval');
-    Route::post('/customers/{customer}/approval-action', [CustomerController::class, 'approvalAction'])->name('customers.approval_action');
+Route::get('/customers/approval/{token}', [CustomerController::class, 'viewApprovalPage'])->name('customers.view_approval');
+Route::post('/customers/{customer}/approval-action', [CustomerController::class, 'approvalAction'])->name('customers.approval_action');
+Route::get('/approval/process/{token}/{action}', [ApprovalProcessController::class, 'process'])->name('approval.process');
+Route::get('/approval/form/{token}/{action}', [ApprovalProcessController::class, 'showForm'])->name('approval.form');
+Route::post('/approval/submit/{token}', [ApprovalProcessController::class, 'submit'])->name('approval.submit');
+Route::get('/public/download-doc/{bg_id}/{type}', [CustomerBgPortalController::class, 'downloadExpiringPdf'])->name('public.bg.download')->middleware('signed');
 
+Route::prefix('customer-portal')->name('customer.portal.')->group(function () {
+    Route::get('/form/{token}', [CustomerBgPortalController::class, 'showInputForm'])->name('input-form');
+    Route::post('/form/{token}', [CustomerBgPortalController::class, 'storeInputData'])->name('store-input');
+    Route::get('/upload/{token}', [CustomerBgPortalController::class, 'showUploadForm'])->name('upload-form');
+    Route::post('/upload/{token}', [CustomerBgPortalController::class, 'storeUploadData'])->name('store-upload');
+    Route::get('/download/{token}', [CustomerBgPortalController::class, 'downloadPdf'])->name('download-pdf');
+});
 
 Route::middleware('auth')->group(function () {
     Route::prefix('dashboard/data')->name('dashboard.data.')->group(function () {
-        // Legacy endpoints repurposed for BG/Customer data
         Route::get('/metric-counts', [DashboardController::class, 'getMetricCounts'])->name('metric-counts');
         Route::get('/monthly-stats', [DashboardController::class, 'getMonthlyStats'])->name('monthly-stats');
         Route::get('/top-items', [DashboardController::class, 'getTopItems'])->name('top-items');
@@ -62,8 +75,6 @@ Route::middleware('auth')->group(function () {
         Route::get('/recent-activities', [DashboardController::class, 'getRecentActivities'])->name('recent-activities');
         Route::get('/my-actions', [DashboardController::class, 'getMyActions'])->name('my-actions');
         Route::get('/available-years', [DashboardController::class, 'getAvailableYearsApi'])->name('available-years');
-
-        // New BG/Customer specific endpoints used by updated dashboard view
         Route::get('/bg-metrics', [DashboardController::class, 'bgMetrics'])->name('bg-metrics');
         Route::get('/customer-metrics', [DashboardController::class, 'customerMetrics'])->name('customer-metrics');
         Route::get('/recent-bgs', [DashboardController::class, 'recentBgs'])->name('recent-bgs');
@@ -104,8 +115,6 @@ Route::middleware('auth')->group(function () {
         Route::get('items/{id}/edit', [ItemController::class, 'edit'])->name('items.edit');
         Route::put('items/{id}', [ItemController::class, 'update'])->name('items.update');
         Route::delete('items/{id}', [ItemController::class, 'destroy'])->name('items.destroy');
-        // Item details endpoints handled by ItemController
-        // All item details (no specific item)
         Route::get('items/details', [ItemController::class, 'detailsAll'])->name('items.details.all');
         Route::get('items/select2', [ItemController::class, 'select2'])->name('items.select2');
         Route::post('items/details', [ItemController::class, 'storeDetailAll'])->name('items.details.storeAll');
@@ -125,8 +134,14 @@ Route::middleware('auth')->group(function () {
         Route::resource('bg-recommendations', BgRecommendationController::class);
         Route::resource('bg-submissions', BgSubmissionController::class);
         Route::resource('bg-histories', BgHistoryController::class)->only(['index', 'destroy']);
+        Route::post('bg-recommendations/{id}/periods', [BgRecommendationController::class, 'savePeriods'])->name('bg-recommendations.save-periods');
         Route::get('customer/bg-form/{id}', [BgRecommendationController::class, 'showForm'])->name('customer.bg.form');
         Route::post('customer/bg-form/{id}', [BgRecommendationController::class, 'submitDetails'])->name('customer.bg.submit');
+        Route::get('bg-submissions/{id}/edit-data', [BgSubmissionController::class, 'getEditData'])->name('bg-submissions.get-edit-data');
+        Route::post('bg-submissions/{id}/process-review', [BgSubmissionController::class, 'processReview'])->name('bg-submissions.process-review');
+        Route::resource('lampiran-d', LampiranDController::class);
+        Route::get('lampiran-d/{id}/versions', [LampiranDController::class, 'versions'])->name('lampiran-d.versions');
+        Route::get('lampiran-d/version/{versionId}', [LampiranDController::class, 'showVersionDetail'])->name('lampiran-d.version.show');
     });
 });
 

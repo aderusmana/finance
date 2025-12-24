@@ -128,9 +128,7 @@
 
     @push('scripts')
         <script src="https://unpkg.com/@phosphor-icons/web"></script>
-
         <script>
-            // === SweetAlert2 Reusable Functions ===
             function successMessage(message, title = 'Success', timer = 1500) {
                 Swal.fire({
                     icon: 'success',
@@ -184,37 +182,35 @@
                 let allSubCategories = [];
                 let existingPaths = [];
 
-                // === Initialize Select2 ===
                 $('#approvers, #category_id, #sub_category_id').select2({
                     theme: 'bootstrap-5',
                     dropdownParent: $('#ApproverModal')
                 });
-                // Atur placeholder secara spesifik
+
                 $('#category_id').select2({
                     theme: 'bootstrap-5',
                     placeholder: 'Select a category',
                     dropdownParent: $('#ApproverModal')
                 });
+
                 $('#sub_category_id').select2({
                     theme: 'bootstrap-5',
                     placeholder: 'Select a sub-category',
                     dropdownParent: $('#ApproverModal')
                 });
+
                 $('#approvers').select2({
                     theme: 'bootstrap-5',
                     placeholder: 'Select approvers in order',
                     dropdownParent: $('#ApproverModal')
                 });
 
-                // atur urutan selected approvers
                 $('#approvers').on('select2:select', function(e) {
                     let id = e.params.data.id;
                     let option = $(this).find('option[value="' + id + '"]');
                     option.appendTo(this);
                 });
 
-                // === Dynamic Sub-Category Handling ===
-                // Only two categories allowed in UI: 'BG' and 'Customer'
                 $('#category_id').on('change', function() {
                     let selectedCategory = $(this).val();
                     let subCategorySelect = $('#sub_category_id');
@@ -223,42 +219,38 @@
 
                     if (isEditMode) return;
 
-                    // Reset and disable downstream fields
-                    subCategorySelect.val(null).trigger('change');
+                    // Reset dropdown sub-category & approvers
+                    subCategorySelect.empty().trigger('change'); 
                     approversSelect.val(null).trigger('change').prop('disabled', true);
 
-                    if (selectedCategory === 'BG') {
-                        // BG has no sub-categories
-                        subCategorySelect.prop('disabled', true);
-                        approversSelect.prop('disabled', false);
-                    } else if (selectedCategory === 'Customer') {
-                        // Customer supports only 'CBD' sub-category
+                    // Cek apakah kategori ini punya sub-categories di mapping
+                    if (selectedCategory && categoryMapping[selectedCategory] && categoryMapping[selectedCategory].length > 0) {
+                        
+                        // Aktifkan Sub Category
                         subCategorySelect.prop('disabled', false);
+                        subCategorySelect.append(new Option('Select a sub-category', '', true, true)); // Placeholder
+                        
+                        // Loop data sub-category (misal: 'Lampiran D' untuk BG, atau 'CBD' untuk Customer)
+                        categoryMapping[selectedCategory].forEach(subVal => {
+                            // Cek apakah path ini sudah ada di database (biar user ga bikin double)
+                            const pathExists = existingPaths.some(path =>
+                                path.category === selectedCategory && path.sub_category === subVal
+                            );
 
-                        const subValue = 'CBD';
-                        const pathExists = existingPaths.some(path =>
-                            path.category === selectedCategory && path.sub_category === subValue
-                        );
-
-                        const subCategoryData = [{
-                            id: subValue,
-                            text: subValue,
-                            disabled: pathExists
-                        }];
-
-                        subCategorySelect.empty().select2({
-                            theme: 'bootstrap-5',
-                            dropdownParent: $('#ApproverModal'),
-                            placeholder: 'Select a sub-category',
-                            data: subCategoryData
+                            let newOption = new Option(subVal, subVal, false, false);
+                            if(pathExists) {
+                                $(newOption).prop('disabled', true); // Disable jika sudah ada
+                            }
+                            subCategorySelect.append(newOption);
                         });
-                        subCategorySelect.val(null).trigger('change');
-                        // Allow creating Customer without sub-category — enable approver selection immediately
-                        approversSelect.prop('disabled', false);
+
+                        // Reset placeholder select2
+                        subCategorySelect.val('').trigger('change');
+
                     } else {
-                        // Any other category - keep sub-category disabled and prevent approver selection
+                        // Jika tidak ada sub-category (misal kategori lain), langsung aktifkan approver
                         subCategorySelect.prop('disabled', true);
-                        approversSelect.prop('disabled', true);
+                        approversSelect.prop('disabled', false);
                     }
                 });
 
@@ -266,23 +258,18 @@
                     let selectedSubCategory = $(this).val();
                     let approversSelect = $('#approvers');
 
-                    // If current category is Customer, approvers are allowed even without sub-category
-                    let currentCategory = $('#category_id').val();
-
-                    if (currentCategory === 'Customer') {
-                        approversSelect.prop('disabled', false);
-                        return;
-                    }
-
-                    // For non-Customer categories, only enable approver when sub-category is chosen
+                    // Jika ada sub-category yang dipilih, aktifkan approver input
                     if (selectedSubCategory) {
                         approversSelect.prop('disabled', false);
                     } else {
-                        approversSelect.val(null).trigger('change').prop('disabled', true);
+                        // Jika sub-category wajib tapi belum dipilih, disable approver
+                        let currentCategory = $('#category_id').val();
+                        if (categoryMapping[currentCategory] && categoryMapping[currentCategory].length > 0) {
+                            approversSelect.prop('disabled', true);
+                        }
                     }
                 });
 
-                // === Load ALL Dropdown Data via AJAX ===
                 function loadDropdownData() {
                     // Fetch Categories & Sub-Categories
                     $.ajax({
@@ -291,39 +278,22 @@
                         dataType: 'json',
                         success: function(data) {
                             let categorySelect = $('#category_id');
-                            let subCategorySelect = $('#sub_category_id');
-
-                            categorySelect.empty().append(
-                                '<option selected disabled value="">Choose a category...</option>');
-                            subCategorySelect.empty();
-
-                            // Restrict categories in the UI to these two values
-                            const allowedCategories = ['BG', 'Customer'];
+                            
+                            categoryMapping = data.subCategories || {};
+                            existingPaths = data.existingPaths || [];
                             categorySelect.empty().append('<option selected disabled value="">Choose a category...</option>');
-                            allowedCategories.forEach(cat => {
-                                categorySelect.append(new Option(cat, cat));
-                            });
-                            allSubCategories = [];
-                            if (data.subCategories) {
-                                data.subCategories.forEach(subCat => {
-                                    allSubCategories.push({
-                                        value: subCat,
-                                        text: subCat
-                                    });
+                            
+                            if (data.categories) {
+                                data.categories.forEach(cat => {
+                                    categorySelect.append(new Option(cat, cat));
                                 });
                             }
-                            if (data.existingPaths) {
-                                existingPaths = data.existingPaths;
-                            }
-
-                            categorySelect.trigger('change');
                         },
                         error: function() {
                             errorMessage('Failed to load category data.');
                         }
                     });
 
-                    // 2. Fetch Approver Names
                     $.ajax({
                         url: "{{ route('get.approver.name') }}",
                         method: 'GET',
@@ -331,19 +301,11 @@
                         success: function(data) {
                             let approverSelect = $('#approvers');
                             approverSelect.empty();
-
-                            console.log(data.approverName);
-
                             if (data.approverName) {
                                 $.each(data.approverName, function(key, value) {
                                     approverSelect.append(new Option(value, key, false, false));
                                 });
                             }
-
-                            approverSelect.trigger('change');
-                        },
-                        error: function(xhr) {
-                            errorMessage('Failed to load approver data.');
                         }
                     });
                 }
@@ -436,7 +398,7 @@
                 $('#btn-create-approver').on('click', function() {
                     resetFormState(); // Gunakan helper function
                     $('#ApproverForm').attr('data-mode', 'create');
-                    $('#ApproverForm').attr('action', '{{ route('approvers.store') }}');
+                    $('#ApproverForm').attr('action', "{{ route('approvers.store') }}");
 
                     // [MODIFIKASI] Atur state awal saat modal create dibuka
                     $('#sub_category_id').prop('disabled', true);

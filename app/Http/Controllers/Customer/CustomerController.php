@@ -435,7 +435,6 @@ class CustomerController extends Controller
         return response()->json(['success' => true, 'message' => 'Customer deleted successfully!']);
     }
 
-    // Manage customer files via CustomerController
     public function storeFile(Request $request, Customer $customer)
     {
         $file = $customer->files()->create($request->all());

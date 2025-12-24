@@ -5,11 +5,23 @@ namespace App\Http\Controllers\BG;
 use App\Http\Controllers\Controller;
 use App\Models\BG\BgSubmission;
 use App\Models\BG\BgRecommendation;
+use App\Models\BG\BgDetail;
+use Illuminate\Support\Facades\Mail;
+use App\Models\BG\BankGaransi;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\Facades\DataTables;
+use Illuminate\Support\Facades\Storage;
+use App\Traits\ApprovalTrait;
+use App\Models\Master\ApprovalLog;
+use App\Jobs\ProcessFinanceApprovalEmail;
+use App\Mail\CustomerBgReadyMail;
+use App\Models\Master\ApprovalPath;
+use App\Models\User;
 
 class BgSubmissionController extends Controller
 {
+    use ApprovalTrait;
     public function index(Request $request)
     {
         if ($request->ajax()) {
@@ -21,25 +33,31 @@ class BgSubmissionController extends Controller
                     return $row->recommendation && $row->recommendation->customer
                         ? $row->recommendation->customer->name : '-';
                 })
-                ->editColumn('total_nominal', function($row){
-                    return 'Rp ' . number_format($row->total_nominal, 0, ',', '.');
-                })
                 ->addColumn('file', function($row){
                     if($row->signed_document_path) {
-                        return '<a href="'.asset($row->signed_document_path).'" target="_blank" class="btn btn-xs btn-info"><i class="ph-bold ph-file"></i> View</a>';
+                        $url = asset($row->signed_document_path);
+                        return '<button type="button" class="btn btn-xs btn-warning btn-view-file" data-url="'.$url.'" data-id="'.$row->id.'" title="View File">
+                                    <i class="ph-bold ph-file-doc"></i>
+                                </button>';
                     }
                     return '<span class="text-muted">No File</span>';
+                })
+                ->addColumn('status', function($row){
+                    $color = 'secondary';
+                    if($row->status === 'uploaded') $color = 'info';
+                    if($row->status === 'completed') $color = 'success';
+                    if($row->status === 'awaiting_upload') $color = 'warning';
+                    return '<span class="badge bg-'.$color.' text-uppercase">'.str_replace('_', ' ', $row->status).'</span>';
                 })
                 ->addColumn('action', function ($row) {
                     return '<button class="btn btn-sm btn-warning btn-edit" data-id="'.$row->id.'"><i class="ph-bold ph-pencil-simple"></i></button>';
                 })
-                ->rawColumns(['file', 'action'])
+                ->rawColumns(['file', 'status', 'action'])
                 ->make(true);
         }
 
-        // Ambil list rekomendasi untuk dropdown (menampilkan nama customer)
         $recommendations = BgRecommendation::with('customer')
-            ->whereHas('customer') // Pastikan ada customernya
+            ->whereHas('customer')
             ->get();
 
         return view('page.bg.bg_submissions.index', compact('recommendations'));
@@ -52,30 +70,224 @@ class BgSubmissionController extends Controller
             'form_code' => 'required|unique:bg_submissions,form_code',
         ]);
 
-        $data = $request->all();
-
-        // Handle File Upload
+        $data = $request->except(['total_nominal']);
         if ($request->hasFile('signed_document')) {
-            $file = $request->file('signed_document');
-            $path = $file->store('bg_documents', 'public'); // pastikan symlink storage sudah jalan
+            $path = $request->file('signed_document')->store('bg_documents/signed', 'public');
             $data['signed_document_path'] = 'storage/' . $path;
+            $data['status'] = 'uploaded';
+            $data['upload_completed_at'] = now();
+            $data['submitted_at'] = now();
+        } else {
+            $data['status'] = 'pending_print'; // Default jika tanpa file
+        }
+
+        if(!isset($data['token'])) {
+            $data['token'] = \Illuminate\Support\Str::random(60);
         }
 
         BgSubmission::create($data);
         return response()->json(['success' => true, 'message' => 'Submission created!']);
     }
 
-    // Update & Show & Destroy methods similar structure...
-    public function update(Request $request, $id) {
-         // Logic update file handling sama seperti store
+    public function update(Request $request, $id)
+    {
          $sub = BgSubmission::findOrFail($id);
-         $data = $request->all();
+
          if ($request->hasFile('signed_document')) {
-            $data['signed_document_path'] = 'storage/' . $request->file('signed_document')->store('bg_documents', 'public');
+             $request->validate([
+                 'signed_document' => 'mimes:pdf,jpg,jpeg,png|max:5120',
+             ]);
          }
+
+         $data = $request->except(['total_nominal']);
+
+         if ($request->hasFile('signed_document')) {
+
+            $path = $request->file('signed_document')->store('bg_documents/signed', 'public');
+            $data['signed_document_path'] = 'storage/' . $path;
+
+            $data['status'] = 'uploaded';
+            $data['upload_completed_at'] = now();
+
+            if(!$sub->submitted_at) {
+                $data['submitted_at'] = now();
+            }
+         }
+
          $sub->update($data);
-         return response()->json(['success' => true, 'message' => 'Updated!']);
+         return response()->json(['success' => true, 'message' => 'Updated successfully!']);
     }
 
-    public function show($id) { return response()->json(BgSubmission::findOrFail($id)); }
+    public function getEditData($id)
+    {
+        // Load Submission beserta relasinya
+        $submission = BgSubmission::with(['recommendation.customer'])->findOrFail($id);
+        $rec = $submission->recommendation;
+        $customer = $rec->customer;
+        
+        // Ambil Data BG terakhir (untuk Poin 11)
+        $bg = BankGaransi::where('customer_id', $customer->id)
+                ->where('created_at', '>=', $submission->created_at->subDay())
+                ->with('details') // Ambil detail bank juga
+                ->latest()
+                ->first();
+
+                $periodeString = '-';
+        if ($rec->periods && $rec->periods->count() > 0) {
+            $start = $rec->periods->min('period_date'); // Format Y-m-d (Carbon object karena cast model)
+            $end   = $rec->periods->max('period_date');
+
+            if ($start && $end) {
+                $periodeString = \Carbon\Carbon::parse($start)->isoFormat('MMMM Y') . ' - ' . \Carbon\Carbon::parse($end)->isoFormat('MMMM Y');
+            }
+        }
+
+        $data = [
+            'submission_id' => $submission->id,
+            'bg_id' => $bg ? $bg->id : null,
+                        'nama_distributor' => $customer->name,         
+            'kota' => $customer->city,                     
+            'wilayah_kerja' => $customer->area ?? '-',     
+            'periode' => $periodeString,                    
+            'rata_rata_penjualan' => $rec->average,        
+            'syarat_pembayaran' => $rec->top,              
+            'lead_time' => $rec->lead_time,                
+            'faktor_fluktuasi' => $rec->inflation,         
+            'limit_kredit' => $rec->credit_limit_updated,  
+            'nilai_bg_ditetapkan' => $rec->set_bg,         
+            'nilai_bg_diserahkan' => $bg ? $bg->bg_nominal : 0,
+            'details' => $bg ? $bg->details : [] 
+        ];
+
+        return response()->json(['success' => true, 'data' => $data]);
+    }
+
+    // Proses Simpan Edit & Submit
+    public function processReview(Request $request, $id)
+    {
+        $submission = BgSubmission::with(['recommendation.customer'])->findOrFail($id);
+        
+        if ($request->action_type == 'edit_submit') {
+
+            $approvalPathExists = ApprovalPath::where('category', 'BG')
+                                    ->where('sub_category', 'Lampiran D')
+                                    ->exists();
+
+            if (!$approvalPathExists) {
+                return response()->json([
+                    'success' => false, 
+                    'message' => 'Gagal Submit: Alur Approval (Approval Path) untuk "BG - Lampiran D" belum dibuat. Harap tambahkan setting Approval Path terlebih dahulu di menu Master Management.'
+                ]);
+            }
+            
+            DB::beginTransaction();
+            try {
+                $rec = $submission->recommendation;
+                $customer = $rec->customer;
+
+                // 1. Update Data Customer (Point 1, 2, 3)
+                $customer->update([
+                    'name' => $request->nama_distributor,
+                    'city' => $request->kota,
+                    'area' => $request->wilayah_kerja, // Pastikan kolom ini ada di DB
+                ]);
+
+                // 2. Update Recommendation (Point 5, 6, 7, 8, 9, 10)
+                $rec->update([
+                    'average' => $request->rata_rata_penjualan,
+                    'top' => $request->syarat_pembayaran,
+                    'lead_time' => $request->lead_time,
+                    'inflation' => $request->faktor_fluktuasi,
+                    'credit_limit_updated' => $request->limit_kredit,
+                    'set_bg' => $request->nilai_bg_ditetapkan,
+                ]);
+
+                if(isset($request->details)) {
+                    foreach ($request->details as $detailId => $val) {
+                        BgDetail::where('id', $detailId)->update([
+                            'bank_name' => $val['bank_name'],
+                            'branch_name' => $val['branch_name'],
+                            'nominal' => $val['nominal'],
+                        ]);
+                    }
+                }
+
+                if ($request->bg_id) {
+                    $newTotal = BgDetail::where('bank_garansi_id', $request->bg_id)->sum('nominal');
+                    BankGaransi::where('id', $request->bg_id)->update([
+                        'bg_nominal' => $newTotal // Update Header BG
+                    ]);
+                }
+
+                // 4. Generate Log Approval & Kirim Email (Seperti logic sebelumnya)
+                $requester = auth()->user();
+                $logs = $this->generateApprovalLogs($requester, $submission->id, 'BG', 'Lampiran D');
+                
+                if ($logs->isEmpty()) {
+                    throw new \Exception("Approval Path ditemukan, tetapi User dengan Role yang sesuai (Manager Finance) tidak ditemukan atau tidak aktif.");
+                }
+
+                $submission->update(['status' => 'waiting_approval']);
+
+                $firstLog = ApprovalLog::where('category', 'BG')
+                    ->where('related_id', $submission->id)
+                    ->where('status', 'Pending')
+                    ->orderBy('level', 'asc')
+                    ->first();
+
+                if ($firstLog) {
+                    ProcessFinanceApprovalEmail::dispatch($firstLog, $submission);
+                }
+
+                DB::commit();
+                return response()->json(['success' => true, 'message' => 'Data Lampiran D berhasil diperbarui & diteruskan ke Finance.']);
+
+            } catch (\Exception $e) {
+                DB::rollBack();
+                return response()->json(['success' => false, 'message' => $e->getMessage()]);
+            }
+        }
+
+        if ($request->action_type == 'direct_submit') {
+            
+            $submission->update([
+                'status' => 'completed',
+            ]);
+
+            $this->sendCompletionEmails($submission);
+
+            return response()->json(['success' => true, 'message' => 'Dokumen disetujui. Notifikasi dikirim ke Customer & Internal.']);
+        }
+
+        return response()->json(['success' => false, 'message' => 'Invalid Action']);
+    }
+
+    public function show($id)
+    {
+        return response()->json(BgSubmission::with('recommendation')->findOrFail($id));
+    }
+
+    public function destroy($id)
+    {
+        $sub = BgSubmission::findOrFail($id);
+        if($sub->signed_document_path) {
+            $relativePath = str_replace('storage/', '', $sub->signed_document_path);
+            Storage::disk('public')->delete($relativePath);
+        }
+        $sub->delete();
+        return response()->json(['success' => true, 'message' => 'Deleted!']);
+    }
+
+    private function sendCompletionEmails($submission) {
+        $customerEmail = $submission->recommendation->customer->email;
+        $salesEmails = User::role('head-SNM')->pluck('email')->toArray();
+        $financeEmails = User::role('manager-finance')->pluck('email')->toArray();
+        $allRecipients = array_merge([$customerEmail], $salesEmails, $financeEmails);
+        $recipients = array_unique(array_filter($allRecipients));
+        foreach($recipients as $email) {
+            if (!empty($email)) {
+                Mail::to($email)->queue(new CustomerBgReadyMail($submission));
+            }
+        }
+    }
 }
