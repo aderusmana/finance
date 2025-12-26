@@ -27,6 +27,8 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Requisition\ItemController;
 use App\Http\Controllers\BG\CustomerBgPortalController;
 use App\Http\Controllers\BG\ApprovalProcessController;
+use App\Http\Controllers\BG\BgApprovalInboxController;
+use App\Http\Controllers\BG\BgReportController;
 use App\Http\Controllers\BG\LampiranDController;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Route;
@@ -142,6 +144,13 @@ Route::middleware('auth')->group(function () {
         Route::resource('lampiran-d', LampiranDController::class);
         Route::get('lampiran-d/{id}/versions', [LampiranDController::class, 'versions'])->name('lampiran-d.versions');
         Route::get('lampiran-d/version/{versionId}', [LampiranDController::class, 'showVersionDetail'])->name('lampiran-d.version.show');
+        Route::get('approvals/inbox', [BgApprovalInboxController::class, 'index'])->name('bg-approvals.index');
+        Route::get('approvals/modal-data/{id}', [BgApprovalInboxController::class, 'getModalData']);
+        Route::post('approvals/process', [BgApprovalInboxController::class, 'process'])->name('bg-approvals.process');
+        Route::post('approvals/resend/{id}', [BgApprovalInboxController::class, 'resendEmail']);
+        Route::get('reports', [BgReportController::class, 'index'])->name('bg-reports.index');
+        Route::get('reports/download/{id}/{doc_type}', [BgReportController::class, 'downloadDoc'])->name('bg-reports.download');
+        Route::get('reports/letters/{id}/{letter_type}', [BgReportController::class, 'downloadLetters'])->name('bg-reports.download-letters');
     });
 });
 

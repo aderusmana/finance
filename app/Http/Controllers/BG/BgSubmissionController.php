@@ -16,8 +16,11 @@ use App\Traits\ApprovalTrait;
 use App\Models\Master\ApprovalLog;
 use App\Jobs\ProcessFinanceApprovalEmail;
 use App\Mail\CustomerBgReadyMail;
+use App\Models\BG\LampiranD;
+use App\Models\BG\LampiranDVersion;
 use App\Models\Master\ApprovalPath;
 use App\Models\User;
+use App\Models\BG\BgHistory;
 
 class BgSubmissionController extends Controller
 {
@@ -124,7 +127,7 @@ class BgSubmissionController extends Controller
         $submission = BgSubmission::with(['recommendation.customer'])->findOrFail($id);
         $rec = $submission->recommendation;
         $customer = $rec->customer;
-        
+
         // Ambil Data BG terakhir (untuk Poin 11)
         $bg = BankGaransi::where('customer_id', $customer->id)
                 ->where('created_at', '>=', $submission->created_at->subDay())
@@ -145,28 +148,27 @@ class BgSubmissionController extends Controller
         $data = [
             'submission_id' => $submission->id,
             'bg_id' => $bg ? $bg->id : null,
-                        'nama_distributor' => $customer->name,         
-            'kota' => $customer->city,                     
-            'wilayah_kerja' => $customer->area ?? '-',     
-            'periode' => $periodeString,                    
-            'rata_rata_penjualan' => $rec->average,        
-            'syarat_pembayaran' => $rec->top,              
-            'lead_time' => $rec->lead_time,                
-            'faktor_fluktuasi' => $rec->inflation,         
-            'limit_kredit' => $rec->credit_limit_updated,  
-            'nilai_bg_ditetapkan' => $rec->set_bg,         
+                        'nama_distributor' => $customer->name,
+            'kota' => $customer->city,
+            'wilayah_kerja' => $customer->area ?? '-',
+            'periode' => $periodeString,
+            'rata_rata_penjualan' => $rec->average,
+            'syarat_pembayaran' => $rec->top,
+            'lead_time' => $rec->lead_time,
+            'faktor_fluktuasi' => $rec->inflation,
+            'limit_kredit' => $rec->credit_limit_updated,
+            'nilai_bg_ditetapkan' => $rec->set_bg,
             'nilai_bg_diserahkan' => $bg ? $bg->bg_nominal : 0,
-            'details' => $bg ? $bg->details : [] 
+            'details' => $bg ? $bg->details : []
         ];
 
         return response()->json(['success' => true, 'data' => $data]);
     }
 
-    // Proses Simpan Edit & Submit
     public function processReview(Request $request, $id)
     {
         $submission = BgSubmission::with(['recommendation.customer'])->findOrFail($id);
-        
+
         if ($request->action_type == 'edit_submit') {
 
             $approvalPathExists = ApprovalPath::where('category', 'BG')
@@ -175,24 +177,23 @@ class BgSubmissionController extends Controller
 
             if (!$approvalPathExists) {
                 return response()->json([
-                    'success' => false, 
-                    'message' => 'Gagal Submit: Alur Approval (Approval Path) untuk "BG - Lampiran D" belum dibuat. Harap tambahkan setting Approval Path terlebih dahulu di menu Master Management.'
+                    'success' => false,
+                    'message' => 'Gagal: Approval Path untuk "BG - Lampiran D" belum dibuat.'
                 ]);
             }
-            
+
             DB::beginTransaction();
             try {
                 $rec = $submission->recommendation;
                 $customer = $rec->customer;
 
-                // 1. Update Data Customer (Point 1, 2, 3)
+                // 1. Update Data Master (Source of Truth)
                 $customer->update([
                     'name' => $request->nama_distributor,
                     'city' => $request->kota,
-                    'area' => $request->wilayah_kerja, // Pastikan kolom ini ada di DB
+                    'area' => $request->wilayah_kerja,
                 ]);
 
-                // 2. Update Recommendation (Point 5, 6, 7, 8, 9, 10)
                 $rec->update([
                     'average' => $request->rata_rata_penjualan,
                     'top' => $request->syarat_pembayaran,
@@ -215,16 +216,58 @@ class BgSubmissionController extends Controller
                 if ($request->bg_id) {
                     $newTotal = BgDetail::where('bank_garansi_id', $request->bg_id)->sum('nominal');
                     BankGaransi::where('id', $request->bg_id)->update([
-                        'bg_nominal' => $newTotal // Update Header BG
+                        'bg_nominal' => $newTotal
                     ]);
                 }
 
-                // 4. Generate Log Approval & Kirim Email (Seperti logic sebelumnya)
+                // A. Cari atau Buat Parent Record di tabel lampiran_d
+                $lampiranD = LampiranD::firstOrCreate(
+                    ['bg_submission_id' => $submission->id],
+                    ['version_latest' => 0, 'created_by' => auth()->id()]
+                );
+
+                // B. Siapkan Data Snapshot (JSON)
+                $snapshotData = [
+                    'nama_distributor' => $request->nama_distributor,
+                    'kota' => $request->kota,
+                    'wilayah_kerja' => $request->wilayah_kerja,
+                    'periode' => $request->periode,
+                    'rata_rata_penjualan' => $request->rata_rata_penjualan,
+                    'syarat_pembayaran' => $request->syarat_pembayaran,
+                    'lead_time' => $request->lead_time,
+                    'faktor_fluktuasi' => $request->faktor_fluktuasi,
+                    'limit_kredit' => $request->limit_kredit,
+                    'nilai_bg_ditetapkan' => $request->nilai_bg_ditetapkan,
+                    'nilai_bg_diserahkan' => $request->nilai_bg_diserahkan,
+                    'details' => $request->details
+                ];
+
+                // C. Simpan ke tabel lampiran_d_versions
+                $nextVersion = $lampiranD->version_latest + 1;
+
+                $newVersion = LampiranDVersion::create([
+                    'lampiran_d_id' => $lampiranD->id,
+                    'version_no'    => $nextVersion,
+                    'data_snapshot' => $snapshotData,
+                    'file_path'     => $submission->signed_document_path,
+                    'generated_by'  => auth()->id(),
+                    'generated_at'  => now(),
+                    'remarks'       => 'Correction via Submission Edit (Submission ID: '.$submission->id.')'
+                ]);
+
+                // D. Update Pointer di Parent
+                $lampiranD->update([
+                    'version_latest'    => $nextVersion,
+                    'active_version_id' => $newVersion->id
+                ]);
+
+
+                // 4. Generate Log Approval & Kirim Email
                 $requester = auth()->user();
                 $logs = $this->generateApprovalLogs($requester, $submission->id, 'BG', 'Lampiran D');
-                
+
                 if ($logs->isEmpty()) {
-                    throw new \Exception("Approval Path ditemukan, tetapi User dengan Role yang sesuai (Manager Finance) tidak ditemukan atau tidak aktif.");
+                    throw new \Exception("User Role Manager Finance tidak ditemukan untuk approval.");
                 }
 
                 $submission->update(['status' => 'waiting_approval']);
@@ -240,7 +283,7 @@ class BgSubmissionController extends Controller
                 }
 
                 DB::commit();
-                return response()->json(['success' => true, 'message' => 'Data Lampiran D berhasil diperbarui & diteruskan ke Finance.']);
+                return response()->json(['success' => true, 'message' => 'Data Lampiran D berhasil diperbarui, disimpan ke history version, & diteruskan ke Finance.']);
 
             } catch (\Exception $e) {
                 DB::rollBack();
@@ -249,17 +292,60 @@ class BgSubmissionController extends Controller
         }
 
         if ($request->action_type == 'direct_submit') {
-            
+
+            $submission = BgSubmission::with(['recommendation.customer'])->findOrFail($id);
+
+            $bg = BankGaransi::where('customer_id', $submission->recommendation->customer_id)
+                    ->where('status', 'submitted')
+                    ->latest()
+                    ->first();
+
             $submission->update([
                 'status' => 'completed',
             ]);
 
+            if ($submission->recommendation) {
+                $submission->recommendation->update(['status' => 'approved']);
+            }
+
+            if ($bg) {
+                $this->addToBgHistory($submission, $bg);
+            }
+
             $this->sendCompletionEmails($submission);
 
-            return response()->json(['success' => true, 'message' => 'Dokumen disetujui. Notifikasi dikirim ke Customer & Internal.']);
+            return response()->json(['success' => true, 'message' => 'Dokumen disetujui & History Tercatat.']);
         }
 
         return response()->json(['success' => false, 'message' => 'Invalid Action']);
+    }
+
+    private function addToBgHistory($submission, $currentBg)
+    {
+        // 1. Cari Previous BG (Mundur 1 ID dari customer yang sama)
+        $prevBg = BankGaransi::where('customer_id', $currentBg->customer_id)
+                    ->where('id', '<', $currentBg->id)
+                    ->orderBy('id', 'desc')
+                    ->first();
+
+        // 2. Ambil Remarks dari Lampiran D Version Terbaru
+        $remarks = null;
+        $lampiranD = LampiranD::where('bg_submission_id', $submission->id)->with('activeVersion')->first();
+
+        if ($lampiranD && $lampiranD->activeVersion) {
+            $remarks = $lampiranD->activeVersion->remarks;
+        }
+
+        // 3. Create History Record
+        BgHistory::create([
+            'bank_garansi_id'   => $currentBg->id,
+            'previous_nominal'  => $prevBg ? $prevBg->bg_nominal : 0,
+            'new_nominal'       => $currentBg->bg_nominal,
+            'previous_exp_date' => $prevBg ? $prevBg->exp_date : null,
+            'new_exp_date'      => $currentBg->exp_date,
+            'remarks'           => $remarks ?? 'Direct Submitted by Admin',
+            'created_by'        => auth()->id() ?? null
+        ]);
     }
 
     public function show($id)

@@ -14,7 +14,7 @@
 
     <div class="row">
         <div class="col-12">
-            
+
             {{-- TAB NAVIGATION --}}
             <ul class="nav nav-tabs nav-tabs-custom mb-3" id="myTab" role="tablist">
                 <li class="nav-item" role="presentation">
@@ -30,7 +30,7 @@
             </ul>
 
             <div class="tab-content" id="myTabContent">
-                
+
                 {{-- TAB 1: OVERVIEW --}}
                 <div class="tab-pane fade show active" id="overview" role="tabpanel">
                     <div class="main-table-container">
@@ -38,7 +38,7 @@
                             <h6 class="mb-0"><i class="ph-bold ph-list me-2"></i> Active Documents</h6>
                         </div>
                         <div class="table-responsive p-3">
-                            <table class="w-100 display" id="tableOverview">
+                            <table class="w-100 display" id="sampleTable">
                                 <thead>
                                     <tr>
                                         <th width="5%">No</th>
@@ -61,7 +61,7 @@
                             <h6 class="mb-0"><i class="ph-bold ph-clock-counter-clockwise me-2"></i> Global Revision Log</h6>
                         </div>
                         <div class="table-responsive p-3">
-                            <table class="w-100 display" id="tableVersions">
+                            <table class="w-100 display" id="historyTable">
                                 <thead>
                                     <tr>
                                         <th width="5%">No</th>
@@ -98,7 +98,7 @@
                         <div class="alert alert-info small py-2">
                             <i class="ph-bold ph-info me-1"></i> Saving this form will increment the version number.
                         </div>
-                        
+
                         <div class="row g-3">
                             {{-- FORM FIELDS SAMA SEPERTI SEBELUMNYA --}}
                             <div class="col-12 border-bottom pb-2 fw-bold text-primary">Data Customer</div>
@@ -180,9 +180,9 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         $(document).ready(function() {
-            
+
             // 1. DATA TABLE OVERVIEW (Tab 1)
-            var tableOverview = $('#tableOverview').DataTable({
+            var tableOverview = $('#sampleTable').DataTable({
                 processing: true, serverSide: true,
                 ajax: {
                     url: "{{ route('lampiran-d.index') }}",
@@ -199,7 +199,7 @@
             });
 
             // 2. DATA TABLE VERSIONS (Tab 2) - Load saat tab diklik atau langsung
-            var tableVersions = $('#tableVersions').DataTable({
+            var tableVersions = $('#historyTable').DataTable({
                 processing: true, serverSide: true,
                 ajax: {
                     url: "{{ route('lampiran-d.index') }}",
@@ -219,7 +219,7 @@
 
             // Reload tables when tabs change (Optional, biar refresh data)
             $('button[data-bs-toggle="tab"]').on('shown.bs.tab', function (e) {
-                var target = $(e.target).attr("id"); 
+                var target = $(e.target).attr("id");
                 if (target === 'overview-tab') {
                     tableOverview.ajax.reload(null, false);
                 } else {
@@ -231,7 +231,7 @@
             $(document).on('click', '.btn-edit-lampiran', function() {
                 var id = $(this).data('id');
                 $('#lampiran_id').val(id);
-                
+
                 $.get("{{ url('bg/lampiran-d') }}/" + id, function(data) {
                     $('#customer_name').val(data.customer_name);
                     $('#customer_city').val(data.customer_city);
@@ -243,7 +243,7 @@
                     $('#credit_limit').val(data.credit_limit);
                     $('#set_bg').val(data.set_bg);
                     $('#bg_nominal').val(data.bg_nominal);
-                    
+
                     $('#editModal').modal('show');
                 });
             });

@@ -1334,3 +1334,42 @@ STYLES MOVED FROM index.blade.php
 #historyTable tbody tr:nth-child(even):hover {
     background: linear-gradient(90deg, rgba(#2563eb) 0%, rgba(#2563eb) 100%) !important;
 }
+
+.nav-pills-custom .nav-link {
+    background: #fff;
+    color: #6c757d;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 15px 20px;
+    text-align: left;
+    transition: all 0.3s ease;
+    margin-right: 10px; /* Jarak antar tab */
+    display: flex;
+    align-items: center;
+}
+
+/* Efek saat Mouse Diarahkan (Hover) */
+.nav-pills-custom .nav-link:hover {
+    background: #f8f9fa;
+    border-color: #dee2e6;
+    transform: translateY(-2px); /* Efek naik sedikit */
+}
+
+/* Efek saat Tab Aktif/Diklik */
+.nav-pills-custom .nav-link.active {
+    background: #2655d6 !important; /* Warna Biru Utama */
+    color: #fff !important;
+    border-color: #2655d6 !important;
+    box-shadow: 0 4px 8px rgba(38, 85, 214, 0.25);
+}
+
+/* Mengubah warna teks kecil saat aktif */
+.nav-pills-custom .nav-link.active .text-muted {
+    color: rgba(255,255,255, 0.8) !important;
+}
+
+/* Ukuran Icon */
+.nav-pills-custom .nav-link i {
+    font-size: 1.8rem;
+    margin-right: 15px;
+}

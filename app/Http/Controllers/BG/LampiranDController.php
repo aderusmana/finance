@@ -50,8 +50,7 @@ class LampiranDController extends Controller
             }
 
             // MODE 2: DATA OVERVIEW (DEFAULT - ACTIVE DOCS)
-            // Hanya ambil versi terbaru dari Lampiran D
-            $query = LampiranD::with(['submission.recommendation.customer']);
+                $query = LampiranD::with(['submission.recommendation.customer']);
 
             return DataTables::of($query)
                 ->addIndexColumn()
@@ -81,15 +80,12 @@ class LampiranDController extends Controller
         return view('page.bg.lampiran_d.index');
     }
 
-    // --- METHOD LAIN TETAP SAMA (STORE, UPDATE, SHOW, DLL) ---
-    
     public function show($id)
     {
-        // Digunakan untuk modal edit (ambil data current)
         $lampiran = LampiranD::with(['submission.recommendation.customer'])->findOrFail($id);
         $rec = $lampiran->submission->recommendation;
         $customer = $rec->customer;
-        
+
         $bg = BankGaransi::where('customer_id', $customer->id)
                 ->where('status', 'submitted')->latest()->first();
 
@@ -121,9 +117,9 @@ class LampiranDController extends Controller
 
             // 1. Simpan Snapshot Versi Baru
             $nextVersion = $lampiranD->version_latest + 1;
-            
+
             // Siapkan data untuk snapshot (simpan inputan user)
-            $dataSnapshot = $request->except(['_token', '_method', 'remarks']); 
+            $dataSnapshot = $request->except(['_token', '_method', 'remarks']);
 
             $version = LampiranDVersion::create([
                 'lampiran_d_id' => $lampiranD->id,
@@ -149,7 +145,7 @@ class LampiranDController extends Controller
                 'credit_limit_updated' => $request->credit_limit,
                 'set_bg' => $request->set_bg,
             ]);
-            
+
             // Update BG Nominal
             $bg = BankGaransi::where('customer_id', $customer->id)
                     ->where('status', 'submitted')->latest()->first();
