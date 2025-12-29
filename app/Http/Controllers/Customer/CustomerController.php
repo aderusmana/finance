@@ -13,7 +13,7 @@ use Illuminate\Http\Request;
 
 use Yajra\DataTables\Facades\DataTables;
 // Removed duplicate import of DataTables
-use App\Traits\ApprovalTrait;
+
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
@@ -26,8 +26,10 @@ use Carbon\Carbon;
 use App\Http\Requests\CustomerRequest;
 use App\Models\Customer\CustomerItem;
 use App\Mail\CustomerWelcomeMail;
+
 use Illuminate\Support\Str;
 use Spatie\Activitylog\Models\Activity;
+use App\Traits\ApprovalTrait;
 
 class CustomerController extends Controller
 {
