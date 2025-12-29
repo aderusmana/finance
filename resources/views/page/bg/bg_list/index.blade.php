@@ -128,6 +128,114 @@
         </div>
     </div>
 
+    {{-- DETAIL MODAL (Modern & Professional) --}}
+    <div class="modal fade" id="bgDetailModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0 shadow-lg overflow-hidden" style="border-radius: 12px;">
+                
+                {{-- Modal Header with Gradient --}}
+                <div class="modal-header text-white px-4 py-3" style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="bg-white bg-opacity-25 rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;">
+                            <i class="ph-bold ph-file-text fs-4"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-title fw-bold mb-0">Bank Garansi Detail</h5>
+                            <small class="text-white-50" id="detail-bg-number">Loading...</small>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body p-0">
+                    
+                    {{-- Status Banner --}}
+                    <div class="px-4 py-3 bg-light d-flex justify-content-between align-items-center border-bottom">
+                        <span class="text-muted fw-bold text-uppercase small letter-spacing-1">Current Status</span>
+                        <span class="badge rounded-pill px-3 py-2 fs-6" id="detail-status">Loading...</span>
+                    </div>
+
+                    <div class="row g-0">
+                        {{-- LEFT COLUMN: Main Info --}}
+                        <div class="col-md-7 p-4 border-end">
+                            <h6 class="fw-bold text-primary mb-3"><i class="ph-duotone ph-buildings me-2"></i>Customer Information</h6>
+                            
+                            <div class="mb-4">
+                                <label class="text-muted small text-uppercase fw-bold">Customer Name</label>
+                                <div class="fs-6 fw-bold text-dark" id="detail-customer">...</div>
+                            </div>
+
+                            <div class="row g-3 mb-4">
+                                <div class="col-6">
+                                    <label class="text-muted small text-uppercase fw-bold">Type</label>
+                                    <div class="d-flex align-items-center gap-2 mt-1">
+                                        <i class="ph-fill ph-tag text-info"></i>
+                                        <span class="fw-bold text-dark" id="detail-type">...</span>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <label class="text-muted small text-uppercase fw-bold">Nominal</label>
+                                    <div class="d-flex align-items-center gap-2 mt-1">
+                                        <i class="ph-fill ph-coins text-warning"></i>
+                                        <span class="fw-bold text-dark" id="detail-nominal">...</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <h6 class="fw-bold text-primary mb-3 mt-4"><i class="ph-duotone ph-bank me-2"></i>Bank Details</h6>
+                            <div class="p-3 rounded bg-light border border-dashed" id="detail-bank-container">
+                                {{-- Bank details will be injected here --}}
+                            </div>
+                        </div>
+
+                        {{-- RIGHT COLUMN: Dates & Meta --}}
+                        <div class="col-md-5 p-4 bg-light-subtle">
+                            <h6 class="fw-bold text-primary mb-3"><i class="ph-duotone ph-calendar me-2"></i>Timeline</h6>
+                            
+                            <div class="timeline-simple">
+                                <div class="mb-3">
+                                    <label class="text-muted small fw-bold">Issued Date</label>
+                                    <div class="d-flex align-items-center gap-2 text-dark">
+                                        <i class="ph-bold ph-calendar-plus text-success"></i>
+                                        <span id="detail-issued">...</span>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="text-muted small fw-bold">Expired Date</label>
+                                    <div class="d-flex align-items-center gap-2 text-dark">
+                                        <i class="ph-bold ph-calendar-x text-danger"></i>
+                                        <span id="detail-expired">...</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr class="border-dashed my-4">
+
+                            <div class="mb-3">
+                                <label class="text-muted small fw-bold">Created By</label>
+                                <div class="d-flex align-items-center gap-2 mt-1">
+                                    <div class="bg-secondary bg-opacity-10 rounded-circle p-1">
+                                        <i class="ph-fill ph-user text-secondary"></i>
+                                    </div>
+                                    <span class="small fw-bold" id="detail-creator">...</span>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="text-muted small fw-bold">Last Updated</label>
+                                <div class="small text-dark" id="detail-updated">...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer bg-light px-4 py-2">
+                    <button type="button" class="btn btn-light border fw-bold" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     @push('scripts')
         <script src="{{ asset('assets/vendor/select/select2.min.js') }}"></script>
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -174,28 +282,23 @@
                 $('#statusFilter, #typeFilter').on('change', function() { table.ajax.reload(); });
                 $('#resetFilters').on('click', function() { $('#statusFilter, #typeFilter').val('all').trigger('change'); });
 
-                // --- DYNAMIC ITEMS LOGIC ---
                 let itemIndex = 0;
 
                 function addBgItem(data = null) {
                     const index = itemIndex++;
 
-                    // PERBAIKAN: Gunakan || '' untuk mencegah "undefined" pada input value
                     const bgNumber = (data && data.bg_number) ? data.bg_number : '';
                     const bgType = (data && data.bg_type) ? data.bg_type : 'new';
 
-                    // Nominal Logic (Format ke Ribuan)
                     let nominalVal = '';
                     if (data && data.bg_nominal && parseFloat(data.bg_nominal) > 0) {
                         nominalVal = new Intl.NumberFormat('id-ID').format(data.bg_nominal);
                     }
 
-                    // Dates
                     const today = new Date().toISOString().split('T')[0];
                     const issued = (data && data.issued_date) ? data.issued_date.substring(0,10) : today;
                     const exp = (data && data.exp_date) ? data.exp_date.substring(0,10) : today;
 
-                    // Detail Logic (Safe Navigation)
                     let detail = (data && data.details && data.details.length > 0) ? data.details[0] : {};
                     const bankName = detail.bank_name || '';
                     const branch = detail.branch_name || '';
@@ -212,7 +315,6 @@
                             </div>
                             <div class="card-body p-3">
                                 <div class="row g-3">
-                                    {{-- Baris 1: BG Info --}}
                                     <div class="col-md-4">
                                         <label class="form-label small text-muted">BG Number <span class="text-danger">*</span></label>
                                         <input type="text" class="form-control" name="items[${index}][bg_number]" value="${bgNumber}" required placeholder="e.g. BG/2025/001">
@@ -237,7 +339,6 @@
                                         </div>
                                     </div>
 
-                                    {{-- Baris 2: Dates (Readonly) --}}
                                     <div class="col-md-6">
                                         <label class="form-label small text-muted">Issued Date</label>
                                         <input type="date" class="form-control bg-light" name="items[${index}][issued_date]" value="${issued}" readonly>
@@ -249,7 +350,6 @@
 
                                     <div class="col-12"><hr class="my-1 border-dashed"></div>
 
-                                    {{-- Baris 3: Bank Details --}}
                                     <div class="col-md-6">
                                         <label class="form-label small text-muted">Bank Name <span class="text-danger">*</span></label>
                                         <input type="text" class="form-control" name="items[${index}][bank_name]" value="${bankName}" required placeholder="e.g. Bank Mandiri">
@@ -278,12 +378,11 @@
                     $(this).closest('.bg-item-row').remove();
                 });
 
-                // --- CREATE MODE ---
                 $('#btn-create-bg').on('click', function() {
                     $('#bgForm')[0].reset();
                     $('#bgId').val(''); $('#formMethod').val('POST');
 
-                    itemIndex = 0; // Reset index agar mulai dari #1
+                    itemIndex = 0;
                     $('#items-container').empty();
 
                     $('.select2-modal').val(null).trigger('change');
@@ -313,7 +412,6 @@
                         $('#btn-add-item').hide();
                         $('#bgModalLabel').text('Edit Bank Garansi');
 
-                        // Load data yang diterima dari controller (sekarang sudah pasti JSON)
                         addBgItem(data);
 
                         $('#bgModal').modal('show');
@@ -377,6 +475,88 @@
                                 error: function() { Swal.fire('Error', 'Failed to delete', 'error'); }
                             });
                         }
+                    });
+                });
+
+                // --- SHOW DETAIL MODAL LOGIC ---
+                $(document).on('click', '.btn-show-bg', function() {
+                    const id = $(this).data('id');
+                    const url = "{{ route('bg-list.show', ':id') }}".replace(':id', id);
+                    
+                    // Tampilkan loading saat fetch data
+                    Swal.fire({ 
+                        title: 'Loading Data...', 
+                        allowOutsideClick: false,
+                        didOpen: () => Swal.showLoading() 
+                    });
+
+                    $.get(url, function(data) {
+                        Swal.close(); // Tutup loading
+
+                        // 1. Populate Header & Status
+                        $('#detail-bg-number').text(data.bg_number || '-');
+                        
+                        // Status Badge Logic
+                        const statusMap = {
+                            'approved': 'bg-success',
+                            'submitted': 'bg-primary',
+                            'draft': 'bg-secondary',
+                            'expired': 'bg-danger',
+                            'sent_to_customer': 'bg-info'
+                        };
+                        const statusClass = statusMap[data.status] || 'bg-secondary';
+                        $('#detail-status')
+                            .removeClass()
+                            .addClass(`badge rounded-pill px-3 py-2 fs-6 ${statusClass}`)
+                            .text((data.status || 'N/A').replace(/_/g, ' ').toUpperCase());
+
+                        // 2. Populate Main Info
+                        $('#detail-customer').text(data.customer ? data.customer.name : '-');
+                        $('#detail-type').text((data.bg_type || '-').toUpperCase());
+                        
+                        // Format Rupiah
+                        const nominal = data.bg_nominal ? new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(data.bg_nominal) : 'Rp 0';
+                        $('#detail-nominal').text(nominal);
+
+                        // 3. Populate Dates
+                        const formatDate = (dateStr) => {
+                            if(!dateStr) return '-';
+                            const date = new Date(dateStr);
+                            return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+                        };
+                        $('#detail-issued').text(formatDate(data.issued_date));
+                        $('#detail-expired').text(formatDate(data.exp_date));
+
+                        // 4. Populate Meta
+                        $('#detail-creator').text(data.creator ? data.creator.name : 'System');
+                        $('#detail-updated').text(formatDate(data.updated_at));
+
+                        // 5. Populate Bank Details (Looping)
+                        let bankHtml = '';
+                        if (data.details && data.details.length > 0) {
+                            data.details.forEach(detail => {
+                                bankHtml += `
+                                    <div class="mb-2 last-mb-0">
+                                        <div class="fw-bold text-dark">${detail.bank_name || '-'}</div>
+                                        <div class="small text-muted">
+                                            <i class="ph-bold ph-map-pin me-1"></i> ${detail.branch_name || 'Main Branch'}
+                                        </div>
+                                        <div class="small text-muted mt-1">
+                                            <i class="ph-bold ph-user me-1"></i> PIC: ${detail.contact_person || '-'}
+                                        </div>
+                                    </div>
+                                `;
+                            });
+                        } else {
+                            bankHtml = '<span class="text-muted f-s-12">No bank details available.</span>';
+                        }
+                        $('#detail-bank-container').html(bankHtml);
+
+                        // Show Modal
+                        $('#bgDetailModal').modal('show');
+
+                    }).fail(function() {
+                        Swal.fire('Error', 'Failed to fetch details.', 'error');
                     });
                 });
             });

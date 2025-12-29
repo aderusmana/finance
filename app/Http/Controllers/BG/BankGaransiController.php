@@ -49,9 +49,9 @@ class BankGaransiController extends Controller
                     $query->orderBy('customers.name', $order);
                 })
                 ->addColumn('action', function ($row) {
-                    $viewBtn = '<a href="' . route('bg-list.show', $row->id) . '" class="btn btn-sm btn-info text-white" title="View Detail"><i class="ph-bold ph-eye"></i></a>';
+                    $viewBtn = '<button type="button" class="btn btn-sm btn-info text-white btn-show-bg" data-id="' . $row->id . '" title="View Detail"><i class="ph-bold ph-eye"></i></button>';
                     $editBtn = '<button type="button" class="btn btn-sm btn-warning btn-edit-bg text-white" data-id="' . $row->id . '" title="Edit"><i class="ph-bold ph-pencil-simple"></i></button>';
-                    $deleteBtn = '<button type="button" class="btn btn-sm btn-danger btn-delete-bg text-white" data-id="' . $row->id . '" title="Delete"><i class="ph-bold ph-trash"></i></button>';
+                    $deleteBtn = '<button type="button" class="btn btn-sm btn-danger btn-delete-bg text-white btn-delete-bg" data-id="' . $row->id . '" title="Delete"><i class="ph-bold ph-trash"></i></button>';
                     return '<div class="d-flex gap-2 justify-content-center">' . $viewBtn . $editBtn . $deleteBtn . '</div>';
                 })
                 ->rawColumns(['action'])
@@ -76,13 +76,9 @@ class BankGaransiController extends Controller
     public function show($id)
     {
         if (request()->ajax() || request()->wantsJson()) {
-            $bg = BankGaransi::with(['details', 'customer'])->findOrFail($id);
+            $bg = BankGaransi::with(['details', 'customer', 'creator', 'histories.user'])->findOrFail($id);
             return response()->json($bg);
         }
-
-        $bg = BankGaransi::with(['customer', 'details', 'histories.user', 'creator'])->findOrFail($id);
-
-        return view('page.bg.bg_list.show', compact('bg'));
     }
 
     public function store(Request $request)

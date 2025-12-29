@@ -8,6 +8,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use Yajra\DataTables\Facades\DataTables;
+use App\Exports\BgHistoryExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class BgHistoryController extends Controller
 {
@@ -104,5 +106,15 @@ class BgHistoryController extends Controller
     {
         $bgHistory->delete();
         return response()->json(['success' => true, 'message' => 'History deleted successfully!']);
+    }
+
+    public function export(Request $request)
+    {
+        $start = $request->start_date;
+        $end   = $request->end_date;
+
+        $filename = 'BG_History_Recap_' . date('Y-m-d_His') . '.xlsx';
+
+        return Excel::download(new BgHistoryExport($start, $end), $filename);
     }
 }

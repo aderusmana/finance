@@ -135,6 +135,7 @@ Route::middleware('auth')->group(function () {
         Route::resource('bg-list', BankGaransiController::class);
         Route::resource('bg-recommendations', BgRecommendationController::class);
         Route::resource('bg-submissions', BgSubmissionController::class);
+        Route::get('bg-histories/export', [BgHistoryController::class, 'export'])->name('bg-histories.export');
         Route::resource('bg-histories', BgHistoryController::class)->only(['index', 'destroy']);
         Route::post('bg-recommendations/{id}/periods', [BgRecommendationController::class, 'savePeriods'])->name('bg-recommendations.save-periods');
         Route::get('customer/bg-form/{id}', [BgRecommendationController::class, 'showForm'])->name('customer.bg.form');

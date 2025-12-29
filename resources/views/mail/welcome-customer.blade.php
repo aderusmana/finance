@@ -111,7 +111,7 @@
                                             <tr>
                                                 <td style="width: 130px; padding: 2px 0; color: #333;">Contact No</td>
                                                 <td style="width: 15px; text-align: center; padding: 2px 0; color: #333;">:</td>
-                                                <td style="padding: 2px 0; color: #333;">-</td>
+                                                <td style="padding: 2px 0; color: #333;">{{ $salesRep->no_telepon  }}</td>
                                             </tr>
                                         </table>
 

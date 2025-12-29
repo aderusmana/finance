@@ -1335,41 +1335,31 @@ STYLES MOVED FROM index.blade.php
     background: linear-gradient(90deg, rgba(#2563eb) 0%, rgba(#2563eb) 100%) !important;
 }
 
-.nav-pills-custom .nav-link {
-    background: #fff;
-    color: #6c757d;
-    border: 1px solid #e9ecef;
-    border-radius: 8px;
-    padding: 15px 20px;
-    text-align: left;
+/* Default State (Tidak Aktif) */
+.nav-tabs-custom .nav-link {
+    color: #2666c0; /* Abu-abu */
+    font-weight: 600;
+    border: 1px solid transparent;
+    background: transparent;
     transition: all 0.3s ease;
-    margin-right: 10px; /* Jarak antar tab */
-    display: flex;
-    align-items: center;
 }
 
-/* Efek saat Mouse Diarahkan (Hover) */
-.nav-pills-custom .nav-link:hover {
-    background: #f8f9fa;
-    border-color: #dee2e6;
-    transform: translateY(-2px); /* Efek naik sedikit */
+/* Hover State */
+.nav-tabs-custom .nav-link:hover {
+    color: #4d83cf;
+    background: #f1f5f9;
 }
 
-/* Efek saat Tab Aktif/Diklik */
-.nav-pills-custom .nav-link.active {
-    background: #2655d6 !important; /* Warna Biru Utama */
-    color: #fff !important;
-    border-color: #2655d6 !important;
-    box-shadow: 0 4px 8px rgba(38, 85, 214, 0.25);
+/* --- ACTIVE STATE: EXPIRING (MERAH) --- */
+.nav-tabs-custom .nav-link#expiring-tab.active {
+    color: #dc3545 !important; /* Merah */
+    background-color: rgba(220, 53, 69, 0.08) !important;
+    border-color: #e2e8f0 #e2e8f0 transparent; /* Border atas/samping, bawah bolong */
 }
 
-/* Mengubah warna teks kecil saat aktif */
-.nav-pills-custom .nav-link.active .text-muted {
-    color: rgba(255,255,255, 0.8) !important;
-}
-
-/* Ukuran Icon */
-.nav-pills-custom .nav-link i {
-    font-size: 1.8rem;
-    margin-right: 15px;
+/* --- ACTIVE STATE: HISTORY (BIRU TUA) --- */
+.nav-tabs-custom .nav-link#history-tab.active {
+    color: #1e3a8a !important; /* Biru Tua */
+    background-color: rgba(30, 58, 138, 0.08) !important;
+    border-color: #e2e8f0 #e2e8f0 transparent;
 }

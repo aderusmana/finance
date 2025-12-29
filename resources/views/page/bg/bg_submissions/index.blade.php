@@ -35,10 +35,10 @@
             </div>
 
             <div class="main-table-container">
-                <div class="table-header-enhanced">
-                    <h4 class="table-title mb-1"><i class="ph-duotone ph-files me-2"></i> Submission Data</h4>
-                    <small class="text-white opacity-75 f-s-12">Upload and manage signed BG application forms.</small>
-                </div>
+                    <div class="table-header-enhanced">
+                        <h4 class="table-title mb-1"><i class="ph-duotone ph-files me-2"></i> Submission Data</h4>
+                        <small class="text-white opacity-75 f-s-12">Upload and manage signed BG application forms.</small>
+                    </div>
                 <div class="table-responsive">
                     <table class="w-100 display" id="sampleTable">
                         <thead>

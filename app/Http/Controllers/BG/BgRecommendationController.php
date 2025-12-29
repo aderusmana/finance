@@ -50,6 +50,13 @@ class BgRecommendationController extends Controller
 
                 return DataTables::of($query)
                     ->addIndexColumn()
+                    ->addColumn('bg_number', function($row) {
+                        $bg = BankGaransi::where('customer_id', $row->customer_id)
+                                ->latest()
+                                ->first();
+                        
+                        return $bg ? $bg->bg_number : '-';
+                    })
                     ->addColumn('customer_name', fn($row) => $row->customer->name ?? '-')
                     ->editColumn('current_bg', fn($row) => 'Rp ' . number_format($row->current_bg, 0, ',', '.'))
                     ->addColumn('action', function ($row) {
@@ -65,6 +72,13 @@ class BgRecommendationController extends Controller
 
                 return DataTables::of($query)
                     ->addIndexColumn()
+                    ->addColumn('bg_number', function($row) {
+                        $bg = BankGaransi::where('customer_id', $row->customer_id)
+                                ->latest()
+                                ->first();
+                        
+                        return $bg ? $bg->bg_number : '-';
+                    })
                     ->addColumn('customer_name', fn($row) => $row->customer->name ?? '-')
                     ->editColumn('average', fn($row) => 'Rp ' . number_format($row->average, 0, ',', '.'))
                     ->editColumn('recommended_credit_limit', fn($row) => 'Rp ' . number_format($row->recommended_credit_limit, 0, ',', '.'))
@@ -158,6 +172,7 @@ class BgRecommendationController extends Controller
         $request->validate([
             'average' => 'required|numeric',
             'set_bg'  => 'required|numeric',
+            'credit_limit_updated' => 'nullable|numeric',
         ]);
 
         DB::beginTransaction();
@@ -189,10 +204,14 @@ class BgRecommendationController extends Controller
             $fkLimit = $recLimit * ($rulePercent / 100);
             $rounded = round($fkLimit, -6);
 
-            if ($rulePercent > 0) {
-                 $limitUpdated = $setBg / ($rulePercent / 100);
+            if ($request->filled('credit_limit_updated')) {
+                $limitUpdated = (float) $request->credit_limit_updated;
             } else {
-                 $limitUpdated = $setBg;
+                if ($rulePercent > 0) {
+                     $limitUpdated = $setBg / ($rulePercent / 100);
+                } else {
+                     $limitUpdated = $setBg;
+                }
             }
 
             $notes = $request->notes;

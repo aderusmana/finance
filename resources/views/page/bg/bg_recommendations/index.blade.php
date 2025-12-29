@@ -4,52 +4,135 @@
 
     <div class="row m-1">
         <div class="col-12">
-            <h4 class="main-title">Credit Limit Recommendations</h4>
+            <h4 class="main-title">BG Recommendations</h4>
+            <ul class="app-line-breadcrumbs mb-3">
+                <li><a class="f-s-14 f-w-500" href="{{ route('bg-recommendations.index') }}">Bank Garansi</a></li>
+                <li class="active"><a class="f-s-14 f-w-500" href="#">Recommendations</a></li>
+            </ul>
         </div>
     </div>
-
-    {{-- TABLE SECTION (SAMA SEPERTI SEBELUMNYA) --}}
+    {{-- 1. HEADER SECTION (COMPACT HERO CARD) --}}
     <div class="row">
         <div class="col-12">
-            <div class="card border-0 shadow-sm">
+            <div class="card border-0 shadow-sm overflow-hidden">
+                <div class="card-body p-3 d-flex align-items-center justify-content-between" 
+                     style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); position: relative; min-height: 80px;">
+                    
+                    {{-- Background Pattern --}}
+                    <div style="position: absolute; right: 0; top: 0; bottom: 0; width: 40%; background: linear-gradient(to left, rgba(255,255,255,0.1), transparent); pointer-events: none;"></div>
+
+                    {{-- Bagian Kiri: Judul & Ikon (Compact) --}}
+                    <div class="d-flex align-items-center position-relative z-1">
+                        <div class="bg-white bg-opacity-25 rounded-3 p-2 me-3 d-flex align-items-center justify-content-center shadow-sm" 
+                             style="width: 48px; height: 48px; backdrop-filter: blur(5px);">
+                            <i class="ph-fill ph-trend-up text-white fs-4"></i>
+                        </div>
+                        <div>
+                            <h5 class="mb-0 fw-bold text-white tracking-wide">
+                                Credit Limit Recommendations
+                            </h5>
+                            <span class="text-white-50 small" style="font-size: 0.85rem;">
+                                Monitor status Bank Garansi & riwayat limit.
+                            </span>
+                        </div>
+                    </div>
+
+                    {{-- Bagian Kanan: Quick Stats (Compact Row) --}}
+                    <div class="d-none d-md-flex align-items-center gap-2 position-relative z-1 text-white">
+                        {{-- Stat: Action --}}
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="text-end line-height-sm">
+                                <span class="d-block text-uppercase text-white-50 fw-bold" style="font-size: 0.7rem;">Action Needed</span>
+                                <span class="fs-5 fw-bold text-warning" id="expiringCountBadge">0</span>
+                            </div>
+                            <i class="ph-fill ph-warning-circle fs-4 text-warning"></i>
+                        </div>
+                        
+                        <div class="vr bg-white opacity-25 mx-2" style="height: 30px;"></div>
+                        
+                        {{-- Stat: History --}}
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="text-end line-height-sm">
+                                <span class="d-block text-uppercase text-white-50 fw-bold" style="font-size: 0.7rem;">History Data</span>
+                                <span class="fs-5 fw-bold" id="historyCountBadge">0</span>
+                            </div>
+                            <i class="ph-fill ph-clock-counter-clockwise fs-4"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm" style="border-radius: 12px;">
                 <div class="card-body p-4">
-                    <ul class="nav nav-tabs mb-4">
-                        <li class="nav-item">
-                            <button class="nav-link active text-danger fw-bold" data-bs-toggle="tab" data-bs-target="#expiring-pane">Expiring (Action Needed)</button>
+                    <div class="alert alert-light-warning border-danger border-opacity-25 d-flex align-items-center">
+                        <i class="ph-fill ph-info text-danger me-2 fs-5"></i>
+                        <small class="text-danger fw-bold">Daftar customer yang BG-nya akan segera expired atau perlu tindakan.</small>
+                    </div>
+                    <ul class="nav nav-tabs nav-tabs-custom mb-4 border-bottom-0" id="recommendationTabs" role="tablist">
+                        <li class="nav-item me-2">
+                            <button class="nav-link active px-4 py-2 rounded-top-3" 
+                                    id="expiring-tab" 
+                                    data-bs-toggle="tab" 
+                                    data-bs-target="#expiring-pane" 
+                                    type="button">
+                                <i class="ph-bold ph-warning me-2"></i>Expiring (Action Needed)
+                            </button>
                         </li>
+
+                        {{-- TAB 2: HISTORY --}}
                         <li class="nav-item">
-                            <button class="nav-link fw-bold" data-bs-toggle="tab" data-bs-target="#history-pane">History</button>
+                            <button class="nav-link px-4 py-2 rounded-top-3" 
+                                    id="history-tab" 
+                                    data-bs-toggle="tab" 
+                                    data-bs-target="#history-pane" 
+                                    type="button">
+                                <i class="ph-bold ph-clock-counter-clockwise me-2"></i>History
+                            </button>
                         </li>
                     </ul>
 
-                    <div class="tab-content">
-                        <div class="tab-pane fade show active" id="expiring-pane">
-                            <table class="table table-hover w-100" id="sampleTable">
-                                <thead class="bg-light">
-                                    <tr>
-                                        <th>No</th>
-                                        <th>Customer</th>
-                                        <th>Current BG</th>
-                                        <th>Action</th>
-                                    </tr>
-                                </thead>
-                            </table>
+                    <div class="tab-content" id="recommendationTabContent">
+                        <div class="tab-pane fade show active" id="expiring-pane" role="tabpanel">
+                            <div class="table-responsive">
+                                <table class="table table-hover w-100 align-middle" id="sampleTable">
+                                    <thead class="bg-light">
+                                        <tr>
+                                            <th width="5%" class="text-center rounded-start">No</th>
+                                            <th width="35%">BG Number</th>
+                                            <th width="35%">Customer Info</th>
+                                            <th width="25%">Current BG (Rp.)</th>
+                                            <th width="15%" class="text-center rounded-end">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {{-- Data diisi oleh DataTables --}}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
-                        <div class="tab-pane fade" id="history-pane">
-                            <table class="table table-hover w-100" id="historyTable">
-                                <thead class="bg-light">
-                                    <tr>
-                                        <th>No</th>
-                                        <th>Customer</th>
-                                        <th>Avg Sales</th>
-                                        <th>Rec. Limit</th>
-                                        <th>Set BG (Final)</th>
-                                        <th>Status</th>
-                                        <th>Action</th>
-                                    </tr>
-                                </thead>
-                            </table>
+
+                        <div class="tab-pane fade" id="history-pane" role="tabpanel">
+                            <div class="table-responsive">
+                                <table class="table table-hover w-100 align-middle" id="historyTable">
+                                    <thead class="bg-light">
+                                        <tr>
+                                            <th width="5%" class="text-center rounded-start">No</th>
+                                            <th width="25%">BG Number</th>
+                                            <th width="25%">Customer</th>
+                                            <th width="15%">Avg Sales</th>
+                                            <th width="15%">Rec. Limit</th>
+                                            <th width="15%">Set BG (Final)</th>
+                                            <th width="15%" class="text-center">Status</th>
+                                            <th width="10%" class="text-center rounded-end">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {{-- Data diisi oleh DataTables --}}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
+
                     </div>
                 </div>
             </div>
@@ -78,8 +161,8 @@
                     @method('PUT')
                     <input type="hidden" name="id" id="recId">
 
-                    {{-- REVISI 3: Hidden Input untuk Raw Current BG --}}
                     <input type="hidden" id="raw_current_bg" value="0">
+                    <input type="hidden" name="credit_limit_updated" id="input_limit_updated">
 
                     <div class="modal-body p-0 bg-light">
                         {{-- SECTION 1: CUSTOMER INFO --}}
@@ -289,6 +372,17 @@
 
     @push('scripts')
     <script>
+        // Update Badge Header saat tabel selesai load/draw
+        $('#sampleTable').on('draw.dt', function () {
+            let info = $('#sampleTable').DataTable().page.info();
+            $('#expiringCountBadge').text(info.recordsTotal);
+        });
+
+        $('#historyTable').on('draw.dt', function () {
+            let info = $('#historyTable').DataTable().page.info();
+            $('#historyCountBadge').text(info.recordsTotal);
+        });
+
         $(document).ready(function() {
             const fmt = (num) => new Intl.NumberFormat('id-ID', {
                 style:'currency',
@@ -341,6 +435,7 @@
                 ajax: { url: "{{ route('bg-recommendations.index') }}", data: { type: 'expiring' } },
                 columns: [
                     { data: 'DT_RowIndex', orderable: false, searchable: false, className: 'text-center' },
+                    { data: 'bg_number', className: 'fw-bold' },
                     { data: 'customer_name', className: 'fw-bold' },
                     { data: 'current_bg' },
                     { data: 'action', className: 'text-center' }
@@ -352,6 +447,7 @@
                 ajax: { url: "{{ route('bg-recommendations.index') }}", data: { type: 'history' } },
                 columns: [
                     { data: 'DT_RowIndex', orderable: false, searchable: false, className: 'text-center' },
+                    { data: 'bg_number', className: 'fw-bold' },
                     { data: 'customer_name' },
                     { data: 'average' },
                     { data: 'recommended_credit_limit' },
@@ -638,6 +734,7 @@
 
                 // Tampilkan dengan desimal (receh)
                 $('#calc_limit_updated').text(fmtDecimal(rawLimitUpdatedValue));
+                $('#input_limit_updated').val(rawLimitUpdatedValue);
             }
 
             $('#set_bg').on('input', calculateAll);
@@ -645,8 +742,11 @@
             $('#btnRoundLimit').click(function() {
                 if(rawLimitUpdatedValue > 0) {
                     let roundedValue = Math.round(rawLimitUpdatedValue / 1000000) * 1000000;
+                    rawLimitUpdatedValue = roundedValue;
+
                     $('#calc_limit_updated').text(fmtDecimal(roundedValue));
                     $('#calc_limit_updated').fadeOut(100).fadeIn(100);
+                    $('#input_limit_updated').val(roundedValue);
                 }
             });
 
