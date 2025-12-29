@@ -17,5 +17,6 @@ class DatabaseSeeder extends Seeder
         $this->call(BankGaransiSeeder::class);
         $this->call(TaxsTableSeeder::class);
         $this->call(BGLimitRulesSeeder::class);
+        $this->call(BgLampiranDApprovalSeeder::class);
     }
 }
