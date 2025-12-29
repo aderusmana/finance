@@ -26,32 +26,26 @@
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <div class="d-flex align-items-center gap-2">
                     <span class="text-muted fw-bold me-1"><i class="ph-bold ph-funnel"></i> Filter:</span>
-                    
-                    {{-- Filter 1: Account Status (Active/Inactive) --}}
+
                     <select id="statusFilter" class="form-select select2" style="width: 150px;">
                         <option value="all">All Account</option>
-                        {{-- Looping Status Akun yang ada di DB --}}
                         @foreach($accountStatuses as $status)
                             <option value="{{ $status }}">{{ $status }}</option>
                         @endforeach
                     </select>
 
-                    {{-- Filter 2: Approval Status (Pending/Processing/dll) --}}
                     <select id="approvalStatusFilter" class="form-select select2" style="width: 175px;">
                         <option value="all">All Approval</option>
-                        {{-- Looping Status Approval yang ada di DB --}}
                         @foreach($approvalStatuses as $status)
                             <option value="{{ $status }}">{{ $status }}</option>
                         @endforeach
                     </select>
 
-                    {{-- Reset Button --}}
                     <button id="resetFilters" class="btn btn-sm btn-secondary border" title="Reset Filters">
                         <i class="ph-bold ph-arrow-counter-clockwise"></i>
                     </button>
                 </div>
 
-                {{-- Create Button --}}
                 <div class="ms-auto d-flex">
                     <button class="btn btn-primary" type="button" id="btn-create-customer">
                         <i class="ph-bold ph-plus"></i>
@@ -62,8 +56,6 @@
 
             <div class="main-table-container">
                 <div class="table-header-enhanced d-flex justify-content-between align-items-center">
-                    
-                    {{-- Kiri: Judul & Deskripsi Singkat --}}
                     <div>
                         <h4 class="table-title mb-1">
                             <i class="ph-duotone ph-users-three me-2"></i> Customer List
@@ -73,17 +65,14 @@
                         </small>
                     </div>
 
-                    {{-- Kanan: Quick Stats --}}
                     <div class="d-none d-md-flex gap-4 text-white align-items-center pe-2">
-                        
-                        {{-- Stat 1: Pending (Kuning - Jam) --}}
                         <div class="d-flex align-items-center gap-2" data-bs-toggle="tooltip" title="Waiting for Approval">
                             <div class="bg-white bg-opacity-25 rounded-circle p-1 d-flex justify-content-center align-items-center" style="width: 32px; height: 32px;">
                                 <i class="ph-fill ph-clock-countdown text-warning f-s-18"></i>
                             </div>
                             <div class="d-flex flex-column line-height-sm">
                                 <span class="f-s-11 opacity-75 text-uppercase fw-bold">Pending</span>
-                                <span class="f-s-14 fw-bold">{{ $pendingCount }}</span> 
+                                <span class="f-s-14 fw-bold">{{ $pendingCount }}</span>
                             </div>
                         </div>
 
@@ -93,49 +82,45 @@
                             </div>
                             <div class="d-flex flex-column line-height-sm">
                                 <span class="f-s-11 opacity-75 text-uppercase fw-bold">Processing</span>
-                                <span class="f-s-14 fw-bold">{{ $processingCount }}</span> 
+                                <span class="f-s-14 fw-bold">{{ $processingCount }}</span>
                             </div>
                         </div>
 
-                        {{-- Stat 2: Approved (Biru Muda - Segel/Stempel) --}}
                         <div class="d-flex align-items-center gap-2" data-bs-toggle="tooltip" title="Approved (Administrative)">
                              <div class="bg-white bg-opacity-25 rounded-circle p-1 d-flex justify-content-center align-items-center" style="width: 32px; height: 32px;">
-                                {{-- GANTI ICON & WARNA DISINI --}}
                                 <i class="ph-fill ph-seal-check text-success f-s-18"></i>
                             </div>
                             <div class="d-flex flex-column line-height-sm">
                                 <span class="f-s-11 opacity-75 text-uppercase fw-bold">Approved</span>
-                                <span class="f-s-14 fw-bold">{{ $approvedCount }}</span> 
+                                <span class="f-s-14 fw-bold">{{ $approvedCount }}</span>
                             </div>
                         </div>
 
                         <div class="vr opacity-100 bg-white" style="height: 50px;"></div>
 
-                        {{-- Stat 3: Active (Hijau - Centang) --}}
+                        {{-- Stat 3: BG Status --}}
                         <div class="d-flex align-items-center gap-4">
 
-                            <div class="d-flex align-items-center gap-2" data-bs-toggle="tooltip" title="Active Customers">
+                            <div class="d-flex align-items-center gap-2" data-bs-toggle="tooltip" title="Customers with Bank Garansi">
                                 <div class="bg-white bg-opacity-10 rounded-circle p-1 d-flex justify-content-center align-items-center" style="width: 32px; height: 32px;">
-                                    <i class="ph-fill ph-check-circle text-success f-s-18"></i>
+                                    <i class="ph-fill ph-file-text text-success f-s-18"></i>
                                 </div>
                                 <div class="d-flex flex-column line-height-sm">
-                                    <span class="f-s-11 opacity-75 text-uppercase fw-bold">Active</span>
-                                    <span class="f-s-14 fw-bold">{{ $activeCount }}</span> 
+                                    <span class="f-s-11 opacity-75 text-uppercase fw-bold">BG Active</span>
+                                    <span class="f-s-14 fw-bold">{{ $activeCount }}</span>
                                 </div>
                             </div>
 
-                            <div class="d-flex align-items-center gap-2" data-bs-toggle="tooltip" title="Inactive Customers">
+                            <div class="d-flex align-items-center gap-2" data-bs-toggle="tooltip" title="Customers without Bank Garansi">
                                 <div class="bg-white bg-opacity-10 rounded-circle p-1 d-flex justify-content-center align-items-center" style="width: 32px; height: 32px;">
-                                    <i class="ph-fill ph-x-circle text-danger f-s-18"></i>
+                                    <i class="ph-fill ph-prohibit text-danger f-s-18"></i>
                                 </div>
                                 <div class="d-flex flex-column line-height-sm">
-                                    <span class="f-s-11 opacity-75 text-uppercase fw-bold">Inactive</span>
-                                    <span class="f-s-14 fw-bold">{{ $inactiveCount }}</span> 
+                                    <span class="f-s-11 opacity-75 text-uppercase fw-bold">No BG</span>
+                                    <span class="f-s-14 fw-bold">{{ $inactiveCount }}</span>
                                 </div>
                             </div>
-
                         </div>
-
                     </div>
                 </div>
 
@@ -950,7 +935,7 @@
                 });
 
                 $('#resetFilters').on('click', function() {
-                    $('#statusFilter').val('all'); 
+                    $('#statusFilter').val('all');
                     $('#approvalStatusFilter').val('all');
 
                     $('#statusFilter').trigger('change');

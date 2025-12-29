@@ -216,16 +216,19 @@ class CustomerBgPortalController extends Controller
             // Ambil data ulang
             $bg = BankGaransi::with('customer')->findOrFail($bg_id);
             $cust = $bg->customer;
+            $financeUser = \App\Models\User::role('manager-finance')->first();
+            $financeName = $financeUser ? $financeUser->name : 'Manager Finance';
             $nomorPkd = DocumentHelper::generatePKDNumber($bg->temp_recommendation_id ?? $bg->id, $cust->name, now());
 
             $dataPdf = [
-                'customer' => $cust, 
+                'customer' => $cust,
                 'bg' => $bg,
                 'nomor_pkd' => $nomorPkd,
                 'expired_date' => $bg->exp_date,
                 'bank_name' => $bg->bank_name ?? 'Bank',
                 'branch_name' => $bg->branch_name ?? '',
-                'nominal' => $bg->bg_nominal
+                'nominal' => $bg->bg_nominal,
+                'finance_name' => $financeName
             ];
 
             // Tentukan View berdasarkan Type

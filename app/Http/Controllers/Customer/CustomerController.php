@@ -111,34 +111,26 @@ class CustomerController extends Controller
                 </div>
             ';
             })
-            // 1. CREDIT LIMIT (Format Uang)
             ->addColumn('credit_limit_formatted', function ($row) {
                 return '<div class="badge status-badge-lg bg-warning">
                             IDR ' . number_format($row->credit_limit, 0, ',', '.') . '
                         </div>';
             })
 
-            // 2. FINANCIAL INFO (TOP & BG Status)
             ->addColumn('financial_info', function ($row) {
-                // Gunakan class .srs-badge dari CSS sample-table (Blue Gradient)
                 if ($row->bank_garansi === 'YA') {
                     $bgBadge = '<span class="srs-badge"><i class="fas fa-file-contract me-1"></i> BG: YES</span>';
                 } else {
-                    // Gunakan style badge secondary biasa tapi tipis
                     $bgBadge = '<span class="badge bg-secondary opacity-50" style="font-size: 0.75em;">BG: NO</span>';
                 }
 
-                // TOP menggunakan teks tebal biru tua (sesuai tema)
                 return '<div class="d-flex flex-column">
                             <span class="fw-bold text-primary mb-1" style="font-size: 0.95em;">'. $row->term_of_payment .'</span>
                             <div>' . $bgBadge . '</div>
                         </div>';
             })
 
-            // 3. STATUS APPROVAL (Gunakan .status-badge-lg)
             ->addColumn('status_approval', function ($row) {
-                // Mapping status ke class Bootstrap dasar
-                // CSS sample-table akan mengubah bg-primary jadi Ungu, bg-warning jadi Oranye, dll.
                 $baseClass = match($row->status_approval) {
                     'Approved', 'Completed' => 'bg-success', // Hijau Gradient
                     'Rejected', 'Canceled' => 'bg-danger',   // Merah Gradient
@@ -147,7 +139,6 @@ class CustomerController extends Controller
                     default => 'bg-secondary'                // Abu Gradient
                 };
 
-                // Icon logic
                 $icon = match($row->status_approval) {
                     'Approved', 'Completed' => '<i class="ph-bold ph-check-circle me-1"></i>',
                     'Rejected', 'Canceled' => '<i class="ph-bold ph-x-circle me-1"></i>',
@@ -155,25 +146,20 @@ class CustomerController extends Controller
                     default => '<i class="ph-bold ph-clock me-1"></i>'
                 };
 
-                // Perhatikan penambahan class 'status-badge-lg'
                 return '<span class="badge status-badge-lg ' . $baseClass . '">' . $icon . strtoupper($row->status_approval) . '</span>';
             })
 
-            // 4. ROUTE TO (Gunakan .route-to-badge-lg)
             ->addColumn('route_to', function ($row) {
                  if($row->status_approval === 'Approved' || $row->status_approval === 'Completed'){
                     return '<span class="badge route-to-badge-lg bg-info text-white"><i class="ph-bold ph-check-circle me-1 text-white"></i>-</span>';
                 }
 
-                // Gunakan bg-info + route-to-badge-lg untuk efek Gold/Emas sesuai CSS Anda
                 return '<span class="badge route-to-badge-lg bg-info text-white">
                             <i class="ph-bold ph-user me-1"></i> ' . strtoupper($row->route_to ?? '-') . '
                         </span>';
             })
 
-            // 5. STATUS ACTIVE/INACTIVE
             ->addColumn('status', function ($row) {
-                // Gunakan status-badge-lg juga agar konsisten bentuknya
                 $badge = $row->status === 'Active' ? 'bg-success' : 'bg-secondary';
                 return '<span class="badge status-badge-lg ' . $badge . '">' . strtoupper($row->status) . '</span>';
             })
@@ -181,7 +167,6 @@ class CustomerController extends Controller
             ->make(true);
         }
 
-        // eager-load relations so view can access user position, branch and region without extra queries
         $sales = Sales::with(['user.position', 'branch', 'region'])->get();
         $top = TOP::all();
         $accountgroup = AccountGroup::all();
@@ -189,8 +174,11 @@ class CustomerController extends Controller
         $pendingCount = Customer::whereIn('status_approval', ['Pending', 'Processing'])->count();
         $processingCount = Customer::where('status_approval', 'Processing')->count();
         $approvedCount = Customer::whereIn('status_approval', ['Approved', 'Completed'])->count();
-        $activeCount = Customer::where('status', 'Active')->count();
-        $inactiveCount = Customer::where('status', 'Inactive')->count();
+        $activeCount = Customer::where('bank_garansi', 'YA')->count();
+        $inactiveCount = Customer::where(function($q) {
+            $q->where('bank_garansi', '!=', 'YA')
+              ->orWhereNull('bank_garansi');
+        })->count();
         $approvalStatuses = Customer::whereNotNull('status_approval')
                                 ->distinct()
                                 ->pluck('status_approval');

@@ -40,7 +40,7 @@
             <td style="width: 10px; padding: 5px; vertical-align: top;">:</td>
             <td style="padding: 5px; vertical-align: top;">
                 @php
-                    $periods = $rec->periods; 
+                    $periods = $rec->periods;
                     $periodeTxt = '-';
                     if($periods->count() > 0) {
                         $start = $periods->min('period_date');
@@ -115,8 +115,8 @@
             <td style="width: 33%; padding-bottom: 80px; vertical-align: top;">DISTRIBUTOR</td>
         </tr>
         <tr>
-            <td style="font-weight: bold; text-decoration: underline;">Ronal Katili</td>
-            <td style="font-weight: bold; text-decoration: underline;">Edie Hirman</td>
+            <td style="font-weight: bold; text-decoration: underline;">{{ isset($sales_name) ? strtoupper($sales_name) : 'Dept Head Sales tidak terpanggil' }}</td>
+            <td style="font-weight: bold; text-decoration: underline;">{{ isset($finance_name) ? strtoupper($finance_name) : 'Dept Head Finance tidak terpanggil' }}</td>
             <td style="font-weight: bold; text-decoration: underline;">{{ $customer->name }}</td>
         </tr>
     </table>

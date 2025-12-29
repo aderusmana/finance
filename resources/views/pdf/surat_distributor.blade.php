@@ -29,12 +29,12 @@
 
     <div style="text-align: justify; margin-bottom: 20px;">
         <p>Dengan Hormat,</p>
-        
-        Sehubungan dengan akan berakhirnya masa berlaku Bank Garansi atas nama <strong>{{ strtoupper($customer->name) }}</strong> 
-        pada tanggal {{ \Carbon\Carbon::parse($expired_date)->locale('id')->isoFormat('D MMMM Y') }}, dengan ini Kami mohon agar Bank Garansi 
-        yang akan habis masa berlakunya tersebut dilakukan perpanjangan masa berlaku Bank Garansi dengan nominal sebesar 
-        <strong>Rp. {{ number_format($nominal, 0, ',', '.') }},- ({{ ucwords(\App\Helpers\DocumentHelper::terbilang($nominal)) }} Rupiah.)</strong> 
-        untuk menjamin pembayaran atas pembelian produk pada PT. Sinar Meadow International Indonesia, 
+
+        Sehubungan dengan akan berakhirnya masa berlaku Bank Garansi atas nama <strong>{{ strtoupper($customer->name) }}</strong>
+        pada tanggal {{ \Carbon\Carbon::parse($expired_date)->locale('id')->isoFormat('D MMMM Y') }}, dengan ini Kami mohon agar Bank Garansi
+        yang akan habis masa berlakunya tersebut dilakukan perpanjangan masa berlaku Bank Garansi dengan nominal sebesar
+        <strong>Rp. {{ number_format($nominal, 0, ',', '.') }},- ({{ ucwords(\App\Helpers\DocumentHelper::terbilang($nominal)) }} Rupiah.)</strong>
+        untuk menjamin pembayaran atas pembelian produk pada PT. Sinar Meadow International Indonesia,
         dimana Bank Garansi yang akan diterbitkan dengan masa berlaku sampai dengan 1 (satu) tahun yang ditunjuk atas nama:
         <br>
 
@@ -43,20 +43,20 @@
             Jalan Pulo Ayang I no. 6<br>
             Kawasan Industri Pulogadung<br>
             Jakarta Timur 13260
-        </div>  
-        
-        Mohon agar dapat mencantumkan Nomor Perjanjian Kerjasama Distributor (PKD) dengan nomor 
+        </div>
+
+        Mohon agar dapat mencantumkan Nomor Perjanjian Kerjasama Distributor (PKD) dengan nomor
         {{ $nomor_pkd }} di dalam Bank Garansi tersebut.
-    
+
 
         <p>Demikian Surat Permohonan ini Kami buat atas perhatian dan kerjasamanya Kami ucapkan terima kasih.</p>
     </div>
 
     {{-- SIGNATURE --}}
-        <p>Hormat Kami,<br>
-        <strong>PT. Sinar Meadow International Indonesia</strong></p>
-        <br><br>
-        <strong style="text-decoration: underline;">Edie Hirman</strong><br>
-        Fin. & Admin Dept. Head
+    <p>Hormat Kami,<br>
+    <strong>PT. Sinar Meadow International Indonesia</strong></p>
+    <br><br>
+    <strong style="text-decoration: underline;">{{ strtoupper($finance_name) }}</strong><br>
+    Fin. & Admin Dept. Head
 </body>
 </html>

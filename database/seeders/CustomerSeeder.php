@@ -86,7 +86,6 @@ class CustomerSeeder extends Seeder
                     CustomerItem::create([
                         'customer_id' => $customer->id,
                         'item_name' => ucwords($faker->words(3, true)),
-                        'item_description' => $faker->sentence(10),
                         'quantity' => $faker->numberBetween(10, 1000),
                         'price' => $faker->randomFloat(2, 50000, 5000000),
                     ]);

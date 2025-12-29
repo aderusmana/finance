@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\BG\BgSubmission;
 use App\Models\BG\BankGaransi;
 use App\Helpers\DocumentHelper;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -109,6 +110,10 @@ class BgReportController extends Controller
             $submission = BgSubmission::with(['recommendation.customer', 'recommendation.periods'])->findOrFail($id);
             $rec = $submission->recommendation;
             $customer = $rec->customer;
+            $financeUser = User::role('manager-finance')->first();
+            $financeName = $financeUser ? $financeUser->name : 'Manager Finance';
+            $salesUser = User::role('head-SNM')->first();
+            $salesName = $salesUser ? $salesUser->name : 'S&M Dept. Head';
 
             // Generate Data Umum
             $nomorPkd = DocumentHelper::generatePKDNumber($rec->id, $customer->name, $submission->created_at);
@@ -119,6 +124,8 @@ class BgReportController extends Controller
                     'rec' => $rec,
                     'customer' => $customer,
                     'nomor_pkd' => $nomorPkd,
+                    'finance_name' => $financeName,
+                    'sales_name' => $salesName
                 ];
                 $pdf = Pdf::loadView('pdf.lampiran_d', $data);
                 return $pdf->stream('Lampiran_D_'.$submission->form_code.'.pdf');
@@ -158,6 +165,10 @@ class BgReportController extends Controller
             $bg = BankGaransi::with('customer')->findOrFail($id);
             $cust = $bg->customer;
             $nomorPkd = DocumentHelper::generatePKDNumber($bg->id, $cust->name, now());
+            $financeUser = User::role('manager-finance')->first();
+            $financeName = $financeUser ? $financeUser->name : 'Manager Finance';
+            $salesUser = User::role('head-SNM')->first();
+            $salesName = $salesUser ? $salesUser->name : 'S&M Dept. Head';
 
             $data = [
                 'customer' => $cust,
@@ -166,7 +177,9 @@ class BgReportController extends Controller
                 'expired_date' => $bg->exp_date,
                 'bank_name' => $bg->bank_name ?? 'Bank Terkait', // Ambil dari detail jika perlu logic khusus
                 'branch_name' => $bg->branch_name ?? '',
-                'nominal' => $bg->bg_nominal
+                'nominal' => $bg->bg_nominal,
+                'finance_name' => $financeName,
+                'sales_name' => $salesName
             ];
 
             $view = ($letter_type == 'distributor') ? 'pdf.surat_distributor' : 'pdf.surat_bank';
