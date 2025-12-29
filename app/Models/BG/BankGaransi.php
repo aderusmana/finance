@@ -2,6 +2,8 @@
 
 namespace App\Models\BG;
 
+use App\Models\Customer\Customer;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -24,7 +26,7 @@ class BankGaransi extends Model
 
     public function customer()
     {
-        return $this->belongsTo(\App\Models\User::class, 'customer_id');
+        return $this->belongsTo(Customer::class, 'customer_id');
     }
 
     public function baseBg()
@@ -44,6 +46,6 @@ class BankGaransi extends Model
 
     public function creator()
     {
-        return $this->belongsTo(\App\Models\User::class, 'created_by');
+        return $this->belongsTo(User::class, 'created_by');
     }
 }

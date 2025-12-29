@@ -12,8 +12,8 @@ class BgSubmission extends Model
     protected $table = 'bg_submissions';
 
     protected $fillable = [
-        'bg_recommendation_id', 'form_code', 'total_nominal', 'signed_document_path',
-        'submitted_at', 'upload_completed_at', 'status'
+        'bg_recommendation_id', 'form_code', 'signed_document_path',
+        'submitted_at', 'upload_completed_at', 'status', 'token'
     ];
 
     protected $casts = [

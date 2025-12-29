@@ -19,7 +19,7 @@
     <link href="{{ asset('assets/') }}/images/logo/favicon.png" rel="icon" type="image/x-icon">
     <link href="{{ asset('assets/') }}/images/logo/favicon.png" rel="shortcut icon" type="image/x-icon">
 
-    <title>Bank Garansi | Customer Create - @yield('title')</title>
+    <title>Bank Garansi | Customer - @yield('title')</title>
 
     <!-- Fonts -->
 

@@ -36,25 +36,8 @@
                     <li><a href="{{ route('sales.index') }}">Sales</a></li>
                     <li><a href="{{ route('tops.index') }}">TOP</a></li>
                     <li><a href="{{ route('customer-classes.index') }}">Customer Class</a></li>
-
-                </ul>
-            </li>
-
-            <li class="menu-title"><span>Bank Garansi (BG)</span></li>
-            <li>
-                <a aria-expanded="false" data-bs-toggle="collapse" href="#bg-menu">
-                    <i class="iconoir-bank"></i> Bank Garansi
-                </a>
-                <ul class="collapse" id="bg-menu">
-                    <li><a href="#">BG List</a></li>
-                    <li><a href="#">BG Histories</a></li>
-                    <li><a href="#">Submissions</a></li>
-                    <li><a href="#">Recommendations</a></li>
-                    <li><a href="#">Lampiran D Overview</a></li>
-                    <li><a href="#">Lampiran D Versions</a></li>
-                    <li><a href="#">Credit Limits</a></li>
-                    <li><a href="#">Approvals / Inbox</a></li>
-                    <li><a href="#">Reports</a></li>
+                    <li><a href="{{ route('tax.index') }}">BG Tax</a></li>
+                    <li><a href="{{ route('limit-rules.index') }}">BG Limit Rules</a></li>
                 </ul>
             </li>
 
@@ -64,8 +47,27 @@
                     <i class="iconoir-community"></i> Customers
                 </a>
                 <ul class="collapse" id="customers-menu">
-                    <li><a href="{{ route('customers.index') }}">List</a></li>
-                    <li><a href="#">New Customer</a></li>
+                    <li><a href="{{ route('customers.index') }}">Customer List</a></li>
+                    <li><a href="{{ route('customers.approval') }}">Approvals List</a></li>
+                    <li><a href="{{ route('customers.log') }}">Customer Logs</a></li>
+                </ul>
+            </li>
+
+            <li class="menu-title"><span>Bank Garansi (BG)</span></li>
+            <li>
+                <a aria-expanded="false" data-bs-toggle="collapse" href="#bg-menu">
+                    <i class="iconoir-bank"></i> Bank Garansi
+                </a>
+                <ul class="collapse" id="bg-menu">
+                    <li><a href="{{ route('bg-list.index') }}">BG List</a></li>
+                    <li><a href="{{ route('bg-histories.index') }}">BG Histories</a></li>
+                        <li><a href="{{ route('bg-submissions.index') }}">Submissions</a></li>
+                    <li><a href="{{ route('bg-recommendations.index') }}">Recommendations</a></li>
+                    <li><a href="{{ route('lampiran-d.index') }}">Lampiran D</a></li>
+                    <!-- <li><a href="#">Lampiran D Versions</a></li> -->
+                    <!-- <li><a href="#">Credit Limits</a></li> -->
+                    <li><a href="{{ route('bg-approvals.index') }}">Approvals / Inbox</a></li>
+                    <li><a href="{{ route('bg-reports.index') }}">Reports</a></li>
                 </ul>
             </li>
         </ul>

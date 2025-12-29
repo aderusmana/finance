@@ -29,11 +29,25 @@ class RevisionController extends Controller
 
         try {
             $revision = Revision::findOrFail($request->id);
+            $oldData = $revision->getOriginal(); // Simpan data lama
+
             $revision->update([
                 'revision_number' => $request->revision_number,
                 'revision_count' => $request->revision_count,
                 'revision_date' => $request->revision_date,
             ]);
+
+            // Activity Log
+            activity()
+                ->causedBy(Auth::user())
+                ->performedOn($revision)
+                ->useLog('master_revision')
+                ->event('update')
+                ->withProperties([
+                    'old' => $oldData,
+                    'attributes' => $revision->getChanges()
+                ])
+                ->log("Updated revision data for {$revision->revision_number}");
 
             return response()->json([
                 'success' => true,

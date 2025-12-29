@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Master\Position;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth; // Tambahkan ini
 use Yajra\DataTables\Facades\DataTables;
 
 class PositionController extends Controller
@@ -48,9 +49,19 @@ class PositionController extends Controller
             'position_name' => 'required|string|max:255|unique:positions,position_name',
         ]);
 
-        Position::create([
+        // Simpan ke variabel agar bisa dilog
+        $position = Position::create([
             'position_name' => $request->position_name
         ]);
+
+        // Activity Log
+        activity()
+            ->causedBy(Auth::user())
+            ->performedOn($position)
+            ->useLog('master_position')
+            ->event('create')
+            ->withProperties(['position_name' => $position->position_name])
+            ->log('Created position: ' . $position->position_name);
 
         return response()->json(['success' => true, 'message' => 'Position created successfully!']);
     }
@@ -61,9 +72,23 @@ class PositionController extends Controller
             'position_name' => 'required|string|max:255|unique:positions,position_name,' . $position->id,
         ]);
 
+        $oldData = $position->getOriginal();
+
         $position->update([
             'position_name' => $request->position_name
         ]);
+
+        // Activity Log
+        activity()
+            ->causedBy(Auth::user())
+            ->performedOn($position)
+            ->useLog('master_position')
+            ->event('update')
+            ->withProperties([
+                'old' => $oldData,
+                'attributes' => $position->getChanges()
+            ])
+            ->log('Updated position: ' . $position->position_name);
 
         return response()->json(['success' => true, 'message' => 'Position updated successfully!']);
     }
@@ -71,7 +96,16 @@ class PositionController extends Controller
     public function destroy($id)
     {
         $position = Position::findOrFail($id);
+        $oldData = $position->toArray();
         $position->delete();
+
+        // Activity Log
+        activity()
+            ->causedBy(Auth::user())
+            ->useLog('master_position')
+            ->event('delete')
+            ->withProperties(['deleted_data' => $oldData])
+            ->log('Deleted position: ' . $oldData['position_name']);
 
         return response()->json(['success' => true, 'message' => 'Position deleted successfully!']);
     }

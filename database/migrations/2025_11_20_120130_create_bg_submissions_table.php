@@ -17,11 +17,11 @@ class CreateBgSubmissionsTable extends Migration
             $table->id();
             $table->unsignedBigInteger('bg_recommendation_id');
             $table->string('form_code', 100)->unique();
-            $table->decimal('total_nominal', 18, 2)->default(0);
             $table->string('signed_document_path', 500)->nullable();
             $table->timestamp('submitted_at')->nullable();
             $table->timestamp('upload_completed_at')->nullable();
-            $table->enum('status', ['pending_print','awaiting_upload','uploaded','reviewed','completed'])->default('pending_print');
+            $table->enum('status', ['pending_print','awaiting_upload','uploaded','reviewed', 'waiting_approval', 'rejected_by_finance', 'completed'])->default('pending_print');
+            $table->string('token', 100)->  nullable();
             $table->timestamps();
 
             $table->foreign('bg_recommendation_id')->references('id')->on('bg_recommendations')->onDelete('cascade');

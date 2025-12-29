@@ -1,40 +1,134 @@
 <x-app-layout>
     @section('title')
-        Requisition Approval
+        Approvals List
     @endsection
 
     @include('components.sample-table-styles')
 
+    {{-- Loading Overlay dengan Inline CSS --}}
+    <div id="loading-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.8); z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center;">
+        <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status"></div>
+        <h5 class="mt-3 fw-bold text-primary">Processing...</h5>
+        <p class="text-muted">Please wait while we update the status.</p>
+    </div>
+
     <div class="row m-1">
         <div class="col-12">
-            <h4 class="main-title">Requisition Approval</h4>
+            <h4 class="main-title">Approvals Management</h4>
             <ul class="app-line-breadcrumbs mb-3">
-                <li><a class="f-s-14 f-w-500" href="#"><i class="ph-duotone ph-check-square f-s-16"></i> Approvals</a></li>
-                <li class="active"><a class="f-s-14 f-w-500" href="#">Requisition List</a></li>
+                <li>
+                    <a class="f-s-14 f-w-500" href="#">
+                        <i class="ph-duotone ph-address-book f-s-16"></i> Approvals
+                    </a>
+                </li>
+                <li class="active">
+                    <a class="f-s-14 f-w-500" href="#">Approvals List</a>
+                </li>
             </ul>
         </div>
     </div>
 
     <div class="row">
         <div class="col-12">
-            <div class="main-table-container">
-                <div class="table-header-enhanced">
-                    <h4 class="table-title"><i class="ph-duotone ph-list-checks"></i> Requisition Action Center</h4>
-                    <p class="table-subtitle">View and process all requisition approval stages.</p>
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="text-muted fw-bold me-1"><i class="ph-bold ph-funnel"></i> Filter:</span>
+
+                    <select id="statusFilter" class="form-select select2" style="width: 150px;">
+                        <option value="all">All Account</option>
+                        @foreach($accountStatuses as $status)
+                            <option value="{{ $status }}">{{ $status }}</option>
+                        @endforeach
+                    </select>
+
+                    <select id="approvalStatusFilter" class="form-select select2" style="width: 175px;">
+                        <option value="all">All Approval</option>
+                        @foreach($approvalStatuses as $status)
+                            <option value="{{ $status }}">{{ $status }}</option>
+                        @endforeach
+                    </select>
+
+                    <button id="resetFilters" class="btn btn-sm btn-secondary border" title="Reset Filters">
+                        <i class="ph-bold ph-arrow-counter-clockwise"></i>
+                    </button>
                 </div>
+            </div>
+
+            <div class="main-table-container">
+                {{-- Stats Header --}}
+                <div class="table-header-enhanced d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4 class="table-title mb-1">
+                            <i class="ph-duotone ph-users-three me-2"></i> Approval Queue
+                        </h4>
+                        <small class="text-white opacity-75 f-s-12">
+                            Review customer requests, check credit limits, and approve or reject.
+                        </small>
+                    </div>
+                    <div class="d-none d-md-flex gap-4 text-white align-items-center pe-2">
+
+                        {{-- Stat 1: Pending (Tugas Saya) --}}
+                        <div class="d-flex align-items-center gap-2" data-bs-toggle="tooltip" title="My Pending Tasks">
+                            <div class="bg-white bg-opacity-25 rounded-circle p-1 d-flex justify-content-center align-items-center" style="width: 32px; height: 32px;">
+                                <i class="ph-fill ph-clock-countdown text-warning f-s-18"></i>
+                            </div>
+                            <div class="d-flex flex-column line-height-sm">
+                                <span class="f-s-11 opacity-75 text-uppercase fw-bold">Pending</span>
+                                <span class="f-s-14 fw-bold">{{ $pendingCount }}</span>
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-items-center gap-2" data-bs-toggle="tooltip" title="My Approved History">
+                                <div class="bg-white bg-opacity-25 rounded-circle p-1 d-flex justify-content-center align-items-center" style="width: 32px; height: 32px;">
+                                <i class="ph-fill ph-seal-check text-success f-s-18"></i>
+                            </div>
+                            <div class="d-flex flex-column line-height-sm">
+                                <span class="f-s-11 opacity-75 text-uppercase fw-bold">Approved</span>
+                                <span class="f-s-14 fw-bold">{{ $approvedCount }}</span>
+                            </div>
+                        </div>
+
+                        <div class="vr opacity-100 bg-white" style="height: 50px;"></div>
+
+                        {{-- Stat 3: Active (Hijau - Centang) --}}
+                        <div class="d-flex align-items-center gap-4">
+
+                            <div class="d-flex align-items-center gap-2" data-bs-toggle="tooltip" title="Active Customers">
+                                <div class="bg-white bg-opacity-10 rounded-circle p-1 d-flex justify-content-center align-items-center" style="width: 32px; height: 32px;">
+                                    <i class="ph-fill ph-check-circle text-success f-s-18"></i>
+                                </div>
+                                <div class="d-flex flex-column line-height-sm">
+                                    <span class="f-s-11 opacity-75 text-uppercase fw-bold">Active</span>
+                                    <span class="f-s-14 fw-bold">{{ $activeCount }}</span>
+                                </div>
+                            </div>
+
+                            <div class="d-flex align-items-center gap-2" data-bs-toggle="tooltip" title="Inactive Customers">
+                                <div class="bg-white bg-opacity-10 rounded-circle p-1 d-flex justify-content-center align-items-center" style="width: 32px; height: 32px;">
+                                    <i class="ph-fill ph-x-circle text-danger f-s-18"></i>
+                                </div>
+                                <div class="d-flex flex-column line-height-sm">
+                                    <span class="f-s-11 opacity-75 text-uppercase fw-bold">Inactive</span>
+                                    <span class="f-s-14 fw-bold">{{ $inactiveCount }}</span>
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </div>
+                </div>
+
                 <div class="table-responsive">
-                    <table class="w-100 display" id="sampleTable">
+                    <table class="w-100 display" id="customerTable">
                         <thead>
                             <tr>
-                                <th>No.</th>
-                                <th>SRS No.</th>
-                                <th>Requester</th>
-                                <th>Request Date</th>
-                                <th>Sub Category</th>
-                                <th>Status</th>
-                                <th>Approver</th>
-                                <th>Level</th>
-                                <th>Action</th>
+                                <th width="5%" class="text-center">No</th>
+                                <th width="10%">Approver NIK</th>
+                                <th>Customer</th>
+                                <th width="5%" class="text-center">Level</th>
+                                <th class="text-center">Status</th>
+                                <th>Route To</th>
+                                <th width="15%" class="text-center">Action</th>
                             </tr>
                         </thead>
                     </table>
@@ -43,478 +137,522 @@
         </div>
     </div>
 
-    <div class="modal fade" id="viewModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    {{-- MODAL VIEW DETAIL & ACTION --}}
+    <div class="modal fade" id="viewModal" tabindex="-1" aria-labelledby="viewModalLabel" aria-hidden="true" data-bs-backdrop="static">
         <div class="modal-dialog modal-dialog-centered modal-xl">
             <div class="modal-content">
-                <div class="modal-header">
-                     <h5 class="modal-title text-white" id="viewModalLabel"><i class="ph-bold ph-file-text me-2"></i>Sample Requisition Details</h5>
-                    <button type="button" class="btn-close btn-close-white m-0 fs-5" data-bs-dismiss="modal" aria-label="Close"></button>
+                <div class="modal-header bg-light">
+                    <h5 class="modal-title fw-bold text-light" id="viewModalLabel">
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body p-4" style="background-color: #f8faf8ff;">
-                    {{-- CARD 1: MAIN REQUISITION DETAILS --}}
-                    <div class="card view-modal-card">
-                        <div class="card-header view-modal-card-header">
-                            <h5 class="fw-bold text-primary mb-3"><i class="ph-bold ph-identification-card me-2"></i> Requisition Details</h5>
+
+                <div class="modal-body bg-light bg-opacity-10">
+
+                    {{-- 1. BAGIAN FORM DATA (READ ONLY) --}}
+                    @php
+                        $readonlyStyle = 'background-color: #f8f9fa; color: #212529; opacity: 1; font-weight: 500; border: 1px solid #dee2e6;';
+                    @endphp
+
+                    <div id="viewModalBodyContent">
+                        {{-- Field User Info --}}
+                        <div class="card mb-3 border-primary shadow-sm">
+                            <div class="card-header bg-light-primary">
+                                <h6 class="mb-0 fw-bold text-primary"><i class="ph-bold ph-user-circle me-2"></i>Requester Info</h6>
+                            </div>
+                            <div class="card-body py-3">
+                                <div class="row g-3">
+                                    <div class="col-md-12">
+                                        <label class="small text-muted fw-bold">Sales / User</label>
+                                        <input type="text" class="form-control" id="view_user_name" disabled style="{{ $readonlyStyle }}">
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="card-body p-4">
-                            <div class="row g-4">
-                                <div class="col-md-6"><small class="view-label">Category</small><p class="view-data">SAMPLE</p></div>
-                                <div class="col-md-6"><small class="view-label">Sub Category</small><p class="view-data" id="view_sub_category">-</p></div>
-                                <div class="col-md-3"><small class="view-label">SRS No.</small><p class="view-data" id="view_no_srs">-</p></div>
-                                <div class="col-md-3"><small class="view-label">Request Date</small><p class="view-data" id="view_request_date">-</p></div>
-                                <div class="col-md-3"><small class="view-label">Customer Name</small><p class="view-data" id="view_customer_name">-</p></div>
-                                <div class="col-md-3"><small class="view-label">Address</small><p class="view-data" id="view_customer_address">-</p></div>
-                                <div class="col-md-3"><small class="view-label">Account</small><p class="view-data" id="view_account">-</p></div>
-                                <div class="col-md-3"><small class="view-label">Cost Center</small><p class="view-data" id="view_cost_center">-</p></div>
-                                <div class="col-md-3"><small class="view-label">Objectives</small><p class="view-data" id="view_objectives">-</p></div>
-                                <div class="col-md-3"><small class="view-label">Estimated Potential</small><p class="view-data" id="view_estimated_potential">-</p></div>
+
+                        {{-- Main Customer Info --}}
+                        <div class="card mb-3 border-secondary shadow-sm">
+                            <div class="card-header bg-light-success">
+                                <h6 class="mb-0 fw-bold text-success"><i class="ph-bold ph-identification-card me-2"></i>Customer Detail</h6>
+                            </div>
+                            <div class="card-body">
+                                {{-- Account Group & Class --}}
+                                <div class="row g-3 mb-4">
+                                    <div class="col-md-6">
+                                        <label class="form-label small text-muted">Account Group</label>
+                                        <select class="form-select" id="view_account_group" disabled style="{{ $readonlyStyle }}">
+                                            <option></option>
+                                            @foreach ($accountgroup as $ag)
+                                                <option value="{{ $ag->id }}">{{ $ag->name_account_group }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small text-muted">Customer Class</label>
+                                        <select class="form-select" id="view_customer_class" disabled style="{{ $readonlyStyle }}">
+                                            <option></option>
+                                            @foreach ($customerClass as $cc)
+                                                <option value="{{ $cc->id }}">{{ $cc->name_class }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+                                <hr class="opacity-25">
+
+                                {{-- Files Section --}}
+                                <div class="row g-3 mb-4">
+                                    <h6 class="fw-bold text-secondary mb-0">Uploaded Documents</h6>
+
+                                    {{-- NPWP --}}
+                                    <div class="col-md-4" id="view_div_npwp" style="display:none;">
+                                        <button type="button" class="btn btn-sm btn-outline-primary w-100 btn-preview-file" data-title="NPWP Preview">
+                                            <i class="ph-bold ph-file-text me-1"></i> View NPWP
+                                        </button>
+                                    </div>
+
+                                    {{-- NIB --}}
+                                    <div class="col-md-4" id="view_div_nib" style="display:none;">
+                                        <button type="button" class="btn btn-sm btn-outline-primary w-100 btn-preview-file" data-title="NIB/SIUP Preview">
+                                            <i class="ph-bold ph-file-text me-1"></i> View NIB/SIUP
+                                        </button>
+                                    </div>
+
+                                    {{-- KTP --}}
+                                    <div class="col-md-4" id="view_div_ktp" style="display:none;">
+                                        <button type="button" class="btn btn-sm btn-outline-primary w-100 btn-preview-file" data-title="KTP Preview">
+                                            <i class="ph-bold ph-id-card me-1"></i> View KTP
+                                        </button>
+                                    </div>
+
+                                    <div class="col-12 text-muted f-s-12" id="no_files_msg" style="display:none;">No documents uploaded.</div>
+                                </div>
+                                <hr class="opacity-25">
+
+                                {{-- General Info --}}
+                                <div class="row g-3 mb-4">
+                                    <h6 class="fw-bold text-secondary mb-0">General Information</h6>
+                                    <div class="col-md-12">
+                                        <label class="form-label small text-muted">Customer Name</label>
+                                        <input type="text" class="form-control fw-bold" id="view_name" disabled style="{{ $readonlyStyle }}">
+                                    </div>
+                                    <div class="col-md-12">
+                                        <label class="form-label small text-muted">Sort Name</label>
+                                        <input type="text" class="form-control" id="view_sort_name" disabled style="{{ $readonlyStyle }}">
+                                    </div>
+                                    <div class="col-md-12">
+                                        <label class="form-label small text-muted">Address</label>
+                                        <input type="text" class="form-control mb-1" id="view_address1" disabled style="{{ $readonlyStyle }}">
+                                        <input type="text" class="form-control mb-1" id="view_address2" disabled style="{{ $readonlyStyle }}">
+                                        <input type="text" class="form-control" id="view_address3" disabled style="{{ $readonlyStyle }}">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small text-muted">City</label>
+                                        <input type="text" class="form-control" id="view_city" disabled style="{{ $readonlyStyle }}">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small text-muted">Postal Code</label>
+                                        <input type="text" class="form-control" id="view_postal_code" disabled style="{{ $readonlyStyle }}">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small text-muted">Country</label>
+                                        <input type="text" class="form-control" id="view_country" disabled style="{{ $readonlyStyle }}">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small text-muted">Email (General)</label>
+                                        <input type="text" class="form-control" id="view_email" disabled style="{{ $readonlyStyle }}">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small text-muted">Area</label>
+                                        <input type="text" class="form-control" id="view_area" disabled style="{{ $readonlyStyle }}">
+                                    </div>
+                                </div>
+                                <hr class="opacity-25">
+
+                                {{-- Shipping & Managers --}}
+                                <div class="row g-3 mb-4">
+                                    <h6 class="fw-bold text-secondary mb-0">Shipping & Key Personnel</h6>
+                                    <div class="col-md-6">
+                                        <label class="form-label small text-muted">Shipping To</label>
+                                        <input type="text" class="form-control" id="view_shipping_to_name" disabled style="{{ $readonlyStyle }}">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small text-muted">Shipping Address</label>
+                                        <textarea class="form-control" id="view_shipping_to_address" rows="1" disabled style="{{ $readonlyStyle }}"></textarea>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label small text-muted">Purchasing Mgr</label>
+                                        <input type="text" class="form-control" id="view_purchasing_manager_name" disabled style="{{ $readonlyStyle }}">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label small text-muted">Purchasing Email</label>
+                                        <input type="text" class="form-control" id="view_purchasing_manager_email" disabled style="{{ $readonlyStyle }}">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label small text-muted">Finance Mgr</label>
+                                        <input type="text" class="form-control" id="view_finance_manager_name" disabled style="{{ $readonlyStyle }}">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label small text-muted">Finance Email</label>
+                                        <input type="text" class="form-control" id="view_finance_manager_email" disabled style="{{ $readonlyStyle }}">
+                                    </div>
+                                </div>
+                                <hr class="opacity-25">
+
+                                {{-- Billing & Tax --}}
+                                <div class="row g-3 mb-4">
+                                    <h6 class="fw-bold text-secondary mb-0">Billing & Tax Data</h6>
+                                    <div class="col-md-4">
+                                        <label class="form-label small text-muted">Billing Contact</label>
+                                        <input type="text" class="form-control" id="view_penagihan_nama_kontak" disabled style="{{ $readonlyStyle }}">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small text-muted">Billing Phone</label>
+                                        <input type="text" class="form-control" id="view_penagihan_telepon" disabled style="{{ $readonlyStyle }}">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small text-muted">Billing Address</label>
+                                        <textarea class="form-control" id="view_penagihan_address" rows="1" disabled style="{{ $readonlyStyle }}"></textarea>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <label class="form-label small text-muted">Correspondence Address</label>
+                                        <textarea class="form-control" id="view_surat_menyurat_address" rows="1" disabled style="{{ $readonlyStyle }}"></textarea>
+                                    </div>
+
+                                    <div class="col-md-3">
+                                        <label class="form-label small text-muted">NPWP</label>
+                                        <input type="text" class="form-control fw-bold" id="view_npwp" disabled style="{{ $readonlyStyle }}">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label small text-muted">NPWP Date</label>
+                                        <input type="text" class="form-control" id="view_tanggal_npwp" disabled style="{{ $readonlyStyle }}">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label small text-muted">NPPKP</label>
+                                        <input type="text" class="form-control" id="view_nppkp" disabled style="{{ $readonlyStyle }}">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label small text-muted">NPPKP Date</label>
+                                        <input type="text" class="form-control" id="view_tanggal_nppkp" disabled style="{{ $readonlyStyle }}">
+                                    </div>
+                                </div>
+                                <hr class="opacity-25">
+
+                                {{-- Financial Terms --}}
+                                <div class="row g-3">
+                                    <h6 class="fw-bold text-secondary mb-0">Financial Terms</h6>
+                                    <div class="col-md-4">
+                                        <label class="form-label small text-muted">Term of Payment</label>
+                                        <input type="text" class="form-control fw-bold text-primary" id="view_term_of_payment" disabled style="{{ $readonlyStyle }}">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small text-muted">Output Tax</label>
+                                        <input type="text" class="form-control" id="view_output_tax" disabled style="{{ $readonlyStyle }}">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small text-muted">Lead Time</label>
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" id="view_lead_time" disabled style="{{ $readonlyStyle }}">
+                                            <span class="input-group-text bg-light">Days</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small text-muted">Credit Limit</label>
+                                        <input type="text" class="form-control fw-bold text-success" id="view_credit_limit" disabled style="{{ $readonlyStyle }}">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small text-muted">CCAR</label>
+                                        <input type="text" class="form-control" id="view_ccar" disabled style="{{ $readonlyStyle }}">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small text-muted">Bank Garansi</label>
+                                        <input type="text" class="form-control" id="view_bank_garansi" disabled style="{{ $readonlyStyle }}">
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    {{-- CARD 2: REQUESTED ITEM LIST --}}
-                    <div class="card view-modal-card">
-                         <div class="card-header"><h5 class="fw-bold text-primary mb-3"><i class="ph-bold  ph-list me-2"></i>Requested Item List</h5></div>
-                        <div class="card-body p-1">
-                            <div class="table-responsive">
-                                <table class="table table-bordered w-100 mb-1">
-                                    <thead class="thead-dark">
-                                        <tr>
-                                            <th class="material-type-column">Material Type</th>
-                                            <th>Item Code</th>
-                                            <th>Item Name</th>
-                                            <th>Unit</th>
-                                            <th class="text-center">Qty Required</th>
-                                            <th class="text-center">Qty Issued</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="view-items-tbody"></tbody>
-                                </table>
-                            </div>
-                        </div>
+                    <div id="viewModalActionFormContainer" class="mt-4">
                     </div>
 
-                    {{-- Sisa card lainnya (Special Order, QA, Tracking, History) tetap sama --}}
-                    <div class="card view-modal-card" id="view-special-order-section" style="display: none;">
-                        <div class="card-header">
-                           <h5 class="fw-bold text-primary mb-3">Special Order Details (Marketing)</h5>
-                        </div>
-                        <div class="card-body">
-                             <div class="row g-4">
-                                <div class="col-md-4"><label class="text-muted">Sample Completion Date</label><p class="fs-6 fw-semibold" id="view_requested_date">-</p></div>
-                                <div class="col-md-4"><label class="text-muted">Sample Weight</label><p class="fs-6 fw-semibold" id="view_weight_selection">-</p></div>
-                                <div class="col-md-4"><label class="text-muted">Sample Packaging</label><p class="fs-6 fw-semibold" id="view_packaging_selection">-</p></div>
-                                <div class="col-md-4"><label class="text-muted">Number of Samples</label><p class="fs-6 fw-semibold" id="view_sample_count">-</p></div>
-                                <div class="col-md-4"><label class="text-muted">COA Required?</label><p class="fs-6 fw-semibold" id="view_coa_required">-</p></div>
-                                <div class="col-md-4"><label class="text-muted">Shipment Method</label><p class="fs-6 fw-semibold" id="view_shipment_method">-</p></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="card view-modal-card" id="view-qa-section" style="display: none;">
-                        <div class="card-header view-modal-card-header">
-                           <h5 class="fw-bold text-primary mb-3"><i class="ph-bold ph-test-tube me-2"></i> QA/QM Details</h5>
-                        </div>
-                        <div class="card-body p-4">
-                             <div class="row g-4">
-                                <div class="col-md-4">
-                                    <small class="view-label">Asal Sample</small>
-                                    <p class="view-data" id="view_source">-</p>
-                                </div>
-                                <div class="col-md-4">
-                                    <small class="view-label">Tanggal Produksi</small>
-                                    <p class="view-data" id="view_production_date">-</p>
-                                </div>
-                                <div class="col-md-4">
-                                    <small class="view-label">Persiapan Sample</small>
-                                    <p class="view-data" id="view_preparation_method">-</p>
-                                </div>
-                                <div class="col-md-4">
-                                    <small class="view-label">Keterangan Sample</small>
-                                    <p class="view-data" id="view_description">-</p>
-                                </div>
-                                <div class="col-md-4">
-                                    <small class="view-label">Keterangan Tambahan</small>
-                                    <p class="view-data fst-italic" id="view_sample_notes">-</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="card view-modal-card">
-                        <div class="card-header view-modal-card-header">
-                            <h5 class="fw-bold text-primary mb-3"><i class="ph-bold ph-path me-2"></i> Approval & Process Tracking</h5>
-                        </div>
-                        <div class="card-body p-4">
-                            <div class="d-flex align-items-center mb-4">
-                                <span class="fw-bold me-3">Current Status:</span>
-                                <div id="view_status_badge"></div>
-                            </div>
-                            <div class="tracker-container" id="approval-tracker-container">
-                                <div class="tracker-line"><div class="tracker-line-progress" id="tracker-progress"></div></div>
-                                <div class="tracker-step" data-step-name="Submitted"><div class="tracker-icon"><i class="ph-bold ph-file-arrow-up fs-6"></i></div><div class="tracker-label">Submitted</div><div class="tracker-details"></div></div>
-                                <div class="tracker-step" data-step-name="Manager Approval"><div class="tracker-icon"><i class="ph-bold ph-user-plus fs-6"></i></div><div class="tracker-label">Manager</div><div class="tracker-details"></div></div>
-                                <div class="tracker-step" data-step-name="Business Controller Approval"><div class="tracker-icon"><i class="ph-bold ph-briefcase fs-6"></i></div><div class="tracker-label">Business Controller</div><div class="tracker-details"></div></div>
-                                <div class="tracker-step" data-step-name="Warehouse Processing"><div class="tracker-icon"><i class="ph-bold ph-package fs-6"></i></div><div class="tracker-label">Warehouse</div><div class="tracker-details"></div></div>
-                                <div class="tracker-step" data-step-name="Ready for Dispatch"><div class="tracker-icon"><i class="ph-bold ph-truck fs-6"></i></div><div class="tracker-label">Dispatch</div><div class="tracker-details"></div></div>
-                                <div class="tracker-step" data-step-name="Completed"><div class="tracker-icon"><i class="ph-bold ph-check-circle fs-6"></i></div><div class="tracker-label">Completed</div><div class="tracker-details"></div></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="card view-modal-card">
-                        <div class="card-header view-modal-card-header">
-                            <h5 class="fw-bold text-primary mb-3"><i class="ph-bold ph-clock-counter-clockwise me-2"></i> Requisition History</h5>
-                        </div>
-                        <div class="card-body p-4">
-                            <ul class="list-group list-group-flush" id="history-log-container">
-                                {{-- History akan diisi oleh JavaScript di sini --}}
-                            </ul>
-                        </div>
-                    </div>
-                    <div id="viewModalActionFormContainer" class="mt-4"></div>
                 </div>
+
                 <div class="modal-footer" id="viewModalFooter">
-                    {{-- [PENTING] Container untuk form aksi --}}
-                    <button class="btn btn-light-secondary" data-bs-dismiss="modal" type="button">Close</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>
     </div>
 
+    <div class="modal fade" id="filePreviewModal" tabindex="-1" aria-labelledby="filePreviewModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-dark text-white py-2">
+                    <h6 class="modal-title" id="filePreviewModalLabel">
+                        <i class="ph-bold ph-image me-2"></i>File Preview
+                    </h6>
+                    {{-- Tombol close khusus agar hanya menutup modal preview, bukan modal utama --}}
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-0 text-center bg-light" style="min-height: 400px; display: flex; align-items: center; justify-content: center;">
+                    {{-- Container Gambar --}}
+                    <img id="previewImageContent" src="" class="img-fluid" style="max-height: 80vh; display: none;" alt="File Preview">
+
+                    {{-- Container Iframe (Untuk PDF) --}}
+                    <iframe id="previewPdfContent" src="" style="width: 100%; height: 70vh; border: none; display: none;"></iframe>
+
+                    {{-- Pesan Error jika file tidak support --}}
+                    <div id="previewErrorMessage" class="text-muted p-5" style="display: none;">
+                        <i class="ph-bold ph-file-x f-s-30 mb-2"></i><br>
+                        File type not supported for preview.<br>
+                        <a href="#" id="downloadFallbackLink" target="_blank" class="btn btn-sm btn-primary mt-2">Download File</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     @push('scripts')
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <script>
+            $('.select2').select2({
+                theme: 'bootstrap-5',
+                minimumResultsForSearch: 10
+            });
+
             $(document).ready(function() {
-                const table = $('#sampleTable').DataTable({
+                const table = $('#customerTable').DataTable({
                     processing: true,
                     serverSide: true,
-                    ajax: "{{ route('sample.approval.data') }}",
+                    ajax: {
+                        url: "{{ route('customers.approval.data') }}",
+                        data: function(d) {
+                            d.status = $('#statusFilter').val();
+                            d.approval_status = $('#approvalStatusFilter').val();
+                        }
+                    },
                     columns: [
-                        { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false, width: '20px', },
-                        { data: 'no_srs', name: 'requisition.no_srs' },
-                        { data: 'requester', name: 'requisition.requester.name' },
-                        { data: 'request_date', name: 'requisition.request_date' },
-                        { data: 'sub_category', name: 'requisition.sub_category', },
-                        { data: 'status', name: 'requisition.status', },
-                        { data: 'approver', name: 'approval_logs.approver_nik' },
-                        { data: 'level', name: 'level', },
-                        { data: 'action', name: 'action', orderable: false, searchable: false, width: '120px' }
+                        { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false, className: 'text-center dt-no-wrap' },
+                        { data: 'approver_nik', name: 'approver_nik', className: 'dt-no-wrap' },
+                        { data: 'customer_name', name: 'customers.name', className: 'dt-wrap' },
+                        { data: 'level', name: 'approval_logs.level', className: 'text-center dt-no-wrap' },
+                        { data: 'status_approval', name: 'customers.status_approval', className: 'text-center dt-no-wrap' },
+                        { data: 'route_to', name: 'customers.route_to', className: 'text-center dt-wrap' },
+                        { data: 'action', name: 'action', orderable: false, searchable: false, className: 'text-center dt-no-wrap' }
                     ],
-                    drawCallback: function () {
-                        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-                        tooltipTriggerList.map(function (tooltipTriggerEl) { return new bootstrap.Tooltip(tooltipTriggerEl); });
-                    }
+                    order: [[3, 'asc'], [0, 'asc']],
+                    autoWidth: false
                 });
 
-                $('#sampleTable_filter input').attr({
-                    'placeholder': '🔍 Search sample...',
-                    'class': 'form-control'
+                $('#statusFilter, #approvalStatusFilter').on('change', function() {
+                    table.ajax.reload();
                 });
 
-                //==================================================
-                // FUNGSI UNTUK MENGISI MODAL DETAIL (DIAMBIL DARI sample/index.blade.php)
-                //==================================================
-                function populateViewForm(data) {
-                    $('#view_sub_category').text(data.sub_category || '-');
-                    $('#view_customer_name').text(data.customer ? data.customer.name : '-');
-                    $('#view_customer_address').text(data.customer ? data.customer.address : '-');
-                    $('#view_no_srs').text(data.no_srs || '-');
-                    $('#view_account').text(data.account || '-');
-                    $('#view_request_date').text(new Date(data.request_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) || '-');
-                    $('#view_cost_center').text(data.cost_center || '-');
-                    $('#view_objectives').text(data.objectives || '-');
-                    $('#view_estimated_potential').text(data.estimated_potential || '-');
-                    const viewItemTbody = $('#view-items-tbody');
-                    const viewTable = viewItemTbody.closest('table');
-                    viewItemTbody.empty();
-                    const isPackaging = data.sub_category === 'Packaging';
-                    viewTable.find('th.material-type-column').toggle(isPackaging);
-                    if (data.requisition_items && data.requisition_items.length > 0) {
-                        data.requisition_items.forEach(item => {
-                            let itemCode = 'N/A', itemName = 'N/A', unit = 'N/A';
-                            if (item.item_detail) {
-                                itemCode = item.item_detail.item_detail_code;
-                                itemName = item.item_detail.item_detail_name;
-                                unit = item.item_detail.unit;
-                            } else if (item.item_master) {
-                                itemCode = item.item_master.item_master_code;
-                                itemName = item.item_master.item_master_name;
-                                unit = item.item_master.unit;
-                            }
-                            const materialTypeCell = isPackaging ? `<td class="material-type-column">${item.material_type}</td>` : '';
-                            const newRow = `<tr>${materialTypeCell}<td>${itemCode}</td><td>${itemName}</td><td>${unit}</td><td class="text-center">${item.quantity_required}</td><td class="text-center">${item.quantity_issued || '-'}</td></tr>`;
-                            viewItemTbody.append(newRow);
-                        });
-                    } else {
-                        const colspan = isPackaging ? 6 : 5;
-                        viewItemTbody.html(`<tr><td colspan="${colspan}" class="text-center">No items have been added.</td></tr>`);
-                    }
-                    const specialOrderSection = $('#view-special-order-section');
-                    const qaSection = $('#view-qa-section');
-                    if (data.sub_category === 'Special Order' && data.requisition_special) {
-                        const special = data.requisition_special;
-                        $('#view_requested_date').text(special.requested_date ? new Date(special.requested_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : '-');
-                        $('#view_weight_selection').text(special.weight_selection || '-');
-                        $('#view_packaging_selection').text(special.packaging_selection || '-');
-                        $('#view_sample_count').text(special.sample_count || '-');
-                        $('#view_shipment_method').text(special.shipment_method || '-');
-                        $('#view_coa_required').text(special.coa_required == 1 ? 'Yes' : 'No');
-                        specialOrderSection.show();
-                        if (special.source) {
-                            $('#view_source').text(special.source || '-');
-                            $('#view_description').text(special.description || '-');
-                            $('#view_production_date').text(special.production_date ? new Date(special.production_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : '-');
-                            $('#view_preparation_method').text(special.preparation_method || '-');
-                            $('#view_sample_notes').text(special.sample_notes || '-');
-                            qaSection.show();
-                        } else {
-                            qaSection.hide();
-                        }
-                    } else {
-                        specialOrderSection.hide();
-                        qaSection.hide();
-                    }
-                    const status = data.status;
-                    let badgeClass = 'bg-secondary';
-                    if (['Submitted', 'Pending'].includes(status)) badgeClass = 'bg-primary';
-                    else if (status.includes('Approved') || status === 'Completed') badgeClass = 'bg-success';
-                    else if (['Rejected', 'Recalled'].includes(status)) badgeClass = 'bg-danger';
-                    else if (status === 'Processing' || status === 'In Progress') badgeClass = 'bg-warning text-dark';
-                    $('#view_status_badge').html(`<span class="badge fs-6 rounded-pill ${badgeClass}">${status}</span>`);
-                    const trackerContainer = $('#approval-tracker-container');
-                    trackerContainer.empty();
-                    let steps = [{ id: 'submitted', label: 'Request Submit', icon: 'ph-file-arrow-up' }];
-                    if (data.sequence_approvers) {
-                        data.sequence_approvers.forEach((role, index) => {
-                            const level = index + 1;
-                            const stepTitle = (role === 'atasan') ? 'Atasan Dept' : 'Bisnis Controller';
-                            steps.push({ id: `approver_${level}`, label: stepTitle, icon: 'ph-user' });
-                        });
-                    }
-                    if (data.status !== 'Rejected' && data.status !== 'Recalled') {
-                        if (data.sub_category === 'Packaging') {
-                            if (data.print_batch == 1) {
-                                steps.push({ id: 'inward_initial', label: 'Inward (Initial)', icon: 'ph-package' });
-                                steps.push({ id: 'material', label: 'Material Support', icon: 'ph-printer' });
-                                steps.push({ id: 'inward_final', label: 'Inward (Final)', icon: 'ph-package' });
-                            } else {
-                                steps.push({ id: 'inward_final', label: 'Inward Check', icon: 'ph-package' });
-                            }
-                        } else if (data.sub_category === 'Finished Goods') {
-                            steps.push({ id: 'outward', label: 'Outward', icon: 'ph-truck' });
-                        } else if (data.sub_category === 'Special Order') {
-                            steps.push({ id: 'qa_form', label: 'QA/QM Form', icon: 'ph-clipboard-text' });
-                        }
-                        steps.push({ id: 'completed', label: 'Completed', icon: 'ph-check-circle' });
-                    }
-                    let trackerHtml = '<div class="tracker-line"><div class="tracker-line-progress" id="tracker-progress"></div></div>';
-                    steps.forEach(step => {
-                        trackerHtml += `<div class="tracker-step" data-step-id="${step.id}"><div class="tracker-icon"><i class="ph-bold ${step.icon} fs-6"></i></div><div class="tracker-label">${step.label}</div><div class="tracker-details"></div></div>`;
-                    });
-                    trackerContainer.html(trackerHtml);
-                    let lastCompletedIndex = -1;
-                    const isRejected = ['Rejected', 'Recalled'].includes(data.status);
-                    if (data.requester && data.created_at) {
-                        const submittedStep = $(`.tracker-step[data-step-id="submitted"]`);
-                        const creationDate = new Date(data.created_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }).replace(',', '');
-                        submittedStep.addClass('completed').find('.tracker-details').html(`<div class="tracker-user text-primary">${data.requester.name}</div><div class="tracker-date text-dark">${creationDate}</div>`);
-                        lastCompletedIndex = 0;
-                    }
-                    if (data.approval_logs) {
-                        data.approval_logs.forEach(log => {
-                            const stepElement = $(`.tracker-step[data-step-id="approver_${log.level}"]`);
-                            if (stepElement.length > 0) {
-                                if (log.status === 'Approved') {
-                                    const approvalDate = new Date(log.updated_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }).replace(',', '');
-                                    stepElement.addClass('completed').find('.tracker-details').html(`<div class="tracker-user text-primary">${log.approver.name}</div><div class="tracker-date text-dark">${approvalDate}</div>`);
-                                    const stepIndex = steps.findIndex(s => s.id === `approver_${log.level}`);
-                                    lastCompletedIndex = Math.max(lastCompletedIndex, stepIndex);
-                                } else if (log.status === 'Rejected') {
-                                    const rejectionDate = new Date(log.updated_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }).replace(',', '');
-                                    stepElement.addClass('rejected').find('.tracker-details').html(`<div class="tracker-user text-danger">${log.approver.name}</div><div class="tracker-date text-dark">${rejectionDate}</div>`);
-                                }
-                            }
-                        });
-                    }
-                    if (data.trackings && data.trackings.length > 0) {
-                        const positionToStepId = { 'Inward WH Supervisor (Initial Check)': 'inward_initial', 'Material Support Supervisor': 'material', 'Inward WH Supervisor (Final Check)': 'inward_final', 'Outward WH Supervisor': 'outward', 'Waiting for QA/QM Form': 'qa_form' };
-                        data.trackings.forEach(tracking => {
-                            if (tracking.last_updated && new Date(tracking.last_updated).getFullYear() > 1970) {
-                                const stepId = positionToStepId[tracking.current_position];
-                                if (stepId) {
-                                    const stepElement = $(`.tracker-step[data-step-id="${stepId}"]`);
-                                    const userName = (stepId === 'qa_form') ? 'QA/QM HSE Team' : tracking.current_position;
-                                    const completionDate = new Date(tracking.last_updated).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }).replace(',', '');
-                                    stepElement.addClass('completed').find('.tracker-details').html(`<div class="tracker-user text-primary">${userName}</div><div class="tracker-date text-dark">${completionDate}</div>`);
-                                    const stepIndex = steps.findIndex(s => s.id === stepId);
-                                    lastCompletedIndex = Math.max(lastCompletedIndex, stepIndex);
-                                }
-                            }
-                        });
-                    }
-                    if (data.status === 'Completed') {
-                        const completedStep = $(`.tracker-step[data-step-id="completed"]`);
-                        const completionDate = new Date(data.updated_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }).replace(',', '');
-                        completedStep.find('.tracker-details').html(`<div class="tracker-user text-primary">${data.requester.name}</div><div class="tracker-date text-dark">${completionDate}</div>`);
-                        $('.tracker-step').addClass('completed');
-                        lastCompletedIndex = steps.length - 1;
-                    } else if (data.status === 'Recalled') {
-                        const submittedStep = $(`.tracker-step[data-step-id="submitted"]`);
-                        const recallDate = new Date(data.updated_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }).replace(',', '');
-                        submittedStep.addClass('rejected').find('.tracker-details').html(`<div class="tracker-user text-danger">${data.requester.name}</div><div class="tracker-date text-dark">${recallDate}</div>`);
-                    } else if (!isRejected) {
-                        const nextStepIndex = lastCompletedIndex + 1;
-                        if (nextStepIndex < steps.length) {
-                            const activeStepElement = trackerContainer.find('.tracker-step').eq(nextStepIndex);
-                            activeStepElement.addClass('active');
-                            if (data.route_to) {
-                                activeStepElement.find('.tracker-details').html(`<div class="tracker-user" style="color: #ffc107; font-weight: 500;"><i class="ph-bold ph-arrow-circle-right me-1"></i>Processed by</div><div class="tracker-date text-dark">${data.route_to}</div>`);
-                            }
-                        }
-                    }
-                    if (lastCompletedIndex >= 0 && !isRejected) {
-                        let progressPercentage = (lastCompletedIndex / (steps.length - 1)) * 100;
-                        $('#tracker-progress').css('width', progressPercentage + '%');
-                    }
-                    const historyContainer = $('#history-log-container');
-                    historyContainer.empty();
-                    if (data.history && data.history.length > 0) {
-                        data.history.forEach(log => {
-                            let badgeClass = 'badge-created', avatarClass = 'avatar-created';
-                            const action = log.action.toLowerCase();
-                            if (action.includes('approved not review')) { badgeClass = 'badge-approved'; avatarClass = 'avatar-approved'; }
-                            else if (action.includes('approved with review')) { badgeClass = 'badge-review'; avatarClass = 'avatar-review'; }
-                            else if (action.includes('rejected') || action.includes('Recalled')) { badgeClass = 'badge-rejected'; avatarClass = 'avatar-rejected'; }
-                            else if (action.includes('completed step')) { badgeClass = 'badge-process'; avatarClass = 'avatar-process'; }
-                            let avatarHtml = '', actorInitial = log.actor ? log.actor.charAt(0).toUpperCase() : '?';
-                            if (log.avatar) {
-                                avatarClass += ' has-image';
-                                avatarHtml = `<img src="${log.avatar}" alt="${actorInitial}">`;
-                            } else {
-                                avatarHtml = actorInitial;
-                            }
-                            const notesHtml = log.notes ? `<div class="history-notes">"${log.notes}"</div>` : '';
-                            const logDate = new Date(log.timestamp).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-                            const historyItem = `<li class="list-group-item history-item"><div class="history-avatar ${avatarClass}">${avatarHtml}</div><div class="history-content"><div class="history-actor">${log.actor}</div>${notesHtml}</div><div class="history-meta"><div class="history-badge ${badgeClass}">${log.action}</div><div class="history-timestamp">${logDate}</div></div></li>`;
-                            historyContainer.append(historyItem);
-                        });
-                    } else {
-                        historyContainer.html('<li class="list-group-item">No history data available.</li>');
-                    }
-                }
-
-                //==================================================
-                // JAVASCRIPT BARU UNTUK MENANGANI AKSI APPROVAL
-                //==================================================
-
-                // --- Handler untuk Quick Approve (Approve Tanpa Review) ---
-                $('#sampleTable').on('click', '.action-btn', function(e) {
-                    e.preventDefault();
-                    const button = $(this); // Simpan referensi ke tombol
-                    const token = button.data('token');
-                    const srs = button.data('srs');
-
-                    Swal.fire({
-                        title: 'Are you sure?',
-                        text: `Approve SRS ${srs} without review?`,
-                        icon: 'question',
-                        showCancelButton: true,
-                        confirmButtonColor: '#28a745',
-                        cancelButtonColor: '#6c757d',
-                        confirmButtonText: 'Yes, Approve!'
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            const originalIcon = button.html(); // Simpan ikon asli
-
-                            $.ajax({
-                                url: "{{ route('approval-sample.process-form') }}",
-                                method: 'POST',
-                                data: {
-                                    _token: '{{ csrf_token() }}',
-                                    token: token,
-                                    action: 'approve',
-                                    notes: 'Approved without Review'
-                                },
-                                // [BARU] Tampilkan spinner sebelum AJAX dikirim
-                                beforeSend: function() {
-                                    button.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>').prop('disabled', true);
-                                },
-                                success: function() {
-                                    Swal.fire('Approved!', `Requisition ${srs} has been approved.`, 'success');
-                                    table.ajax.reload(null, false);
-                                },
-                                error: function(xhr) {
-                                    Swal.fire('Error!', xhr.responseJSON?.message || 'An error occurred.', 'error');
-                                },
-                                // [BARU] Kembalikan tombol ke kondisi semula setelah AJAX selesai (baik sukses maupun error)
-                                complete: function() {
-                                    button.html(originalIcon).prop('disabled', false);
-                                }
-                            });
-                        }
-                    });
+                $('#resetFilters').on('click', function() {
+                    $('#statusFilter').val('all');
+                    $('#approvalStatusFilter').val('all');
+                    $('#statusFilter').trigger('change');
+                    $('#approvalStatusFilter').trigger('change');
                 });
 
-                // --- Handler untuk Review & Reject yang akan menampilkan Modal Detail ---
+                // --- 1. POPULATE FORM FUNCTION ---
+                window.populateViewForm = function(data) {
+                    let salesName = '-';
+                    if (data.sales && data.sales.user) {
+                        salesName = data.sales.user.name;
+                    } else if (data.user) {
+                        salesName = data.user.name;
+                    }
+                    $('#view_user_name').val(salesName);
+
+                    // Account Info
+                    $('#view_account_group').val(data.account_group);
+                    $('#view_customer_class').val(data.customer_class);
+
+                    // General
+                    $('#view_name').val(data.name);
+                    $('#view_sort_name').val(data.sort_name || '-');
+                    $('#view_address1').val(data.address1);
+                    $('#view_address2').val(data.address2);
+                    $('#view_address3').val(data.address3);
+                    $('#view_city').val(data.city);
+                    $('#view_postal_code').val(data.postal_code);
+                    $('#view_country').val(data.country);
+                    $('#view_email').val(data.email);
+                    $('#view_area').val(data.area);
+
+                    // Shipping
+                    $('#view_shipping_to_name').val(data.shipping_to_name);
+                    $('#view_shipping_to_address').val(data.shipping_to_address);
+                    $('#view_purchasing_manager_name').val(data.purchasing_manager_name);
+                    $('#view_purchasing_manager_email').val(data.purchasing_manager_email);
+                    $('#view_finance_manager_name').val(data.finance_manager_name);
+                    $('#view_finance_manager_email').val(data.finance_manager_email);
+
+                    // Billing
+                    $('#view_penagihan_nama_kontak').val(data.penagihan_nama_kontak);
+                    $('#view_penagihan_telepon').val(data.penagihan_telepon);
+                    $('#view_penagihan_address').val(data.penagihan_address);
+                    $('#view_surat_menyurat_address').val(data.surat_menyurat_address);
+
+                    // Tax
+                    $('#view_npwp').val(data.npwp);
+                    $('#view_tanggal_npwp').val(data.tanggal_npwp);
+                    $('#view_nppkp').val(data.nppkp);
+                    $('#view_tanggal_nppkp').val(data.tanggal_nppkp);
+
+                    // Financial
+                    $('#view_term_of_payment').val(data.term_of_payment);
+                    $('#view_output_tax').val(data.output_tax);
+                    $('#view_lead_time').val(data.lead_time);
+
+                    const limit = parseFloat(data.credit_limit) || 0;
+                    $('#view_credit_limit').val(new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(limit));
+
+                    $('#view_ccar').val(data.ccar === 'smd_idr' ? 'SMD (IDR)' : (data.ccar === 'smd_usd' ? 'SMD USD' : data.ccar));
+                    $('#view_bank_garansi').val(data.bank_garansi === 'YA' ? 'Yes' : 'No');
+
+                    // FILES Handling
+                    $('#view_div_npwp, #view_div_nib, #view_div_ktp').hide();
+                    $('#no_files_msg').show();
+                    let fileFound = false;
+
+                    const storageBase = "{{ asset('storage') }}";
+
+                    function setupFileBtn(divId, fileName) {
+                        if(fileName) {
+                            const cleanFileName = fileName.startsWith('/') ? fileName.substring(1) : fileName;
+                            const fullUrl = `${storageBase}/${cleanFileName}`;
+
+                            const btn = $(divId + ' .btn-preview-file');
+                            btn.data('url', fullUrl);
+                            btn.data('filename', cleanFileName);
+                            btn.data('customer-name', data.name);
+
+                            $(divId).show();
+                            fileFound = true;
+                        }
+                    }
+
+                    if(data.files && data.files.length > 0) {
+                            const f = data.files[0];
+                            setupFileBtn('#view_div_npwp', f.npwp_file);
+                            setupFileBtn('#view_div_nib', f.nib_siup_file);
+                            setupFileBtn('#view_div_ktp', f.ktp_file);
+                    }
+                    // Fallback data di root object (jika controller mengirim flat object)
+                    else {
+                        setupFileBtn('#view_div_npwp', data.file_npwp);
+                        setupFileBtn('#view_div_nib', data.file_nib);
+                        setupFileBtn('#view_div_ktp', data.file_ktp);
+                    }
+
+                    if(fileFound) $('#no_files_msg').hide();
+                };
+
+                $(document).on('click', '.btn-preview-file', function() {
+                    const url = $(this).data('url');
+                    const filename = $(this).data('filename');
+                    const title = $(this).data('title') || 'File Preview';
+                    const customerName = $(this).data('customer-name') || '';
+
+                    // Reset konten modal
+                    $('#previewImageContent').hide();
+                    $('#previewPdfContent').hide();
+                    $('#previewErrorMessage').hide();
+
+                    const headerTitle = `<i class="ph-bold ph-image me-2"></i> ${title} <span class="text-white-50 mx-2">|</span> <span class="fw-light">${customerName}</span>`;
+                    $('#filePreviewModalLabel').html(headerTitle);
+
+                    if (!url) return;
+
+                    // Cek Ekstensi File
+                    const extension = filename.split('.').pop().toLowerCase();
+
+                    // Jika Gambar (jpg, jpeg, png, bmp, webp)
+                    if (['jpg', 'jpeg', 'png', 'bmp', 'webp'].includes(extension)) {
+                        $('#previewImageContent').attr('src', url).show();
+                    }
+                    // Jika PDF
+                    else if (extension === 'pdf') {
+                        $('#previewPdfContent').attr('src', url).show();
+                    }
+                    // Format lain (doc, zip, dll) -> Tampilkan tombol download
+                    else {
+                        $('#downloadFallbackLink').attr('href', url);
+                        $('#previewErrorMessage').show();
+                    }
+
+                    const fileModal = new bootstrap.Modal(document.getElementById('filePreviewModal'));
+                    fileModal.show();
+                });
+
+                // --- 2. HANDLER TOMBOL REVIEW & REJECT ---
                 $(document).on('click', '.action-btn-modal', function() {
                     const button = $(this);
-                    const requisitionId = button.data('id');
+                    const customerId = button.data('id');
                     const token = button.data('token');
                     const action = button.data('action');
-                    const srs = button.data('srs');
+                    const customerName = button.data('name');
 
                     const originalIcon = button.html();
                     button.html('<span class="spinner-border spinner-border-sm"></span>').prop('disabled', true);
 
                     $.ajax({
-                        url: `/sample-form/${requisitionId}`,
+                        url: `/customers/${customerId}`,
                         type: 'GET',
                         success: function(response) {
                             populateViewForm(response);
 
                             const isReject = action === 'reject';
-                            const modalTitle = isReject ? 'Reject Requisition' : 'Approve with Review';
+                            const modalTitle = isReject ? 'Reject Customer' : 'Approve with Review';
+                            const cardBorder = isReject ? 'border-danger' : 'border-primary';
+                            const headerBg = isReject ? 'bg-danger text-white' : 'bg-primary text-white';
                             const btnClass = isReject ? 'btn-danger' : 'btn-primary';
-                            const btnText = isReject ? 'Submit Reject' : 'Submit Approve with Review';
-                            const notesPlaceholder = isReject ? 'Provide reason for rejection...' : 'Provide review notes...';
+                            const btnText = isReject ? 'Submit Reject' : 'Submit Approval';
                             const notesLabel = isReject ? 'Rejection Reason' : 'Review Notes';
+                            const notesPlaceholder = isReject ? 'Please provide a valid reason for rejection...' : 'Please provide notes/corrections...';
 
-                            $('#viewModalLabel').text(`${modalTitle}: ${srs}`);
+                            $('#viewModalLabel').text(`${modalTitle} : ${customerName}`);
 
-                            // [MODIFIKASI 1] Form sekarang TIDAK lagi berisi tombol submit
+                            let urlTemplate = "{{ route('customers.approval_action', ':id') }}";
+                            let finalUrl = urlTemplate.replace(':id', customerId);
+
                             const actionFormHtml = `
-                                <hr>
-                                <form id="modalResponseForm" action="{{ route('approval-sample.process-form') }}" method="POST">
-                                    @csrf
-                                    <input type="hidden" name="token" value="${token}">
-                                    <input type="hidden" name="action" value="${action}">
-
-                                    <div class="card view-modal-card">
-                                        <div class="card-header view-modal-card-header border-bottom">
-                                            <h5 class="fw-bold text-primary mb-0"><i class="ph-bold ph-note-pencil me-2"></i>Notes</h5>
-                                        </div>
-                                        <div class="card-body p-4">
-                                            <label for="modal_notes" class="form-label fw-bold">${notesLabel} <span class="text-danger">*</span></label>
-                                            <textarea class="form-control" id="modal_notes" name="notes" rows="4" placeholder="${notesPlaceholder}" required></textarea>
-                                            <div class="form-text">Notes are required to proceed.</div>
-                                        </div>
+                                <div class="card ${cardBorder} shadow-sm">
+                                    <div class="card-header ${headerBg}">
+                                        <h6 class="mb-0 fw-bold"><i class="ph-bold ph-gavel me-2"></i>Decision: ${action.toUpperCase()}</h6>
                                     </div>
-                                </form>
+                                    <div class="card-body p-4 bg-white">
+                                        <form id="modalResponseForm" action="${finalUrl}" method="POST">
+                                            @csrf
+                                            <input type="hidden" name="token" value="${token}">
+                                            <input type="hidden" name="action" value="${action}">
+
+                                            <div class="mb-3">
+                                                <label for="modal_notes" class="form-label fw-bold">${notesLabel} <span class="text-danger">*</span></label>
+                                                <textarea class="form-control border-${isReject ? 'danger' : 'primary'}" id="modal_notes" name="notes" rows="4" placeholder="${notesPlaceholder}" required></textarea>
+                                                <div class="form-text text-muted">Please provide clear and descriptive notes.</div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
                             `;
 
-                            // [MODIFIKASI 2] Buat HTML untuk tombol submit secara terpisah
-                            // Atribut 'form="modalResponseForm"' akan men-trigger submit form walau tombol ada di luar tag <form>
-                            const submitButtonHtml = `<button type="submit" form="modalResponseForm" class="btn ${btnClass}">${btnText}</button>`;
+                            const submitButtonHtml = `
+                                <button type="submit" form="modalResponseForm" class="btn ${btnClass} px-4 py-2 fw-bold">
+                                    <i class="ph-bold ${isReject ? 'ph-x-circle' : 'ph-check-circle'} me-2"></i> ${btnText}
+                                </button>
+                            `;
 
-                            // [MODIFIKASI 3] Tempatkan form di body, dan tombol di footer
                             $('#viewModalActionFormContainer').html(actionFormHtml);
-                            $('#viewModalFooter').prepend(submitButtonHtml); // .prepend() menaruhnya di awal (kiri)
+                            $('#viewModalFooter button[type="submit"]').remove();
+                            $('#viewModalFooter').prepend(submitButtonHtml);
 
                             $('#viewModal').modal('show');
                         },
                         error: function() {
-                            alert('Failed to fetch requisition details.');
+                            Swal.fire('Error', 'Failed to fetch customer data.', 'error');
                         },
                         complete: function() {
                             button.html(originalIcon).prop('disabled', false);
@@ -522,115 +660,148 @@
                     });
                 });
 
-                $('#sampleTable').on('click', '.btn-resend-email', function() {
+                // --- 3. HANDLER SUBMIT FORM (VALIDASI & OVERLAY) ---
+                $(document).on('submit', '#modalResponseForm', function(e) {
+                    e.preventDefault();
+
+                    const form = $(this);
+                    const notesField = $('#modal_notes');
+                    const notesValue = notesField.val().trim();
+                    const action = form.find('input[name="action"]').val();
+                    const isReject = action === 'reject';
+
+                    if (!notesValue || !/[a-zA-Z]/.test(notesValue)) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Invalid Notes',
+                            text: 'Please provide a valid reason/note containing letters.',
+                            target: document.getElementById('viewModal')
+                        });
+                        return;
+                    }
+
+                    Swal.fire({
+                        title: isReject ? 'Confirm Rejection?' : 'Confirm Approval?',
+                        text: isReject ? "This request will be rejected permanently." : "You are about to approve with notes.",
+                        icon: isReject ? 'warning' : 'question',
+                        showCancelButton: true,
+                        confirmButtonColor: isReject ? '#d33' : '#3085d6',
+                        cancelButtonColor: '#6c757d',
+                        confirmButtonText: isReject ? 'Yes, Reject it!' : 'Yes, Submit!',
+                        target: document.getElementById('viewModal')
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            $('#loading-overlay').css('display', 'flex');
+                            $('#viewModal').modal('hide');
+
+                            $.ajax({
+                                url: form.attr('action'),
+                                method: 'POST',
+                                data: form.serialize(),
+                                success: function(response) {
+                                    $('#loading-overlay').hide();
+                                    Swal.fire('Success!', response.message, 'success');
+                                    table.ajax.reload(null, false);
+                                },
+                                error: function(xhr) {
+                                    $('#loading-overlay').hide();
+                                    const errorMsg = xhr.responseJSON?.message || 'An error occurred processing the request.';
+                                    Swal.fire('Error!', errorMsg, 'error');
+                                }
+                            });
+                        }
+                    });
+                });
+
+                // Quick Approve Handler
+                $('#customerTable').on('click', '.action-btn', function(e) {
+                    e.preventDefault();
                     const button = $(this);
                     const token = button.data('token');
+                    const customerId = button.data('id');
+                    const name = button.data('name');
+
+                    let url = "{{ route('customers.approval_action', ':id') }}".replace(':id', customerId);
+
+                    Swal.fire({
+                        title: 'Quick Approve?',
+                        text: `Approve customer ${name} without notes?`,
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonColor: '#28a745',
+                        confirmButtonText: 'Yes, Approve!'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            $('#loading-overlay').css('display', 'flex');
+
+                            $.ajax({
+                                url: url,
+                                method: 'POST',
+                                data: {
+                                    _token: '{{ csrf_token() }}',
+                                    token: token,
+                                    action: 'approve',
+                                    notes: 'Approved without Review'
+                                },
+                                success: function(res) {
+                                    $('#loading-overlay').hide();
+                                    Swal.fire('Approved!', res.message, 'success');
+                                    table.ajax.reload(null, false);
+                                },
+                                error: function(xhr) {
+                                    $('#loading-overlay').hide();
+                                    Swal.fire('Error!', xhr.responseJSON?.message || 'Error', 'error');
+                                }
+                            });
+                        }
+                    });
+                });
+
+                $(document).on('click', '.btn-resend-email', function(e) {
+                    e.preventDefault();
+                    const button = $(this);
+                    const token = button.data('token');
+                    const approverName = button.data('approver-name') || 'User Terkait';
 
                     Swal.fire({
                         title: 'Resend Email?',
-                        text: "This will send the approval notification email again. Continue?",
+                        html: `Kirim ulang notifikasi email approval ke <b>${approverName}</b>?`,
                         icon: 'question',
                         showCancelButton: true,
-                        confirmButtonColor: '#ffc107',
-                        confirmButtonText: 'Yes, Resend!',
-                        cancelButtonText: 'Recall'
+                        confirmButtonColor: '#ffc107', // Warna Warning
+                        cancelButtonColor: '#6c757d',
+                        confirmButtonText: 'Yes, Resend!'
                     }).then((result) => {
                         if (result.isConfirmed) {
+                            const originalContent = button.html();
+                            button.html('<span class="spinner-border spinner-border-sm"></span>').prop('disabled', true);
+
                             $.ajax({
-                                url: `/approvals/resend/${token}`, // Sesuai dengan route yang dibuat
+                                // Pastikan route ini sesuai dengan definisi di web.php
+                                // Contoh: Route::post('/approvals/resend/{token}', ...)
+                                url: `/approvals/resend/${token}`,
                                 method: 'POST',
                                 data: {
                                     _token: '{{ csrf_token() }}'
                                 },
-                                beforeSend: function() {
-                                    button.prop('disabled', true).find('i').addClass('spinner-border spinner-border-sm').removeClass('ph-paper-plane-tilt');
-                                },
                                 success: function(response) {
-                                    Swal.fire('Success!', response.message, 'success');
+                                    Swal.fire('Sent!', response.message, 'success');
                                 },
                                 error: function(xhr) {
-                                    const errorMsg = xhr.responseJSON?.message || 'An error occurred.';
+                                    const errorMsg = xhr.responseJSON?.message || 'Gagal mengirim ulang email.';
                                     Swal.fire('Error!', errorMsg, 'error');
                                 },
                                 complete: function() {
-                                    button.prop('disabled', false).find('i').removeClass('spinner-border spinner-border-sm').addClass('ph-paper-plane-tilt');
+                                    button.html(originalContent).prop('disabled', false);
                                 }
                             });
                         }
                     });
                 });
 
-                $(document).on('submit', '#modalResponseForm', function(e) {
-                    e.preventDefault(); // Selalu hentikan submit standar
-
-                    const form = $(this);
-                    const notesField = $('#modal_notes');
-                    const submitButton = $('#viewModalFooter button[type="submit"]');
-
-                    const notesValue = notesField.val();
-                    // Regex ini akan memeriksa apakah ada setidaknya SATU huruf (a-z, A-Z) di dalam string.
-                    if (!/[a-zA-Z]/.test(notesValue)) {
-                        Swal.fire({
-                            icon: 'warning',
-                            title: 'Catatan Tidak Valid',
-                            text: 'Mohon berikan alasan yang jelas. Catatan tidak boleh hanya berisi spasi, angka, atau simbol.'
-                        });
-                        return; // Hentikan proses jika tidak valid
-                    }
-
-                    const action = form.find('input[name="action"]').val();
-                    const isReject = action === 'reject';
-                    const confirmTitle = isReject ? 'Confirm Rejection' : 'Confirm Approval';
-                    const confirmText = isReject
-                        ? 'Are you sure you want to REJECT this requisition?'
-                        : 'Are you sure you want to APPROVE this requisition?';
-                    const confirmButtonText = isReject ? 'Yes, Reject It!' : 'Yes, Approve It!';
-
-                    Swal.fire({
-                        title: confirmTitle,
-                        text: confirmText,
-                        icon: 'question',
-                        showCancelButton: true,
-                        confirmButtonColor: isReject ? '#d33' : '#3085d6',
-                        cancelButtonColor: '#6c757d',
-                        confirmButtonText: confirmButtonText
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            // Jika dikonfirmasi, kirim data via AJAX
-                            $.ajax({
-                                url: form.attr('action'),
-                                method: form.attr('method'),
-                                data: form.serialize(), // Ambil semua data dari form
-                                beforeSend: function() {
-                                    // Tampilkan status loading
-                                    submitButton.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...').prop('disabled', true);
-                                },
-                                success: function(response) {
-                                    // Jika sukses
-                                    $('#viewModal').modal('hide'); // Tutup modal
-                                    Swal.fire('Success!', response.message, 'success'); // Tampilkan pesan sukses
-                                    table.ajax.reload(null, false); // Refresh DataTable
-                                },
-                                error: function(xhr) {
-                                    // Jika error
-                                    const errorMsg = xhr.responseJSON?.message || 'An unknown error occurred.';
-                                    Swal.fire('Error!', errorMsg, 'error');
-                                },
-                                complete: function() {
-                                    // Kembalikan tombol ke kondisi semula (jika terjadi error)
-                                    const btnText = isReject ? 'Submit Reject' : 'Submit Approve with Review';
-                                    submitButton.html(btnText).prop('disabled', false);
-                                }
-                            });
-                        }
-                    });
-                });
-
-                // [MODIFIKASI 4] Saat modal ditutup, bersihkan form DAN tombol submit yang dinamis
                 $('#viewModal').on('hidden.bs.modal', function () {
                     $('#viewModalActionFormContainer').empty();
-                    $('#viewModalFooter button[type="submit"]').remove(); // Hapus tombol submit
-                    $('#viewModalLabel').html('<i class="ph-bold ph-file-text me-2"></i>Sample Requisition Details');
+                    $('#viewModalFooter button[type="submit"]').remove();
                 });
             });
         </script>

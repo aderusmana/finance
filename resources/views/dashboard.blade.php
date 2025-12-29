@@ -378,7 +378,7 @@
             <div class="card h-100 shadow-sm border-0">
                 <div class="card-header d-flex justify-content-between align-items-center bg-white border-0 py-3">
                     <h5 class="mb-0 card-title">Aktivitas BG Terbaru</h5>
-                    <a href="{{ route('sample-form.log') }}" class="btn btn-sm btn-outline-secondary">Lihat Semua</a>
+                    <a href="" class="btn btn-sm btn-outline-secondary">Lihat Semua</a>
                 </div>
                 <div class="table-responsive">
                     <table class="table align-middle table-hover mb-0">

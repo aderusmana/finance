@@ -1261,3 +1261,115 @@ STYLES MOVED FROM index.blade.php
     display: inline-block;
     line-height: 1.4;    /* Atur jarak baris agar mudah dibaca */
 }
+
+
+/* History Table */
+#historyTable {
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+    border-radius: 10px !important;
+    overflow: hidden !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06) !important;
+    border: 1px solid rgba(#2563eb) !important;
+}
+
+#historyTable thead th {
+    background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%) !important;
+    color: white !important;
+    padding: 16px 15px !important; /* Adjusted padding */
+    font-weight: 700 !important;
+    font-size: 0.9em !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    border: none !important;
+    position: relative !important;
+    text-align: left; /* Ensure text alignment */
+}
+
+#historyTable thead th::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 25%;
+    height: 50%;
+    width: 1px;
+    background: rgba(255, 255, 255, 0.2);
+}
+
+#historyTable thead th:last-child::after {
+    display: none;
+}
+
+#historyTable tbody td {
+    padding: 18px 15px !important; /* Padding disesuaikan */
+    border-bottom: 1px solid rgba(#2563eb) !important;
+    border-right: none !important; /* Garis vertikal dihilangkan untuk tampilan lebih bersih */
+    vertical-align: middle !important;
+    font-size: 15px !important;      /* UKURAN FONT DIPERBESAR */
+    font-weight: 500 !important;     /* FONT DITEBALKAN (500 adalah medium) */
+    color: #495057;
+    transition: all 0.2s ease !important;
+}
+
+#historyTable tbody td:last-child {
+    border-right: none !important;
+}
+
+#historyTable tbody tr {
+    transition: all 0.3s ease !important;
+}
+
+#historyTable tbody tr:hover {
+    background: linear-gradient(90deg, rgba(#2563eb) 0%, rgba(#2563eb) 100%) !important;
+    transform: scale(1.01);
+    box-shadow: 0 6px 20px rgba(#2563eb) !important;
+    position: relative;
+    z-index: 10;
+}
+
+#historyTable tbody tr:nth-child(even) {
+    background: rgba(248, 249, 250, 0.6) !important;
+}
+
+#historyTable tbody tr:nth-child(even):hover {
+    background: linear-gradient(90deg, rgba(#2563eb) 0%, rgba(#2563eb) 100%) !important;
+}
+
+.nav-pills-custom .nav-link {
+    background: #fff;
+    color: #6c757d;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 15px 20px;
+    text-align: left;
+    transition: all 0.3s ease;
+    margin-right: 10px; /* Jarak antar tab */
+    display: flex;
+    align-items: center;
+}
+
+/* Efek saat Mouse Diarahkan (Hover) */
+.nav-pills-custom .nav-link:hover {
+    background: #f8f9fa;
+    border-color: #dee2e6;
+    transform: translateY(-2px); /* Efek naik sedikit */
+}
+
+/* Efek saat Tab Aktif/Diklik */
+.nav-pills-custom .nav-link.active {
+    background: #2655d6 !important; /* Warna Biru Utama */
+    color: #fff !important;
+    border-color: #2655d6 !important;
+    box-shadow: 0 4px 8px rgba(38, 85, 214, 0.25);
+}
+
+/* Mengubah warna teks kecil saat aktif */
+.nav-pills-custom .nav-link.active .text-muted {
+    color: rgba(255,255,255, 0.8) !important;
+}
+
+/* Ukuran Icon */
+.nav-pills-custom .nav-link i {
+    font-size: 1.8rem;
+    margin-right: 15px;
+}

@@ -13,7 +13,10 @@ class DatabaseSeeder extends Seeder
     {
         $this->call(AllSeeder::class);
         $this->call(CustomerSeeder::class);
-        $this->call(ApprovalPathSeeder::class); 
-        $this->call(ItemSeeder::class);
+        $this->call(MasterManagementSeeder::class);
+        $this->call(BankGaransiSeeder::class);
+        $this->call(TaxsTableSeeder::class);
+        $this->call(BGLimitRulesSeeder::class);
+        $this->call(BgLampiranDApprovalSeeder::class);
     }
 }

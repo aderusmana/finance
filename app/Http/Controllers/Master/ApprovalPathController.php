@@ -71,14 +71,12 @@ class ApprovalPathController extends Controller
     public function edit($id)
     {
         $approvalPath = ApprovalPath::findOrFail($id);
-
-        // Mengubah format sequence_approvers agar sesuai dengan value di Select2
         $approverRoles = $approvalPath->sequence_approvers;
 
         return response()->json([
             'category_id' => $approvalPath->category,
             'sub_category_id' => $approvalPath->sub_category,
-            'approver_user_ids' => $approverRoles, // Kirim array of role names
+            'approver_user_ids' => $approverRoles,
         ]);
     }
 
@@ -130,13 +128,19 @@ class ApprovalPathController extends Controller
             'BG',
             'Customer',
         ];
+
         $subCategories = [
-            'CBD',
+            'BG' => ['Lampiran D'],
+            'Customer' => ['CBD'],
         ];
 
         $existingPaths = ApprovalPath::select('category', 'sub_category')->get();
 
-        return response()->json(['categories' => $categories, 'subCategories' => $subCategories, 'existingPaths' => $existingPaths]);
+        return response()->json([
+            'categories' => $categories, 
+            'subCategories' => $subCategories,
+            'existingPaths' => $existingPaths
+        ]);
     }
 
     public function approverName()
@@ -155,16 +159,10 @@ class ApprovalPathController extends Controller
         $orderColumnIndex = $request->input('order.0.column');
         $orderDirection = $request->input('order.0.dir', 'asc');
 
-        // Dapatkan nama kolom untuk sorting dari request berdasarkan indexnya
         $orderColumnName = $request->input("columns.{$orderColumnIndex}.name");
-
-        // Hitung total data tanpa filter apa pun
         $totalData = ApprovalPath::count();
-
-        // Mulai query builder
         $query = ApprovalPath::query();
 
-        // 2. Terapkan filter pencarian jika ada input dari kotak search
         if (!empty($searchValue)) {
             $query->where(function ($q) use ($searchValue) {
                 $q->where('category', 'like', "%{$searchValue}%")
@@ -218,7 +216,6 @@ class ApprovalPathController extends Controller
                     'deleted_approvers' => $data->sequence_approvers,
                 ];
 
-                // Log dicatat SEBELUM data dihapus
                 activity()
                     ->causedBy($causer)
                     ->performedOn($data)
