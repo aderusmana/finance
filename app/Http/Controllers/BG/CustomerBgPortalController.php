@@ -9,6 +9,7 @@ use App\Models\BG\BgRecommendation;
 use App\Models\BG\BankGaransi;
 use App\Models\BG\BgSubmission;
 use Illuminate\Support\Facades\DB;
+use App\Models\User;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\BgSubmissionDocumentMail;
@@ -93,10 +94,14 @@ class CustomerBgPortalController extends Controller
                 'status' => 'awaiting_upload'
             ]);
 
+            $financeUser = User::role('manager-finance')->first();
+            $financeName = $financeUser ? $financeUser->name : 'Manager Finance';
+
             $pdf = Pdf::loadView('pdf.bg_submission_document', [
                 'bg' => $bg,
                 'customer' => $rec->customer,
-                'submission' => $submission
+                'submission' => $submission,
+                'finance_name' => $financeName
             ]);
 
             $fileName = 'Formulir_BG_' . str_replace(['/', '\\'], '-', $submission->form_code) . '.pdf';

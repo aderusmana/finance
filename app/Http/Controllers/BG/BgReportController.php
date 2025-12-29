@@ -17,7 +17,6 @@ class BgReportController extends Controller
     {
         if ($request->ajax()) {
 
-            // --- TAB 1: TRANSACTION DOCUMENTS (Submission based) ---
             if ($request->type == 'transactions') {
                 $query = BgSubmission::with(['recommendation.customer'])
                             ->orderBy('created_at', 'desc');
@@ -60,9 +59,7 @@ class BgReportController extends Controller
                     ->make(true);
             }
 
-            // --- TAB 2: EXPIRING LETTERS (Existing BG based) ---
             if ($request->type == 'expiring') {
-                // Ambil BG yang belum diclose/dikembalikan
                 $query = BankGaransi::with('customer')
                             ->where('status', '!=', 'returned')
                             ->orderBy('exp_date', 'asc');
