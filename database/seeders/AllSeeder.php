@@ -177,7 +177,6 @@ class AllSeeder extends Seeder
             'view customer', 'create customer', 'update customer'
         ]);
 
-        // Assign basic permissions
         $userRequisitionRole->givePermissionTo(['view log', 'view requisition-form', 'view report', 'view requisition', 'create requisition', 'update requisition', 'delete requisition']);
         $approvalRole->givePermissionTo(['view log', 'view requisition-form', 'view report', 'view approval', 'view requisition-approval', 'approve requisition', 'reject requisition']);
         $superAdminRole->givePermissionTo(Permission::all());
@@ -198,6 +197,7 @@ class AllSeeder extends Seeder
                 'status' => 'active',
                 'atasan_nik' => 'AG2222',
                 'position_id' => $posDirector->id,
+                'no_telepon' => '081200000001',
             ]
         );
         $superAdminUser->assignRole($superAdminRole);
@@ -214,6 +214,7 @@ class AllSeeder extends Seeder
                 'status' => 'active',
                 'atasan_nik' => 'AG3333',
                 'position_id' => $posGM->id,
+                'no_telepon' => '081200000002',
             ]
         );
         $userRequsition->assignRole($userRequisitionRole);
@@ -230,6 +231,7 @@ class AllSeeder extends Seeder
                 'status' => 'active',
                 'atasan_nik' => 'AG1111',
                 'position_id' => $posManager->id,
+                'no_telepon' => '081200000003',
             ]
         );
         $userApproval->assignRole($approvalRole);
@@ -242,26 +244,28 @@ class AllSeeder extends Seeder
                 'username' => 'manager.finance',
                 'password' => Hash::make('password'),
                 'email_verified_at' => now(),
-                'department_id' => 2, // Finance Admin
+                'department_id' => 2,
                 'status' => 'active',
-                'atasan_nik' => 'HDFN01', // Asumsi atasan direktur
+                'atasan_nik' => 'HDFN01',
                 'position_id' => $posManager->id,
+                'no_telepon' => '081200000004',
             ]
         );
         $managerFinance->assignRole($managerFinanceRole);
 
         $headFinance = User::updateOrCreate(
-            ['email' => 'head.finance@example.com'], // Email Login
+            ['email' => 'head.finance@example.com'],
             [
                 'name' => 'Dept Head Finance',
                 'nik' => 'HDFIN01',
                 'username' => 'head.finance',
                 'password' => Hash::make('password'),
                 'email_verified_at' => now(),
-                'department_id' => 2, // Finance Admin
+                'department_id' => 2,
                 'status' => 'active',
-                'atasan_nik' => 'AG1111', // Asumsi atasan langsung Direktur
-                'position_id' => $posManager->id, // Level Manager/Dept Head
+                'atasan_nik' => 'AG1111',
+                'position_id' => $posManager->id,
+                'no_telepon' => '081200000005',
             ]
         );
         $headFinance->assignRole($headFinanceRole);
@@ -274,15 +278,15 @@ class AllSeeder extends Seeder
                 'username' => 'it.engineer',
                 'password' => Hash::make('password'),
                 'email_verified_at' => now(),
-                'department_id' => 1, // Engineering/IT
+                'department_id' => 1,
                 'status' => 'active',
                 'atasan_nik' => 'AG1111',
                 'position_id' => $posStaff->id,
+                'no_telepon' => '081200000006',
             ]
         );
         $itEngineer->assignRole($itRole);
 
-        // --- WH Users ---
         $headWh = User::updateOrCreate(
             ['email' => 'head.wh@example.com'],
             [
@@ -290,6 +294,7 @@ class AllSeeder extends Seeder
                 'password' => Hash::make('password'), 'email_verified_at' => now(),
                 'department_id' => 9, 'status' => 'active', 'atasan_nik' => 'AG1111',
                 'position_id' => $posManager->id,
+                'no_telepon' => '081200000007',
             ]
         );
         $headWh->assignRole($headWhRole);
@@ -301,11 +306,11 @@ class AllSeeder extends Seeder
                 'password' => Hash::make('password'), 'email_verified_at' => now(),
                 'department_id' => 9, 'status' => 'active', 'atasan_nik' => 'HDWH01',
                 'position_id' => $posStaff->id,
+                'no_telepon' => '081200000008',
             ]
         );
         $staffWh1->assignRole($staffWhRole);
 
-        // --- Material Users ---
         $headMaterial = User::updateOrCreate(
             ['email' => 'head.material@example.com'],
             [
@@ -313,6 +318,7 @@ class AllSeeder extends Seeder
                 'password' => Hash::make('password'), 'email_verified_at' => now(),
                 'department_id' => 8, 'status' => 'active', 'atasan_nik' => 'AG1111',
                 'position_id' => $posManager->id,
+                'no_telepon' => '081200000009',
             ]
         );
         $headMaterial->assignRole($headMaterialRole);
@@ -324,11 +330,11 @@ class AllSeeder extends Seeder
                 'password' => Hash::make('password'), 'email_verified_at' => now(),
                 'department_id' => 8, 'status' => 'active', 'atasan_nik' => 'HDMT01',
                 'position_id' => $posStaff->id,
+                'no_telepon' => '081200000010',
             ]
         );
         $staffMaterial1->assignRole($staffMaterialRole);
 
-        // --- Sales & Marketing Users ---
         $headSales = User::updateOrCreate(
             ['email' => 'head.sales@example.com'],
             [
@@ -336,6 +342,7 @@ class AllSeeder extends Seeder
                 'password' => Hash::make('password'), 'email_verified_at' => now(),
                 'department_id' => 7, 'status' => 'active', 'atasan_nik' => 'AG1111',
                 'position_id' => $posManager->id,
+                'no_telepon' => '081200000011',
             ]
         );
         $headSales->assignRole($headSalesMarketingRole);
@@ -347,10 +354,11 @@ class AllSeeder extends Seeder
                 'password' => Hash::make('password'), 'email_verified_at' => now(),
                 'department_id' => 7, 'status' => 'active', 'atasan_nik' => 'HDSM01',
                 'position_id' => $posStaff->id,
+                'no_telepon' => '081200000012',
             ]
         );
         $staffSales1->assignRole($staffSalesMarketingRole);
-        $staffSales1->assignRole($salesRole); // Assign juga role 'sales' agar bisa akses customer
+        $staffSales1->assignRole($salesRole);
 
         $staffSales2 = User::updateOrCreate(
             ['email' => 'staff.sales2@example.com'],
@@ -359,12 +367,12 @@ class AllSeeder extends Seeder
                 'password' => Hash::make('password'), 'email_verified_at' => now(),
                 'department_id' => 7, 'status' => 'active', 'atasan_nik' => 'HDSM01',
                 'position_id' => $posStaff->id,
+                'no_telepon' => '081200000013',
             ]
         );
         $staffSales2->assignRole($staffSalesMarketingRole);
-        $staffSales2->assignRole($salesRole); // Assign juga role 'sales'
+        $staffSales2->assignRole($salesRole);
 
-        // --- R&D Users ---
         $headRnd = User::updateOrCreate(
             ['email' => 'head.rnd@example.com'],
             [
@@ -372,6 +380,7 @@ class AllSeeder extends Seeder
                 'password' => Hash::make('password'), 'email_verified_at' => now(),
                 'department_id' => 6, 'status' => 'active', 'atasan_nik' => 'AG1111',
                 'position_id' => $posManager->id,
+                'no_telepon' => '081200000014',
             ]
         );
         $headRnd->assignRole($headRndRole);
@@ -383,6 +392,7 @@ class AllSeeder extends Seeder
                 'password' => Hash::make('password'), 'email_verified_at' => now(),
                 'department_id' => 6, 'status' => 'active', 'atasan_nik' => 'HDRD01',
                 'position_id' => $posStaff->id,
+                'no_telepon' => '081200000015',
             ]
         );
         $staffRnd1->assignRole($staffRndRole);
@@ -394,11 +404,11 @@ class AllSeeder extends Seeder
                 'password' => Hash::make('password'), 'email_verified_at' => now(),
                 'department_id' => 6, 'status' => 'active', 'atasan_nik' => 'HDRD01',
                 'position_id' => $posStaff->id,
+                'no_telepon' => '081200000016',
             ]
         );
         $staffRnd2->assignRole($staffRndRole);
 
-        // --- QA Users ---
         $headQa = User::updateOrCreate(
             ['email' => 'head.qa@example.com'],
             [
@@ -406,6 +416,7 @@ class AllSeeder extends Seeder
                 'password' => Hash::make('password'), 'email_verified_at' => now(),
                 'department_id' => 5, 'status' => 'active', 'atasan_nik' => 'AG1111',
                 'position_id' => $posManager->id,
+                'no_telepon' => '081200000017',
             ]
         );
         $headQa->assignRole($headQaRole);
@@ -417,6 +428,7 @@ class AllSeeder extends Seeder
                 'password' => Hash::make('password'), 'email_verified_at' => now(),
                 'department_id' => 5, 'status' => 'active', 'atasan_nik' => 'HDQA01',
                 'position_id' => $posStaff->id,
+                'no_telepon' => '081200000018',
             ]
         );
         $staffQa1->assignRole($staffQaRole);
@@ -428,11 +440,11 @@ class AllSeeder extends Seeder
                 'password' => Hash::make('password'), 'email_verified_at' => now(),
                 'department_id' => 5, 'status' => 'active', 'atasan_nik' => 'HDQA01',
                 'position_id' => $posStaff->id,
+                'no_telepon' => '081200000019',
             ]
         );
         $staffQa2->assignRole($staffQaRole);
 
-        // --- HCD Users ---
         $headHcd = User::updateOrCreate(
             ['email' => 'head.hcd@example.com'],
             [
@@ -440,6 +452,7 @@ class AllSeeder extends Seeder
                 'password' => Hash::make('password'), 'email_verified_at' => now(),
                 'department_id' => 3, 'status' => 'active', 'atasan_nik' => 'AG1111',
                 'position_id' => $posManager->id,
+                'no_telepon' => '081200000020',
             ]
         );
         $headHcd->assignRole($headHcdRole);
@@ -451,6 +464,7 @@ class AllSeeder extends Seeder
                 'password' => Hash::make('password'), 'email_verified_at' => now(),
                 'department_id' => 3, 'status' => 'active', 'atasan_nik' => 'HDHCD01',
                 'position_id' => $posStaff->id,
+                'no_telepon' => '081200000021',
             ]
         );
         $staffHcd1->assignRole($staffHcdRole);
@@ -462,6 +476,7 @@ class AllSeeder extends Seeder
                 'password' => Hash::make('password'), 'email_verified_at' => now(),
                 'department_id' => 3, 'status' => 'active', 'atasan_nik' => 'HDHCD01',
                 'position_id' => $posStaff->id,
+                'no_telepon' => '081200000022',
             ]
         );
         $staffHcd2->assignRole($staffHcdRole);
@@ -473,6 +488,7 @@ class AllSeeder extends Seeder
                 'password' => Hash::make('password'), 'email_verified_at' => now(),
                 'department_id' => 1, 'status' => 'active', 'atasan_nik' => 'AG1111',
                 'position_id' => $posManager->id,
+                'no_telepon' => '081200000023',
             ]
         );
         $atasan1->assignRole($atasanRole);
@@ -484,11 +500,11 @@ class AllSeeder extends Seeder
                 'password' => Hash::make('password'), 'email_verified_at' => now(),
                 'department_id' => 7, 'status' => 'active', 'atasan_nik' => 'HD0001',
                 'position_id' => $posStaff->id,
+                'no_telepon' => '081200000024',
             ]
         );
         $anotherUserRequisition->assignRole('user-requisition');
 
-        // --- Warehouse Specific Users ---
         $warehouseUsers = [
             [
                 'name' => 'Inward WH Supervisor',
@@ -497,6 +513,7 @@ class AllSeeder extends Seeder
                 'email' => 'inward.wh@example.com',
                 'department_id' => 8,
                 'position_id' => $posSupervisor->id,
+                'no_telepon' => '081200000025',
             ],
             [
                 'name' => 'Material Support Supervisor',
@@ -505,6 +522,7 @@ class AllSeeder extends Seeder
                 'email' => 'material.support@example.com',
                 'department_id' => 8,
                 'position_id' => $posSupervisor->id,
+                'no_telepon' => '081200000026',
             ],
             [
                 'name' => 'Outward WH Supervisor',
@@ -513,6 +531,7 @@ class AllSeeder extends Seeder
                 'email' => 'outward.wh@example.com',
                 'department_id' => 8,
                 'position_id' => $posSupervisor->id,
+                'no_telepon' => '081200000027',
             ],
         ];
 
@@ -529,6 +548,7 @@ class AllSeeder extends Seeder
                     'status' => 'active',
                     'atasan_nik' => 'AG1111',
                     'position_id' => $whUser['position_id'],
+                    'no_telepon' => $whUser['no_telepon'],
                 ]
             );
             $user->assignRole('user-requisition');

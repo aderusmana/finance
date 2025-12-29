@@ -31,7 +31,5 @@ class BgLampiranDApprovalSeeder extends Seeder
                 'updated_at' => now(),
             ]
         );
-
-        $this->command->info('Approval Path [BG - Lampiran D] berhasil dibuat untuk Manager Finance.');
     }
 }

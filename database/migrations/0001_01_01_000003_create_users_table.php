@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('username')->unique();
             $table->string('email')->unique();
             $table->string('name');
+            $table->string('no_telepon', 20)->nullable();
             $table->string('avatar')->nullable();
             $table->unsignedBigInteger('department_id');
             $table->timestamp('email_verified_at')->nullable();
