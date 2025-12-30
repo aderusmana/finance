@@ -1368,7 +1368,7 @@ STYLES MOVED FROM index.blade.php
     background-color: #2563eb; border-color: #2563eb;
 }
 
-/* 3. FLOATING ACTION BAR MODERN */
+/* 3. FLOATING ACTION BAR MODERN (UPDATED) */
 .bulk-action-bar {
     position: fixed;
     bottom: 30px;
@@ -1377,17 +1377,31 @@ STYLES MOVED FROM index.blade.php
     background: rgba(15, 23, 42, 0.95); /* Dark Slate / Glass-ish */
     backdrop-filter: blur(10px);
     color: white;
-    padding: 15px 30px;
+    padding: 12px 30px; /* Padding atas-bawah dikecilkan sedikit agar slim */
     border-radius: 100px;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    box-shadow: 0 20px 50px rgba(0,0,0,0.4);
     display: flex;
     align-items: center;
-    gap: 25px;
+    gap: 20px;
     z-index: 9999;
     transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     border: 1px solid rgba(255,255,255,0.1);
-    width: auto;
-    max-width: 90%;
+
+    /* --- PERUBAHAN UTAMA DISINI --- */
+    width: auto;          /* Lebar otomatis mengikuti konten */
+    min-width: 750px;     /* Minimal lebar diperpanjang agar lega */
+    max-width: 95vw;      /* Maksimal 95% lebar layar */
+    white-space: nowrap;  /* PENTING: Mencegah teks turun baris (wrap) */
+    flex-wrap: nowrap;    /* Mencegah elemen turun baris */
+}
+
+/* Pastikan semua anak elemen juga tidak wrapping */
+.bulk-action-bar form,
+.bulk-action-bar .d-flex,
+.bulk-action-bar label,
+.bulk-action-bar button,
+.bulk-action-bar span {
+    white-space: nowrap;
 }
 
 .bulk-action-bar.active {

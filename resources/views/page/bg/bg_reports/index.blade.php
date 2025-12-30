@@ -173,7 +173,7 @@
             <input type="hidden" name="category" id="bulkCategoryInput">
 
             {{-- 1. PILIH JENIS FILE --}}
-            <select name="doc_type" id="bulkDocType" class="form-select form-select-sm border-0" style="border-radius: 20px; width: 180px; cursor: pointer; background-color: rgba(255,255,255,0.9);">
+            <select name="doc_type" id="bulkDocType" class="form-select form-select-sm border-0" style="border-radius: 20px; min-width: 200px; width: auto; cursor: pointer; background-color: rgba(255,255,255,0.9); font-weight: 600;">
                 {{-- Opsi diisi via JS --}}
             </select>
 
@@ -227,20 +227,15 @@
                     $('#bulkActionBar').addClass('active');
                     $('#countSelected').text(selectedIds.length);
 
-                    // Update Dropdown Options hanya jika belum ada (agar tidak reset pilihan user)
                     let currentOptions = $('#bulkDocType option').map(function() { return $(this).val(); }).get();
                     let targetOptions = docOptions[currentTab].map(o => o.val);
 
-                    // Simple check if options need update (bedakan array)
                     if(JSON.stringify(currentOptions) !== JSON.stringify(targetOptions)) {
                         let opts = docOptions[currentTab].map(o => `<option value="${o.val}">${o.text}</option>`).join('');
                         $('#bulkDocType').html(opts);
                     }
 
-                    // Isi Input Hidden Form
                     $('#bulkCategoryInput').val(currentTab);
-
-                    // Reset input ID di form dan isi ulang
                     $('#bulkDownloadForm input[name="ids[]"]').remove();
                     selectedIds.forEach(id => {
                         $('#bulkDownloadForm').append(`<input type="hidden" name="ids[]" value="${id}">`);
@@ -252,19 +247,23 @@
             }
 
             $('button[data-bs-toggle="pill"]').on('shown.bs.tab', function (e) {
+                currentTab = $(e.target).attr('id') === 'trans-tab' ? 'transactions' : 'expiring';
+
+                selectedIds = [];
+                $('.dt-checkbox').prop('checked', false);
+                $('#checkAllTrans, #checkAllLetters').prop('checked', false);
+
+                updateBulkUI();
                 transTable.columns.adjust().draw();
                 lettersTable.columns.adjust().draw();
             });
 
             $('#btnCancelSelection').on('click', function() {
-                // 1. Kosongkan Array
                 selectedIds = [];
 
-                // 2. Uncheck semua checkbox fisik di tabel
                 $('.dt-checkbox').prop('checked', false);
                 $('#checkAllTrans, #checkAllLetters').prop('checked', false);
 
-                // 3. Update UI (Otomatis menyembunyikan floating bar karena selectedIds kosong)
                 updateBulkUI();
             });
 
@@ -328,12 +327,10 @@
                 lettersTable.search($(this).val()).draw();
             });
 
-            // Styling Input Search
             $('.dataTables_filter input').addClass('form-control form-control-sm ps-4').css({
                 'border-radius': '20px', 'min-width': '250px', 'background-color': '#f8fafc', 'border': '1px solid #e2e8f0'
             });
 
-            // 1. Check All Handler
             $('#checkAllTrans').on('click', function() {
                 let checked = this.checked;
                 $('#transTable .dt-checkbox').prop('checked', checked).trigger('change');
@@ -343,7 +340,6 @@
                 $('#lettersTable .dt-checkbox').prop('checked', checked).trigger('change');
             });
 
-            // 2. Individual Check Handler
             $(document).on('change', '.dt-checkbox', function() {
                 let id = $(this).val();
                 if(this.checked) {
@@ -355,7 +351,6 @@
                 updateBulkUI();
             });
 
-            // 3. Maintain State on Page Change
             transTable.on('draw', function(){
                 $('.dt-checkbox').each(function(){
                     if(selectedIds.includes($(this).val())) $(this).prop('checked', true);
@@ -367,6 +362,70 @@
                 });
             });
 
+            // --- 5. CONFIRMATION BEFORE DOWNLOAD (NEW) ---
+            $('#bulkDownloadForm').on('submit', function(e) {
+                e.preventDefault(); // Stop proses download langsung
+
+                // 1. Ambil Data untuk Penjelasan
+                let count = selectedIds.length;
+                let docText = $('#bulkDocType option:selected').text();
+                let modeVal = $('input[name="output_mode"]:checked').val();
+
+                // Tentukan Label Mode & Penjelasan Isi
+                let modeLabel = '';
+                let contentDesc = '';
+
+                if (modeVal === 'merged') {
+                    modeLabel = '<span class="badge bg-primary">Merged PDF (1 File Gabungan)</span>';
+                    contentDesc = `Semua dokumen <b>${docText}</b> milik <b>${count} Customer</b> akan digabung menjadi satu file PDF panjang (multi-page).`;
+                } else {
+                    modeLabel = '<span class="badge bg-warning text-dark">ZIP Archive (Terpisah)</span>';
+                    contentDesc = `Anda akan mengunduh folder ZIP yang berisi <b>${count} file PDF</b> (satu file per customer) untuk dokumen <b>${docText}</b>.`;
+                }
+
+                // 2. Tampilkan SweetAlert Konfirmasi
+                Swal.fire({
+                    title: 'Konfirmasi Download',
+                    html: `
+                        <div class="text-start border p-3 rounded bg-light mt-2">
+                            <table class="table table-borderless table-sm mb-0">
+                                <tr>
+                                    <td width="35%" class="text-muted small">Output Mode</td>
+                                    <td>${modeLabel}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted small">Jenis Dokumen</td>
+                                    <td class="fw-bold text-dark">${docText}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted small">Total Data</td>
+                                    <td class="fw-bold text-primary fs-5">${count} <span class="fs-6 text-muted fw-normal">Customer</span></td>
+                                </tr>
+                            </table>
+                            <hr class="my-2">
+                            <p class="small text-muted mb-0 fst-italic text-center">
+                                "${contentDesc}"
+                            </p>
+                        </div>
+                    `,
+                    icon: 'info',
+                    showCancelButton: true,
+                    confirmButtonColor: '#2563eb', // Royal Blue
+                    cancelButtonColor: '#64748b',  // Slate Grey
+                    confirmButtonText: '<i class="ph-bold ph-download-simple me-1"></i> Ya, Proses Download',
+                    cancelButtonText: 'Batal',
+                    reverseButtons: true, // Tombol Cancel di kiri
+                    focusConfirm: false
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        e.currentTarget.submit();
+                        const Toast = Swal.mixin({
+                            toast: true, position: 'top-end', showConfirmButton: false, timer: 3000
+                        });
+                        Toast.fire({ icon: 'success', title: 'Download sedang diproses...' });
+                    }
+                });
+            });
         });
     </script>
     @endpush

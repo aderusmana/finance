@@ -216,42 +216,65 @@ class BgReportController extends Controller
         return null;
     }
 
-    // --- BULK DOWNLOAD (LOGIC BARU) ---
     public function bulkDownload(Request $request)
     {
         $ids = $request->input('ids');
         $docType = $request->input('doc_type');
         $category = $request->input('category');
-        $outputMode = $request->input('output_mode', 'zip'); // 'zip' or 'merged'
+        $outputMode = $request->input('output_mode', 'zip');
 
         if (empty($ids) || !is_array($ids)) return back()->with('error', 'Tidak ada data dipilih.');
 
+        // 1. HITUNG JUMLAH CUSTOMER
+        $totalSelected = count($ids);
+
+        // 2. Format Nama File yang Cantik
+        $niceName = match($docType) {
+            'distributor' => 'Surat Distributor',
+            'bank' => 'Surat Bank',
+            'lampiran_d' => 'Lampiran D',
+            'submission_form' => 'Formulir Pengajuan',
+            default => ucfirst(str_replace('_', ' ', $docType))
+        };
+
+        // Buat nama base agar seragam. Contoh: Surat_Distributor
+        $baseFileName = str_replace(' ', '_', $niceName);
+
         // ---------------------------------------------------------
-        // OPSI 1: DOWNLOAD AS MERGED PDF (1 File, Multiple Pages)
+        // OPSI 1: DOWNLOAD AS MERGED PDF
         // ---------------------------------------------------------
         if ($outputMode == 'merged') {
-            $mergedHtml = '<html><head><style>
-                body { font-family: Arial, sans-serif; }
+
+            // CSS Khusus Surat (Margin Tebal)
+            $customCss = '';
+            if (in_array($docType, ['bank', 'distributor'])) {
+                $customCss = '
+                    @page { margin: 3cm 2.5cm; }
+                    body { font-family: Arial, sans-serif; font-size: 11pt; line-height: 1.5; }
+                ';
+            } else {
+                $customCss = 'body { font-family: Arial, sans-serif; font-size: 12px; }';
+            }
+
+            // Header HTML
+            $mergedHtml = '<html><head>
+                <title>'. $niceName .' - '. $totalSelected .' Customer</title>
+                <style>
+                ' . $customCss . '
                 .page-break { page-break-after: always; }
-                /* Copy CSS penting dari view asli ke sini jika perlu */
-            </style></head><body>';
+                .document-wrapper { width: 100%; }
+                </style>
+            </head><body>';
 
             $count = 0;
             foreach ($ids as $id) {
                 $info = $this->prepareViewData($id, $docType, $category);
                 if ($info) {
-                    // Render View jadi String HTML
                     $viewHtml = view($info['view'], $info['data'])->render();
-
-                    // Bersihkan tag HTML/BODY dari view anak agar tidak double declaration
-                    // Kita ambil isinya saja (di dalam body)
                     preg_match('/<body[^>]*>(.*?)<\/body>/is', $viewHtml, $matches);
-                    $bodyContent = $matches[1] ?? $viewHtml; // Fallback ke full html jika regex gagal
+                    $bodyContent = $matches[1] ?? $viewHtml;
 
-                    // Tambahkan Page Break (Kecuali item terakhir)
-                    $mergedHtml .= '<div class="document-wrapper">';
-                    $mergedHtml .= $bodyContent;
-                    $mergedHtml .= '</div>';
+                    $mergedHtml .= '<div class="document-wrapper">'.$bodyContent.'</div>';
 
                     if ($count < count($ids) - 1) {
                         $mergedHtml .= '<div class="page-break"></div>';
@@ -261,16 +284,21 @@ class BgReportController extends Controller
             }
             $mergedHtml .= '</body></html>';
 
-            $filename = 'Merged_' . ucfirst($docType) . '_' . date('Ymd_His') . '.pdf';
+            // --- NAMA FILE BARU (MERGED) ---
+            // Format: Surat_Distributor_Gabungan_5_Customer.pdf
+            $filename = $baseFileName . '_Gabungan_' . $totalSelected . '_Customer.pdf';
+
             return Pdf::loadHTML($mergedHtml)->stream($filename);
         }
 
         // ---------------------------------------------------------
-        // OPSI 2: DOWNLOAD AS ZIP (Multiple Files)
+        // OPSI 2: DOWNLOAD AS ZIP
         // ---------------------------------------------------------
         else {
-            $zipFileName = 'Bulk_' . ucfirst($docType) . '_' . date('Ymd_His') . '.zip';
-            $zipPath = storage_path('app/public/temp_zip/' . $zipFileName);
+            // --- NAMA FILE BARU (ZIP) ---
+            // Format: Surat_Distributor_5_Customer.zip
+            $zipName = $baseFileName . '_' . $totalSelected . '_Customer.zip';
+            $zipPath = storage_path('app/public/temp_zip/' . $zipName);
 
             if (!file_exists(dirname($zipPath))) mkdir(dirname($zipPath), 0755, true);
 
@@ -285,22 +313,99 @@ class BgReportController extends Controller
                 }
                 $zip->close();
             }
-            return response()->download($zipPath)->deleteFileAfterSend(true);
+            return response()->download($zipPath, $zipName)->deleteFileAfterSend(true);
         }
     }
 
-    // --- Single Download Wrapper ---
-    public function downloadDoc($id, $doc_type) {
-        $info = $this->prepareViewData($id, $doc_type, 'transactions');
-        if(!$info) abort(404);
-        $pdf = Pdf::loadView($info['view'], $info['data']);
-        return $pdf->stream($info['filename']);
+    /**
+     * Generate PDF untuk Transaction Documents (Lampiran D & Submission)
+     */
+    public function downloadDoc($id, $doc_type)
+    {
+        try {
+            $submission = BgSubmission::with(['recommendation.customer', 'recommendation.periods'])->findOrFail($id);
+            $rec = $submission->recommendation;
+            $customer = $rec->customer;
+            $financeUser = User::role('manager-finance')->first();
+            $financeName = $financeUser ? $financeUser->name : 'Manager Finance';
+            $salesUser = User::role('head-SNM')->first();
+            $salesName = $salesUser ? $salesUser->name : 'S&M Dept. Head';
+
+            // Generate Data Umum
+            $nomorPkd = DocumentHelper::generatePKDNumber($rec->id, $customer->name, $submission->created_at);
+
+            if ($doc_type == 'lampiran_d') {
+                $data = [
+                    'submission' => $submission,
+                    'rec' => $rec,
+                    'customer' => $customer,
+                    'nomor_pkd' => $nomorPkd,
+                    'finance_name' => $financeName,
+                    'sales_name' => $salesName
+                ];
+                $pdf = Pdf::loadView('pdf.lampiran_d', $data);
+                return $pdf->stream('Lampiran_D_'.$submission->form_code.'.pdf');
+            }
+
+            if ($doc_type == 'submission_form') {
+                // Cari BG terkait (Draft/Submitted)
+                $bg = BankGaransi::where('customer_id', $customer->id)
+                        ->where('created_at', '>=', $submission->created_at->subDay())
+                        ->with('details')
+                        ->latest()
+                        ->first();
+
+                // Fallback jika BG belum tercreate (misal baru tahap recommendation)
+                if (!$bg) return abort(404, 'Data Rincian Bank belum tersedia (Formulir belum diisi customer).');
+
+                $data = [
+                    'submission' => $submission,
+                    'customer' => $customer,
+                    'bg' => $bg
+                ];
+                $pdf = Pdf::loadView('pdf.bg_submission_document', $data);
+                return $pdf->stream('Formulir_Pengajuan_'.$submission->form_code.'.pdf');
+            }
+
+        } catch (\Exception $e) {
+            return abort(500, 'Gagal generate PDF: ' . $e->getMessage());
+        }
     }
 
-    public function downloadLetters($id, $letter_type) {
-        $info = $this->prepareViewData($id, $letter_type, 'expiring');
-        if(!$info) abort(404);
-        $pdf = Pdf::loadView($info['view'], $info['data']);
-        return $pdf->stream($info['filename']);
+    /**
+     * Generate PDF untuk Expiring Letters (Surat Distributor & Bank)
+     */
+    public function downloadLetters($id, $letter_type)
+    {
+        try {
+            $bg = BankGaransi::with('customer')->findOrFail($id);
+            $cust = $bg->customer;
+            $nomorPkd = DocumentHelper::generatePKDNumber($bg->id, $cust->name, now());
+            $financeUser = User::role('manager-finance')->first();
+            $financeName = $financeUser ? $financeUser->name : 'Manager Finance';
+            $salesUser = User::role('head-SNM')->first();
+            $salesName = $salesUser ? $salesUser->name : 'S&M Dept. Head';
+
+            $data = [
+                'customer' => $cust,
+                'bg' => $bg,
+                'nomor_pkd' => $nomorPkd,
+                'expired_date' => $bg->exp_date,
+                'bank_name' => $bg->bank_name ?? 'Bank Terkait', // Ambil dari detail jika perlu logic khusus
+                'branch_name' => $bg->branch_name ?? '',
+                'nominal' => $bg->bg_nominal,
+                'finance_name' => $financeName,
+                'sales_name' => $salesName
+            ];
+
+            $view = ($letter_type == 'distributor') ? 'pdf.surat_distributor' : 'pdf.surat_bank';
+            $filename = ucfirst($letter_type) . '_Letter_' . $bg->bg_number . '.pdf';
+
+            $pdf = Pdf::loadView($view, $data);
+            return $pdf->stream($filename);
+
+        } catch (\Exception $e) {
+            return abort(500, 'Gagal generate Surat: ' . $e->getMessage());
+        }
     }
 }
