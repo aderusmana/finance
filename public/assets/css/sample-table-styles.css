@@ -826,7 +826,7 @@ body {
 /* Status Badge Enhanced */
 .status-badge-lg {
     font-size: 0.8em !important;
-    padding: 4px 8px !important;
+    padding: 6px 10px !important;
     font-weight: 700 !important;
     border-radius: 10px !important;
     text-transform: uppercase !important;
@@ -1335,31 +1335,242 @@ STYLES MOVED FROM index.blade.php
     background: linear-gradient(90deg, rgba(#2563eb) 0%, rgba(#2563eb) 100%) !important;
 }
 
-/* Default State (Tidak Aktif) */
-.nav-tabs-custom .nav-link {
-    color: #2666c0; /* Abu-abu */
-    font-weight: 600;
-    border: 1px solid transparent;
-    background: transparent;
-    transition: all 0.3s ease;
+/* 1. TABLE CONTAINER FIX */
+.table-responsive {
+    overflow-x: auto !important;
+    min-height: 350px;
+    padding-bottom: 150px !important;
+    margin-bottom: 20px;
+}
+
+.dropdown-menu {
+    position: fixed !important;
+    z-index: 9999 !important;
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    padding: 8px;
+    min-width: 200px;
+    animation: fadeInSimple 0.2s ease-out;
+}
+
+@keyframes fadeInSimple {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* 2. CHECKBOX STYLING */
+.form-check-input {
+    width: 1.2em; height: 1.2em; cursor: pointer;
+    border: 2px solid #cbd5e1;
+}
+.form-check-input:checked {
+    background-color: #2563eb; border-color: #2563eb;
+}
+
+/* 3. FLOATING ACTION BAR MODERN */
+.bulk-action-bar {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(150%); /* Hidden state */
+    background: rgba(15, 23, 42, 0.95); /* Dark Slate / Glass-ish */
+    backdrop-filter: blur(10px);
+    color: white;
+    padding: 15px 30px;
+    border-radius: 100px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    display: flex;
+    align-items: center;
+    gap: 25px;
+    z-index: 9999;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    border: 1px solid rgba(255,255,255,0.1);
+    width: auto;
+    max-width: 90%;
+}
+
+.bulk-action-bar.active {
+    transform: translateX(-50%) translateY(0); /* Active state */
+}
+
+.bulk-separator {
+    width: 1px; height: 30px; background: rgba(255,255,255,0.2);
+}
+
+.selected-badge {
+    background: #3b82f6; color: white; padding: 5px 12px;
+    border-radius: 20px; font-weight: 700; font-size: 0.9rem;
+}
+
+/* RADIO BUTTON GROUP FOR OUTPUT MODE */
+.output-mode-group {
+    background: rgba(255,255,255,0.1);
+    padding: 4px;
+    border-radius: 20px;
+    display: flex;
+}
+.output-mode-label {
+    padding: 6px 16px;
+    border-radius: 16px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 0;
+    color: rgba(255,255,255,0.7);
+}
+.output-mode-input:checked + .output-mode-label {
+    background: white;
+    color: #0f172a;
+    font-weight: 700;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+.output-mode-input { display: none; }
+
+#transTable thead th {
+    background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%) !important; /* Emerald Gradient */
+    color: white !important;
+    padding: 16px 15px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    border: none !important;
+    vertical-align: middle !important;
+}
+
+/* 2. Letters Table (Royal Blue Theme - Kesan 'Official/Info') */
+#lettersTable thead th {
+    background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%) !important; /* Blue Gradient */
+    color: white !important;
+    padding: 16px 15px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    border: none !important;
+    vertical-align: middle !important;
+}
+
+/* Pemisah kolom halus di header */
+#transTable thead th:not(:last-child)::after,
+#lettersTable thead th:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 25%;
+    height: 50%;
+    width: 1px;
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* Rounded Corners untuk Header */
+#transTable thead th:first-child, #lettersTable thead th:first-child { border-top-left-radius: 12px; }
+#transTable thead th:last-child, #lettersTable thead th:last-child { border-top-right-radius: 12px; }
+
+/* Hover Effect pada Baris Isi */
+#transTable tbody tr:hover { background-color: #f0fdf4 !important; transition: 0.2s; }
+#lettersTable tbody tr:hover { background-color: #eff6ff !important; transition: 0.2s; }
+
+/* Checkbox Styling yang cocok dengan Header */
+.checkbox-trans:checked { background-color: #059669; border-color: #059669; }
+.checkbox-letter:checked { background-color: #2563eb; border-color: #2563eb; }
+
+/* =========================================
+   4. MODERN NAV PILLS (TAB BESAR)
+   ========================================= */
+
+.nav-pills-custom .nav-link {
+    background: #fff;
+    color: #64748b; /* Slate 500 */
+    border: 1px solid #e2e8f0;
+    border-radius: 16px; /* Sudut membulat modern */
+    padding: 20px;
+    text-align: left;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    height: 100%; /* Agar tinggi sama jika dalam grid */
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
 
 /* Hover State */
-.nav-tabs-custom .nav-link:hover {
-    color: #4d83cf;
-    background: #f1f5f9;
+.nav-pills-custom .nav-link:hover {
+    transform: translateY(-3px);
+    border-color: #cbd5e1;
+    box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.1);
+    background: #f8fafc;
 }
 
-/* --- ACTIVE STATE: EXPIRING (MERAH) --- */
-.nav-tabs-custom .nav-link#expiring-tab.active {
-    color: #dc3545 !important; /* Merah */
-    background-color: rgba(220, 53, 69, 0.08) !important;
-    border-color: #e2e8f0 #e2e8f0 transparent; /* Border atas/samping, bawah bolong */
+/* Active State (Gradient Blue) */
+.nav-pills-custom .nav-link.active {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); /* Royal Blue Gradient */
+    color: #fff;
+    border-color: transparent;
+    box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.4); /* Blue Glow */
 }
 
-/* --- ACTIVE STATE: HISTORY (BIRU TUA) --- */
-.nav-tabs-custom .nav-link#history-tab.active {
-    color: #1e3a8a !important; /* Biru Tua */
-    background-color: rgba(30, 58, 138, 0.08) !important;
-    border-color: #e2e8f0 #e2e8f0 transparent;
+/* Active State Text Colors Override */
+.nav-pills-custom .nav-link.active .text-muted {
+    color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.nav-pills-custom .nav-link.active .text-dark {
+    color: #fff !important;
+}
+
+.nav-pills-custom .nav-link.active .fw-bold {
+    color: #fff !important;
+}
+
+/* Icon Wrapper Styling */
+.nav-pills-custom .nav-link .icon-wrapper {
+    width: 54px;
+    height: 54px;
+    border-radius: 12px;
+    background: #eff6ff; /* Light Blue bg */
+    color: #2563eb; /* Primary Blue text */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+    flex-shrink: 0; /* Mencegah icon mengecil */
+    transition: all 0.3s ease;
+}
+
+/* Icon Wrapper Active State */
+.nav-pills-custom .nav-link.active .icon-wrapper {
+    background: rgba(255, 255, 255, 0.2); /* Glass effect */
+    color: #fff;
+    backdrop-filter: blur(5px);
+}
+
+.form-control.bg-light:focus {
+    background-color: #fff !important;
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1); /* Glow biru halus */
+    border: 1px solid #cbd5e1 !important;
+}
+
+#searchTrans, #searchLetters {
+    background-color: #f1f5f9 !important; /* Abu-abu slate (lebih gelap dari putih) */
+    border: 1px solid #cbd5e1 !important; /* Border abu-abu tegas */
+    color: #0f172a !important; /* Warna teks gelap */
+    font-weight: 500; /* Font agak tebal */
+    transition: all 0.3s ease;
+}
+
+/* Saat Input Diklik/Fokus */
+#searchTrans:focus, #searchLetters:focus {
+    background-color: #ffffff !important; /* Kembali putih saat ngetik */
+    border-color: #2563eb !important; /* Border jadi biru */
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15) !important; /* Glow biru */
+}
+
+/* Warna Teks Placeholder (Tulisan 'Cari...') */
+#searchTrans::placeholder, #searchLetters::placeholder {
+    color: #64748b !important; /* Slate grey yang mudah dibaca */
+    opacity: 1;
+}
+
+/* Ikon Kaca Pembesar */
+.ph-magnifying-glass {
+    color: #475569 !important; /* Ikon lebih gelap */
 }

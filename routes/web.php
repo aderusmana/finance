@@ -150,6 +150,7 @@ Route::middleware('auth')->group(function () {
         Route::post('approvals/process', [BgApprovalInboxController::class, 'process'])->name('bg-approvals.process');
         Route::post('approvals/resend/{id}', [BgApprovalInboxController::class, 'resendEmail']);
         Route::get('reports', [BgReportController::class, 'index'])->name('bg-reports.index');
+        Route::post('reports/bulk-download', [BgReportController::class, 'bulkDownload'])->name('bg-reports.bulk-download');
         Route::get('reports/download/{id}/{doc_type}', [BgReportController::class, 'downloadDoc'])->name('bg-reports.download');
         Route::get('reports/letters/{id}/{letter_type}', [BgReportController::class, 'downloadLetters'])->name('bg-reports.download-letters');
     });
