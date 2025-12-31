@@ -133,6 +133,7 @@ Route::middleware('auth')->group(function () {
 
     Route::group(['prefix' => 'bg'], function () {
         Route::resource('bg-list', BankGaransiController::class);
+        Route::get('generate-number', [BankGaransiController::class, 'generateNumber'])->name('bg.generate-number');
         Route::resource('bg-recommendations', BgRecommendationController::class);
         Route::resource('bg-submissions', BgSubmissionController::class);
         Route::get('bg-histories/export', [BgHistoryController::class, 'export'])->name('bg-histories.export');

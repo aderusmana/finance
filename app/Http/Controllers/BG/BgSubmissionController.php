@@ -300,6 +300,14 @@ class BgSubmissionController extends Controller
                     ->latest()
                     ->first();
 
+            if ($bg) {
+                $bg->update([
+                    'status'      => 'approved',
+                    'issued_date' => now(),
+                    'exp_date'    => now()->addYear(),
+                ]);
+            }
+
             $submission->update([
                 'status' => 'completed',
             ]);
@@ -314,7 +322,7 @@ class BgSubmissionController extends Controller
 
             $this->sendCompletionEmails($submission);
 
-            return response()->json(['success' => true, 'message' => 'Dokumen disetujui & History Tercatat.']);
+            return response()->json(['success' => true, 'message' => 'Dokumen disetujui, Tanggal Terbit & Expired berhasil di-generate.']);
         }
 
         return response()->json(['success' => false, 'message' => 'Invalid Action']);
@@ -322,13 +330,11 @@ class BgSubmissionController extends Controller
 
     private function addToBgHistory($submission, $currentBg)
     {
-        // 1. Cari Previous BG (Mundur 1 ID dari customer yang sama)
         $prevBg = BankGaransi::where('customer_id', $currentBg->customer_id)
                     ->where('id', '<', $currentBg->id)
                     ->orderBy('id', 'desc')
                     ->first();
 
-        // 2. Ambil Remarks dari Lampiran D Version Terbaru
         $remarks = null;
         $lampiranD = LampiranD::where('bg_submission_id', $submission->id)->with('activeVersion')->first();
 
@@ -336,7 +342,6 @@ class BgSubmissionController extends Controller
             $remarks = $lampiranD->activeVersion->remarks;
         }
 
-        // 3. Create History Record
         BgHistory::create([
             'bank_garansi_id'   => $currentBg->id,
             'previous_nominal'  => $prevBg ? $prevBg->bg_nominal : 0,

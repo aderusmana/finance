@@ -93,28 +93,29 @@ class ApprovalProcessController extends Controller
                 $sub->recommendation->update(['status' => 'approved']);
             }
 
-            // [LOGIC BARU] Masuk ke BG History
             $bg = BankGaransi::where('customer_id', $sub->recommendation->customer_id)
                     ->where('status', 'submitted')
                     ->latest()
                     ->first();
 
             if ($bg) {
+                $bg->update([
+                    'status'      => 'approved',
+                    'issued_date' => now(),
+                    'exp_date'    => now()->addYear(),
+                ]);
 
-                // 1. Previous BG
                 $prevBg = BankGaransi::where('customer_id', $bg->customer_id)
                             ->where('id', '<', $bg->id)
                             ->orderBy('id', 'desc')
                             ->first();
 
-                // 2. Remarks dari Lampiran D
                 $remarks = null;
                 $lampiranD = LampiranD::where('bg_submission_id', $sub->id)->with('activeVersion')->first();
                 if ($lampiranD && $lampiranD->activeVersion) {
                     $remarks = $lampiranD->activeVersion->remarks;
                 }
 
-                // 3. Create
                 BgHistory::create([
                     'bank_garansi_id'   => $bg->id,
                     'previous_nominal'  => $prevBg ? $prevBg->bg_nominal : 0,
@@ -122,7 +123,7 @@ class ApprovalProcessController extends Controller
                     'previous_exp_date' => $prevBg ? $prevBg->exp_date : null,
                     'new_exp_date'      => $bg->exp_date,
                     'remarks'           => $remarks ?? 'Approved by Finance via Email',
-                    'created_by'        => null // System triggered via approval link
+                    'created_by'        => null
                 ]);
             }
 

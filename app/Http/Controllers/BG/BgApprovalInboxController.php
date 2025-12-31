@@ -140,13 +140,11 @@ class BgApprovalInboxController extends Controller
             $status = ($request->action == 'reject') ? 'rejected_by_finance' : 'completed';
             $notes  = $request->notes ?? 'Processed via Dashboard (Quick Action)';
 
-            // 1. Update Submission
-            $sub->update([
+            $sub->update([  
                 'status' => $status,
                 'reviewed_at' => now()
             ]);
 
-            // 2. Update Log
             if ($log) {
                 $log->update([
                     'status' => ($request->action == 'reject') ? 'Rejected' : 'Approved',
@@ -156,11 +154,24 @@ class BgApprovalInboxController extends Controller
                 ]);
             }
 
-            // 3. Trigger History & Email
             if ($status == 'completed') {
                 if ($sub->recommendation) {
                     $sub->recommendation->update(['status' => 'approved']);
                 }
+
+                $bg = BankGaransi::where('customer_id', $sub->recommendation->customer_id)
+                        ->where('status', 'submitted')
+                        ->latest()
+                        ->first();
+
+                if ($bg) {
+                    $bg->update([
+                        'status'      => 'approved',
+                        'issued_date' => now(),
+                        'exp_date'    => now()->addYear(),
+                    ]);
+                }
+
                 $this->addToHistoryLogic($sub);
                 $this->sendCompletionEmails($sub);
             }
