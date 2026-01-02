@@ -7,6 +7,7 @@ use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Helpers\DocumentHelper;
+use App\Models\BG\BankGaransi;
 
 class CustomerBgReadyMail extends Mailable
 {
@@ -24,12 +25,15 @@ class CustomerBgReadyMail extends Mailable
         $rec = $this->submission->recommendation;
         $customer = $rec->customer;
 
+        $bg = BankGaransi::where('customer_id', $customer->id)->latest()->first();
+
         $nomorPkd = DocumentHelper::generatePKDNumber($rec->id, $customer->name, now());
 
         $data = [
             'submission' => $this->submission,
             'rec' => $rec,
             'customer' => $customer,
+            'bg' => $bg,
             'nomor_pkd' => $nomorPkd,
         ];
 

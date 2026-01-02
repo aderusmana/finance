@@ -41,8 +41,7 @@
                             <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="margin: 30px 0;">
                                 <tr>
                                     <td align="center">
-                                        {{-- Tombol dengan Token --}}
-                                        <a href="{{ route('customer.portal.download-pdf', $submission->token) }}" target="_blank" style="background-color: #2563eb; color: #ffffff; text-decoration: none; padding: 14px 30px; border-radius: 6px; font-weight: 700; display: inline-block; font-size: 16px; box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);">
+                                        <a href="{{ route('customer.portal.download-lampiran-d', $submission->token) }}" target="_blank" style="background-color: #2563eb; color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 700; display: inline-block; font-size: 16px; box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);">
                                             Download Lampiran D
                                         </a>
                                     </td>

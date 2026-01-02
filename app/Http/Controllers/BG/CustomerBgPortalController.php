@@ -266,4 +266,49 @@ class CustomerBgPortalController extends Controller
             abort(404, 'Dokumen tidak ditemukan atau link kadaluarsa.');
         }
     }
+
+    public function downloadLampiranD($token)
+    {
+        try {
+            // 1. Cari Submission berdasarkan Token
+            $submission = BgSubmission::with(['recommendation.customer'])->where('token', $token)->first();
+
+            if (!$submission) {
+                return view('page.customer_portal.form-invalid');
+            }
+
+            $rec = $submission->recommendation;
+            $customer = $rec->customer;
+
+            // 2. Cari Data Bank Garansi (Untuk mengambil Nilai BG Diserahkan)
+            // Ambil BG terakhir yang terkait dengan customer ini
+            $bg = BankGaransi::where('customer_id', $customer->id)
+                    ->latest() // Ambil yang paling baru dibuat/diupdate
+                    ->first();
+
+            // 3. Generate Nomor PKD & Data
+            $nomorPkd = DocumentHelper::generatePKDNumber($rec->id, $customer->name, now());
+            
+            // Siapkan Data untuk View
+            $data = [
+                'submission' => $submission,
+                'rec' => $rec,
+                'customer' => $customer,
+                'bg' => $bg, // PENTING: Kirim object BG agar nominal bisa dibaca
+                'nomor_pkd' => $nomorPkd,
+                // Nama Dept Head bisa dinamis atau hardcode sesuai kebutuhan
+                'sales_name' => 'Dept Head Sales', 
+                'finance_name' => 'Dept Head Finance'
+            ];
+
+            // 4. Download PDF Lampiran D (Bukan Formulir Submission)
+            $pdf = Pdf::loadView('pdf.lampiran_d', $data);
+            
+            $safeName = str_replace(['/', '\\'], '-', $customer->name);
+            return $pdf->download('Lampiran_D_' . $safeName . '.pdf');
+
+        } catch (\Exception $e) {
+            abort(404, 'Dokumen tidak ditemukan.');
+        }
+    }
 }

@@ -66,6 +66,7 @@ Route::prefix('customer-portal')->name('customer.portal.')->group(function () {
     Route::get('/upload/{token}', [CustomerBgPortalController::class, 'showUploadForm'])->name('upload-form');
     Route::post('/upload/{token}', [CustomerBgPortalController::class, 'storeUploadData'])->name('store-upload');
     Route::get('/download/{token}', [CustomerBgPortalController::class, 'downloadPdf'])->name('download-pdf');
+    Route::get('/download-lampiran-d/{token}', [CustomerBgPortalController::class, 'downloadLampiranD'])->name('download-lampiran-d');
 });
 
 Route::middleware('auth')->group(function () {

@@ -101,8 +101,8 @@
             <td style="width: 200px; font-weight: bold; padding: 5px; vertical-align: top;">NILAI BG YANG DISERAHKAN</td>
             <td style="width: 10px; padding: 5px; vertical-align: top;">:</td>
             <td style="padding: 5px; vertical-align: top;">
-                Rp. {{ number_format($submission->bg_nominal ?? 0, 0, ',', '.') }}<br>
-                <i style="font-size: 11px;">({{ ucwords(\App\Helpers\DocumentHelper::terbilang($submission->bg_nominal ?? 0)) }} Rupiah)</i>
+                Rp. {{ number_format($bg->bg_nominal ?? 0, 0, ',', '.') }}<br>
+                <i style="font-size: 11px;">({{ ucwords(\App\Helpers\DocumentHelper::terbilang($bg->bg_nominal ?? 0)) }} Rupiah)</i>
             </td>
         </tr>
     </table>
