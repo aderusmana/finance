@@ -132,7 +132,7 @@
     <div class="modal fade" id="bgDetailModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content border-0 shadow-lg overflow-hidden" style="border-radius: 12px;">
-                
+
                 {{-- Modal Header with Gradient --}}
                 <div class="modal-header text-white px-4 py-3" style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);">
                     <div class="d-flex align-items-center gap-3">
@@ -148,7 +148,7 @@
                 </div>
 
                 <div class="modal-body p-0">
-                    
+
                     {{-- Status Banner --}}
                     <div class="px-4 py-3 bg-light d-flex justify-content-between align-items-center border-bottom">
                         <span class="text-muted fw-bold text-uppercase small letter-spacing-1">Current Status</span>
@@ -159,7 +159,7 @@
                         {{-- LEFT COLUMN: Main Info --}}
                         <div class="col-md-7 p-4 border-end">
                             <h6 class="fw-bold text-primary mb-3"><i class="ph-duotone ph-buildings me-2"></i>Customer Information</h6>
-                            
+
                             <div class="mb-4">
                                 <label class="text-muted small text-uppercase fw-bold">Customer Name</label>
                                 <div class="fs-6 fw-bold text-dark" id="detail-customer">...</div>
@@ -191,7 +191,7 @@
                         {{-- RIGHT COLUMN: Dates & Meta --}}
                         <div class="col-md-5 p-4 bg-light-subtle">
                             <h6 class="fw-bold text-primary mb-3"><i class="ph-duotone ph-calendar me-2"></i>Timeline</h6>
-                            
+
                             <div class="timeline-simple">
                                 <div class="mb-3">
                                     <label class="text-muted small fw-bold">Issued Date</label>
@@ -220,7 +220,7 @@
                                     <span class="small fw-bold" id="detail-creator">...</span>
                                 </div>
                             </div>
-                            
+
                             <div class="mb-3">
                                 <label class="text-muted small fw-bold">Last Updated</label>
                                 <div class="small text-dark" id="detail-updated">...</div>
@@ -266,27 +266,27 @@
                 processing: true, serverSide: true,
                 ajax: {
                     url: "{{ route('bg-list.index') }}",
-                    data: function(d) { 
-                        d.status = $('#statusFilter').val(); 
-                        d.bg_type = $('#typeFilter').val(); 
+                    data: function(d) {
+                        d.status = $('#statusFilter').val();
+                        d.bg_type = $('#typeFilter').val();
                     }
                 },
                 columns: [
                     { data: 'DT_RowIndex', orderable: false, searchable: false, className: 'text-center' },
                     { data: 'bg_number', className: 'fw-bold' },
                     { data: 'customer_name', className: 'text-wrap text-start', width: '25%' },
-                    { data: 'bg_type', className: 'text-center', render: function(d) { 
+                    { data: 'bg_type', className: 'text-center', render: function(d) {
                         let color = d === 'new' ? 'info' : (d === 'extension' ? 'warning' : 'secondary');
-                        return `<span class="badge bg-${color} text-uppercase">${d}</span>`; 
+                        return `<span class="badge bg-${color} text-uppercase">${d}</span>`;
                     }},
                     { data: 'bg_nominal', className: 'text-end fw-bold' },
-                    { data: 'issued_date' }, 
+                    { data: 'issued_date' },
                     { data: 'exp_date' },
-                    { data: 'status', className: 'text-center', render: function(d) { 
+                    { data: 'status', className: 'text-center', render: function(d) {
                         let color = d === 'approved' ? 'success' : (d === 'submitted' ? 'primary' : (d === 'expired' ? 'danger' : 'secondary'));
-                        return `<span class="badge bg-${color} text-uppercase">${d.replace('_', ' ')}</span>`; 
+                        return `<span class="badge bg-${color} status-badge-lg              ">${d.replace('_', ' ')}</span>`;
                     }},
-                    { data: 'action', orderable: false, searchable: false, className: 'text-center position-static' }   
+                    { data: 'action', orderable: false, searchable: false, className: 'text-center position-static' }
                 ],
                 order: [[1, 'asc']]
             });
@@ -299,7 +299,7 @@
             let currentPrefix = '';
 
             $('#customer_id').on('change', function() {
-                if (isPopulating) return; 
+                if (isPopulating) return;
 
                 let custId = $(this).val();
                 if(!custId) return;
@@ -310,11 +310,11 @@
                     data: { customer_id: custId },
                     success: function(res) {
                         if(res.status === 'success') {
-                            currentSequence = res.sequence; 
+                            currentSequence = res.sequence;
                             currentPrefix = res.prefix;
 
                             let firstInput = $('input[name="items[0][bg_number]"]');
-                            
+
                             if(firstInput.val() === '' || firstInput.val().startsWith('BG-')) {
                                 firstInput.val(res.number);
                             }
@@ -344,16 +344,16 @@
                 const tempIndex = new Date().getTime() + Math.floor(Math.random() * 1000);
                 let bgNumber = '';
                 if (data && data.bg_number) {
-                    bgNumber = data.bg_number; 
+                    bgNumber = data.bg_number;
                 } else {
                     if (currentPrefix !== '' && currentSequence > 0) {
                         let existingRows = $('.bg-item-row').length;
-                        let nextSeq = currentSequence + existingRows; 
-                        let seqStr = nextSeq.toString().padStart(4, '0'); 
+                        let nextSeq = currentSequence + existingRows;
+                        let seqStr = nextSeq.toString().padStart(4, '0');
                         bgNumber = currentPrefix + seqStr;
                     }
                 }
-                
+
                 let bgType = 'new';
                 if(forceType) {
                     bgType = forceType;
@@ -438,20 +438,20 @@
                             </div>
                         </div>
                     </div>`;
-                
+
                 $('#items-container').append(html);
                 updateRowNumbers();
             }
 
             $('#btn-add-item').on('click', function() { addBgItem(); });
-            $(document).on('click', '.btn-remove-item', function() { 
-                $(this).closest('.bg-item-row').remove(); 
+            $(document).on('click', '.btn-remove-item', function() {
+                $(this).closest('.bg-item-row').remove();
                 updateRowNumbers();
             });
 
             function resetModal(title) {
                 $('#bgForm')[0].reset();
-                $('#bgId').val(''); 
+                $('#bgId').val('');
                 $('#formMethod').val('POST');
                 $('#items-container').empty();
                 $('.select2-modal').val(null).trigger('change');
@@ -475,16 +475,16 @@
                 $.get(baseUrl + "/" + id, function(data) {
                     resetModal('Edit Bank Garansi');
                     $('#bgId').val(data.id);
-                    $('#formMethod').val('PUT'); 
-                    
-                    isPopulating = true; 
-                    
-                    $('#customer_id').val(data.customer_id).trigger('change');
-                    
-                    addBgItem(data);
-                    isPopulating = false; 
+                    $('#formMethod').val('PUT');
 
-                    $('#btn-add-item').show(); 
+                    isPopulating = true;
+
+                    $('#customer_id').val(data.customer_id).trigger('change');
+
+                    addBgItem(data);
+                    isPopulating = false;
+
+                    $('#btn-add-item').show();
                     $('#bgModal').modal('show');
                 });
             });
@@ -493,9 +493,9 @@
                 let id = $(this).data('id');
                 $.get(baseUrl + "/" + id, function(data) {
                     resetModal('Extension Bank Garansi');
-                    
-                    $('#formMethod').val('POST'); 
-                    
+
+                    $('#formMethod').val('POST');
+
                     isPopulating = true;
                     $('#customer_id').val(data.customer_id).trigger('change');
                     isPopulating = false;
@@ -509,12 +509,12 @@
                                 currentSequence = res.sequence;
                                 currentPrefix = res.prefix;
                                 addBgItem(null, 'extension');
-                                
+
                                 $('input[name="items[0][bg_number]"]').val(res.number);
                             }
                         }
                     });
-                    
+
                     $('#bgModal').modal('show');
                 });
             });
@@ -523,17 +523,17 @@
                 let id = $(this).data('id');
                 $.get(baseUrl + "/" + id, function(data) {
                     resetModal('Existing Bank Garansi (Renewal)');
-                    
+
                     $('#bgId').val(data.id);
                     $('#formMethod').val('PUT');
-                    
+
                     isPopulating = true;
                     $('#customer_id').val(data.customer_id).trigger('change');
-                    
-                    addBgItem(data, 'existing'); 
-                    
+
+                    addBgItem(data, 'existing');
+
                     isPopulating = false;
-                    
+
                     $('#bgModal').modal('show');
                 });
             });
@@ -551,29 +551,29 @@
 
                 $.get(baseUrl + "/" + id, function(data) {
                     $('#detail-bg-number').text(data.bg_number);
-                    
+
                     let statusClass = 'secondary';
                     if(data.status === 'approved') statusClass = 'success';
                     else if(data.status === 'submitted') statusClass = 'primary';
                     else if(data.status === 'expired') statusClass = 'danger';
-                    
+
                     $('#detail-status').text(data.status.toUpperCase())
                         .attr('class', `badge rounded-pill px-3 py-2 fs-6 bg-${statusClass}`);
-                    
+
                     $('#detail-customer').text(data.customer ? data.customer.name : '-');
                     $('#detail-type').text(data.bg_type.toUpperCase());
                     $('#detail-nominal').text('Rp ' + new Intl.NumberFormat('id-ID').format(data.bg_nominal));
-                    
+
                     $('#detail-issued').text(formatDate(data.issued_date));
                     $('#detail-expired').text(formatDate(data.exp_date));
-                    
+
                     $('#detail-creator').text(data.creator ? data.creator.name : 'System');
                     $('#detail-updated').text(formatDate(data.updated_at));
 
                     let bankHtml = '<p class="text-muted text-center mb-0">No bank details found.</p>';
                     if(data.details && data.details.length > 0) {
                         let d = data.details[0];
-                        
+
                         bankHtml = `
                             <div class="d-flex justify-content-between mb-2 border-bottom pb-1">
                                 <span class="text-muted small">Bank Name:</span>
@@ -631,9 +631,9 @@
                 e.preventDefault();
                 const id = $('#bgId').val();
                 const method = $('#formMethod').val();
-                
+
                 let url = "{{ route('bg-list.store') }}";
-                
+
                 if(method === 'PUT' && id) {
                     url = "{{ route('bg-list.update', ':id') }}".replace(':id', id);
                 }
@@ -646,7 +646,7 @@
                         let rawVal = formData.get(key);
                         if(rawVal) {
                             let cleanVal = rawVal.replace(/\./g, '').replace(/,/g, '.');
-                            cleanVal = rawVal.replace(/\./g, ''); 
+                            cleanVal = rawVal.replace(/\./g, '');
                             formData.set(key, cleanVal);
                         }
                     }
@@ -655,10 +655,10 @@
                 Swal.fire({ title: 'Saving...', didOpen: () => Swal.showLoading() });
 
                 $.ajax({
-                    url: url, 
+                    url: url,
                     method: 'POST',
-                    data: formData, 
-                    processData: false, 
+                    data: formData,
+                    processData: false,
                     contentType: false,
                     success: function(res) {
                         Swal.fire('Success', res.message, 'success');

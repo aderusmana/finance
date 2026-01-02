@@ -21,6 +21,7 @@ use App\Models\BG\LampiranDVersion;
 use App\Models\Master\ApprovalPath;
 use App\Models\User;
 use App\Models\BG\BgHistory;
+use Illuminate\Support\Str; 
 
 class BgSubmissionController extends Controller
 {
@@ -39,21 +40,36 @@ class BgSubmissionController extends Controller
                 ->addColumn('file', function($row){
                     if($row->signed_document_path) {
                         $url = asset($row->signed_document_path);
-                        return '<button type="button" class="btn btn-xs btn-warning btn-view-file" data-url="'.$url.'" data-id="'.$row->id.'" title="View File">
-                                    <i class="ph-bold ph-file-doc"></i>
-                                </button>';
+
+                        return '
+                        <button type="button"
+                                class="status-badge-lg bg-primary text-light fw-bold btn-view-file shadow-sm px-3"
+                                data-url="'.$url.'"
+                                data-id="'.$row->id.'"
+                                data-bs-toggle="tooltip"
+                                title="Klik untuk Melihat Dokumen & Proses Approval">
+                            <i class="ph-bold ph-file-search me-1"></i> Review & Process
+                        </button>';
                     }
-                    return '<span class="text-muted">No File</span>';
+
+                    return '<span class="badge bg-light text-muted border border-secondary border-opacity-25">
+                                <i class="ph-bold ph-hourglass me-1"></i> Awaiting Upload
+                            </span>';
                 })
                 ->addColumn('status', function($row){
                     $color = 'secondary';
                     if($row->status === 'uploaded') $color = 'info';
                     if($row->status === 'completed') $color = 'success';
                     if($row->status === 'awaiting_upload') $color = 'warning';
-                    return '<span class="badge bg-'.$color.' text-uppercase">'.str_replace('_', ' ', $row->status).'</span>';
+                    return '<span class="badge bg-'.$color.' status-badge-lg">'.str_replace('_', ' ', $row->status).'</span>';
                 })
                 ->addColumn('action', function ($row) {
-                    return '<button class="btn btn-sm btn-warning btn-edit" data-id="'.$row->id.'"><i class="ph-bold ph-pencil-simple"></i></button>';
+                    return '<button class="status-badge-lg bg-warning text-light border btn-edit-submission"
+                                    data-id="'.$row->id.'"
+                                    data-bs-toggle="tooltip"
+                                    title="Edit Data Administrasi (No Approval)">
+                                <i class="ph-bold ph-pencil-simple"></i>
+                            </button>';
                 })
                 ->rawColumns(['file', 'status', 'action'])
                 ->make(true);
@@ -123,24 +139,23 @@ class BgSubmissionController extends Controller
 
     public function getEditData($id)
     {
-        // Load Submission beserta relasinya
         $submission = BgSubmission::with(['recommendation.customer'])->findOrFail($id);
         $rec = $submission->recommendation;
         $customer = $rec->customer;
 
-        // Ambil Data BG terakhir (untuk Poin 11)
         $bg = BankGaransi::where('customer_id', $customer->id)
                 ->where('created_at', '>=', $submission->created_at->subDay())
-                ->with('details') // Ambil detail bank juga
+                ->with('details')
                 ->latest()
                 ->first();
 
                 $periodeString = '-';
         if ($rec->periods && $rec->periods->count() > 0) {
-            $start = $rec->periods->min('period_date'); // Format Y-m-d (Carbon object karena cast model)
+            $start = $rec->periods->min('period_date');
             $end   = $rec->periods->max('period_date');
 
             if ($start && $end) {
+                \Carbon\Carbon::setLocale('id');
                 $periodeString = \Carbon\Carbon::parse($start)->isoFormat('MMMM Y') . ' - ' . \Carbon\Carbon::parse($end)->isoFormat('MMMM Y');
             }
         }
@@ -187,7 +202,6 @@ class BgSubmissionController extends Controller
                 $rec = $submission->recommendation;
                 $customer = $rec->customer;
 
-                // 1. Update Data Master (Source of Truth)
                 $customer->update([
                     'name' => $request->nama_distributor,
                     'city' => $request->kota,
@@ -214,19 +228,26 @@ class BgSubmissionController extends Controller
                 }
 
                 if ($request->bg_id) {
-                    $newTotal = BgDetail::where('bank_garansi_id', $request->bg_id)->sum('nominal');
                     BankGaransi::where('id', $request->bg_id)->update([
-                        'bg_nominal' => $newTotal
+                        'bg_nominal' => $request->nilai_bg_diserahkan
                     ]);
+
+                    $firstDetail = BgDetail::where('bank_garansi_id', $request->bg_id)
+                                           ->orderBy('id', 'asc')
+                                           ->first();
+                    
+                    if ($firstDetail) {
+                        $firstDetail->update([
+                            'nominal' => $request->nilai_bg_diserahkan
+                        ]);
+                    }
                 }
 
-                // A. Cari atau Buat Parent Record di tabel lampiran_d
                 $lampiranD = LampiranD::firstOrCreate(
                     ['bg_submission_id' => $submission->id],
                     ['version_latest' => 0, 'created_by' => auth()->id()]
                 );
 
-                // B. Siapkan Data Snapshot (JSON)
                 $snapshotData = [
                     'nama_distributor' => $request->nama_distributor,
                     'kota' => $request->kota,
@@ -242,7 +263,6 @@ class BgSubmissionController extends Controller
                     'details' => $request->details
                 ];
 
-                // C. Simpan ke tabel lampiran_d_versions
                 $nextVersion = $lampiranD->version_latest + 1;
 
                 $newVersion = LampiranDVersion::create([
@@ -255,14 +275,12 @@ class BgSubmissionController extends Controller
                     'remarks'       => 'Correction via Submission Edit (Submission ID: '.$submission->id.')'
                 ]);
 
-                // D. Update Pointer di Parent
                 $lampiranD->update([
                     'version_latest'    => $nextVersion,
                     'active_version_id' => $newVersion->id
                 ]);
 
 
-                // 4. Generate Log Approval & Kirim Email
                 $requester = auth()->user();
                 $logs = $this->generateApprovalLogs($requester, $submission->id, 'BG', 'Lampiran D');
 
@@ -310,6 +328,7 @@ class BgSubmissionController extends Controller
 
             $submission->update([
                 'status' => 'completed',
+                'token'  => Str::random(60)
             ]);
 
             if ($submission->recommendation) {

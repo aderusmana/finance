@@ -181,8 +181,7 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const limitApproved = Math.floor({{ $rec->credit_limit_updated ?? $rec->recommended_credit_limit ?? 0 }});
-        let rowCount = document.querySelectorAll('.bank-row').length;
+        const limitApproved = Math.round({{ $rec->credit_limit_updated ?? $rec->recommended_credit_limit ?? 0 }});
 
         const container = document.getElementById('bank-rows');
         const btnAdd = document.getElementById('addBankRow');
@@ -193,6 +192,25 @@
         const formatter = new Intl.NumberFormat('id-ID', {
             style: 'currency', currency: 'IDR', minimumFractionDigits: 0, maximumFractionDigits: 0
         });
+
+        function updateRowNumbers() {
+            const rows = document.querySelectorAll('.bank-row');
+            rows.forEach((row, index) => {
+                const title = row.querySelector('h6');
+                if(title) {
+                    title.innerHTML = `<i class="bi bi-bank me-2"></i>Bank ${index + 1}`;
+                }
+
+                const inputs = row.querySelectorAll('input, textarea, select');
+                inputs.forEach(input => {
+                    let name = input.getAttribute('name');
+                    if (name) {
+                        let newName = name.replace(/details\[\d+\]/, `details[${index}]`);
+                        input.setAttribute('name', newName);
+                    }
+                });
+            });
+        }
 
         function formatRupiah(angka, prefix) {
             var number_string = angka.replace(/[^,\d]/g, '').toString(),
@@ -222,15 +240,16 @@
             });
 
             totalDisplay.innerText = formatter.format(total);
-            totalDisplay.classList.remove('text-primary', 'text-warning', 'text-danger');
+            totalDisplay.classList.remove('text-primary', 'text-warning', 'text-danger', 'text-success');
 
-            if (total < limitApproved) {
-                totalDisplay.classList.add('text-danger');
-            } else if (total > limitApproved) {
+            if (total === limitApproved) {
+                totalDisplay.classList.add('text-success');
+            } else if (total < limitApproved) {
                 totalDisplay.classList.add('text-danger');
             } else {
-                totalDisplay.classList.add('text-primary');
+                totalDisplay.classList.add('text-warning');
             }
+
             return total;
         }
 
@@ -246,54 +265,57 @@
             }
         });
 
-        // --- UPDATE PADA JS: Style Inline dimasukkan juga ke string HTML ---
         btnAdd.addEventListener('click', function() {
+            const tempIndex = Date.now();
+
             const newRow = document.createElement('div');
             newRow.classList.add('bank-row', 'fade-in', 'mt-3');
 
-            // Inject Inline Style untuk Row
             newRow.style.cssText = "background-color: #fff; border: 1px solid #e9ecef; border-radius: 10px; padding: 25px; margin-bottom: 20px; position: relative;";
 
             newRow.innerHTML = `
                 <div class="btn-remove remove-row" title="Hapus Bank" style="position: absolute; top: 15px; right: 15px; color: #dc3545; cursor: pointer; transition: 0.2s; background: #fff0f0; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border-radius: 50%;"><i class="bi bi-trash"></i></div>
-                <h6 class="text-primary mb-3 fw-bold"><i class="bi bi-bank me-2"></i>Bank ${rowCount + 1}</h6>
+
+                <h6 class="text-primary mb-3 fw-bold"><i class="bi bi-bank me-2"></i>Bank #</h6>
+
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label class="form-label" style="font-weight: 500; font-size: 0.9rem; color: #495057; margin-bottom: 8px;">Nama Bank <span class="text-danger">*</span></label>
-                        <input type="text" name="details[${rowCount}][bank_name]" class="form-control" style="padding: 12px; border-radius: 8px; border: 1px solid #dee2e6; font-size: 0.95rem;" placeholder="Contoh: BCA / Mandiri" required>
+                        <input type="text" name="details[${tempIndex}][bank_name]" class="form-control" style="padding: 12px; border-radius: 8px; border: 1px solid #dee2e6; font-size: 0.95rem;" placeholder="Contoh: BCA / Mandiri" required>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label" style="font-weight: 500; font-size: 0.9rem; color: #495057; margin-bottom: 8px;">Cabang Bank</label>
-                        <input type="text" name="details[${rowCount}][branch_name]" class="form-control" style="padding: 12px; border-radius: 8px; border: 1px solid #dee2e6; font-size: 0.95rem;" placeholder="Contoh: KCU Sudirman">
+                        <input type="text" name="details[${tempIndex}][branch_name]" class="form-control" style="padding: 12px; border-radius: 8px; border: 1px solid #dee2e6; font-size: 0.95rem;" placeholder="Contoh: KCU Sudirman">
                     </div>
                     <div class="col-12">
                         <label class="form-label" style="font-weight: 500; font-size: 0.9rem; color: #495057; margin-bottom: 8px;">Alamat Bank</label>
-                        <textarea name="details[${rowCount}][bank_address]" class="form-control" rows="2" style="padding: 12px; border-radius: 8px; border: 1px solid #dee2e6; font-size: 0.95rem;" placeholder="Alamat lengkap bank penerbit"></textarea>
+                        <textarea name="details[${tempIndex}][bank_address]" class="form-control" rows="2" style="padding: 12px; border-radius: 8px; border: 1px solid #dee2e6; font-size: 0.95rem;" placeholder="Alamat lengkap bank penerbit"></textarea>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label" style="font-weight: 500; font-size: 0.9rem; color: #495057; margin-bottom: 8px;">Contact Person (PIC)</label>
                         <div class="input-group">
                             <span class="input-group-text bg-white text-muted"><i class="bi bi-person"></i></span>
-                            <input type="text" name="details[${rowCount}][contact_person]" class="form-control" style="padding: 12px; border-radius: 8px; border: 1px solid #dee2e6; font-size: 0.95rem;" placeholder="Nama PIC Bank">
+                            <input type="text" name="details[${tempIndex}][contact_person]" class="form-control" style="padding: 12px; border-radius: 8px; border: 1px solid #dee2e6; font-size: 0.95rem;" placeholder="Nama PIC Bank">
                         </div>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label" style="font-weight: 500; font-size: 0.9rem; color: #495057; margin-bottom: 8px;">Nominal Pengajuan <span class="text-danger">*</span></label>
                         <div class="input-group">
                             <span class="input-group-text bg-light fw-bold">Rp</span>
-                            <input type="text" name="details[${rowCount}][nominal]" class="form-control nominal-input rupiah-format fw-bold text-end" style="padding: 12px; border-radius: 8px; border: 1px solid #dee2e6; font-size: 0.95rem;" placeholder="0" required>
+                            <input type="text" name="details[${tempIndex}][nominal]" class="form-control nominal-input rupiah-format fw-bold text-end" style="padding: 12px; border-radius: 8px; border: 1px solid #dee2e6; font-size: 0.95rem;" placeholder="0" required>
                         </div>
                     </div>
                 </div>
             `;
             container.appendChild(newRow);
-            rowCount++;
+            updateRowNumbers();
         });
 
         container.addEventListener('click', function(e) {
             if (e.target.closest('.remove-row')) {
                 e.target.closest('.bank-row').remove();
                 updateTotal();
+                updateRowNumbers();
             }
         });
 
@@ -332,7 +354,6 @@
                 allowOutsideClick: false, didOpen: () => Swal.showLoading()
             });
 
-            // Tetap bersihkan titik sebelum kirim ke server
             document.querySelectorAll('.nominal-input').forEach(input => {
                 input.value = cleanNumber(input.value);
             });

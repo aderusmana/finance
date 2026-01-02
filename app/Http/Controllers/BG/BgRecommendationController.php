@@ -54,7 +54,7 @@ class BgRecommendationController extends Controller
                         $bg = BankGaransi::where('customer_id', $row->customer_id)
                                 ->latest()
                                 ->first();
-                        
+
                         return $bg ? $bg->bg_number : '-';
                     })
                     ->addColumn('customer_name', fn($row) => $row->customer->name ?? '-')
@@ -76,7 +76,7 @@ class BgRecommendationController extends Controller
                         $bg = BankGaransi::where('customer_id', $row->customer_id)
                                 ->latest()
                                 ->first();
-                        
+
                         return $bg ? $bg->bg_number : '-';
                     })
                     ->addColumn('customer_name', fn($row) => $row->customer->name ?? '-')
@@ -85,7 +85,7 @@ class BgRecommendationController extends Controller
                     ->editColumn('set_bg', fn($row) => 'Rp ' . number_format($row->set_bg, 0, ',', '.'))
                     ->editColumn('status', function($row){
                         $color = $row->status == 'completed' ? 'success' : 'primary';
-                        return '<span class="badge bg-'.$color.'">'.ucfirst(str_replace('_', ' ', $row->status)).'</span>';
+                        return '<span class="badge bg-'.$color.' status-badge-lg">'.ucfirst(str_replace('_', ' ', $row->status)).'</span>';
                     })
 
                     ->addColumn('action', function($row){

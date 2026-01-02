@@ -15,15 +15,15 @@
     <div class="row">
         <div class="col-12">
             <div class="card border-0 shadow-sm overflow-hidden">
-                <div class="card-body p-3 d-flex align-items-center justify-content-between" 
+                <div class="card-body p-3 d-flex align-items-center justify-content-between"
                      style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); position: relative; min-height: 80px;">
-                    
+
                     {{-- Background Pattern --}}
                     <div style="position: absolute; right: 0; top: 0; bottom: 0; width: 40%; background: linear-gradient(to left, rgba(255,255,255,0.1), transparent); pointer-events: none;"></div>
 
                     {{-- Bagian Kiri: Judul & Ikon (Compact) --}}
                     <div class="d-flex align-items-center position-relative z-1">
-                        <div class="bg-white bg-opacity-25 rounded-3 p-2 me-3 d-flex align-items-center justify-content-center shadow-sm" 
+                        <div class="bg-white bg-opacity-25 rounded-3 p-2 me-3 d-flex align-items-center justify-content-center shadow-sm"
                              style="width: 48px; height: 48px; backdrop-filter: blur(5px);">
                             <i class="ph-fill ph-trend-up text-white fs-4"></i>
                         </div>
@@ -47,9 +47,9 @@
                             </div>
                             <i class="ph-fill ph-warning-circle fs-4 text-warning"></i>
                         </div>
-                        
+
                         <div class="vr bg-white opacity-25 mx-2" style="height: 30px;"></div>
-                        
+
                         {{-- Stat: History --}}
                         <div class="d-flex align-items-center gap-2">
                             <div class="text-end line-height-sm">
@@ -70,10 +70,10 @@
                     </div>
                     <ul class="nav nav-tabs nav-tabs-custom mb-4 border-bottom-0" id="recommendationTabs" role="tablist">
                         <li class="nav-item me-2">
-                            <button class="nav-link active px-4 py-2 rounded-top-3" 
-                                    id="expiring-tab" 
-                                    data-bs-toggle="tab" 
-                                    data-bs-target="#expiring-pane" 
+                            <button class="nav-link active px-4 py-2 rounded-top-3"
+                                    id="expiring-tab"
+                                    data-bs-toggle="tab"
+                                    data-bs-target="#expiring-pane"
                                     type="button">
                                 <i class="ph-bold ph-warning me-2"></i>Expiring (Action Needed)
                             </button>
@@ -81,10 +81,10 @@
 
                         {{-- TAB 2: HISTORY --}}
                         <li class="nav-item">
-                            <button class="nav-link px-4 py-2 rounded-top-3" 
-                                    id="history-tab" 
-                                    data-bs-toggle="tab" 
-                                    data-bs-target="#history-pane" 
+                            <button class="nav-link px-4 py-2 rounded-top-3"
+                                    id="history-tab"
+                                    data-bs-toggle="tab"
+                                    data-bs-target="#history-pane"
                                     type="button">
                                 <i class="ph-bold ph-clock-counter-clockwise me-2"></i>History
                             </button>
@@ -765,55 +765,121 @@
                 element.value = rupiah;
             }
 
-            // 7. SUBMIT FORM UTAMA
+            // 7. SUBMIT FORM UTAMA (DENGAN DETAIL KONFIRMASI)
             $('#recForm').on('submit', function(e) {
                 e.preventDefault();
                 let id = $('#recId').val();
                 let formData = $(this).serialize();
 
+                // --- 1. AMBIL DATA UNTUK PREVIEW ---
+                let custName = $('#disp_customer').text();
+                let avgSales = $('#average_display').val() || 'Rp 0';
+
+                // Format Set BG Manual agar rapi
+                let setBgVal = parseFloat($('#set_bg').val()) || 0;
+                let setBgFmt = new Intl.NumberFormat('id-ID', {
+                    style: 'currency', currency: 'IDR', maximumFractionDigits: 0
+                }).format(setBgVal);
+
+                let limitUpdated = $('#calc_limit_updated').text();
+                let notes = $('#notes').val() || '-';
+
+                // --- 2. HTML CONTENT UNTUK SWEETALERT ---
+                let htmlContent = `
+                    <div class="text-start bg-light p-3 rounded border">
+                        <table class="table table-borderless table-sm mb-0">
+                            <tr>
+                                <td class="text-secondary small fw-bold">Customer</td>
+                                <td class="text-end fw-bold text-dark text-wrap" style="max-width: 200px;">${custName}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-secondary small fw-bold">Avg. Sales</td>
+                                <td class="text-end fw-bold text-dark">${avgSales}</td>
+                            </tr>
+                            <tr>
+                                <td colspan="2"><hr class="my-1 border-secondary border-opacity-25"></td>
+                            </tr>
+                            <tr>
+                                <td class="text-secondary small fw-bold align-middle">Set BG (Final)</td>
+                                <td class="text-end fw-bold text-success fs-5">${setBgFmt}</td>
+                            </tr>
+                            <tr>
+                                <td class="text-secondary small fw-bold">Limit Updated</td>
+                                <td class="text-end fw-bold text-primary">${limitUpdated}</td>
+                            </tr>
+                             <tr>
+                                <td colspan="2"><hr class="my-1 border-secondary border-opacity-25"></td>
+                            </tr>
+                            <tr>
+                                <td class="text-secondary small fw-bold">Notes</td>
+                                <td class="text-end small fst-italic text-muted text-wrap" style="max-width: 200px;">${notes}</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <p class="text-center text-muted mt-3 mb-0 small">Pastikan data di atas sudah benar sebelum disimpan.</p>
+                `;
+
+                // --- 3. TAMPILKAN SWEETALERT ---
                 Swal.fire({
-                    title: 'Konfirmasi Simpan',
-                    text: "Apakah Anda yakin ingin menyimpan rekomendasi ini?",
-                    icon: 'question',
+                    title: 'Konfirmasi Rekomendasi',
+                    html: htmlContent, // Gunakan HTML custom di atas
+                    icon: 'info',
                     showCancelButton: true,
-                    confirmButtonText: 'Ya, Simpan',
+                    confirmButtonText: '<i class="ph-bold ph-check me-1"></i> Ya, Simpan',
                     confirmButtonColor: '#3085d6',
-                    cancelButtonText: 'Batal',
-                    cancelButtonColor: '#d33'
+                    cancelButtonText: 'Periksa Lagi',
+                    cancelButtonColor: '#d33',
+                    reverseButtons: true
                 }).then((result) => {
                     if (result.isConfirmed) {
+                        // Tampilkan Loading state
+                        Swal.fire({
+                            title: 'Menyimpan...',
+                            text: 'Mohon tunggu sebentar',
+                            allowOutsideClick: false,
+                            didOpen: () => { Swal.showLoading(); }
+                        });
+
                         $.ajax({
                             url: "{{ url('bg/bg-recommendations') }}/" + id,
                             method: "PUT",
                             data: formData,
                             success: function(res) {
                                 $('#recModal').modal('hide');
-                                tableExpiring.ajax.reload();
+                                tableExpiring.ajax.reload(); // Reload tabel
                                 tableHistory.ajax.reload();
-                                Swal.fire('Berhasil!', res.message, 'success');
 
-                                // 1. Reset Form Input Biasa
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Berhasil!',
+                                    text: res.message,
+                                    timer: 2000,
+                                    showConfirmButton: false
+                                });
+
+                                // --- RESET FORM SETELAH SUKSES ---
                                 $('#recForm')[0].reset();
 
-                                // 2. Reset Tampilan Angka / Label (PENTING)
-                                $('#live-total-period').text(fmt(0)); // Reset Total Penjualan jadi Rp 0
-                                $('#period-counter').text('0 Bulan'); // Reset Counter
-                                $('#period-inputs-wrapper').empty();  // Hapus list input bulan
+                                // Reset Tampilan Angka / Label
+                                $('#live-total-period').text(fmt(0));
+                                $('#period-counter').text('0 Bulan');
+                                $('#period-inputs-wrapper').empty();
                                 $('#hidden-period-data-container').empty();
 
-                                // 3. Reset Tampilan Kalkulasi Credit Limit
+                                // Reset Kalkulasi
                                 $('#average_display').val('');
                                 $('#calc_limit_updated').text('Rp 0,00');
                                 $('#calc_rec_limit').text('-');
                                 $('#calc_rounded').text('-');
 
-                                // Reset Variabel Global (jika pakai script yang sebelumnya saya kasih)
+                                // Reset Variabel Global
                                 if(typeof rawLimitUpdatedValue !== 'undefined') {
                                     rawLimitUpdatedValue = 0;
                                 }
                             },
                             error: function(err) {
-                                Swal.fire('Gagal!', 'Terjadi kesalahan sistem', 'error');
+                                let msg = err.responseJSON ? err.responseJSON.message : 'Terjadi kesalahan sistem';
+                                Swal.fire('Gagal!', msg, 'error');
                             }
                         });
                     }

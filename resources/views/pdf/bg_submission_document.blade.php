@@ -6,7 +6,7 @@
 </head>
 {{-- FONT ARIAL --}}
 <body style="font-family: Arial, sans-serif; font-size: 12px; color: #000;">
-    
+
     {{-- HEADER --}}
     <div style="text-align: center; margin-bottom: 25px; border-bottom: 2px solid #000; padding-bottom: 10px;">
         <h2 style="margin: 0; font-size: 18px; text-transform: uppercase;">FORMULIR PENGAJUAN BANK GARANSI</h2>
@@ -37,11 +37,10 @@
     <div style="background-color: #e0e0e0; padding: 5px 10px; font-weight: bold; border: 1px solid #000; margin-top: 15px; margin-bottom: 0; font-size: 13px;">
         A. DATA KEUANGAN & LIMIT KREDIT (LAMPIRAN D)
     </div>
-    
+
     @php
         $rec = $submission->recommendation;
-        // Logic Periode Dinamis
-        $periods = $rec->periods; 
+        $periods = $rec->periods;
         $periodeTxt = '-';
         if($periods && $periods->count() > 0) {
             $start = $periods->min('period_date');
@@ -101,7 +100,7 @@
     <div style="background-color: #e0e0e0; padding: 5px 10px; font-weight: bold; border: 1px solid #000; margin-top: 15px; margin-bottom: 0; font-size: 13px;">
         B. RINCIAN BANK GARANSI YANG DISERAHKAN
     </div>
-    
+
     <p style="margin: 5px 0 10px 0;">Mengajukan penerbitan Bank Garansi dengan rincian sebagai berikut:</p>
 
     <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px;">
@@ -114,35 +113,49 @@
             </tr>
         </thead>
         <tbody>
-            @foreach($bg->details as $detail)
-            <tr>
-                <td style="border: 1px solid #000; padding: 6px; vertical-align: top;">{{ $detail->bank_name }}</td>
-                <td style="border: 1px solid #000; padding: 6px; vertical-align: top;">{{ $detail->branch_name ?? '-' }}</td>
-                <td style="border: 1px solid #000; padding: 6px; vertical-align: top;">{{ $detail->bank_address ?? '-' }}</td>
-                <td style="border: 1px solid #000; padding: 6px; vertical-align: top; text-align: right;">{{ number_format($detail->nominal, 0, ',', '.') }}</td>
-            </tr>
+            @php
+                $grandTotal = 0;
+                // Normalisasi: Gunakan $bgs jika ada (dari controller baru), jika tidak pakai [$bg] (fallback)
+                $sourceData = isset($bgs) ? $bgs : (isset($bg) ? [$bg] : []);
+            @endphp
+
+            @foreach($sourceData as $bgItem)
+                {{-- Loop Details dalam setiap BG --}}
+                @foreach($bgItem->details as $detail)
+                    @php $grandTotal += $detail->nominal; @endphp
+                    <tr>
+                        <td style="border: 1px solid #000; padding: 6px; vertical-align: top;">{{ $detail->bank_name }}</td>
+                        <td style="border: 1px solid #000; padding: 6px; vertical-align: top;">{{ $detail->branch_name ?? '-' }}</td>
+                        <td style="border: 1px solid #000; padding: 6px; vertical-align: top;">
+                            {{ $detail->bank_address ?? '-' }}<br>
+                            <small>PIC: {{ $detail->contact_person ?? '-' }}</small>
+                        </td>
+                        <td style="border: 1px solid #000; padding: 6px; vertical-align: top; text-align: right;">{{ number_format($detail->nominal, 0, ',', '.') }}</td>
+                    </tr>
+                @endforeach
             @endforeach
+
             <tr>
                 <td colspan="3" style="border: 1px solid #000; padding: 6px; vertical-align: top; text-align: right; font-weight: bold; background-color: #f9f9f9;">TOTAL PENGAJUAN</td>
-                <td style="border: 1px solid #000; padding: 6px; vertical-align: top; text-align: right; font-weight: bold; background-color: #f9f9f9;">Rp {{ number_format($bg->bg_nominal, 0, ',', '.') }}</td>
+                <td style="border: 1px solid #000; padding: 6px; vertical-align: top; text-align: right; font-weight: bold; background-color: #f9f9f9;">Rp {{ number_format($grandTotal, 0, ',', '.') }}</td>
             </tr>
         </tbody>
     </table>
-    
+
     <div style="margin-top: -10px; font-size: 11px;">
-        <strong>Terbilang:</strong> <span style="font-style: italic;">{{ ucwords(\App\Helpers\DocumentHelper::terbilang($bg->bg_nominal)) }} Rupiah</span>
+        <strong>Terbilang:</strong> <span style="font-style: italic;">{{ ucwords(\App\Helpers\DocumentHelper::terbilang($grandTotal)) }} Rupiah</span>
     </div>
 
-    <p style="margin-top: 20px;">Demikian formulir ini dibuat dengan sebenar-benarnya untuk diproses lebih lanjut sesuai ketentuan yang berlaku.</p>
+    <p style="margin-top: 10px;">Demikian formulir ini dibuat dengan sebenar-benarnya untuk diproses lebih lanjut sesuai ketentuan yang berlaku.</p>
 
     {{-- TANDA TANGAN --}}
-    <div style="margin-top: 40px; width: 100%; page-break-inside: avoid;">
+    <div style="margin-top: 15px; width: 100%; page-break-inside: avoid;">
         <div style="width: 40%; display: inline-block; vertical-align: top;">
             <p style="margin-bottom: 5px;">Disetujui Oleh (Customer),</p>
             <p style="font-size: 10px; color: #555; margin-top:0;"><i>(Mohon bubuhkan Tanda Tangan & Stempel)</i></p>
-            
+
             <div style="height: 80px; border-bottom: 1px solid #000; margin-top: 40px; margin-bottom: 5px; width: 80%;"></div>
-            
+
             <table style="width: 100%; margin-top: 0; border-collapse: collapse;">
                 <tr>
                     <td style="width: 20%; padding: 0; border: none;">Nama</td>

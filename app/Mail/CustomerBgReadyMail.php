@@ -23,7 +23,7 @@ class CustomerBgReadyMail extends Mailable
     {
         $rec = $this->submission->recommendation;
         $customer = $rec->customer;
-        
+
         $nomorPkd = DocumentHelper::generatePKDNumber($rec->id, $customer->name, now());
 
         $data = [
@@ -36,7 +36,7 @@ class CustomerBgReadyMail extends Mailable
         $pdfLampiranD = Pdf::loadView('pdf.lampiran_d', $data)->output();
 
         return $this->subject('Dokumen Perhitungan BG (Lampiran D) - ' . $customer->name)
-                    ->view('mail.mail-lampiran-dp')
+                    ->view('mail.mail-lampiran-d')
                     ->attachData($pdfLampiranD, 'Lampiran_D.pdf', ['mime' => 'application/pdf']);
     }
 }

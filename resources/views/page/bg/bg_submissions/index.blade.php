@@ -34,6 +34,21 @@
                 </div>
             </div>
 
+            <div class="alert shadow-sm d-flex align-items-center mb-4 p-3 rounded-3" role="alert" style="background-color: #e7f1ff; border: none; border-left: 5px solid #0d6efd; color: #084298;">
+                <div class="me-3">
+                    <span class="d-flex align-items-center justify-content-center bg-white text-primary rounded-circle shadow-sm" style="width: 45px; height: 45px;">
+                        <i class="ph-duotone ph-info fs-3"></i>
+                    </span>
+                </div>
+                <div>
+                    <h5 class="fw-bold mb-1" style="color: #052c65;">Panduan Proses Approval</h5>
+                    <p class="mb-0 small" style="line-height: 2.5; color: #084298;">
+                        1. Klik tombol <span class="status-badge-lg bg-primary text-light border border-warning shadow-sm"><i class="ph-bold ph-file-search me-1"></i> Review & Process</span> pada kolom <b>Signed Doc</b> untuk memeriksa dokumen, mengoreksi data, dan melanjutkan ke <b>Lampiran D</b>.<br>
+                        2. Tombol <span class="status-badge-lg bg-warning text-light border"><i class="ph-bold ph-pencil-simple"></i></span> pada kolom <i>Action</i> hanya digunakan untuk <b>Upload Ulang / Edit Administrasi</b> (Tanpa Approval).
+                    </p>
+                </div>
+            </div>
+
             <div class="main-table-container">
                     <div class="table-header-enhanced">
                         <h4 class="table-title mb-1"><i class="ph-duotone ph-files me-2"></i> Submission Data</h4>
@@ -148,7 +163,7 @@
                     <h6 class="modal-title text-white"><i class="ph-bold ph-file-text me-2"></i> Document Preview & Action</h6>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                
+
                 <div class="modal-body p-0 bg-light position-relative" id="fileContentArea" style="height: 100%;">
                     </div>
 
@@ -162,7 +177,7 @@
                                 <i class="ph-bold ph-pencil-simple me-1"></i> Edit Data & Submit
                             </button>
                         </div>
-                        
+
                         <div>
                             <small class="text-muted d-block text-end">Data sudah sesuai?</small>
                             {{-- TOMBOL DIRECT SUBMIT --}}
@@ -188,7 +203,7 @@
                     @csrf
                     <input type="hidden" name="submission_id" id="edit_submission_id">
                     <input type="hidden" name="action_type" value="edit_submit"> {{-- Penanda Action --}}
-                    
+
                     <div class="modal-body">
                         <div class="alert alert-info d-flex align-items-center mb-3">
                             <i class="ph-bold ph-info me-2 fs-4"></i>
@@ -218,6 +233,11 @@
                 $('.select2').select2({ theme: 'bootstrap-5' });
                 $('.select2-modal').select2({ dropdownParent: $('#submissionModal'), theme: 'bootstrap-5', placeholder: 'Select Option' });
 
+                var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+                var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                    return new bootstrap.Tooltip(tooltipTriggerEl)
+                })
+
                 let currentSubmissionId = null;
 
                 const table = $('#sampleTable').DataTable({
@@ -237,6 +257,34 @@
                 });
 
                 $('#statusFilter').change(function() { table.ajax.reload(); });
+
+                function formatRupiah(angka, prefix = 'Rp ') {
+                    var number_string = angka.toString().replace(/[^,\d]/g, '').toString();
+
+                    if (number_string === '') return prefix;
+                    var split = number_string.split(','),
+                        sisa = split[0].length % 3,
+                        rupiah = split[0].substr(0, sisa),
+                        ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+
+                    if (ribuan) {
+                        separator = sisa ? '.' : '';
+                        rupiah += separator + ribuan.join('.');
+                    }
+
+                    rupiah = split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
+                    return prefix + rupiah;
+                }
+
+                function cleanNumber(value) {
+                    if (!value) return 0;
+                    return value.toString().replace(/[^0-9]/g, '');
+                }
+
+                $(document).on('keyup', '.rupiah-input', function(e) {
+                    if (e.keyCode >= 37 && e.keyCode <= 40) return;
+                    $(this).val(formatRupiah($(this).val()));
+                });
 
                 // Create
                 $('#btn-create').click(function() {
@@ -284,7 +332,7 @@
 
                     let container = $('#fileContentArea');
                     container.html('<div class="d-flex h-100 justify-content-center align-items-center"><div class="spinner-border text-primary"></div></div>');
-                    
+
                     $('#viewFileModal').modal('show');
 
                     // Render File
@@ -298,24 +346,33 @@
                     }, 500);
                 });
 
+                // --- BAGIAN EDIT DATA (Updated Logic) ---
                 $('#btn-trigger-edit').click(function() {
                     $('#viewFileModal').modal('hide');
-                    Swal.fire({ title: 'Loading Data Lampiran D...', didOpen: () => Swal.showLoading() });
+                    Swal.fire({ title: 'Loading Data...', didOpen: () => Swal.showLoading() });
 
                     let url = "{{ route('bg-submissions.get-edit-data', ':id') }}".replace(':id', currentSubmissionId);
-                    
+
                     $.get(url, function(res) {
                         Swal.close();
                         if(res.success) {
                             let d = res.data;
                             $('#edit_submission_id').val(d.submission_id);
+
+                            const valAvg = d.rata_rata_penjualan ? Math.floor(d.rata_rata_penjualan) : 0;
+                            const valLimit = d.limit_kredit ? Math.floor(d.limit_kredit) : 0;
+                            const valSetBg = d.nilai_bg_ditetapkan ? Math.floor(d.nilai_bg_ditetapkan) : 0;
                             
-                            // Render Form 11 Point
+                            let valDiserahkan = 0;
+                            if (d.details && d.details.length > 0) {
+                                valDiserahkan = Math.floor(d.details[0].nominal);
+                            }
+
                             let html = `
                                 <input type="hidden" name="bg_id" value="${d.bg_id}">
                                 <div class="row g-3">
                                     <div class="col-12"><h6 class="fw-bold text-primary border-bottom pb-2">A. Informasi Distributor</h6></div>
-                                    
+
                                     <div class="col-md-12">
                                         <label class="form-label small fw-bold">1. Nama Distributor</label>
                                         <input type="text" class="form-control" name="nama_distributor" value="${d.nama_distributor}">
@@ -340,7 +397,8 @@
 
                                     <div class="col-md-6">
                                         <label class="form-label small fw-bold">5. Rata-rata Penjualan (Rp)</label>
-                                        <input type="number" class="form-control" name="rata_rata_penjualan" value="${d.rata_rata_penjualan}">
+                                        <input type="text" class="form-control rupiah-input" name="rata_rata_penjualan" 
+                                               value="${formatRupiah(valAvg)}">
                                     </div>
 
                                     <div class="col-md-3">
@@ -360,51 +418,27 @@
 
                                     <div class="col-md-6">
                                         <label class="form-label small fw-bold">9. Limit Kredit (Rp)</label>
-                                        <input type="number" class="form-control fw-bold" name="limit_kredit" value="${d.limit_kredit}">
+                                        <input type="text" class="form-control fw-bold rupiah-input" name="limit_kredit" 
+                                               value="${formatRupiah(valLimit)}">
                                     </div>
 
                                     <div class="col-12 mt-4"><h6 class="fw-bold text-primary border-bottom pb-2">C. Nilai Bank Garansi</h6></div>
 
                                     <div class="col-md-6">
                                         <label class="form-label small fw-bold">10. Nilai BG Ditetapkan (Rp)</label>
-                                        <input type="number" class="form-control border-success" name="nilai_bg_ditetapkan" value="${d.nilai_bg_ditetapkan}">
+                                        <input type="text" class="form-control border-success rupiah-input" name="nilai_bg_ditetapkan" 
+                                               value="${formatRupiah(valSetBg)}">
                                     </div>
 
                                     <div class="col-md-6">
                                         <label class="form-label small fw-bold">11. Nilai BG Diserahkan (Rp)</label>
-                                        <input type="number" class="form-control border-primary" name="nilai_bg_diserahkan" value="${d.nilai_bg_diserahkan}">
-                                        <div class="form-text text-muted small">Total dari formulir bank. Mengedit ini akan mengubah total di sistem.</div>
+                                        <input type="text" class="form-control border-primary rupiah-input" name="nilai_bg_diserahkan" 
+                                               value="${formatRupiah(valDiserahkan)}">
+                                        <div class="form-text text-muted small">Mengubah ini akan mengupdate Bank 1 & Total BG.</div>
                                     </div>
                                 </div>
-                                <h6 class="fw-bold text-primary border-bottom pb-2">D. Rincian Bank</h6>
                             `;
                             
-                            if(d.details) {
-                                d.details.forEach((item, index) => {
-                                    html += `
-                                        <div class="card mb-2 border-start border-2 border-primary">
-                                            <div class="card-body p-2">
-                                                <input type="hidden" name="details[${item.id}][id]" value="${item.id}">
-                                                <div class="row g-2">
-                                                    <div class="col-md-4">
-                                                        <label class="small text-muted fw-bold">Bank</label>
-                                                        <input type="text" class="form-control form-control-sm" name="details[${item.id}][bank_name]" value="${item.bank_name}">
-                                                    </div>
-                                                    <div class="col-md-4">
-                                                        <label class="small text-muted fw-bold">Cabang</label>
-                                                        <input type="text" class="form-control form-control-sm" name="details[${item.id}][branch_name]" value="${item.branch_name}">
-                                                    </div>
-                                                    <div class="col-md-4">
-                                                        <label class="small text-muted fw-bold">Nominal</label>
-                                                        <input type="number" class="form-control form-control-sm" name="details[${item.id}][nominal]" value="${item.nominal}">
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    `;
-                                });
-                            }
-
                             $('#bankDetailsContainer').html(html);
                             $('#editBgDataModal').modal('show');
                         } else {
@@ -415,7 +449,7 @@
 
                 $('#editBgForm').on('submit', function(e) {
                     e.preventDefault();
-                    
+
                     Swal.fire({
                         title: 'Konfirmasi Perubahan',
                         text: "Apakah Anda yakin data yang diedit sudah benar? Permintaan approval akan dikirim ke Manager Finance.",
@@ -427,7 +461,13 @@
                         cancelButtonText: 'Cek Lagi'
                     }).then((result) => {
                         if (result.isConfirmed) {
-                            // JIKA USER KLIK YA, BARU PROSES
+
+                            $('#editBgForm .rupiah-input').each(function() {
+                                let raw = $(this).val();
+                                let clean = cleanNumber(raw);
+                                $(this).val(clean);
+                            });
+
                             let formData = $('#editBgForm').serialize();
                             let url = "{{ route('bg-submissions.process-review', ':id') }}".replace(':id', $('#edit_submission_id').val());
 
@@ -440,6 +480,9 @@
                                     table.ajax.reload();
                                 } else {
                                     Swal.fire('Error', res.message, 'error');
+                                    $('#editBgForm .rupiah-input').each(function() {
+                                        $(this).val(formatRupiah($(this).val()));
+                                    });
                                 }
                             }).fail(function(xhr) {
                                 Swal.fire('Error', 'Terjadi kesalahan sistem.', 'error');
@@ -459,11 +502,11 @@
                     }).then((result) => {
                         if (result.isConfirmed) {
                             let url = "{{ route('bg-submissions.process-review', ':id') }}".replace(':id', currentSubmissionId);
-                            
+
                             Swal.fire({ title: 'Sending Emails...', didOpen: () => Swal.showLoading() });
 
-                            $.post(url, { 
-                                _token: "{{ csrf_token() }}", 
+                            $.post(url, {
+                                _token: "{{ csrf_token() }}",
                                 action_type: 'direct_submit'
                             }, function(res) {
                                 if(res.success) {
@@ -478,7 +521,7 @@
                     });
                 });
 
-                $(document).on('click', '.btn-edit', function() {
+                $(document).on('click', '.btn-edit-submission', function() {
                     let id = $(this).data('id');
                     let url = "{{ route('bg-submissions.show', ':id') }}".replace(':id', id);
 

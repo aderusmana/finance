@@ -27,7 +27,7 @@ class CustomerBgPortalController extends Controller
         $rec = BgRecommendation::with('customer')->where('token', $token)->first();
 
         if (!$rec) {
-            abort(404, 'Token tidak valid.');
+            return view('page.customer_portal.form-invalid');
         }
 
        if ($rec->status !== 'process') {
@@ -62,20 +62,37 @@ class CustomerBgPortalController extends Controller
         DB::beginTransaction();
         try {
             $creatorId = $rec->customer ? $rec->customer->user_id : null;
+            $createdBgs = [];
+            $latestBg = BankGaransi::where('customer_id', $rec->customer_id)
+                                   ->orderBy('id', 'desc')
+                                   ->first();
+            $currentBaseBgId = $latestBg ? $latestBg->id : null;
+            $currentYear = date('Y');
+            $existingCount = BankGaransi::where('customer_id', $rec->customer_id)
+                                ->whereYear('created_at', $currentYear)
+                                ->count();
 
-            $bg = BankGaransi::create([
-                'customer_id' => $rec->customer_id,
-                'bg_number'   => 'DRAFT-' . time(),
-                'bg_type'     => 'new',
-                'bg_nominal'  => 0,
-                'status'      => 'submitted',
-                'created_by'  => $creatorId,
-            ]);
-
-            $totalNominal = 0;
-
-            foreach ($request->details as $d) {
+            foreach ($request->details as $index => $d) {
                 $nominal = (float) $d['nominal'];
+                $sequence = $existingCount + ($index + 1);
+                $seqStr = str_pad($sequence, 4, '0', STR_PAD_LEFT);
+                $bgNumber = "BG-{$currentYear}-{$seqStr}";
+
+                $bg = BankGaransi::create([
+                    'customer_id' => $rec->customer_id,
+                    'bg_number'   => $bgNumber,
+                    'bg_type'     => 'new',
+                    'bg_nominal'  => $nominal,
+                    'base_bg_id'  => $currentBaseBgId,
+                    'status'      => 'submitted',
+                    'created_by'  => $creatorId,
+                ]);
+
+                if (!$currentBaseBgId) {
+                    $bg->update(['base_bg_id' => $bg->id]);
+                }
+
+                $currentBaseBgId = $bg->id;
 
                 $bg->details()->create([
                     'bank_name'      => $d['bank_name'],
@@ -85,10 +102,8 @@ class CustomerBgPortalController extends Controller
                     'nominal'        => $nominal,
                 ]);
 
-                $totalNominal += $nominal;
+                $createdBgs[] = $bg;
             }
-
-            $bg->update(['bg_nominal' => $totalNominal]);
 
             $submission->update([
                 'status' => 'awaiting_upload'
@@ -98,7 +113,8 @@ class CustomerBgPortalController extends Controller
             $financeName = $financeUser ? $financeUser->name : 'Manager Finance';
 
             $pdf = Pdf::loadView('pdf.bg_submission_document', [
-                'bg' => $bg,
+                'bg' => $createdBgs[0],
+                'bgs' => $createdBgs,
                 'customer' => $rec->customer,
                 'submission' => $submission,
                 'finance_name' => $financeName
@@ -147,7 +163,7 @@ class CustomerBgPortalController extends Controller
                 return response()->download(storage_path('app/public/' . $path), $fileName);
             }
             $rec = $submission->recommendation;
-            $bg = BankGaransi::where('bg_number', 'like', '%'.$submission->form_code.'%')->first(); // Sesuaikan query BG jika perlu
+            $bg = BankGaransi::where('bg_number', 'like', '%'.$submission->form_code.'%')->first();
 
             if(!$bg) {
                  $bg = BankGaransi::where('created_at', $submission->created_at)->first();
@@ -171,7 +187,11 @@ class CustomerBgPortalController extends Controller
         $submission = BgSubmission::where('token', $token)
                         ->where('status', 'awaiting_upload')
                         ->with('recommendation.customer')
-                        ->firstOrFail();
+                        ->first();
+
+        if (!$submission) {
+             return view('page.customer_portal.form-invalid');
+        }
 
         $bg = BankGaransi::where('customer_id', $submission->recommendation->customer_id)
                          ->where('status', 'submitted')
@@ -218,10 +238,9 @@ class CustomerBgPortalController extends Controller
     public function downloadExpiringPdf($bg_id, $type)
     {
         try {
-            // Ambil data ulang
             $bg = BankGaransi::with('customer')->findOrFail($bg_id);
             $cust = $bg->customer;
-            $financeUser = \App\Models\User::role('manager-finance')->first();
+            $financeUser = User::role('manager-finance')->first();
             $financeName = $financeUser ? $financeUser->name : 'Manager Finance';
             $nomorPkd = DocumentHelper::generatePKDNumber($bg->temp_recommendation_id ?? $bg->id, $cust->name, now());
 
@@ -236,7 +255,6 @@ class CustomerBgPortalController extends Controller
                 'finance_name' => $financeName
             ];
 
-            // Tentukan View berdasarkan Type
             $viewName = ($type === 'distributor') ? 'pdf.surat_distributor' : 'pdf.surat_bank';
             $fileName = ($type === 'distributor') ? 'Surat_Pemberitahuan_Distributor.pdf' : 'Surat_Pengantar_Bank.pdf';
 

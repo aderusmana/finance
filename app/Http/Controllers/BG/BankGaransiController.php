@@ -17,7 +17,7 @@ class BankGaransiController extends Controller
     public function generateNumber(Request $request)
     {
         $customerId = $request->query('customer_id');
-        
+
         if (!$customerId) {
             return response()->json(['number' => '']);
         }
@@ -27,7 +27,7 @@ class BankGaransiController extends Controller
         $count = BankGaransi::where('customer_id', $customerId)
                             ->whereYear('created_at', $currentYear)
                             ->count();
-        
+
         $nextSequence = $count + 1;
         $sequenceStr = str_pad($nextSequence, 4, '0', STR_PAD_LEFT);
         $generatedNumber = "BG-{$currentYear}-{$sequenceStr}";
@@ -159,7 +159,7 @@ class BankGaransiController extends Controller
                     'contact_person' => $item['contact_person'] ?? null,
                     'nominal'        => $item['nominal'],
                 ]);
-                
+
                 if (($item['bg_type'] ?? '') === 'extension') {
                     if ($bg->customer && $bg->customer->email) {
                         Mail::to($bg->customer->email)->queue(new BgExtensionMail($bg));
@@ -211,7 +211,7 @@ class BankGaransiController extends Controller
                 'contact_person' => $mainData['contact_person'] ?? null,
                 'nominal'        => $mainData['nominal'],
             ]);
-            
+
             if (($mainData['bg_type'] ?? '') === 'existing') {
                 if ($bg->customer && $bg->customer->email) {
                     Mail::to($bg->customer->email)->queue(new BgExistingMail($bg));
@@ -264,7 +264,7 @@ class BankGaransiController extends Controller
             return response()->json(['success' => false, 'message' => 'Error: ' . $e->getMessage()], 500);
         }
     }
-
+            
     public function destroy($id)
     {
         try {

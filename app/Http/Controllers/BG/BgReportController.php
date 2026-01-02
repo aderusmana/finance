@@ -37,11 +37,9 @@ class BgReportController extends Controller
                     ->addColumn('status', function($row){
                         $status = $row->status;
 
-                        // Default values
                         $color = 'secondary';
                         $icon = 'ph-minus';
 
-                        // Logic Pemilihan Warna & Ikon (Dipindah dari JS ke Sini)
                         switch ($status) {
                             case 'completed':
                                 $color = 'success';
@@ -113,8 +111,7 @@ class BgReportController extends Controller
 
                 return DataTables::of($query)
                     ->addIndexColumn()
-                    // CHECKBOX COLUMN
-                    ->addColumn('checkbox', function($row) {
+                        ->addColumn('checkbox', function($row) {
                         return '<div class="form-check text-center">
                                     <input class="form-check-input dt-checkbox" type="checkbox" value="'.$row->id.'">
                                 </div>';
@@ -225,10 +222,8 @@ class BgReportController extends Controller
 
         if (empty($ids) || !is_array($ids)) return back()->with('error', 'Tidak ada data dipilih.');
 
-        // 1. HITUNG JUMLAH CUSTOMER
         $totalSelected = count($ids);
 
-        // 2. Format Nama File yang Cantik
         $niceName = match($docType) {
             'distributor' => 'Surat Distributor',
             'bank' => 'Surat Bank',
@@ -237,15 +232,12 @@ class BgReportController extends Controller
             default => ucfirst(str_replace('_', ' ', $docType))
         };
 
-        // Buat nama base agar seragam. Contoh: Surat_Distributor
         $baseFileName = str_replace(' ', '_', $niceName);
 
         // ---------------------------------------------------------
         // OPSI 1: DOWNLOAD AS MERGED PDF
         // ---------------------------------------------------------
         if ($outputMode == 'merged') {
-
-            // CSS Khusus Surat (Margin Tebal)
             $customCss = '';
             if (in_array($docType, ['bank', 'distributor'])) {
                 $customCss = '
@@ -256,7 +248,6 @@ class BgReportController extends Controller
                 $customCss = 'body { font-family: Arial, sans-serif; font-size: 12px; }';
             }
 
-            // Header HTML
             $mergedHtml = '<html><head>
                 <title>'. $niceName .' - '. $totalSelected .' Customer</title>
                 <style>
@@ -284,8 +275,6 @@ class BgReportController extends Controller
             }
             $mergedHtml .= '</body></html>';
 
-            // --- NAMA FILE BARU (MERGED) ---
-            // Format: Surat_Distributor_Gabungan_5_Customer.pdf
             $filename = $baseFileName . '_Gabungan_' . $totalSelected . '_Customer.pdf';
 
             return Pdf::loadHTML($mergedHtml)->stream($filename);
@@ -295,8 +284,6 @@ class BgReportController extends Controller
         // OPSI 2: DOWNLOAD AS ZIP
         // ---------------------------------------------------------
         else {
-            // --- NAMA FILE BARU (ZIP) ---
-            // Format: Surat_Distributor_5_Customer.zip
             $zipName = $baseFileName . '_' . $totalSelected . '_Customer.zip';
             $zipPath = storage_path('app/public/temp_zip/' . $zipName);
 
@@ -348,14 +335,12 @@ class BgReportController extends Controller
             }
 
             if ($doc_type == 'submission_form') {
-                // Cari BG terkait (Draft/Submitted)
                 $bg = BankGaransi::where('customer_id', $customer->id)
                         ->where('created_at', '>=', $submission->created_at->subDay())
                         ->with('details')
                         ->latest()
                         ->first();
 
-                // Fallback jika BG belum tercreate (misal baru tahap recommendation)
                 if (!$bg) return abort(404, 'Data Rincian Bank belum tersedia (Formulir belum diisi customer).');
 
                 $data = [

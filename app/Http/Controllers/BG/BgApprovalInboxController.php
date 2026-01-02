@@ -14,6 +14,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use Yajra\DataTables\Facades\DataTables;
 
 class BgApprovalInboxController extends Controller
@@ -38,9 +39,8 @@ class BgApprovalInboxController extends Controller
                     return '<span class="fw-bold text-primary">'.$row->form_code.'</span>';
                 })
                 ->addColumn('bg_nominal', function($row){
-                    // LOGIC BARU: Ambil BG terbaru berdasarkan Customer ID (Tanpa filter status ketat)
                     $bg = BankGaransi::where('customer_id', $row->recommendation->customer_id)
-                            ->latest() // Ambil yang paling baru dibuat
+                            ->latest()
                             ->first();
 
                     return $bg ? 'Rp ' . number_format($bg->bg_nominal, 0, ',', '.') : '-';
@@ -110,8 +110,6 @@ class BgApprovalInboxController extends Controller
                 'limit_kredit' => number_format($rec->credit_limit_updated, 0, ',', '.'),
                 'bg_ditetapkan' => number_format($rec->set_bg, 0, ',', '.'),
                 'bg_diserahkan' => number_format($bg->bg_nominal ?? 0, 0, ',', '.'),
-
-                // Extra Info
                 'form_code' => $sub->form_code,
             ]
         ]);
@@ -139,9 +137,10 @@ class BgApprovalInboxController extends Controller
         try {
             $status = ($request->action == 'reject') ? 'rejected_by_finance' : 'completed';
             $notes  = $request->notes ?? 'Processed via Dashboard (Quick Action)';
-
+            $newToken = ($status == 'completed') ? Str::random(60) : null;
             $sub->update([  
                 'status' => $status,
+                'token' => $newToken,
                 'reviewed_at' => now()
             ]);
 

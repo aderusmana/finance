@@ -31,7 +31,6 @@ class BankGaransiSeeder extends Seeder
             'bg_type'     => 'existing',
             'bg_nominal'  => 150000000,
             'issued_date' => Carbon::now()->subMonths(10),
-            // Expired tepat 60 hari lagi (Masuk radar notifikasi)
             'exp_date'    => Carbon::now()->addDays(60)->format('Y-m-d'),
             'status'      => 'approved', // WAJIB APPROVED agar dianggap "Masih Aktif tapi Mau Expired"
             'created_by'  => 1
@@ -90,7 +89,6 @@ class BankGaransiSeeder extends Seeder
             'bg_type'     => 'existing',
             'bg_nominal'  => 20000000,
             'issued_date' => Carbon::now()->subMonths(5),
-            // Expired 59 hari lagi (Masuk radar notifikasi)
             'exp_date'    => Carbon::now()->addDays(59)->format('Y-m-d'),
             'status'      => 'approved',
             'created_by'  => 1

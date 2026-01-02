@@ -46,7 +46,8 @@
 
                         {{-- DROP ZONE --}}
                         <div id="dropZone" style="border: 2px dashed #cbd5e1; border-radius: 12px; padding: 40px 20px; text-align: center; background-color: #f8fafc; transition: all 0.3s ease; cursor: pointer; margin-top: 10px;">
-                            <input type="file" name="signed_document" id="fileInput" accept=".pdf" style="display: none;" required>
+                            <input type="file" name="signed_document" id="fileInput" accept=".pdf" style="display: none;">
+
 
                             <i class="bi bi-file-earmark-pdf icon-cloud" style="font-size: 3.5rem; color: #94a3b8; margin-bottom: 15px; display: block; transition: color 0.3s;"></i>
 
@@ -184,12 +185,17 @@
             }
         }
 
-        // --- 2. HANDLE SUBMIT DENGAN PREVIEW ---
+            // --- 2. HANDLE SUBMIT DENGAN PREVIEW ---
         form.addEventListener('submit', function(e) {
             e.preventDefault();
 
             if(fileInput.files.length === 0) {
-                Swal.fire({ icon: 'warning', title: 'File Kosong', text: 'Pilih file dulu.', confirmButtonColor: '#1e40af' });
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Belum Ada File',
+                    text: 'Silahkan upload file terlebih dahulu.',
+                    confirmButtonColor: '#1e40af'
+                });
                 return;
             }
 

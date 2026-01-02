@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Mail;
 use App\Mail\CustomerBgReadyMail;
 use App\Models\BG\BgHistory;
 use App\Models\BG\LampiranD;
+use Illuminate\Support\Str;
 
 class ApprovalProcessController extends Controller
 {
@@ -19,7 +20,11 @@ class ApprovalProcessController extends Controller
     {
         $log = ApprovalLog::where('token', $token)
                           ->where('status', 'Pending')
-                          ->firstOrFail();
+                          ->first();
+
+        if (!$log) {
+            return view('page.customer_portal.form-invalid');
+        }
 
         if ($action == 'approve') {
             $log->update([
@@ -40,7 +45,11 @@ class ApprovalProcessController extends Controller
     {
         $log = ApprovalLog::where('token', $token)
                           ->where('status', 'Pending')
-                          ->firstOrFail();
+                          ->first();
+
+        if (!$log) {
+            return view('page.customer_portal.form-invalid');
+        }
 
         $submission = BgSubmission::with('recommendation.customer')->findOrFail($log->related_id);
 
@@ -86,6 +95,7 @@ class ApprovalProcessController extends Controller
         if($sub) {
             $sub->update([
                 'status' => 'completed',
+                'token' => Str::random(60),
                 'reviewed_at' => now()
             ]);
 
@@ -125,6 +135,7 @@ class ApprovalProcessController extends Controller
                     'remarks'           => $remarks ?? 'Approved by Finance via Email',
                     'created_by'        => null
                 ]);
+
             }
 
             $customerEmail = $sub->recommendation->customer->email;
