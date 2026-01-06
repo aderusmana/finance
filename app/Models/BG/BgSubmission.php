@@ -31,4 +31,9 @@ class BgSubmission extends Model
     {
         return $this->hasOne(LampiranD::class, 'bg_submission_id');
     }
+
+    public function bankGaransi()
+    {
+        return $this->hasOne(BankGaransi::class, 'bg_submission_id');
+    }
 }

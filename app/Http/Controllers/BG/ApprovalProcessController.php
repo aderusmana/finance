@@ -52,13 +52,15 @@ class ApprovalProcessController extends Controller
         }
 
         $submission = BgSubmission::with('recommendation.customer')->findOrFail($log->related_id);
+        $timestamp = $submission->created_at;
+        $bgs = BankGaransi::where('customer_id', $submission->recommendation->customer_id)
+                ->where('created_at', $timestamp) 
+                ->get();
 
-        $bg = BankGaransi::where('customer_id', $submission->recommendation->customer_id)
-                ->where('status', 'submitted')
-                ->latest()
-                ->first();
+        $totalBgDiserahkan = $bgs->sum('bg_nominal');
+        $bg = $bgs->first();
 
-        return view('page.approval.action_lampiran', compact('token', 'action', 'submission', 'bg'));
+        return view('page.approval.action_lampiran', compact('token', 'action', 'submission', 'bg', 'totalBgDiserahkan'));
     }
 
     public function submit(Request $request, $token)
@@ -103,12 +105,11 @@ class ApprovalProcessController extends Controller
                 $sub->recommendation->update(['status' => 'approved']);
             }
 
-            $bg = BankGaransi::where('customer_id', $sub->recommendation->customer_id)
-                    ->where('status', 'submitted')
-                    ->latest()
-                    ->first();
+            $bgs = BankGaransi::where('customer_id', $sub->recommendation->customer_id)
+                    ->where('created_at', $sub->created_at)
+                    ->get();
 
-            if ($bg) {
+            foreach($bgs as $bg) {
                 $bg->update([
                     'status'      => 'approved',
                     'issued_date' => now(),
@@ -135,11 +136,9 @@ class ApprovalProcessController extends Controller
                     'remarks'           => $remarks ?? 'Approved by Finance via Email',
                     'created_by'        => null
                 ]);
-
             }
 
             $customerEmail = $sub->recommendation->customer->email;
-
             $salesEmails = User::role('head-SNM')->pluck('email')->toArray();
             $financeEmails = User::role('manager-finance')->pluck('email')->toArray();
 

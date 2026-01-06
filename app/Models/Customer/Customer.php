@@ -16,7 +16,7 @@ class Customer extends Model
     use HasFactory;
 
     protected $fillable = ['user_id',
-        'code', 'name','sort_name', 'customer_class', 'account_group',
+        'code', 'no_pkd', 'name','sort_name', 'customer_class', 'account_group',
         'address1', 'address2', 'address3', 'city', 'postal_code', 'country',
         'shipping_to_name', 'shipping_to_address',
         'purchasing_manager_name', 'purchasing_manager_email',
@@ -35,7 +35,6 @@ class Customer extends Model
     ];
 
     protected $table = 'customers';
-
 
     public function requisitions()
     {

@@ -261,7 +261,7 @@
                                     <div class="p-4 border border-primary border-opacity-25 rounded-3 bg-primary bg-opacity-10 text-center mb-4">
                                         <small class="text-uppercase text-primary fw-bold f-s-11 mb-2 d-block letter-spacing-1">CREDIT LIMIT UPDATED</small>
                                         <div class="d-flex align-items-center justify-content-center gap-2 mb-2">
-                                            <h2 class="fw-bold text-primary mb-0 f-s-28" id="calc_limit_updated">Rp 0,00</h2>
+                                            <h2 class="fw-bold text-primary mb-0 f-s-28" id="calc_limit_updated">Rp 0</h2>
                                             <button type="button" class="btn btn-sm btn-outline-primary bg-white shadow-sm rounded-circle p-1" id="btnRoundLimit" title="Bulatkan ke Jutaan Terdekat">
                                                 <i class="ph-bold ph-arrows-in-line-vertical f-s-16"></i>
                                             </button>
@@ -732,8 +732,8 @@
                 let setBgUser = parseFloat($('#set_bg').val()) || 0;
                 rawLimitUpdatedValue = (rule > 0) ? setBgUser / (rule / 100) : setBgUser;
 
-                // Tampilkan dengan desimal (receh)
-                $('#calc_limit_updated').text(fmtDecimal(rawLimitUpdatedValue));
+                // Tampilkan TANPA desimal (receh)
+                $('#calc_limit_updated').text(fmt(rawLimitUpdatedValue));
                 $('#input_limit_updated').val(rawLimitUpdatedValue);
             }
 
@@ -744,7 +744,7 @@
                     let roundedValue = Math.round(rawLimitUpdatedValue / 1000000) * 1000000;
                     rawLimitUpdatedValue = roundedValue;
 
-                    $('#calc_limit_updated').text(fmtDecimal(roundedValue));
+                    $('#calc_limit_updated').text(fmt(roundedValue));
                     $('#calc_limit_updated').fadeOut(100).fadeIn(100);
                     $('#input_limit_updated').val(roundedValue);
                 }
@@ -868,7 +868,7 @@
 
                                 // Reset Kalkulasi
                                 $('#average_display').val('');
-                                $('#calc_limit_updated').text('Rp 0,00');
+                                $('#calc_limit_updated').text('Rp 0');
                                 $('#calc_rec_limit').text('-');
                                 $('#calc_rounded').text('-');
 

@@ -60,35 +60,50 @@
             </div>
 
             @php
-                $bg = \App\Models\BG\BankGaransi::where('customer_id', $submission->recommendation->customer_id)
-                        ->where('status', 'submitted')->latest()->with('details')->first();
+                // --- LOGIC BARU: AMBIL SEMUA BANK DALAM BATCH INI ---
+                $timestamp = $submission->created_at;
+                
+                // Ambil semua BG yang dibuat bersamaan (detik yang sama)
+                $allBgs = \App\Models\BG\BankGaransi::where('customer_id', $submission->recommendation->customer_id)
+                            ->where('created_at', $timestamp) 
+                            ->with('details')
+                            ->get();
+
+                // Hitung Grand Total dari semua bank
+                $grandTotal = $allBgs->sum('bg_nominal');
             @endphp
 
-            @if($bg)
+            @if($allBgs->count() > 0)
                 <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
-                    @foreach($bg->details as $idx => $detail)
-                    <tr>
-                        <td colspan="2" style="background: #f8fafc; padding: 8px 10px; font-weight: bold; font-size: 12px; color: #1e3a8a; border-bottom: 1px solid #f1f5f9;">
-                            Bank {{ $idx + 1 }}
-                        </td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 8px 0; border-bottom: 1px solid #f1f5f9; color: #64748b; width: 40%;">Nama Bank</td>
-                        <td style="padding: 8px 0; border-bottom: 1px solid #f1f5f9; font-weight: 600; color: #333; text-align: right;">{{ $detail->bank_name }}</td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 8px 0; border-bottom: 1px solid #f1f5f9; color: #64748b; width: 40%;">Cabang</td>
-                        <td style="padding: 8px 0; border-bottom: 1px solid #f1f5f9; font-weight: 600; color: #333; text-align: right;">{{ $detail->branch_name ?? '-' }}</td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 8px 0; border-bottom: 1px solid #f1f5f9; color: #64748b; width: 40%;">Nominal</td>
-                        <td style="padding: 8px 0; border-bottom: 1px solid #f1f5f9; font-weight: 600; color: #333; text-align: right;">Rp {{ number_format($detail->nominal, 0, ',', '.') }}</td>
-                    </tr>
+                    
+                    {{-- LOOPING SEMUA BANK GARANSI --}}
+                    @foreach($allBgs as $index => $bg)
+                        @foreach($bg->details as $detail)
+                            <tr>
+                                <td colspan="2" style="background: #f8fafc; padding: 8px 10px; font-weight: bold; font-size: 12px; color: #1e3a8a; border-bottom: 1px solid #f1f5f9; border-top: {{ $index > 0 ? '1px solid #cbd5e1' : 'none' }};">
+                                    Bank {{ $index + 1 }}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 8px 0; border-bottom: 1px solid #f1f5f9; color: #64748b; width: 40%;">Nama Bank</td>
+                                <td style="padding: 8px 0; border-bottom: 1px solid #f1f5f9; font-weight: 600; color: #333; text-align: right;">{{ $detail->bank_name }}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 8px 0; border-bottom: 1px solid #f1f5f9; color: #64748b; width: 40%;">Cabang</td>
+                                <td style="padding: 8px 0; border-bottom: 1px solid #f1f5f9; font-weight: 600; color: #333; text-align: right;">{{ $detail->branch_name ?? '-' }}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 8px 0; border-bottom: 1px solid #f1f5f9; color: #64748b; width: 40%;">Nominal</td>
+                                <td style="padding: 8px 0; border-bottom: 1px solid #f1f5f9; font-weight: 600; color: #333; text-align: right;">Rp {{ number_format($bg->bg_nominal, 0, ',', '.') }}</td>
+                            </tr>
+                        @endforeach
                     @endforeach
+
+                    {{-- TOTAL PENGAJUAN (GABUNGAN SEMUA BANK) --}}
                     <tr>
                         <td style="padding: 15px 0 8px; border-bottom: 1px solid #f1f5f9; color: #64748b; width: 40%; font-weight: bold;">TOTAL PENGAJUAN</td>
                         <td style="padding: 15px 0 8px; border-bottom: 1px solid #f1f5f9; font-weight: bold; color: #1e3a8a; text-align: right; font-size: 16px;">
-                            Rp {{ number_format($bg->bg_nominal, 0, ',', '.') }}
+                            Rp {{ number_format($grandTotal, 0, ',', '.') }}
                         </td>
                     </tr>
                 </table>
@@ -98,19 +113,16 @@
 
             {{-- ACTION BUTTONS --}}
             <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px dashed #cbd5e1;">
-                {{-- Quick Approve: Langsung Success --}}
                 <a href="{{ route('approval.process', ['token' => $log->token, 'action' => 'approve']) }}"
                    style="display: inline-block; padding: 12px 20px; border-radius: 50px; text-decoration: none; font-weight: bold; font-size: 14px; margin: 5px; color: white !important; background-color: #166534;">
                     ✅ Quick Approve
                 </a>
 
-                {{-- Review with Notes: Ke Form --}}
                 <a href="{{ route('approval.form', ['token' => $log->token, 'action' => 'review']) }}"
                    style="display: inline-block; padding: 12px 20px; border-radius: 50px; text-decoration: none; font-weight: bold; font-size: 14px; margin: 5px; color: white !important; background-color: #ca8a04;">
                     📝 Review with Notes
                 </a>
 
-                {{-- Reject: Ke Form --}}
                 <a href="{{ route('approval.form', ['token' => $log->token, 'action' => 'reject']) }}"
                    style="display: inline-block; padding: 12px 20px; border-radius: 50px; text-decoration: none; font-weight: bold; font-size: 14px; margin: 5px; color: white !important; background-color: #991b1b;">
                     ❌ Reject
@@ -123,4 +135,4 @@
         </div>
     </div>
 </body>
-</html> 
+</html>

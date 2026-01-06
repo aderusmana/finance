@@ -143,9 +143,8 @@
                                     <td
                                         style="width: 40%; color: #6b7280; font-size: 0.9rem; font-weight: 500; padding: 12px 0; border-bottom: none; vertical-align: top;">
                                         10. Nilai BG Diserahkan</td>
-                                    <td
-                                        style="width: 60%; color: #059669; font-weight: 700; font-size: 0.95rem; text-align: right; padding: 12px 0; border-bottom: none; vertical-align: top;">
-                                        Rp {{ number_format($bg->bg_nominal ?? 0, 0, ',', '.') }}
+                                    <td style="width: 60%; color: #059669; font-weight: 700; font-size: 0.95rem; text-align: right; padding: 12px 0; border-bottom: none; vertical-align: top;">
+                                        Rp {{ number_format($totalBgDiserahkan ?? 0, 0, ',', '.') }}
                                     </td>
                                 </tr>
                             </table>

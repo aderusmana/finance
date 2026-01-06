@@ -9,6 +9,7 @@
 
     @php
         $isUploadContext = isset($submission);
+        $targetBg = null;
 
         // Normalisasi Data
         if ($isUploadContext) {
@@ -17,8 +18,32 @@
             $pageTitle = 'Konfirmasi Pengajuan BG';
             $refNumber = 'Form Code: #' . $submission->form_code;
 
+            // --- LOGIC PENCARIAN BANK SPESIFIK (INDEX MATCHING) ---
+            // Mencari Bank Garansi yang pasangannya tepat berdasarkan urutan input (detik yang sama)
+            
+            $siblings = \App\Models\BG\BgSubmission::where('bg_recommendation_id', $rec->id)
+                        ->where('created_at', $submission->created_at)
+                        ->orderBy('id', 'asc')
+                        ->pluck('id')->toArray();
+
+            $myIndex = array_search($submission->id, $siblings);
+
+            $candidateBgs = \App\Models\BG\BankGaransi::where('customer_id', $rec->customer_id)
+                            ->where('created_at', $submission->created_at)
+                            ->with('details')
+                            ->orderBy('id', 'asc')
+                            ->get();
+
+            // Ambil BG sesuai urutan (Jika submission ke-2, ambil BG ke-2)
+            $targetBg = isset($candidateBgs[$myIndex]) ? $candidateBgs[$myIndex] : $candidateBgs->first();
+            // -----------------------------------------------------
+
             // Link menuju halaman Upload
             $actionUrl = route('customer.portal.upload-form', ['token' => $token]);
+            
+            // Link Download PDF Formulir
+            $downloadUrl = route('customer.portal.download-pdf', ['token' => $token]);
+
             $btnColor = '#ea580c'; // Orange
             $btnShadow = 'rgba(234, 88, 12, 0.2)';
             $btnText = 'Upload Dokumen Scan &rarr;';
@@ -60,22 +85,48 @@
                 @endif
             </p>
 
-            {{-- HERO SECTION (DYNAMIC) --}}
+            {{-- INFO BANK GARANSI SPESIFIK (HANYA MUNCUL DI EMAIL UPLOAD) --}}
+            @if($isUploadContext && $targetBg)
+                <div style="background-color: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; padding: 15px; margin-bottom: 25px;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <tr>
+                            <td colspan="2" style="padding-bottom: 10px; border-bottom: 1px solid #e2e8f0; font-size: 11px; text-transform: uppercase; color: #64748b; font-weight: 700;">
+                                Detail Dokumen Ini
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px 0 5px; color: #64748b; font-size: 13px;">Bank Tujuan</td>
+                            <td style="padding: 10px 0 5px; text-align: right; color: #1e293b; font-weight: 700; font-size: 14px;">
+                                {{ $targetBg->details->first()->bank_name ?? '-' }}
+                                @if($targetBg->details->first() && $targetBg->details->first()->branch_name)
+                                    <span style="color: #64748b; font-weight: normal; font-size: 12px;">({{ $targetBg->details->first()->branch_name }})</span>
+                                @endif
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 5px 0; color: #64748b; font-size: 13px;">Nominal</td>
+                            <td style="padding: 5px 0; text-align: right; color: #15803d; font-weight: 700; font-size: 14px;">
+                                Rp {{ number_format($targetBg->bg_nominal, 0, ',', '.') }}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            @endif
+
+            {{-- HERO SECTION (ACTION) --}}
             @if($isUploadContext)
-                {{-- TAMPILAN HERO: ACTION REQUIRED (ORANGE) --}}
                 <div style="background-color: #fff7ed; border: 1px solid #fed7aa; border-radius: 10px; padding: 25px; margin-bottom: 35px;">
                     <h3 style="margin: 0 0 15px; color: #9a3412; font-size: 16px; font-weight: 700;">
-                        ⚠️ Tindakan Diperlukan: Upload Dokumen
+                        ⚠️ Tindakan Diperlukan: Download, TTD & Upload
                     </h3>
                     <ol style="margin: 0; padding-left: 20px; font-size: 14px; color: #9a3412; line-height: 1.6;">
-                        <li style="margin-bottom: 8px;"><strong>Download</strong> file PDF yang terlampir pada email ini.</li>
+                        <li style="margin-bottom: 8px;"><strong>Download</strong> formulir PDF (Link khusus {{ $targetBg->details->first()->bank_name ?? 'Bank' }}).</li>
                         <li style="margin-bottom: 8px;"><strong>Cetak & Tanda Tangani</strong> (Basah + Stempel).</li>
-                        <li style="margin-bottom: 8px;"><strong>Scan</strong> dokumen tersebut.</li>
-                        <li><strong>Upload</strong> kembali melalui tombol di bawah ini.</li>
+                        <li style="margin-bottom: 8px;"><strong>Scan</strong> dokumen tersebut menjadi file PDF.</li>
+                        <li><strong>Upload</strong> kembali melalui tombol Upload di bawah.</li>
                     </ol>
                 </div>
             @else
-                {{-- TAMPILAN HERO: CREDIT LIMIT APPROVED (GREEN) --}}
                 <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 30px; text-align: center; margin-bottom: 35px;">
                     <p style="margin: 0; font-size: 12px; text-transform: uppercase; letter-spacing: 1.5px; color: #15803d; font-weight: 700;">
                         Total Plafon Kredit (Credit Limit) Terbaru
@@ -165,15 +216,22 @@
                 </table>
             </div>
 
-            {{-- CTA SECTION (DYNAMIC) --}}
+            {{-- CTA SECTION --}}
             <div style="text-align: center; padding: 35px 20px; background-color: #f8fafc; border-radius: 12px; border: 1px dashed #cbd5e1;">
                 <p style="font-size: 14px; margin: 0 0 25px; color: #475569; line-height: 1.5;">
                     @if($isUploadContext)
-                        Untuk melanjutkan proses, silakan upload dokumen hasil scan melalui tombol berikut:
+                        Silakan download formulir untuk <strong>{{ $targetBg->details->first()->bank_name ?? 'Bank' }}</strong>, lalu upload kembali:
                     @else
                         Untuk melanjutkan penerbitan BG senilai <strong>Rp {{ number_format($rec->credit_limit_updated, 0, ',', '.') }}</strong>, mohon lengkapi detail bank penjamin:
                     @endif
                 </p>
+
+                @if($isUploadContext)
+                    <a href="{{ $downloadUrl }}"
+                       style="display: inline-block; background-color: #ffffff; color: #475569; padding: 12px 25px; font-size: 14px; font-weight: 600; text-decoration: none; border-radius: 50px; border: 1px solid #cbd5e1; margin-bottom: 15px; margin-right: 10px;">
+                        ⬇️ Download Formulir PDF
+                    </a>
+                @endif
 
                 <a href="{{ $actionUrl }}"
                    style="display: inline-block; background-color: {{ $btnColor }}; color: #ffffff; padding: 14px 35px; font-size: 16px; font-weight: 700; text-decoration: none; border-radius: 50px; box-shadow: 0 4px 10px {{ $btnShadow }};">
@@ -181,7 +239,7 @@
                 </a>
 
                 <p style="font-size: 12px; color: #94a3b8; margin: 20px 0 0;">
-                    <em>*Tautan ini bersifat rahasia. Mohon segera selesaikan proses ini.</em>
+                    <em>*Tautan ini bersifat rahasia dan spesifik untuk pengajuan ini.</em>
                 </p>
             </div>
 
@@ -190,7 +248,7 @@
         {{-- FOOTER --}}
         <div style="background-color: #1e293b; color: #94a3b8; padding: 30px; text-align: center; font-size: 12px; line-height: 1.6;">
             <p style="margin: 0 0 10px;">Email ini dikirim secara otomatis oleh Sistem Manajemen Kredit.</p>
-            <p style="margin: 0;">&copy; {{ date('Y') }} <strong>PT. Nama Perusahaan Anda</strong>.<br>Jl. Contoh Alamat No. 123, Jakarta, Indonesia.</p>
+            <p style="margin: 0;">&copy; {{ date('Y') }} <strong>PT. Sinar Meadow International Indonesia</strong>.<br>Automated System Notification.</p>
         </div>
 
     </div>

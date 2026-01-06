@@ -296,18 +296,17 @@
                                 <div class="card-body">
                                     <div class="row g-3 mb-4">
                                         <h6 class="fw-bold text-secondary">General Information</h6>
-                                        <div class="col-md-12">
+                                        <div class="col-md-6">
                                             <label class="form-label">Customer Name <span
                                                     class="text-danger">*</span></label>
                                             <input type="text" class="form-control" name="name" id="name"
                                                 placeholder="e.g. PT. Maju Mundur Cantik" required>
                                         </div>
-                                        <div class="col-md-12">
+                                        <div class="col-md-6">
                                             <label class="form-label">Sort Name</label>
                                             <input type="text" class="form-control" name="sort_name" id="sort_name"
                                                 placeholder="e.g. MMC">
                                         </div>
-
                                         <div class="col-md-12">
                                             <label class="form-label">Address <span class="text-danger">*</span></label>
                                             <input type="text" class="form-control mb-2" name="address1"
@@ -317,22 +316,24 @@
                                             <input type="text" class="form-control" name="address3" id="address3"
                                                 placeholder="Address Line 3 (Optional)">
                                         </div>
-                                        <div class="col-md-4">
+                                        <div class="col-md-6">
+                                            <label class="form-label">Nomor PKD <span class="text-danger">*</span></label>
+                                            <input type="text" class="form-control bg-light" name="no_pkd" id="no_pkd" placeholder="No PKD akan otomatis tergenerate oleh sistem" readonly>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">Postal Code <span class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" name="postal_code"
+                                                id="postal_code" placeholder="e.g. 12345" required>
+                                        </div>
+                                        <div class="col-md-6">
                                             <label class="form-label">City <span class="text-danger">*</span></label>
                                             <input type="text" class="form-control" name="city" id="city"
                                                 placeholder="e.g. Jakarta Selatan" required>
                                         </div>
-                                        <div class="col-md-4">
-                                            <label class="form-label">Postal Code <span
-                                                    class="text-danger">*</span></label>
-                                            <input type="text" class="form-control" name="postal_code"
-                                                id="postal_code" placeholder="e.g. 12345" required>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <label class="form-label">Country <span
-                                                    class="text-danger">*</span></label>
-                                            <input type="text" class="form-control" name="country" id="country"
-                                                value="Indonesia" placeholder="Country" required>
+                                        <div class="col-md-6">
+                                            <label class="form-label">Area <span class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" name="area" id="area"
+                                                placeholder="e.g. Jabodetabek" required>
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label">Email (General) <span
@@ -341,9 +342,10 @@
                                                 placeholder="e.g. info@company.com" required>
                                         </div>
                                         <div class="col-md-6">
-                                            <label class="form-label">Area <span class="text-danger">*</span></label>
-                                            <input type="text" class="form-control" name="area" id="area"
-                                                placeholder="e.g. Jabodetabek" required>
+                                            <label class="form-label">Country <span
+                                                    class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" name="country" id="country"
+                                                value="Indonesia" placeholder="Country" required>
                                         </div>
                                     </div>
                                 </div>
@@ -573,21 +575,16 @@
                 });
 
                 $('#customerForm').on('submit', function(e) {
-                    e.preventDefault(); // Mencegah submit default browser
+                    e.preventDefault();
 
-                    // Cek validasi HTML native (required, type, dll)
                     if (!this.checkValidity()) {
-                        // Jika tidak valid, biarkan browser menampilkan pesan error default
                         e.stopPropagation();
                         this.reportValidity();
                         return;
                     }
 
                     const formData = new FormData(this);
-                    // Untuk default saya set ke store (create), jika edit biasanya ada hidden input ID
                     const url = "{{ route('customers.store') }}";
-
-                    // Tampilkan SweetAlert Konfirmasi
                     Swal.fire({
                         title: 'Konfirmasi Penyimpanan',
                         text: "Pastikan seluruh data yang diinput sudah benar. Lanjutkan penyimpanan?",
@@ -599,7 +596,6 @@
                         cancelButtonText: 'Batal'
                     }).then((result) => {
                         if (result.isConfirmed) {
-                            // Tampilkan Loading
                             Swal.fire({
                                 title: 'Menyimpan Data...',
                                 html: 'Mohon tunggu sebentar.',
@@ -609,7 +605,6 @@
                                 }
                             });
 
-                            // Proses AJAX Request
                             $.ajax({
                                 url: url,
                                 method: 'POST',
@@ -617,7 +612,7 @@
                                 processData: false,
                                 contentType: false,
                                 success: function(response) {
-                                    Swal.close(); // Tutup loading
+                                    Swal.close();
 
                                     if(response.success) {
                                         Swal.fire({
@@ -647,12 +642,10 @@
                     });
                 });
 
-                // OCR handling for NPWP upload: extract NPWP number and address
                 $(document).on('change', 'input[name="file_npwp"]', function(e) {
                     const file = this.files && this.files[0];
                     if (!file) return;
 
-                    // show temporary notice
                     const originalBtn = $('#btn-save-customer');
                     originalBtn.prop('disabled', true);
                     const notice = $(
@@ -663,7 +656,6 @@
                     reader.onload = function(evt) {
                         try {
                             const dataUrl = evt.target.result;
-                            // run OCR
                             Tesseract.recognize(dataUrl, 'eng', {
                                     logger: m => console.log(m)
                                 })
@@ -671,19 +663,14 @@
                                     const text = result.data && result.data.text ? result.data.text :
                                     '';
                                     console.log('OCR text:', text);
-                                    // try to find NPWP number pattern like 99.999.999.9-999.999 or groups of digits
                                     let npwpMatch = text.match(/\d{2}\.\d{3}\.\d{3}\.\d-\d{3}\.\d{3}/);
                                     if (!npwpMatch) {
-                                        // fallback: any sequence of 9-20 digits and punctuation
                                         npwpMatch = text.match(/[0-9\.\-\s]{9,25}/);
                                     }
                                     const npwp = npwpMatch ? npwpMatch[0].trim() : '';
 
-                                    // --- PERBAIKAN OCR: bila tersedia, ambil alamat mulai dari baris ke-5 ---
                                     const lines = text.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
                                     console.log('OCR lines:', lines);
-                                    // Prefer OCR lines 4 and 5 (indices 4 and 5) for Customer Name per request.
-                                    // Join line 4 and 5 if both exist. If not available, fall back to line 2.
                                     try {
                                         let nameFromOcr = '';
                                         if (lines.length > 3) {
@@ -697,13 +684,13 @@
                                         }
                                         if (nameFromOcr) {
                                             $('#name').val(nameFromOcr);
+                                            generatePkdNumber(nameFromOcr);
                                         }
                                     } catch (e) {
                                         console.error('Failed to set name from OCR', e);
                                     }
                                     let address = '';
 
-                                    // Prefer fixed start index 5 when OCR has enough lines (user request)
                                     const fixedStart = 5;
                                     if (lines.length > fixedStart) {
                                         const candidate = [];
@@ -721,9 +708,7 @@
                                         }
                                     }
 
-                                    // fallback: NPWP-relative heuristics if fixed-start didn't produce an address
                                     if (!address) {
-                                        // Normalisasi NPWP yang ditemukan (jika ada)
                                         const npwpPattern = npwpMatch ? npwpMatch[0].trim() : null;
                                         let npwpLineIdx = -1;
                                         if (npwpPattern) {
@@ -733,7 +718,6 @@
                                         if (npwpLineIdx >= 0) {
                                             const skipLabelRegex = /\b(NPWP|NPPKP|No\.?|Nama|Name|Alamat|Address|Tgl|Tanggal|SIUP|NIB)\b/i;
                                             const collected = [];
-                                            // Skip 2 lines after the NPWP line then start collecting address lines
                                             const skipAfterNpwp = 2;
                                             for (let i = npwpLineIdx + 1 + skipAfterNpwp; i < lines.length && collected.length < 3; i++) {
                                                 const ln = lines[i];
@@ -774,10 +758,8 @@
 
                                     console.log('Extracted address (pre-chunk):', address);
 
-                                    // split address into 24-character chunks without breaking words
                                     function splitChunksWordWrap(str, len) {
                                         if (!str) return [];
-                                        // normalize spaces
                                         str = str.replace(/\s+/g, ' ').trim();
                                         const words = str.split(' ');
                                         const out = [];
@@ -811,7 +793,6 @@
                                         console.error('Error setting address fields', e);
                                     }
 
-                                    // if NPWP extracted, fill npwp field
                                     if (npwp) {
                                         $('#npwp').val(npwp);
                                     }
@@ -851,7 +832,46 @@
                     placeholder: 'Select Option'
                 });
 
-                // 2. DataTables Configuration
+                function generatePkdNumber(customerName) {
+                    if (!customerName || customerName.length < 3) return;
+
+                    $('#no_pkd').val('Generating...').addClass('text-muted');
+
+                    $.ajax({
+                        url: "{{ route('customers.generate-pkd-preview') }}",
+                        method: "POST",
+                        data: {
+                            _token: "{{ csrf_token() }}",
+                            name: customerName
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                $('#no_pkd').val(response.number).removeClass('text-muted').addClass('fw-bold');
+                            } else {
+                                console.warn('Generate Failed:', response);
+                                $('#no_pkd').val('').attr('');
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            console.error('AJAX Error:', status, error);
+                            console.error('Response:', xhr.responseText);
+                            
+                            if(xhr.status === 403) {
+                                $('#no_pkd').val('Error: Unauthorized (403)');
+                            } else {
+                                $('#no_pkd').val('').attr('placeholder', '(Failed to generate)');
+                            }
+                        }
+                    });
+                }
+
+                $('#name').on('blur', function() {
+                    let val = $(this).val();
+                    if(val.length > 3) {
+                        generatePkdNumber(val);
+                    }
+                });
+
                 const table = $('#customerTable').DataTable({
                     processing: true,
                     serverSide: true,
@@ -968,20 +988,15 @@
                     }
                 });
 
-                // When account group or customer class changes, enable save when both are present
                 $('#account_group, #customer_class').on('change', function() {
                     const ag = $('#account_group').val();
                     const cc = $('#customer_class').val();
-
-                    // Ambil option yang sedang dipilih
                     const selectedAg = $('#account_group').find(':selected');
 
                     if (selectedAg.length) {
-                        // Ambil data raw dari attribut (kemungkinan 1 atau 0)
                         let rawBg = selectedAg.data('bank_garansi');
                         let rawCcar = selectedAg.data('ccar');
 
-                        // 1. LOGIC KONVERSI: Ubah 1/0 menjadi 'YA'/'TIDAK'
                         let bgValue = '';
                         if (rawBg == 1 || rawBg === true || rawBg === '1') {
                             bgValue = 'YA';
@@ -1009,21 +1024,14 @@
                 $('#btn-create-customer').on('click', function() {
                     $('#customerForm')[0].reset();
                     $('.select2-styled').val(null).trigger('change');
-
-                    // --- PERBAIKAN: Enable semua inputan ---
                     $('#customerForm').find('input, textarea, select').prop('disabled', false);
-
-                    // Pastikan field user info tetap readonly (karena auto-fill), bukan disabled
                     $('#user_position, #user_branch, #user_region').prop('readonly', true);
-                    $('#credit_limit').prop('readonly', true); // Credit limit juga readonly
+                    $('#credit_limit').prop('readonly', true);
+                    $('#no_pkd').val('').prop('readonly', true);
 
                     $('#preview_npwp, #preview_nib, #preview_ktp').hide();
                     $('input[type="file"]').prop('disabled', false).prop('required', true);
-
-                    // Tampilkan tombol Save
                     $('#btn-save-customer').show().prop('disabled', true);
-
-                    // Reset Visibility Sections
                     $('#user-info-section').hide();
                     $('#main-form-section').hide();
 
@@ -1031,30 +1039,19 @@
                     $('#customerModal').modal('show');
                 });
 
-                // 5. Populate Data for View/Edit (From Action Button)
                 $(document).on('click', '.btn-show-customer', function() {
                     const btn = $(this);
-                    // Mengambil semua data-attribute yang dirender dari controller
 
                     $('#customerForm')[0].reset();
                     $('#customerModalLabel').html('<i class="ph-bold ph-eye"></i> View Customer Details (Read Only)');
-
-                    // Reset Preview File (Sembunyikan dulu)
                     $('#preview_npwp, #preview_nib, #preview_ktp').hide();
-                    $('#preview_npwp a, #preview_nib a, #preview_ktp a').attr('href', '#'); // Reset link
-
-                    // Reset Validation state
+                    $('#preview_npwp a, #preview_nib a, #preview_ktp a').attr('href', '#')
                     $('input[type="file"]').prop('required', false);
-
-                    // B. Isi Data User (Select2)
                     $('#user_id').val(btn.data('user_id')).trigger('change');
 
                     setTimeout(() => {
-                        // 1. Account Group & Class
                         $('#account_group').val(btn.data('account_group')).trigger('change');
                         $('#customer_class').val(btn.data('customer_class')).trigger('change');
-
-                        // 2. Financial Terms (Termasuk Output Tax)
                         $('#term_of_payment').val(btn.data('term_of_payment')).trigger('change');
 
                         let outTax = btn.data('output_tax');
@@ -1077,9 +1074,9 @@
                         $('#customerForm').find('input, textarea, select').prop('disabled', true);
                     }, 100);
 
-                    // Isi Field Text standar
                     $('#name').val(btn.data('name'));
                     $('#code').val(btn.data('code'));
+                    $('#no_pkd').val(btn.data('no_pkd') || '');
                     $('#address1').val(btn.data('address1'));
                     $('#address2').val(btn.data('address2'));
                     $('#address3').val(btn.data('address3'));
@@ -1090,27 +1087,20 @@
                     $('#area').val(btn.data('area'));
                     $('#join_date').val(btn.data('join_date'));
 
-                    // Isi Shipping
                     $('#shipping_to_name').val(btn.data('shipping_to_name'));
                     $('#shipping_to_address').val(btn.data('shipping_to_address'));
 
-                    // Isi Managers
                     $('#purchasing_manager_name').val(btn.data('purchasing_manager_name'));
                     $('#purchasing_manager_email').val(btn.data('purchasing_manager_email'));
                     $('#finance_manager_name').val(btn.data('finance_manager_name'));
                     $('#finance_manager_email').val(btn.data('finance_manager_email'));
 
-                    // Isi Billing
                     $('#penagihan_nama_kontak').val(btn.data('penagihan_nama_kontak'));
                     $('#penagihan_telepon').val(btn.data('penagihan_telepon'));
                     $('#penagihan_address').val(btn.data('penagihan_address'));
-                    // Surat menyurat address (new)
                     $('#surat_menyurat_address').val(btn.data('surat_menyurat_address'));
-
-                    // Sort name (new)
                     $('#sort_name').val(btn.data('sort_name'));
 
-                    // Isi Tax
                     $('#tax_contact_name').val(btn.data('tax_contact_name'));
                     $('#tax_contact_email').val(btn.data('tax_contact_email'));
                     $('#tax_contact_phone').val(btn.data('tax_contact_phone'));
@@ -1120,7 +1110,6 @@
                     $('#tanggal_nppkp').val(btn.data('tanggal_nppkp'));
                     $('#no_pengukuhan_kaber').val(btn.data('no_pengukuhan_kaber') || '-');
 
-                    // Isi Financial
                     $('#output_tax').val(btn.data('output_tax'));
                     $('#term_of_payment').val(btn.data('term_of_payment')).trigger('change');
                     $('#lead_time').val(btn.data('lead_time'));

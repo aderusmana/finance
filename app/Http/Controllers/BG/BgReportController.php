@@ -151,10 +151,9 @@ class BgReportController extends Controller
         return view('page.bg.bg_reports.index');
     }
 
-    // --- HELPER: Siapkan Data View ---
     private function prepareViewData($id, $doc_type, $category)
     {
-        $financeUser = User::role('manager-finance')->first();
+        $financeUser = User::role('head-finance')->first();
         $financeName = $financeUser ? $financeUser->name : 'Manager Finance';
         $salesUser = User::role('head-SNM')->first();
         $salesName = $salesUser ? $salesUser->name : 'S&M Dept. Head';
@@ -165,7 +164,7 @@ class BgReportController extends Controller
 
             $rec = $submission->recommendation;
             $customer = $rec->customer;
-            $nomorPkd = DocumentHelper::generatePKDNumber($rec->id, $customer->name, $submission->created_at);
+            $nomorPkd = $customer->no_pkd;
 
             if ($doc_type == 'lampiran_d') {
                 return [
@@ -313,13 +312,12 @@ class BgReportController extends Controller
             $submission = BgSubmission::with(['recommendation.customer', 'recommendation.periods'])->findOrFail($id);
             $rec = $submission->recommendation;
             $customer = $rec->customer;
-            $financeUser = User::role('manager-finance')->first();
-            $financeName = $financeUser ? $financeUser->name : 'Manager Finance';
+            $financeUser = User::role('head-finance')->first();
+            $financeName = $financeUser ? $financeUser->name : 'Finance Dept. Head Tidak Diketahui';
             $salesUser = User::role('head-SNM')->first();
-            $salesName = $salesUser ? $salesUser->name : 'S&M Dept. Head';
+            $salesName = $salesUser ? $salesUser->name : 'S&M Dept. Head Tidak Diketahui';
 
-            // Generate Data Umum
-            $nomorPkd = DocumentHelper::generatePKDNumber($rec->id, $customer->name, $submission->created_at);
+            $nomorPkd = $customer->no_pkd;
 
             if ($doc_type == 'lampiran_d') {
                 $data = [
@@ -366,7 +364,7 @@ class BgReportController extends Controller
             $bg = BankGaransi::with('customer')->findOrFail($id);
             $cust = $bg->customer;
             $nomorPkd = DocumentHelper::generatePKDNumber($bg->id, $cust->name, now());
-            $financeUser = User::role('manager-finance')->first();
+            $financeUser = User::role('head-finance')->first();
             $financeName = $financeUser ? $financeUser->name : 'Manager Finance';
             $salesUser = User::role('head-SNM')->first();
             $salesName = $salesUser ? $salesUser->name : 'S&M Dept. Head';

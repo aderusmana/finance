@@ -10,10 +10,8 @@ use App\Models\Customer\CustomerFile;
 use App\Models\Customer\Sales;
 use App\Models\Customer\TOP;
 use Illuminate\Http\Request;
-
 use Yajra\DataTables\Facades\DataTables;
-// Removed duplicate import of DataTables
-
+use App\Helpers\DocumentHelper;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
@@ -26,7 +24,6 @@ use Carbon\Carbon;
 use App\Http\Requests\CustomerRequest;
 use App\Models\Customer\CustomerItem;
 use App\Mail\CustomerWelcomeMail;
-
 use Illuminate\Support\Str;
 use Spatie\Activitylog\Models\Activity;
 use App\Traits\ApprovalTrait;
@@ -34,6 +31,84 @@ use App\Traits\ApprovalTrait;
 class CustomerController extends Controller
 {
     use ApprovalTrait;
+
+    private function generateInitials($string) {
+        $string = strtoupper($string);
+        $string = str_replace(['.', ',', '/', '-', '(', ')'], ' ', $string);
+        $string = preg_replace('/[^A-Z0-9\s]/', '', $string);
+        
+        $words = preg_split('/\s+/', $string, -1, PREG_SPLIT_NO_EMPTY);
+        $acronym = "";
+        
+        $entities = ['PT', 'CV', 'UD', 'TB', 'PD']; 
+
+        foreach ($words as $index => $w) {
+            if ($index === 0 && (in_array($w, $entities) || strlen($w) <= 3)) {
+                $acronym .= $w;
+            } else {
+                $acronym .= mb_substr($w, 0, 1);
+            }
+        }
+
+        if (empty($acronym)) return 'GEN'; 
+
+        return substr($acronym, 0, 7);
+    }
+
+    private function getRomanMonth($month) {
+        $map = [
+            1 => 'I', 2 => 'II', 3 => 'III', 4 => 'IV', 5 => 'V', 6 => 'VI',
+            7 => 'VII', 8 => 'VIII', 9 => 'IX', 10 => 'X', 11 => 'XI', 12 => 'XII'
+        ];
+        return $map[intval($month)] ?? 'I';
+    }
+
+    public function generatePkdPreview(Request $request)
+    {
+        $name = $request->name;
+        
+        if (empty($name)) {
+            return response()->json(['success' => false, 'number' => '']);
+        }
+
+        $year = date('Y');
+        $monthRoman = $this->getRomanMonth(date('n'));
+        $initials = $this->generateInitials($name);
+
+        $maxSequence = 0;
+        $existingNumbers = Customer::where('no_pkd', 'LIKE', "%/{$year}")
+                            ->pluck('no_pkd')
+                            ->toArray();
+
+        foreach ($existingNumbers as $no) {
+            $parts = explode('/', $no);
+            if (isset($parts[0]) && is_numeric($parts[0])) {
+                $seq = intval($parts[0]);
+                if ($seq > $maxSequence) {
+                    $maxSequence = $seq;
+                }
+            }
+        }
+
+        $nextSequence = $maxSequence + 1;
+        $pkdNumber = '';
+
+        do {
+            $sequenceStr = str_pad($nextSequence, 3, '0', STR_PAD_LEFT);
+            $pkdNumber = sprintf("%s/PKD-%s/%s/%s", $sequenceStr, $initials, $monthRoman, $year);
+            
+            $exists = Customer::where('no_pkd', $pkdNumber)->exists();
+            if ($exists) {
+                $nextSequence++; 
+            }
+        } while ($exists);
+
+        return response()->json([
+            'success' => true, 
+            'number' => $pkdNumber
+        ]);
+    }
+
     public function index(Request $request)
     {
         if ($request->ajax()) {
@@ -49,6 +124,7 @@ class CustomerController extends Controller
                 $dataAttrs .= ' data-id="' . $row->id . '"';
                 $dataAttrs .= ' data-user_id="' . e($row->user_id) . '"';
                 $dataAttrs .= ' data-code="' . e($row->code) . '"';
+                $dataAttrs .= ' data-no_pkd="' . e($row->no_pkd) . '"';
                 $dataAttrs .= ' data-name="' . e($row->name) . '"';
                 $dataAttrs .= ' data-sort_name="' . e($row->sort_name) . '"';
                 $dataAttrs .= ' data-customer_class="' . e($row->customer_class) . '"';
@@ -201,19 +277,16 @@ class CustomerController extends Controller
 
     public function store(CustomerRequest $request)
     {
-
         $category = 'Customer';
         $subCategory = 'CBD';
 
         $pathExists = ApprovalPath::where('category', $category)
             ->where(function ($q) use ($subCategory) {
-                // Jika subCategory spesifik (CBD), cari yang match atau yang null (umum)
                 if (!empty($subCategory)) {
                     $q->where('sub_category', $subCategory)
                     ->orWhereNull('sub_category')
                     ->orWhere('sub_category', '');
                 } else {
-                    // Jika subCategory kosong, cari yang null saja
                     $q->whereNull('sub_category')
                     ->orWhere('sub_category', '');
                 }
@@ -231,12 +304,45 @@ class CustomerController extends Controller
         $logs = collect();
         $firstLog = null;
 
-        // Wrap DB changes in a transaction to keep consistency
         DB::transaction(function () use ($request, &$createdCustomer, &$logs, &$firstLog) {
             $user = Auth::user();
 
-            // 1. SIMPAN DATA CUSTOMER DULU (Agar dapat ID)
             $customerData = $request->except(['file_npwp', 'file_nib', 'file_ktp', 'items']);
+            $year = date('Y');
+            $monthRoman = $this->getRomanMonth(date('n'));
+            $initials = $this->generateInitials($request->name);
+            $maxSequence = 0;
+
+            $existingNumbers = Customer::where('no_pkd', 'LIKE', "%/{$year}")
+                                ->pluck('no_pkd')
+                                ->toArray();
+
+            foreach ($existingNumbers as $no) {
+                $parts = explode('/', $no);
+                if (isset($parts[0]) && is_numeric($parts[0])) {
+                    $seq = intval($parts[0]);
+                    if ($seq > $maxSequence) {
+                        $maxSequence = $seq;
+                    }
+                }
+            }
+
+            $nextSequence = $maxSequence + 1;
+            $pkdNumber = '';
+
+            do {
+                $sequenceStr = str_pad($nextSequence, 3, '0', STR_PAD_LEFT);
+                $pkdNumber = sprintf("%s/PKD-%s/%s/%s", $sequenceStr, $initials, $monthRoman, $year);
+
+                $exists = Customer::where('no_pkd', $pkdNumber)->exists();
+
+                if ($exists) {
+                    $nextSequence++;
+                }
+            } while ($exists);
+
+            $customerData['no_pkd'] = $pkdNumber;
+
             if ($request->filled('top_calc')) {
                 $customerData['top_calc'] = $request->top_calc;
             } else {
@@ -244,7 +350,6 @@ class CustomerController extends Controller
                 $customerData['top_calc'] = ($termVal === 'CBD') ? 0 : (int) $termVal;
             }
 
-            // Pastikan lead_time null atau 0 tersimpan sebagai 0 (Default database usually 0)
             if(empty($customerData['lead_time'])) {
                 $customerData['lead_time'] = 0;
             }
@@ -253,23 +358,18 @@ class CustomerController extends Controller
 
             if ($request->has('items') && is_array($request->items)) {
                 foreach ($request->items as $item) {
-                    // Pastikan data valid angka
                     $qty = (float) ($item['quantity'] ?? 0);
                     $price = (float) ($item['price'] ?? 0);
-
-                    // Tambahkan ke Grand Total
                     $grandTotal += ($qty * $price);
                 }
             }
 
-            // Masukkan hasil hitungan ke array data yang akan disimpan
             $customerData['customer_total'] = $grandTotal;
 
             $createdCustomer = Customer::create($customerData);
 
             if ($request->has('items') && is_array($request->items)) {
                 foreach ($request->items as $item) {
-                    // Pastikan data tidak kosong
                     if (!empty($item['item_name']) && !empty($item['quantity'])) {
                         CustomerItem::create([
                             'customer_id' => $createdCustomer->id,
@@ -292,7 +392,6 @@ class CustomerController extends Controller
                 ])
                 ->log("Created new customer: {$createdCustomer->name}");
 
-            // 2. PROSES UPLOAD FILE (Folder: customer_files/{ID})
             $storageFolder = 'customer_files/' . $createdCustomer->id;
 
             $fileData = [
@@ -302,7 +401,6 @@ class CustomerController extends Controller
                 'ktp_file' => null
             ];
 
-            // Simpan File ke dalam folder ID tersebut
             if ($request->hasFile('file_npwp')) {
                 $fileData['npwp_file'] = $request->file('file_npwp')->store($storageFolder, 'public');
             }
@@ -315,11 +413,8 @@ class CustomerController extends Controller
                 $fileData['ktp_file'] = $request->file('file_ktp')->store($storageFolder, 'public');
             }
 
-            // Simpan path ke database
             CustomerFile::create($fileData);
-
             $subCategory = 'CBD';
-
             $logs = $this->generateApprovalLogs($user, $createdCustomer->id, 'Customer', $subCategory);
 
             $firstLog = ApprovalLog::where('category', 'Customer')
@@ -340,7 +435,6 @@ class CustomerController extends Controller
             }
         });
 
-        // Ensure customer was created before proceeding
         if (! $createdCustomer) {
             return response()->json(['success' => false, 'message' => 'Failed to create customer'], 500);
         }
@@ -353,23 +447,18 @@ class CustomerController extends Controller
                 $approverUser = User::where('nik', $approverNik)->first();
 
                 if ($approverUser && $approverUser->email) {
-                    // Siapkan Data Penerima (Cuma 1 orang: Level 1)
                     $recipients = [
                         [
                             'nik' => $approverUser->nik,
                             'email' => $approverUser->email,
                             'name' => $approverUser->name,
-                            'level' => $firstLog['level'], // Akses pakai array
+                            'level' => $firstLog['level'],
                             'is_first' => true,
                         ]
                     ];
 
-                    // Ambil Token Level 1 (Akses pakai array)
                     $token = $firstLog['token'];
-
-                    // Dispatch Job
                     CustomerJob::dispatch($createdCustomer->id, $recipients, $token, 'approval');
-
                     Log::info("Email approval level 1 dikirim ke: " . $approverUser->email);
                 } else {
                     Log::warning("User Level 1 tidak punya email atau NIK tidak ditemukan: " . $approverNik);
@@ -403,7 +492,7 @@ class CustomerController extends Controller
         ->useLog('customer')
         ->event('update')
         ->withProperties([
-            'attributes' => $request->all(), // Data baru
+            'attributes' => $request->all(),
             // 'old' => $oldData // Jika ingin mencatat data lama
         ])
         ->log("Updated customer data: {$customer->name}");
@@ -447,8 +536,6 @@ class CustomerController extends Controller
 
     public function viewApprovalPage(Request $request, $token)
     {
-        // 1. Cek Token & Status
-        // Token "Hangus" jika status log bukan 'Pending' lagi
         $log = ApprovalLog::where('token', $token)->first();
 
         if (!$log || $log->status !== 'Pending') {
@@ -460,12 +547,10 @@ class CustomerController extends Controller
 
         $preSelectedAction = $request->query('pre_action', 'approve');
 
-        // Jika Quick Approve, langsung proses tanpa buka form
         if ($preSelectedAction === 'approve') {
             return $this->processApprovalInternal($token, 'approve', null, $customer);
         }
 
-        // Jika Review/Reject, buka form
         return view('page.customer.links.approval-form', [
             'customer' => $customer,
             'token' => $token,
@@ -494,7 +579,6 @@ class CustomerController extends Controller
 
     private function processApprovalInternal($token, $action, $notes, $customer)
     {
-        // Kunci Data agar tidak race condition
         $currentLog = ApprovalLog::where('token', $token)
             ->where('related_id', $customer->id)
             ->where('category', 'Customer')
@@ -654,16 +738,13 @@ class CustomerController extends Controller
                     }
 
                 } else {
-                    // --- KASUS B: TIDAK ADA LEVEL SELANJUTNYA (FINISH) ---
-
                     $customer->update([
                         'status_approval' => 'Approved',
                         'route_to' => 'Finished',
-                        'status' => 'Active' // Customer Resmi Aktif
+                        'status' => 'Active'
                     ]);
 
-                    // Kirim Email "Completed" ke Requester (Sales yang buat)
-                    $requester = $customer->user; // Relasi ke User pembuat
+                    $requester = $customer->user;
                     if ($requester && $requester->email) {
                         $recipients = [[
                             'email' => $requester->email,
@@ -672,16 +753,12 @@ class CustomerController extends Controller
                             'is_first' => false
                         ]];
 
-                        // Dispatch Job tipe 'completed'
                         CustomerJob::dispatch($customer->id, $recipients, null, 'completed');
                         Log::info("APPROVAL FLOW: Customer #{$customer->id} COMPLETED (Approved). Email notifikasi dikirim ke Requester: {$requester->email}");
                     }
                 }
 
             } elseif ($dbStatus === 'Rejected') {
-                // --- KASUS C: DITOLAK (REJECTED) ---
-
-                // Batalkan semua log level diatasnya (jika ada)
                 ApprovalLog::where('category', 'Customer')
                     ->where('related_id', $customer->id)
                     ->where('status', 'Pending')
@@ -692,7 +769,6 @@ class CustomerController extends Controller
                     'route_to' => 'Rejected by ' . $currentLog->approver_nik
                 ]);
 
-                // Opsional: Kirim notifikasi Reject ke Requester
                 $requester = $customer->user;
                 if ($requester && $requester->email) {
                      $recipients = [[
@@ -706,9 +782,8 @@ class CustomerController extends Controller
 
             DB::commit();
 
-            // Tampilkan Halaman Sukses
             return view('page.customer.links.approval-success', [
-                'action' => $action, // kirim action asli (review/approve) utk pesan beda di view jika perlu
+                'action' => $action,
                 'customerName' => $customer->name,
                 'routeTo' => $customer->route_to,
                 'statusApproval' => $customer->status_approval
@@ -728,27 +803,21 @@ class CustomerController extends Controller
     {
         $user = Auth::user();
 
-        // 1. Base Query ke Table ApprovalLog (Category Customer)
         $logQuery = ApprovalLog::where('category', 'Customer');
 
-        // 2. Jika bukan Super Admin, filter berdasarkan NIK Approver
         if (!$user->hasRole('super-admin')) {
             $logQuery->where('approver_nik', $user->nik);
         }
 
-        // 3. Hitung Counter Berdasarkan Status Log
         $pendingCount = (clone $logQuery)->where('status', 'Pending')->count();
         $approvedCount = (clone $logQuery)->where('status', 'Approved')->count();
 
-        // 4. Data Pendukung Lainnya (Tetap dari table Customer untuk Active/Inactive)
         $activeCount = Customer::where('status', 'Active')->count();
         $inactiveCount = Customer::where('status', 'Inactive')->count();
 
-        // Dropdown Filters
         $approvalStatuses = ApprovalLog::where('category', 'Customer')->distinct()->pluck('status');
         $accountStatuses = Customer::whereNotNull('status')->distinct()->pluck('status');
 
-        // Data Master (Untuk modal view/filter)
         $sales = Sales::with(['user.position', 'branch', 'region'])->get();
         $top = TOP::all();
         $accountgroup = AccountGroup::all();
@@ -765,8 +834,6 @@ class CustomerController extends Controller
     public function getApprovalData()
     {
         $currentUser = Auth::user();
-
-        // 1. Base Query
         $query = ApprovalLog::with('approver')
             ->select(
                 'approval_logs.*',
@@ -780,15 +847,11 @@ class CustomerController extends Controller
             ->join('customers', 'approval_logs.related_id', '=', 'customers.id')
             ->where('approval_logs.category', 'Customer');
 
-        // Hanya ambil log yang statusnya Pending (Tugas user)
         $query->where('approval_logs.status', 'Pending');
 
-        // Pastikan status customer juga masih dalam proses (belum Reject/Cancel global)
         $query->whereIn('customers.status_approval', ['Pending', 'Processing']);
 
         if (!$currentUser->hasRole('super-admin')) {
-            // Tampilkan semua task Pending milik user ini,
-            // TANPA filter "orWhereExists" agar User Level 2 tetap bisa melihat barisnya meski dikunci.
             $query->where('approval_logs.approver_nik', $currentUser->nik);
         }
 
@@ -798,44 +861,33 @@ class CustomerController extends Controller
         return DataTables::of($query)
             ->addIndexColumn()
 
-            // --- KOLOM BARU: APPROVER NIK ---
             ->addColumn('approver_nik', function ($row) {
                 return '<span class="badge status-badge-lg bg-primary">' . e($row->approver_nik) . '</span>';
             })
-
-            // --- KOLOM BARU: LEVEL ---
             ->addColumn('level', function ($row) {
                 return '<span class="badge status-badge-lg bg-info">Level ' . $row->level . '</span>';
             })
-
-            // --- LOGIC VALIDASI: Cek apakah boleh action? ---
             ->addColumn('is_actionable', function ($row) {
-                // Jika Level 1, pasti boleh action (karena dia awal)
                 if ($row->level == 1) {
                     return true;
                 }
 
-                // Jika Level > 1, Cek apakah Level sebelumnya (level - 1) sudah Approved?
                 $prevLog = ApprovalLog::where('category', 'Customer')
                     ->where('related_id', $row->customer_id)
                     ->where('level', $row->level - 1)
                     ->first();
 
-                // Boleh action HANYA JIKA previous log ada DAN statusnya 'Approved'
                 if ($prevLog && $prevLog->status === 'Approved') {
                     return true;
                 }
 
                 return false;
             })
-
-            // --- Existing Columns ---
             ->addColumn('customer_name', function ($row) {
                 return '<div>
                             <div class="fw-bold text-dark">' . e($row->customer_name) . '</div>
                         </div>';
             })
-
             ->addColumn('status_approval', function ($row) {
                 $status = $row->customer_status;
                 $baseClass = match($status) {
@@ -847,21 +899,17 @@ class CustomerController extends Controller
                 };
                 return '<span class="badge status-badge-lg ' . $baseClass . '">' . strtoupper($status ?? 'N/A') . '</span>';
             })
-
             ->addColumn('route_to', function ($row) {
                 return '<span class="badge route-to-badge-lg bg-info text-white">
                             <i class="ph-bold ph-user me-1"></i> ' . strtoupper($row->route_to ?? '-') . '
                         </span>';
             })
-
             ->addColumn('action', function ($row) {
                 $token = $row->token;
                 $customerName = e($row->customer_name);
                 $customerId = $row->customer_id;
-
                 $canAction = true;
                 $waitingMessage = "";
-
                 if ($row->level > 1) {
                     $prevLog = ApprovalLog::where('category', 'Customer')
                         ->where('related_id', $row->customer_id)
@@ -874,7 +922,6 @@ class CustomerController extends Controller
                     }
                 }
 
-                // Jika TIDAK BISA Action (Terkunci)
                 if (!$canAction) {
                     return '<button type="button" class="btn btn-sm btn-secondary"
                             onclick="Swal.fire(\'Locked\', \'Anda harus menunggu '. $waitingMessage .' melakukan approval terlebih dahulu.\', \'warning\')">
@@ -882,7 +929,6 @@ class CustomerController extends Controller
                             </button>';
                 }
 
-                // Jika BISA Action
                 $btnApprove = '<button type="button" class="btn btn-sm btn-success action-btn"
                                 data-id="'.$customerId.'"
                                 data-token="'.$token.'"
@@ -926,17 +972,13 @@ class CustomerController extends Controller
 
     public function resendApprovalEmail(Request $request, $token)
     {
-        // Cari log approval yang masih pending
         $approvalLog = ApprovalLog::where('token', $token)->where('status', 'Pending')->first();
 
         if (!$approvalLog) {
             return response()->json(['success' => false, 'message' => 'This approval task is no longer valid.'], 404);
         }
 
-        // [FIX] Ambil Customer berdasarkan related_id, bukan Requisition
         $customer = Customer::find($approvalLog->related_id);
-
-        // Ambil data approver
         $approver = User::where('nik', $approvalLog->approver_nik)->first();
 
         if (!$customer || !$approver) {
@@ -944,11 +986,9 @@ class CustomerController extends Controller
         }
 
         try {
-            // Buat token baru
             $newToken = Str::uuid()->toString();
             $approvalLog->update(['token' => $newToken]);
 
-            // Siapkan recipients format untuk CustomerJob
             $recipients = [[
                 'nik' => $approver->nik,
                 'email' => $approver->email,
@@ -957,12 +997,10 @@ class CustomerController extends Controller
                 'is_first' => false
             ]];
 
-            // Kirim ulang email
             CustomerJob::dispatch($customer->id, $recipients, $newToken, 'approval');
 
-            // === [ACTIVITY LOG: RESEND] ===
             activity()
-                ->causedBy(Auth::user()) // User yang mengklik tombol resend (Admin/Sales)
+                ->causedBy(Auth::user())
                 ->performedOn($customer)
                 ->useLog('customer')
                 ->event('resend')

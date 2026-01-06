@@ -21,11 +21,12 @@ use App\Models\BG\LampiranDVersion;
 use App\Models\Master\ApprovalPath;
 use App\Models\User;
 use App\Models\BG\BgHistory;
-use Illuminate\Support\Str; 
+use Illuminate\Support\Str;
 
 class BgSubmissionController extends Controller
 {
     use ApprovalTrait;
+
     public function index(Request $request)
     {
         if ($request->ajax()) {
@@ -34,8 +35,47 @@ class BgSubmissionController extends Controller
             return DataTables::of($query)
                 ->addIndexColumn()
                 ->addColumn('customer_name', function($row){
-                    return $row->recommendation && $row->recommendation->customer
-                        ? $row->recommendation->customer->name : '-';
+                    $customerName = $row->recommendation->customer->name ?? '-';
+                    $siblingSubmissions = BgSubmission::where('bg_recommendation_id', $row->bg_recommendation_id)
+                                            ->where('created_at', $row->created_at)
+                                            ->orderBy('id', 'asc')
+                                            ->pluck('id')
+                                            ->toArray();
+
+                    $myIndex = array_search($row->id, $siblingSubmissions);
+                    $candidateBgs = BankGaransi::where('customer_id', $row->recommendation->customer_id)
+                                        ->where('created_at', $row->created_at)
+                                        ->where(function($q) {
+                                            $q->where('bg_type', 'new')
+                                              ->orWhere('status', 'draft');
+                                        })
+                                        ->orderBy('id', 'asc')
+                                        ->with('details')
+                                        ->get();
+
+                    $bg = isset($candidateBgs[$myIndex]) ? $candidateBgs[$myIndex] : null;
+
+                    if (!$bg) {
+                        $bg = $candidateBgs->first();
+                    }
+
+                    $bgNumber = $bg ? $bg->bg_number : 'No BG Ref';
+                    $bankName = $bg && $bg->details->first() ? $bg->details->first()->bank_name : '-';
+                    $nominal  = $bg ? number_format($bg->bg_nominal, 0, ',', '.') : '0';
+
+                    return '
+                    <div class="d-flex flex-column">
+                        <div class="mb-1">
+                            <span class="fw-bold text-dark">'.$customerName.'</span>
+                            <span class="text-muted small ms-1"> - '.$bgNumber.'</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-light text-primary border border-primary-subtle rounded-pill px-2">
+                                <i class="ph-bold ph-bank me-1"></i> '.$bankName.'
+                            </span>
+                            <span class="fw-bold text-success small">Rp '.$nominal.'</span>
+                        </div>
+                    </div>';
                 })
                 ->addColumn('file', function($row){
                     if($row->signed_document_path) {
@@ -52,16 +92,19 @@ class BgSubmissionController extends Controller
                         </button>';
                     }
 
-                    return '<span class="badge bg-light text-muted border border-secondary border-opacity-25">
-                                <i class="ph-bold ph-hourglass me-1"></i> Awaiting Upload
+                    return '<span class="status-badge-lg bg-secondary border border-secondary border-opacity-25">
+                                <i class="ph-bold ph-file"></i> Belum Ada File
                             </span>';
                 })
                 ->addColumn('status', function($row){
                     $color = 'secondary';
-                    if($row->status === 'uploaded') $color = 'info';
-                    if($row->status === 'completed') $color = 'success';
-                    if($row->status === 'awaiting_upload') $color = 'warning';
-                    return '<span class="badge bg-'.$color.' status-badge-lg">'.str_replace('_', ' ', $row->status).'</span>';
+                    if($row->status === 'uploaded') $color = 'info'; $icon = '<i class="ph-bold ph-upload-simple me-1"></i>';
+                    if($row->status === 'completed') $color = 'success'; $icon = '<i class="ph-bold ph-check-circle me-1"></i>';
+                    if($row->status === 'awaiting_upload') $color = 'warning'; $icon = '<i class="ph-bold ph-hourglass me-1"></i>';
+                    return '<span class="status-badge-lg bg-'.$color.' text-light border btn-status"
+                                data-id="'.$row->id.'">
+                                '.$icon.' '.ucwords(str_replace('_', ' ', $row->status)).'
+                            </span>';
                 })
                 ->addColumn('action', function ($row) {
                     return '<button class="status-badge-lg bg-warning text-light border btn-edit-submission"
@@ -71,7 +114,7 @@ class BgSubmissionController extends Controller
                                 <i class="ph-bold ph-pencil-simple"></i>
                             </button>';
                 })
-                ->rawColumns(['file', 'status', 'action'])
+                ->rawColumns(['customer_name', 'file', 'status', 'action'])
                 ->make(true);
         }
 
@@ -97,11 +140,11 @@ class BgSubmissionController extends Controller
             $data['upload_completed_at'] = now();
             $data['submitted_at'] = now();
         } else {
-            $data['status'] = 'pending_print'; // Default jika tanpa file
+            $data['status'] = 'pending_print';
         }
 
         if(!isset($data['token'])) {
-            $data['token'] = \Illuminate\Support\Str::random(60);
+            $data['token'] = Str::random(60);
         }
 
         BgSubmission::create($data);
@@ -143,13 +186,30 @@ class BgSubmissionController extends Controller
         $rec = $submission->recommendation;
         $customer = $rec->customer;
 
-        $bg = BankGaransi::where('customer_id', $customer->id)
-                ->where('created_at', '>=', $submission->created_at->subDay())
+        $bgs = BankGaransi::where('customer_id', $customer->id)
+                ->where('status', 'draft')
                 ->with('details')
-                ->latest()
-                ->first();
+                ->get();
 
-                $periodeString = '-';
+        if ($bgs->isEmpty()) {
+            $bgs = BankGaransi::where('customer_id', $customer->id)
+                ->latest()
+                ->take(1)
+                ->with('details')
+                ->get();
+        }
+
+        $totalBgDiserahkan = $bgs->sum('bg_nominal');
+
+        $allDetails = [];
+        foreach($bgs as $bg) {
+            foreach($bg->details as $detail) {
+                $detail->parent_bg_id = $bg->id;
+                $allDetails[] = $detail;
+            }
+        }
+
+        $periodeString = '-';
         if ($rec->periods && $rec->periods->count() > 0) {
             $start = $rec->periods->min('period_date');
             $end   = $rec->periods->max('period_date');
@@ -160,10 +220,12 @@ class BgSubmissionController extends Controller
             }
         }
 
+        $firstBgId = $bgs->first() ? $bgs->first()->id : null;
+
         $data = [
             'submission_id' => $submission->id,
-            'bg_id' => $bg ? $bg->id : null,
-                        'nama_distributor' => $customer->name,
+            'bg_id' => $firstBgId,
+            'nama_distributor' => $customer->name,
             'kota' => $customer->city,
             'wilayah_kerja' => $customer->area ?? '-',
             'periode' => $periodeString,
@@ -173,8 +235,8 @@ class BgSubmissionController extends Controller
             'faktor_fluktuasi' => $rec->inflation,
             'limit_kredit' => $rec->credit_limit_updated,
             'nilai_bg_ditetapkan' => $rec->set_bg,
-            'nilai_bg_diserahkan' => $bg ? $bg->bg_nominal : 0,
-            'details' => $bg ? $bg->details : []
+            'nilai_bg_diserahkan' => $totalBgDiserahkan,
+            'details' => $allDetails
         ];
 
         return response()->json(['success' => true, 'data' => $data]);
@@ -219,27 +281,20 @@ class BgSubmissionController extends Controller
 
                 if(isset($request->details)) {
                     foreach ($request->details as $detailId => $val) {
-                        BgDetail::where('id', $detailId)->update([
+                        $detailObj = BgDetail::findOrFail($detailId);
+
+                        $detailObj->update([
                             'bank_name' => $val['bank_name'],
                             'branch_name' => $val['branch_name'],
                             'nominal' => $val['nominal'],
                         ]);
-                    }
-                }
 
-                if ($request->bg_id) {
-                    BankGaransi::where('id', $request->bg_id)->update([
-                        'bg_nominal' => $request->nilai_bg_diserahkan
-                    ]);
-
-                    $firstDetail = BgDetail::where('bank_garansi_id', $request->bg_id)
-                                           ->orderBy('id', 'asc')
-                                           ->first();
-                    
-                    if ($firstDetail) {
-                        $firstDetail->update([
-                            'nominal' => $request->nilai_bg_diserahkan
-                        ]);
+                        $parentBg = BankGaransi::find($detailObj->bank_garansi_id);
+                        if ($parentBg) {
+                            $parentBg->update([
+                                'bg_nominal' => $val['nominal']
+                            ]);
+                        }
                     }
                 }
 
@@ -280,7 +335,6 @@ class BgSubmissionController extends Controller
                     'active_version_id' => $newVersion->id
                 ]);
 
-
                 $requester = auth()->user();
                 $logs = $this->generateApprovalLogs($requester, $submission->id, 'BG', 'Lampiran D');
 
@@ -311,37 +365,107 @@ class BgSubmissionController extends Controller
 
         if ($request->action_type == 'direct_submit') {
 
-            $submission = BgSubmission::with(['recommendation.customer'])->findOrFail($id);
+            DB::beginTransaction();
+            try {
+                $rec = $submission->recommendation;
+                $customer = $rec->customer;
 
-            $bg = BankGaransi::where('customer_id', $submission->recommendation->customer_id)
-                    ->where('status', 'submitted')
-                    ->latest()
-                    ->first();
+                $submissionDates = BgSubmission::where('bg_recommendation_id', $rec->id)->pluck('created_at');
+                $bgs = BankGaransi::where('customer_id', $customer->id)
+                        ->whereIn('created_at', $submissionDates)
+                        ->with('details')
+                        ->get();
 
-            if ($bg) {
-                $bg->update([
-                    'status'      => 'approved',
-                    'issued_date' => now(),
-                    'exp_date'    => now()->addYear(),
+                $totalBgDiserahkan = $bgs->sum('bg_nominal');
+
+                $periodeString = '-';
+                if ($rec->periods && $rec->periods->count() > 0) {
+                    $start = $rec->periods->min('period_date');
+                    $end   = $rec->periods->max('period_date');
+                    if ($start && $end) {
+                        \Carbon\Carbon::setLocale('id');
+                        $periodeString = \Carbon\Carbon::parse($start)->isoFormat('MMMM Y') . ' - ' . \Carbon\Carbon::parse($end)->isoFormat('MMMM Y');
+                    }
+                }
+
+                $detailsSnapshot = [];
+                foreach($bgs as $bgItem) {
+                    foreach($bgItem->details as $d) {
+                        $detailsSnapshot[$d->id] = [
+                            'bank_name' => $d->bank_name,
+                            'branch_name' => $d->branch_name,
+                            'nominal' => $d->nominal,
+                            'id' => $d->id
+                        ];
+                    }
+                }
+
+                $snapshotData = [
+                    'nama_distributor' => $customer->name,
+                    'kota' => $customer->city,
+                    'wilayah_kerja' => $customer->area ?? '-',
+                    'periode' => $periodeString,
+                    'rata_rata_penjualan' => $rec->average,
+                    'syarat_pembayaran' => $rec->top,
+                    'lead_time' => $rec->lead_time,
+                    'faktor_fluktuasi' => $rec->inflation,
+                    'limit_kredit' => $rec->credit_limit_updated,
+                    'nilai_bg_ditetapkan' => $rec->set_bg,
+                    'nilai_bg_diserahkan' => $totalBgDiserahkan,
+                    'details' => $detailsSnapshot
+                ];
+
+                $lampiranD = LampiranD::firstOrCreate(
+                    ['bg_submission_id' => $submission->id],
+                    ['version_latest' => 0, 'created_by' => auth()->id()]
+                );
+
+                $nextVersion = $lampiranD->version_latest + 1;
+
+                $newVersion = LampiranDVersion::create([
+                    'lampiran_d_id' => $lampiranD->id,
+                    'version_no'    => $nextVersion,
+                    'data_snapshot' => $snapshotData,
+                    'file_path'     => $submission->signed_document_path,
+                    'generated_by'  => auth()->id(),
+                    'generated_at'  => now(),
+                    'remarks'       => 'Direct Approved by Admin (Auto Generated Snapshot)'
                 ]);
+
+                $lampiranD->update([
+                    'version_latest'    => $nextVersion,
+                    'active_version_id' => $newVersion->id
+                ]);
+
+                foreach($bgs as $bg) {
+                    if($bg->status == 'draft' || $bg->status == 'submitted') {
+                        $bg->update([
+                            'status'      => 'approved',
+                            'issued_date' => now(),
+                            'exp_date'    => now()->addYear(),
+                        ]);
+                        $this->addToBgHistory($submission, $bg);
+                    }
+                }
+
+                $submission->update([
+                    'status' => 'completed',
+                    'token'  => Str::random(60)
+                ]);
+
+                if ($submission->recommendation) {
+                    $submission->recommendation->update(['status' => 'approved']);
+                }
+
+                $this->sendCompletionEmails($submission);
+
+                DB::commit();
+                return response()->json(['success' => true, 'message' => 'Dokumen disetujui, Lampiran D terbit & BG Aktif.']);
+
+            } catch (\Exception $e) {
+                DB::rollBack();
+                return response()->json(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
             }
-
-            $submission->update([
-                'status' => 'completed',
-                'token'  => Str::random(60)
-            ]);
-
-            if ($submission->recommendation) {
-                $submission->recommendation->update(['status' => 'approved']);
-            }
-
-            if ($bg) {
-                $this->addToBgHistory($submission, $bg);
-            }
-
-            $this->sendCompletionEmails($submission);
-
-            return response()->json(['success' => true, 'message' => 'Dokumen disetujui, Tanggal Terbit & Expired berhasil di-generate.']);
         }
 
         return response()->json(['success' => false, 'message' => 'Invalid Action']);
@@ -349,8 +473,10 @@ class BgSubmissionController extends Controller
 
     private function addToBgHistory($submission, $currentBg)
     {
+        // Cari BG sebelumnya (untuk referensi history pergerakan nominal)
         $prevBg = BankGaransi::where('customer_id', $currentBg->customer_id)
                     ->where('id', '<', $currentBg->id)
+                    ->where('status', '!=', 'draft') // Jangan bandingkan dengan sesama draft
                     ->orderBy('id', 'desc')
                     ->first();
 
@@ -389,11 +515,23 @@ class BgSubmissionController extends Controller
     }
 
     private function sendCompletionEmails($submission) {
+        $pendingSiblings = BgSubmission::where('bg_recommendation_id', $submission->bg_recommendation_id)
+                            ->where('id', '!=', $submission->id)
+                            ->where('status', '!=', 'completed')
+                            ->where('status', '!=', 'approved')
+                            ->count();
+        
+        if ($pendingSiblings > 0) {
+            return;
+        }
+
         $customerEmail = $submission->recommendation->customer->email;
         $salesEmails = User::role('head-SNM')->pluck('email')->toArray();
-        $financeEmails = User::role('manager-finance')->pluck('email')->toArray();
+        $financeEmails = User::role('head-finance')->pluck('email')->toArray();
+
         $allRecipients = array_merge([$customerEmail], $salesEmails, $financeEmails);
         $recipients = array_unique(array_filter($allRecipients));
+
         foreach($recipients as $email) {
             if (!empty($email)) {
                 Mail::to($email)->queue(new CustomerBgReadyMail($submission));

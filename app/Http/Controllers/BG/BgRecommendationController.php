@@ -196,7 +196,6 @@ class BgRecommendationController extends Controller
             }
             $rulePercent = $this->getLimitRulePercent($rec->customer);
 
-            // Perhitungan Ulang di Backend (Validasi)
             $estPpnValue = $avg * $taxRate;
             $timeFactor = $top > 0 ? ($top + $leadTime) / $top : 1;
             $inflationFactor = $inflation / 100;
@@ -234,17 +233,6 @@ class BgRecommendationController extends Controller
                 'notes'                     => $notes,
                 'token'                     => $token,
             ]);
-
-            BgSubmission::firstOrCreate(
-                ['bg_recommendation_id' => $rec->id],
-                [
-                    'form_code' => 'SUB-' . date('Ymd') . '-' . strtoupper(Str::random(5)),
-                    'status'    => 'pending_print',
-                    'token'     => Str::random(60),
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]
-            );
 
             $recForMail = BgRecommendation::with(['customer', 'periods', 'tax'])->findOrFail($id);
             if ($recForMail->customer && $recForMail->customer->email) {

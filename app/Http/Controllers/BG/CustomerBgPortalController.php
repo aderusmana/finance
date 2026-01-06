@@ -19,9 +19,6 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class CustomerBgPortalController extends Controller
 {
-    /**
-     * STEP 1: Tampilkan Form Input Detail
-     */
     public function showInputForm($token)
     {
         $rec = BgRecommendation::with('customer')->where('token', $token)->first();
@@ -37,20 +34,16 @@ class CustomerBgPortalController extends Controller
         return view('page.customer_portal.form-input-bank', compact('rec', 'token'));
     }
 
-    /**
-     * STEP 2: Simpan Data, Generate PDF, Create Submission, Kirim Email
-     */
     public function storeInputData(Request $request, $token)
     {
         $rec = BgRecommendation::with('customer')->where('token', $token)->firstOrFail();
-        $submission = BgSubmission::where('bg_recommendation_id', $rec->id)->first();
 
-        if (!$submission) {
-             return back()->with('error', 'Data submission tidak ditemukan. Hubungi Admin.');
+        if (!$rec) {
+             return view('page.customer_portal.form-invalid');
         }
 
-        if ($submission->status != 'pending_print') {
-            return back()->with('error', 'Formulir ini sudah disubmit sebelumnya atau sedang dalam proses.');
+        if ($rec->status != 'process') {
+            return view('page.customer_portal.expired_or_completed');
         }
 
         $request->validate([
@@ -72,8 +65,13 @@ class CustomerBgPortalController extends Controller
                                 ->whereYear('created_at', $currentYear)
                                 ->count();
 
+            $financeUser = User::role('head-finance')->first();
+            $financeName = $financeUser ? $financeUser->name : 'Finance Dept. Head Tidak Diketahui';
+            $generatedCount = 0;
+
             foreach ($request->details as $index => $d) {
                 $nominal = (float) $d['nominal'];
+                $timestamp = now();
                 $sequence = $existingCount + ($index + 1);
                 $seqStr = str_pad($sequence, 4, '0', STR_PAD_LEFT);
                 $bgNumber = "BG-{$currentYear}-{$seqStr}";
@@ -84,8 +82,10 @@ class CustomerBgPortalController extends Controller
                     'bg_type'     => 'new',
                     'bg_nominal'  => $nominal,
                     'base_bg_id'  => $currentBaseBgId,
-                    'status'      => 'submitted',
+                    'status'      => 'draft',
                     'created_by'  => $creatorId,
+                    'created_at'  => $timestamp,
+                    'updated_at'  => $timestamp
                 ]);
 
                 if (!$currentBaseBgId) {
@@ -103,30 +103,36 @@ class CustomerBgPortalController extends Controller
                 ]);
 
                 $createdBgs[] = $bg;
-            }
 
-            $submission->update([
-                'status' => 'awaiting_upload'
-            ]);
+                $formCode = 'SUB-' . date('Ymd') . '-' . strtoupper(Str::random(4)) . '-' . ($index+1);
+                $submission = BgSubmission::create([
+                    'bg_recommendation_id' => $rec->id,
+                    'form_code' => $formCode,
+                    'status' => 'awaiting_upload',
+                    'token'  => Str::random(60),
+                    'created_at' => $timestamp,
+                    'updated_at' => $timestamp
+                ]);
 
-            $financeUser = User::role('manager-finance')->first();
-            $financeName = $financeUser ? $financeUser->name : 'Manager Finance';
+                $pdf = Pdf::loadView('pdf.bg_submission_document', [
+                    'bg' => $bg,
+                    'bgs' => [$bg],
+                    'customer' => $rec->customer,
+                    'submission' => $submission,
+                    'finance_name' => $financeName
+                ]);
 
-            $pdf = Pdf::loadView('pdf.bg_submission_document', [
-                'bg' => $createdBgs[0],
-                'bgs' => $createdBgs,
-                'customer' => $rec->customer,
-                'submission' => $submission,
-                'finance_name' => $financeName
-            ]);
+                $fileName = 'Formulir_BG_' . str_replace(['/', '\\'], '-', $submission->form_code) . '.pdf';
+                Storage::disk('public')->put('generated_pdfs/' . $fileName, $pdf->output());
 
-            $fileName = 'Formulir_BG_' . str_replace(['/', '\\'], '-', $submission->form_code) . '.pdf';
-            Storage::disk('public')->put('generated_pdfs/' . $fileName, $pdf->output());
+                if ($rec->customer && $rec->customer->email) {
+                    $pdfContentBase64 = base64_encode($pdf->output());
 
-            $pdfContentBase64 = base64_encode($pdf->output());
-            if ($rec->customer && $rec->customer->email) {
-                Mail::to($rec->customer->email)
-                    ->queue(new BgSubmissionDocumentMail($submission, $pdfContentBase64));
+                    Mail::to($rec->customer->email)
+                        ->queue(new BgSubmissionDocumentMail($submission, $pdfContentBase64));
+                }
+
+                $generatedCount++;
             }
 
             $rec->update([
@@ -140,9 +146,10 @@ class CustomerBgPortalController extends Controller
             $downloadUrl = route('customer.portal.download-pdf', ['token' => $submission->token]);
 
             return view('page.customer_portal.form-success', [
-                'type'        => 'input',
+                'type'        => 'input_multi',
                 'downloadUrl' => $downloadUrl,
-                'uploadToken' => $submission->token
+                'uploadToken' => $submission->token,
+                'message'     => 'Berhasil! Kami telah mengirimkan ' . $generatedCount . ' email terpisah untuk setiap bank. Silakan cek email Anda untuk mengunduh dan mengupload dokumen masing-masing.',
             ]);
 
         } catch (\Exception $e) {
@@ -155,19 +162,34 @@ class CustomerBgPortalController extends Controller
     {
         try {
             $submission = BgSubmission::where('token', $token)->firstOrFail();
-
             $fileName = 'Formulir_BG_' . str_replace(['/', '\\'], '-', $submission->form_code) . '.pdf';
             $path = 'generated_pdfs/' . $fileName;
 
+            // 1. Coba ambil file fisik dulu (paling aman karena dibuat saat loop)
             if (Storage::disk('public')->exists($path)) {
                 return response()->download(storage_path('app/public/' . $path), $fileName);
             }
-            $rec = $submission->recommendation;
-            $bg = BankGaransi::where('bg_number', 'like', '%'.$submission->form_code.'%')->first();
 
-            if(!$bg) {
-                 $bg = BankGaransi::where('created_at', $submission->created_at)->first();
-            }
+            // 2. Fallback: Generate ulang jika file hilang (Logic Index Matching)
+            $rec = $submission->recommendation;
+            
+            // Cari submission temannya yang dibuat barengan
+            $siblings = BgSubmission::where('bg_recommendation_id', $rec->id)
+                        ->where('created_at', $submission->created_at)
+                        ->orderBy('id', 'asc')
+                        ->pluck('id')->toArray();
+            
+            // Saya urutan keberapa?
+            $myIndex = array_search($submission->id, $siblings);
+
+            // Ambil kandidat BG
+            $candidateBgs = BankGaransi::where('customer_id', $rec->customer_id)
+                            ->where('created_at', $submission->created_at)
+                            ->orderBy('id', 'asc')
+                            ->get();
+
+            // Ambil BG yang sesuai urutan
+            $bg = isset($candidateBgs[$myIndex]) ? $candidateBgs[$myIndex] : $candidateBgs->first();
 
             $pdf = Pdf::loadView('pdf.bg_submission_document', [
                 'bg' => $bg,
@@ -193,11 +215,25 @@ class CustomerBgPortalController extends Controller
              return view('page.customer_portal.form-invalid');
         }
 
-        $bg = BankGaransi::where('customer_id', $submission->recommendation->customer_id)
-                         ->where('status', 'submitted')
-                         ->latest()
-                         ->with('details')
-                         ->first();
+        $rec = $submission->recommendation;
+        $siblingSubmissions = BgSubmission::where('bg_recommendation_id', $rec->id)
+                                ->where('created_at', $submission->created_at)
+                                ->orderBy('id', 'asc')
+                                ->pluck('id')
+                                ->toArray();
+
+        $myIndex = array_search($submission->id, $siblingSubmissions);
+        $candidateBgs = BankGaransi::where('customer_id', $rec->customer_id)
+                            ->where('created_at', $submission->created_at)
+                            ->with('details')
+                            ->orderBy('id', 'asc')
+                            ->get();
+
+        if (isset($candidateBgs[$myIndex])) {
+            $bg = $candidateBgs[$myIndex];
+        } else {
+            $bg = $candidateBgs->first();
+        }
 
         return view('page.customer_portal.upload_form', compact('submission', 'token', 'bg'));
     }
@@ -240,8 +276,8 @@ class CustomerBgPortalController extends Controller
         try {
             $bg = BankGaransi::with('customer')->findOrFail($bg_id);
             $cust = $bg->customer;
-            $financeUser = User::role('manager-finance')->first();
-            $financeName = $financeUser ? $financeUser->name : 'Manager Finance';
+            $financeUser = User::role('head-finance')->first();
+            $financeName = $financeUser ? $financeUser->name : 'Finance Dept. Head Tidak Diketahui';
             $nomorPkd = DocumentHelper::generatePKDNumber($bg->temp_recommendation_id ?? $bg->id, $cust->name, now());
 
             $dataPdf = [
@@ -270,7 +306,6 @@ class CustomerBgPortalController extends Controller
     public function downloadLampiranD($token)
     {
         try {
-            // 1. Cari Submission berdasarkan Token
             $submission = BgSubmission::with(['recommendation.customer'])->where('token', $token)->first();
 
             if (!$submission) {
@@ -280,30 +315,30 @@ class CustomerBgPortalController extends Controller
             $rec = $submission->recommendation;
             $customer = $rec->customer;
 
-            // 2. Cari Data Bank Garansi (Untuk mengambil Nilai BG Diserahkan)
-            // Ambil BG terakhir yang terkait dengan customer ini
-            $bg = BankGaransi::where('customer_id', $customer->id)
-                    ->latest() // Ambil yang paling baru dibuat/diupdate
-                    ->first();
+            $submissionDates = BgSubmission::where('bg_recommendation_id', $rec->id)->pluck('created_at');
+            $totalBgDiserahkan = BankGaransi::where('customer_id', $customer->id)
+                                    ->whereIn('created_at', $submissionDates)
+                                    ->sum('bg_nominal');
 
-            // 3. Generate Nomor PKD & Data
-            $nomorPkd = DocumentHelper::generatePKDNumber($rec->id, $customer->name, now());
-            
-            // Siapkan Data untuk View
+            $nomorPkd = $customer->no_pkd;
+            if(empty($nomorPkd)) {
+                 $nomorPkd = DocumentHelper::generatePKDNumber($rec->id, $customer->name, $customer->created_at);
+            }
+
+            $financeUser = User::role('head-finance')->first();
+            $salesUser = User::role('head-SNM')->first();
+
             $data = [
                 'submission' => $submission,
                 'rec' => $rec,
                 'customer' => $customer,
-                'bg' => $bg, // PENTING: Kirim object BG agar nominal bisa dibaca
+                'total_bg_diserahkan' => $totalBgDiserahkan,
                 'nomor_pkd' => $nomorPkd,
-                // Nama Dept Head bisa dinamis atau hardcode sesuai kebutuhan
-                'sales_name' => 'Dept Head Sales', 
-                'finance_name' => 'Dept Head Finance'
+                'sales_name' => $salesUser ? $salesUser->name : 'S&M Dept. Head',
+                'finance_name' => $financeUser ? $financeUser->name : 'Manager Finance'
             ];
 
-            // 4. Download PDF Lampiran D (Bukan Formulir Submission)
             $pdf = Pdf::loadView('pdf.lampiran_d', $data);
-            
             $safeName = str_replace(['/', '\\'], '-', $customer->name);
             return $pdf->download('Lampiran_D_' . $safeName . '.pdf');
 

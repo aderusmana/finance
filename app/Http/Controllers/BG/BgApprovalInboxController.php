@@ -138,7 +138,7 @@ class BgApprovalInboxController extends Controller
             $status = ($request->action == 'reject') ? 'rejected_by_finance' : 'completed';
             $notes  = $request->notes ?? 'Processed via Dashboard (Quick Action)';
             $newToken = ($status == 'completed') ? Str::random(60) : null;
-            $sub->update([  
+            $sub->update([
                 'status' => $status,
                 'token' => $newToken,
                 'reviewed_at' => now()
@@ -233,9 +233,18 @@ class BgApprovalInboxController extends Controller
 
     private function sendCompletionEmails($submission)
     {
+        $pendingSiblings = BgSubmission::where('bg_recommendation_id', $submission->bg_recommendation_id)
+                            ->where('status', '!=', 'completed')
+                            ->where('status', '!=', 'approved') // Jaga-jaga jika ada status approved
+                            ->count();
+
+        if ($pendingSiblings > 0) {
+            return;
+        }
+
         $customerEmail = $submission->recommendation->customer->email;
         $salesEmails = User::role('head-SNM')->pluck('email')->toArray();
-        $financeEmails = User::role('manager-finance')->pluck('email')->toArray();
+        $financeEmails = User::role('head-finance')->pluck('email')->toArray();
 
         $allRecipients = array_merge([$customerEmail], $salesEmails, $financeEmails);
         $recipients = array_unique(array_filter($allRecipients));

@@ -362,11 +362,7 @@
                             const valAvg = d.rata_rata_penjualan ? Math.floor(d.rata_rata_penjualan) : 0;
                             const valLimit = d.limit_kredit ? Math.floor(d.limit_kredit) : 0;
                             const valSetBg = d.nilai_bg_ditetapkan ? Math.floor(d.nilai_bg_ditetapkan) : 0;
-                            
-                            let valDiserahkan = 0;
-                            if (d.details && d.details.length > 0) {
-                                valDiserahkan = Math.floor(d.details[0].nominal);
-                            }
+                            const valDiserahkanTotal = d.nilai_bg_diserahkan ? Math.floor(d.nilai_bg_diserahkan) : 0;
 
                             let html = `
                                 <input type="hidden" name="bg_id" value="${d.bg_id}">
@@ -397,7 +393,7 @@
 
                                     <div class="col-md-6">
                                         <label class="form-label small fw-bold">5. Rata-rata Penjualan (Rp)</label>
-                                        <input type="text" class="form-control rupiah-input" name="rata_rata_penjualan" 
+                                        <input type="text" class="form-control rupiah-input" name="rata_rata_penjualan"
                                                value="${formatRupiah(valAvg)}">
                                     </div>
 
@@ -418,7 +414,7 @@
 
                                     <div class="col-md-6">
                                         <label class="form-label small fw-bold">9. Limit Kredit (Rp)</label>
-                                        <input type="text" class="form-control fw-bold rupiah-input" name="limit_kredit" 
+                                        <input type="text" class="form-control fw-bold rupiah-input" name="limit_kredit"
                                                value="${formatRupiah(valLimit)}">
                                     </div>
 
@@ -426,19 +422,56 @@
 
                                     <div class="col-md-6">
                                         <label class="form-label small fw-bold">10. Nilai BG Ditetapkan (Rp)</label>
-                                        <input type="text" class="form-control border-success rupiah-input" name="nilai_bg_ditetapkan" 
+                                        <input type="text" class="form-control border-success rupiah-input" name="nilai_bg_ditetapkan"
                                                value="${formatRupiah(valSetBg)}">
                                     </div>
 
                                     <div class="col-md-6">
-                                        <label class="form-label small fw-bold">11. Nilai BG Diserahkan (Rp)</label>
-                                        <input type="text" class="form-control border-primary rupiah-input" name="nilai_bg_diserahkan" 
-                                               value="${formatRupiah(valDiserahkan)}">
-                                        <div class="form-text text-muted small">Mengubah ini akan mengupdate Bank 1 & Total BG.</div>
+                                        <label class="form-label small fw-bold">11. Total BG Diserahkan (Rp)</label>
+                                        <input type="text" class="form-control border-primary bg-light fw-bold"
+                                               value="${formatRupiah(valDiserahkanTotal)}" readonly>
+                                        <div class="form-text text-muted small">Total akumulasi dari rincian bank di bawah.</div>
+                                        <input type="hidden" name="nilai_bg_diserahkan" value="${valDiserahkanTotal}">
                                     </div>
                                 </div>
+                                <h6 class="fw-bold text-primary border-bottom pb-2 mt-3">D. Rincian Bank</h6>
                             `;
-                            
+
+                            if(d.details) {
+                                d.details.forEach((item, index) => {
+                                    let nominalDetail = item.nominal ? Math.floor(item.nominal) : 0;
+
+                                    html += `
+                                        <div class="card mb-2 border-start border-2 border-primary">
+                                            <div class="card-body p-2">
+                                                <input type="hidden" name="details[${item.id}][id]" value="${item.id}">
+
+                                                <div class="d-flex justify-content-between mb-1">
+                                                    <strong class="text-primary small">Bank Ke-${index+1}</strong>
+                                                </div>
+
+                                                <div class="row g-2">
+                                                    <div class="col-md-4">
+                                                        <label class="small text-muted fw-bold">Bank</label>
+                                                        <input type="text" class="form-control form-control-sm" name="details[${item.id}][bank_name]" value="${item.bank_name}">
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <label class="small text-muted fw-bold">Cabang</label>
+                                                        <input type="text" class="form-control form-control-sm" name="details[${item.id}][branch_name]" value="${item.branch_name}">
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <label class="small text-muted fw-bold">Nominal</label>
+                                                        <input type="text" class="form-control form-control-sm rupiah-input"
+                                                               name="details[${item.id}][nominal]"
+                                                               value="${formatRupiah(nominalDetail)}">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `;
+                                });
+                            }
+
                             $('#bankDetailsContainer').html(html);
                             $('#editBgDataModal').modal('show');
                         } else {

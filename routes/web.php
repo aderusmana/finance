@@ -70,6 +70,7 @@ Route::prefix('customer-portal')->name('customer.portal.')->group(function () {
 });
 
 Route::middleware('auth')->group(function () {
+    Route::post('/customers/generate-pkd-preview', [CustomerController::class, 'generatePkdPreview'])->name('customers.generate-pkd-preview');
     Route::prefix('dashboard/data')->name('dashboard.data.')->group(function () {
         Route::get('/metric-counts', [DashboardController::class, 'getMetricCounts'])->name('metric-counts');
         Route::get('/monthly-stats', [DashboardController::class, 'getMonthlyStats'])->name('monthly-stats');
