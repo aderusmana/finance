@@ -327,15 +327,26 @@
 
                 $(document).on('click', '.btn-view-file', function() {
                     let url = $(this).data('url');
-                    let id = $(this).data('id'); // ID Submission
+                    let id = $(this).data('id');
+                    let status = $(this).data('status');
+
                     currentSubmissionId = id;
 
                     let container = $('#fileContentArea');
                     container.html('<div class="d-flex h-100 justify-content-center align-items-center"><div class="spinner-border text-primary"></div></div>');
 
+                    if (status === 'completed') {
+                        $('#viewFileModal .modal-footer').hide(); 
+                        $('#viewFileModal .modal-header').removeClass('bg-dark').addClass('bg-success');
+                        $('#viewFileModal .modal-title').html('<i class="ph-bold ph-check-circle me-2"></i> Document Preview (Final)');
+                    } else {
+                        $('#viewFileModal .modal-footer').show();
+                        $('#viewFileModal .modal-header').removeClass('bg-success').addClass('bg-dark');
+                        $('#viewFileModal .modal-title').html('<i class="ph-bold ph-file-text me-2"></i> Document Preview & Action');
+                    }
+
                     $('#viewFileModal').modal('show');
 
-                    // Render File
                     let extension = url.split('.').pop().toLowerCase();
                     setTimeout(() => {
                         if (['jpg', 'jpeg', 'png'].includes(extension)) {

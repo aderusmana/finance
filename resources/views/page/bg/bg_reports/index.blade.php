@@ -267,7 +267,6 @@
                 updateBulkUI();
             });
 
-            // --- TABLE 1: TRANSACTIONS ---
             var transTable = $('#transTable').DataTable({
                 processing: true, serverSide: true, responsive: true,
                 ajax: { url: "{{ route('bg-reports.index') }}", data: { type: 'transactions' } },
@@ -275,8 +274,8 @@
                 columns: [
                     {data: 'checkbox', name: 'checkbox', orderable: false, searchable: false, className: 'text-center align-middle'},
                     {data: 'DT_RowIndex', searchable: false, orderable: false, className: 'text-center text-muted fw-bold align-middle'},
-                    {data: 'date', name: 'created_at', className: 'text-secondary'},
-                    {data: 'form_code', name: 'form_code', className: 'fw-bold text-dark align-middle'}, // Emerald text handled in Controller or here
+                    {data: 'date', name: 'created_at', className: 'fw-bold text-dark align-middle'},
+                    {data: 'form_code', name: 'form_code', className: 'fw-bold text-dark align-middle'},
                     {data: 'customer', name: 'recommendation.customer.name', className: 'fw-bold text-dark align-middle'},
                     {
                         data: 'status',
@@ -299,7 +298,6 @@
                 transTable.search($(this).val()).draw();
             });
 
-            // --- TABLE 2: LETTERS ---
             var lettersTable = $('#lettersTable').DataTable({
                 processing: true, serverSide: true, responsive: true,
                 ajax: { url: "{{ route('bg-reports.index') }}", data: { type: 'expiring' } },
@@ -362,16 +360,11 @@
                 });
             });
 
-            // --- 5. CONFIRMATION BEFORE DOWNLOAD (NEW) ---
             $('#bulkDownloadForm').on('submit', function(e) {
-                e.preventDefault(); // Stop proses download langsung
-
-                // 1. Ambil Data untuk Penjelasan
+                e.preventDefault();
                 let count = selectedIds.length;
                 let docText = $('#bulkDocType option:selected').text();
                 let modeVal = $('input[name="output_mode"]:checked').val();
-
-                // Tentukan Label Mode & Penjelasan Isi
                 let modeLabel = '';
                 let contentDesc = '';
 
@@ -383,7 +376,6 @@
                     contentDesc = `Anda akan mengunduh folder ZIP yang berisi <b>${count} file PDF</b> (satu file per customer) untuk dokumen <b>${docText}</b>.`;
                 }
 
-                // 2. Tampilkan SweetAlert Konfirmasi
                 Swal.fire({
                     title: 'Konfirmasi Download',
                     html: `
@@ -410,11 +402,11 @@
                     `,
                     icon: 'info',
                     showCancelButton: true,
-                    confirmButtonColor: '#2563eb', // Royal Blue
-                    cancelButtonColor: '#64748b',  // Slate Grey
+                    confirmButtonColor: '#2563eb',
+                    cancelButtonColor: '#64748b',
                     confirmButtonText: '<i class="ph-bold ph-download-simple me-1"></i> Ya, Proses Download',
                     cancelButtonText: 'Batal',
-                    reverseButtons: true, // Tombol Cancel di kiri
+                    reverseButtons: true,
                     focusConfirm: false
                 }).then((result) => {
                     if (result.isConfirmed) {

@@ -36,68 +36,30 @@ class BgReportController extends Controller
                     ->addColumn('customer', fn($row) => $row->recommendation->customer->name ?? '-')
                     ->addColumn('status', function($row){
                         $status = $row->status;
-
                         $color = 'secondary';
                         $icon = 'ph-minus';
 
                         switch ($status) {
-                            case 'completed':
-                                $color = 'success';
-                                $icon = 'ph-check-circle';
-                                break;
-                            case 'uploaded':
-                                $color = 'info';
-                                $icon = 'ph-upload-simple';
-                                break;
-                            case 'pending_print':
-                                $color = 'warning';
-                                $icon = 'ph-printer';
-                                break;
-                            case 'reviewed':
-                                $color = 'primary';
-                                $icon = 'ph-paper-plane-right';
-                                break;
-                            case 'awaiting_upload':
-                                $color = 'info';
-                                $icon = 'ph-clock';
-                                break;
-                            case 'waiting_approval':
-                                $color = 'warning';
-                                $icon = 'ph-hourglass';
-                                break;
-                            case 'rejected_by_finance':
-                                $color = 'danger';
-                                $icon = 'ph-x-circle';
-                                break;
+                            case 'completed': $color = 'success'; $icon = 'ph-check-circle'; break;
+                            case 'uploaded': $color = 'info'; $icon = 'ph-upload-simple'; break;
+                            case 'pending_print': $color = 'warning'; $icon = 'ph-printer'; break;
+                            case 'reviewed': $color = 'primary'; $icon = 'ph-paper-plane-right'; break;
+                            case 'awaiting_upload': $color = 'info'; $icon = 'ph-clock'; break;
+                            case 'waiting_approval': $color = 'warning'; $icon = 'ph-hourglass'; break;
+                            case 'rejected_by_finance': $color = 'danger'; $icon = 'ph-x-circle'; break;
                         }
-
                         $label = strtoupper(str_replace('_', ' ', $status));
-
-                        return '<span class="badge bg-'.$color.' status-badge-lg">
-                                    <i class="ph-bold '.$icon.' me-1"></i>'.$label.'
-                                </span>';
+                        return '<span class="badge bg-'.$color.' status-badge-lg"><i class="ph-bold '.$icon.' me-1"></i>'.$label.'</span>';
                     })
                     ->addColumn('action', function($row) {
                         return '
                         <div class="dropdown">
-                            <button class="btn btn-light-danger dropdown-toggle" type="button"
-                                    data-bs-toggle="dropdown"
-                                    data-bs-boundary="viewport"
-                                    aria-expanded="false">
+                            <button class="btn btn-light-danger dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 <i class="ph-bold ph-printer"></i> Print
                             </button>
-
                             <ul class="dropdown-menu dropdown-menu-end">
-                                <li>
-                                    <a class="dropdown-item" href="'.route('bg-reports.download', ['id' => $row->id, 'doc_type' => 'lampiran_d']).'" target="_blank">
-                                        <i class="ph-duotone ph-file-text text-warning me-2 fs-5"></i> Lampiran D
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item" href="'.route('bg-reports.download', ['id' => $row->id, 'doc_type' => 'submission_form']).'" target="_blank">
-                                        <i class="ph-duotone ph-file-pdf text-danger me-2 fs-5"></i> Formulir Pengajuan
-                                    </a>
-                                </li>
+                                <li><a class="dropdown-item" href="'.route('bg-reports.download', ['id' => $row->id, 'doc_type' => 'lampiran_d']).'" target="_blank"><i class="ph-duotone ph-file-text text-warning me-2 fs-5"></i> Lampiran D</a></li>
+                                <li><a class="dropdown-item" href="'.route('bg-reports.download', ['id' => $row->id, 'doc_type' => 'submission_form']).'" target="_blank"><i class="ph-duotone ph-file-pdf text-danger me-2 fs-5"></i> Formulir Pengajuan</a></li>
                             </ul>
                         </div>';
                     })
@@ -112,9 +74,7 @@ class BgReportController extends Controller
                 return DataTables::of($query)
                     ->addIndexColumn()
                         ->addColumn('checkbox', function($row) {
-                        return '<div class="form-check text-center">
-                                    <input class="form-check-input dt-checkbox" type="checkbox" value="'.$row->id.'">
-                                </div>';
+                        return '<div class="form-check text-center"><input class="form-check-input dt-checkbox" type="checkbox" value="'.$row->id.'"></div>';
                     })
                     ->addColumn('bg_number', fn($row) => '<span class="text-primary fw-bold">'.$row->bg_number.'</span>')
                     ->addColumn('customer', fn($row) => $row->customer->name ?? '-')
@@ -123,24 +83,10 @@ class BgReportController extends Controller
                     ->addColumn('action', function($row) {
                         return '
                         <div class="dropdown">
-                            <button class="btn btn-light-danger dropdown-toggle" type="button"
-                                    data-bs-toggle="dropdown"
-                                    data-bs-boundary="viewport"
-                                    aria-expanded="false">
-                                <i class="ph-bold ph-envelope-open"></i> Letters
-                            </button>
-
+                            <button class="btn btn-light-danger dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="ph-bold ph-envelope-open"></i> Letters</button>
                             <ul class="dropdown-menu dropdown-menu-end">
-                                <li>
-                                    <a class="dropdown-item" href="'.route('bg-reports.download-letters', ['id' => $row->id, 'letter_type' => 'distributor']).'" target="_blank">
-                                        <i class="ph-duotone ph-buildings text-primary me-2 fs-5"></i> Surat Distributor
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item" href="'.route('bg-reports.download-letters', ['id' => $row->id, 'letter_type' => 'bank']).'" target="_blank">
-                                        <i class="ph-duotone ph-bank text-success me-2 fs-5"></i> Surat Bank
-                                    </a>
-                                </li>
+                                <li><a class="dropdown-item" href="'.route('bg-reports.download-letters', ['id' => $row->id, 'letter_type' => 'distributor']).'" target="_blank"><i class="ph-duotone ph-buildings text-primary me-2 fs-5"></i> Surat Distributor</a></li>
+                                <li><a class="dropdown-item" href="'.route('bg-reports.download-letters', ['id' => $row->id, 'letter_type' => 'bank']).'" target="_blank"><i class="ph-duotone ph-bank text-success me-2 fs-5"></i> Surat Bank</a></li>
                             </ul>
                         </div>';
                     })
@@ -153,8 +99,8 @@ class BgReportController extends Controller
 
     private function prepareViewData($id, $doc_type, $category)
     {
-        $financeUser = User::role('head-finance')->first();
-        $financeName = $financeUser ? $financeUser->name : 'Manager Finance';
+        $financeUser = User::role('manager-finance')->first();
+        $financeName = $financeUser ? $financeUser->name : 'Finance Dept. Head';
         $salesUser = User::role('head-SNM')->first();
         $salesName = $salesUser ? $salesUser->name : 'S&M Dept. Head';
 
@@ -165,23 +111,59 @@ class BgReportController extends Controller
             $rec = $submission->recommendation;
             $customer = $rec->customer;
             $nomorPkd = $customer->no_pkd;
+            if (empty($nomorPkd)) {
+                $nomorPkd = DocumentHelper::generatePKDNumber($rec->id, $customer->name, $submission->created_at);
+            }
+
+            $submissionDates = BgSubmission::where('bg_recommendation_id', $rec->id)->pluck('created_at');
+            $totalBgDiserahkan = BankGaransi::where('customer_id', $customer->id)
+                                    ->whereIn('created_at', $submissionDates)
+                                    ->sum('bg_nominal');
+
+            if ($totalBgDiserahkan == 0) {
+                $lastBg = BankGaransi::where('customer_id', $customer->id)
+                        ->where('status', '!=', 'draft')
+                        ->latest()->first();
+                $totalBgDiserahkan = $lastBg ? $lastBg->bg_nominal : 0;
+            }
+
+            $commonData = [
+                'submission' => $submission,
+                'rec' => $rec,
+                'customer' => $customer,
+                'nomor_pkd' => $nomorPkd,
+                'total_bg_diserahkan' => $totalBgDiserahkan,
+                'finance_name' => $financeName,
+                'sales_name' => $salesName,
+                'bg' => null
+            ];
 
             if ($doc_type == 'lampiran_d') {
                 return [
                     'view' => 'pdf.lampiran_d',
-                    'data' => compact('submission', 'rec', 'customer', 'nomorPkd', 'financeName', 'salesName'),
-                    'filename' => 'Lampiran_D_' . str_replace('/', '-', $submission->form_code) . '.pdf'
+                    'data' => $commonData,
+                    'filename' => 'Lampiran_D_' . $submission->form_code . '.pdf'
                 ];
-            } elseif ($doc_type == 'submission_form') {
-                $bg = BankGaransi::where('customer_id', $customer->id)
-                        ->where('created_at', '>=', $submission->created_at->subDay())
-                        ->with('details')->latest()->first();
+            }
+            elseif ($doc_type == 'submission_form') {
+                $siblings = BgSubmission::where('bg_recommendation_id', $rec->id)
+                            ->where('created_at', $submission->created_at)
+                            ->orderBy('id', 'asc')->pluck('id')->toArray();
+
+                $myIndex = array_search($submission->id, $siblings);
+                $candidateBgs = BankGaransi::where('customer_id', $rec->customer_id)
+                                ->where('created_at', $submission->created_at)
+                                ->with('details')->orderBy('id', 'asc')->get();
+
+                $bg = isset($candidateBgs[$myIndex]) ? $candidateBgs[$myIndex] : $candidateBgs->first();
+
                 if (!$bg) return null;
+                $commonData['bg'] = $bg;
 
                 return [
-                    'view' => 'pdf.bg_submission_document',
-                    'data' => compact('submission', 'customer', 'bg', 'financeName', 'salesName'),
-                    'filename' => 'Formulir_' . str_replace('/', '-', $submission->form_code) . '.pdf'
+                    'view' => 'pdf.bg_confirmation',
+                    'data' => $commonData,
+                    'filename' => 'Formulir_' . $submission->form_code . '.pdf'
                 ];
             }
         }
@@ -189,24 +171,24 @@ class BgReportController extends Controller
             $bg = BankGaransi::with('customer')->find($id);
             if (!$bg) return null;
 
-            $cust = $bg->customer;
-            $nomorPkd = DocumentHelper::generatePKDNumber($bg->id, $cust->name, now());
+            $nomorPkd = DocumentHelper::generatePKDNumber($bg->id, $bg->customer->name, now());
+
             $data = [
-                'customer' => $cust, 'bg' => $bg, 'nomor_pkd' => $nomorPkd,
+                'customer' => $bg->customer,
+                'bg' => $bg,
+                'nomor_pkd' => $nomorPkd,
                 'expired_date' => $bg->exp_date,
                 'bank_name' => $bg->bank_name ?? 'Bank Terkait',
                 'branch_name' => $bg->branch_name ?? '',
                 'nominal' => $bg->bg_nominal,
-                'finance_name' => $financeName, 'sales_name' => $salesName
+                'finance_name' => $financeName,
+                'sales_name' => $salesName
             ];
 
             $view = ($doc_type == 'distributor') ? 'pdf.surat_distributor' : 'pdf.surat_bank';
-            $prefix = ($doc_type == 'distributor') ? 'Surat_Distributor_' : 'Surat_Bank_';
-
             return [
-                'view' => $view,
-                'data' => $data,
-                'filename' => $prefix . $bg->bg_number . '_' . str_replace(' ', '_', $cust->name) . '.pdf'
+                'view' => $view, 'data' => $data,
+                'filename' => ucfirst($doc_type) . '_' . $bg->bg_number . '.pdf'
             ];
         }
         return null;
@@ -214,76 +196,37 @@ class BgReportController extends Controller
 
     public function bulkDownload(Request $request)
     {
-        $ids = $request->input('ids');
-        $docType = $request->input('doc_type');
-        $category = $request->input('category');
-        $outputMode = $request->input('output_mode', 'zip');
-
-        if (empty($ids) || !is_array($ids)) return back()->with('error', 'Tidak ada data dipilih.');
-
-        $totalSelected = count($ids);
-
-        $niceName = match($docType) {
-            'distributor' => 'Surat Distributor',
-            'bank' => 'Surat Bank',
-            'lampiran_d' => 'Lampiran D',
-            'submission_form' => 'Formulir Pengajuan',
-            default => ucfirst(str_replace('_', ' ', $docType))
-        };
-
-        $baseFileName = str_replace(' ', '_', $niceName);
-
-        // ---------------------------------------------------------
-        // OPSI 1: DOWNLOAD AS MERGED PDF
-        // ---------------------------------------------------------
+        $ids = is_array($request->ids) ? $request->ids : explode(',', $request->ids);
+        $docType = $request->doc_type;
+        $category = $request->category;
+        $outputMode = $request->output_mode;
+        if (empty($ids)) return back()->with('error', 'Tidak ada data dipilih.');
+        $baseFileName = 'Bulk_' . ucfirst($docType) . '_' . date('Ymd_His');
         if ($outputMode == 'merged') {
-            $customCss = '';
-            if (in_array($docType, ['bank', 'distributor'])) {
-                $customCss = '
-                    @page { margin: 3cm 2.5cm; }
-                    body { font-family: Arial, sans-serif; font-size: 11pt; line-height: 1.5; }
-                ';
-            } else {
-                $customCss = 'body { font-family: Arial, sans-serif; font-size: 12px; }';
-            }
+            $dataset = [];
 
-            $mergedHtml = '<html><head>
-                <title>'. $niceName .' - '. $totalSelected .' Customer</title>
-                <style>
-                ' . $customCss . '
-                .page-break { page-break-after: always; }
-                .document-wrapper { width: 100%; }
-                </style>
-            </head><body>';
-
-            $count = 0;
             foreach ($ids as $id) {
                 $info = $this->prepareViewData($id, $docType, $category);
                 if ($info) {
-                    $viewHtml = view($info['view'], $info['data'])->render();
-                    preg_match('/<body[^>]*>(.*?)<\/body>/is', $viewHtml, $matches);
-                    $bodyContent = $matches[1] ?? $viewHtml;
-
-                    $mergedHtml .= '<div class="document-wrapper">'.$bodyContent.'</div>';
-
-                    if ($count < count($ids) - 1) {
-                        $mergedHtml .= '<div class="page-break"></div>';
-                    }
-                    $count++;
+                    $dataset[] = $info['data'];
                 }
             }
-            $mergedHtml .= '</body></html>';
 
-            $filename = $baseFileName . '_Gabungan_' . $totalSelected . '_Customer.pdf';
+            if (empty($dataset)) return back()->with('error', 'Gagal memproses data.');
+            if ($docType == 'lampiran_d') {
+                $viewName = 'pdf.bulk_lampiran_d';
+            } elseif ($docType == 'submission_form') {
+                $viewName = 'pdf.bulk_bg_confirmation';
+            } else {
+                return back()->with('error', 'Fitur Merge dokumen ini belum tersedia.');
+            }
 
-            return Pdf::loadHTML($mergedHtml)->stream($filename);
-        }
+            $pdf = Pdf::loadView($viewName, ['dataset' => $dataset]);
+            $pdf->setPaper('A4', 'portrait');
 
-        // ---------------------------------------------------------
-        // OPSI 2: DOWNLOAD AS ZIP
-        // ---------------------------------------------------------
-        else {
-            $zipName = $baseFileName . '_' . $totalSelected . '_Customer.zip';
+            return $pdf->stream($baseFileName . '.pdf');
+        } else {
+            $zipName = $baseFileName . '.zip';
             $zipPath = storage_path('app/public/temp_zip/' . $zipName);
 
             if (!file_exists(dirname($zipPath))) mkdir(dirname($zipPath), 0755, true);
@@ -293,7 +236,9 @@ class BgReportController extends Controller
                 foreach ($ids as $id) {
                     $info = $this->prepareViewData($id, $docType, $category);
                     if ($info) {
-                        $pdfContent = Pdf::loadView($info['view'], $info['data'])->output();
+                        $pdfContent = Pdf::loadView($info['view'], $info['data'])
+                                        ->setPaper('A4', 'portrait')
+                                        ->output();
                         $zip->addFromString($info['filename'], $pdfContent);
                     }
                 }
@@ -303,92 +248,23 @@ class BgReportController extends Controller
         }
     }
 
-    /**
-     * Generate PDF untuk Transaction Documents (Lampiran D & Submission)
-     */
     public function downloadDoc($id, $doc_type)
     {
-        try {
-            $submission = BgSubmission::with(['recommendation.customer', 'recommendation.periods'])->findOrFail($id);
-            $rec = $submission->recommendation;
-            $customer = $rec->customer;
-            $financeUser = User::role('head-finance')->first();
-            $financeName = $financeUser ? $financeUser->name : 'Finance Dept. Head Tidak Diketahui';
-            $salesUser = User::role('head-SNM')->first();
-            $salesName = $salesUser ? $salesUser->name : 'S&M Dept. Head Tidak Diketahui';
+        $info = $this->prepareViewData($id, $doc_type, 'transactions');
 
-            $nomorPkd = $customer->no_pkd;
+        if(!$info) return abort(404, 'Data tidak ditemukan.');
 
-            if ($doc_type == 'lampiran_d') {
-                $data = [
-                    'submission' => $submission,
-                    'rec' => $rec,
-                    'customer' => $customer,
-                    'nomor_pkd' => $nomorPkd,
-                    'finance_name' => $financeName,
-                    'sales_name' => $salesName
-                ];
-                $pdf = Pdf::loadView('pdf.lampiran_d', $data);
-                return $pdf->stream('Lampiran_D_'.$submission->form_code.'.pdf');
-            }
-
-            if ($doc_type == 'submission_form') {
-                $bg = BankGaransi::where('customer_id', $customer->id)
-                        ->where('created_at', '>=', $submission->created_at->subDay())
-                        ->with('details')
-                        ->latest()
-                        ->first();
-
-                if (!$bg) return abort(404, 'Data Rincian Bank belum tersedia (Formulir belum diisi customer).');
-
-                $data = [
-                    'submission' => $submission,
-                    'customer' => $customer,
-                    'bg' => $bg
-                ];
-                $pdf = Pdf::loadView('pdf.bg_submission_document', $data);
-                return $pdf->stream('Formulir_Pengajuan_'.$submission->form_code.'.pdf');
-            }
-
-        } catch (\Exception $e) {
-            return abort(500, 'Gagal generate PDF: ' . $e->getMessage());
-        }
+        $pdf = Pdf::loadView($info['view'], $info['data']);
+        return $pdf->stream($info['filename']);
     }
 
-    /**
-     * Generate PDF untuk Expiring Letters (Surat Distributor & Bank)
-     */
     public function downloadLetters($id, $letter_type)
     {
-        try {
-            $bg = BankGaransi::with('customer')->findOrFail($id);
-            $cust = $bg->customer;
-            $nomorPkd = DocumentHelper::generatePKDNumber($bg->id, $cust->name, now());
-            $financeUser = User::role('head-finance')->first();
-            $financeName = $financeUser ? $financeUser->name : 'Manager Finance';
-            $salesUser = User::role('head-SNM')->first();
-            $salesName = $salesUser ? $salesUser->name : 'S&M Dept. Head';
+        $info = $this->prepareViewData($id, $letter_type, 'expiring');
 
-            $data = [
-                'customer' => $cust,
-                'bg' => $bg,
-                'nomor_pkd' => $nomorPkd,
-                'expired_date' => $bg->exp_date,
-                'bank_name' => $bg->bank_name ?? 'Bank Terkait', // Ambil dari detail jika perlu logic khusus
-                'branch_name' => $bg->branch_name ?? '',
-                'nominal' => $bg->bg_nominal,
-                'finance_name' => $financeName,
-                'sales_name' => $salesName
-            ];
+        if(!$info) return abort(404, 'Data tidak ditemukan.');
 
-            $view = ($letter_type == 'distributor') ? 'pdf.surat_distributor' : 'pdf.surat_bank';
-            $filename = ucfirst($letter_type) . '_Letter_' . $bg->bg_number . '.pdf';
-
-            $pdf = Pdf::loadView($view, $data);
-            return $pdf->stream($filename);
-
-        } catch (\Exception $e) {
-            return abort(500, 'Gagal generate Surat: ' . $e->getMessage());
-        }
+        $pdf = Pdf::loadView($info['view'], $info['data']);
+        return $pdf->stream($info['filename']);
     }
 }

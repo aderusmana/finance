@@ -20,7 +20,7 @@
         .header-container {
             text-align: left; /* Diubah ke Kiri */
             margin-bottom: 30px;
-        }
+            }
 
         .header-title {
             text-decoration: underline;

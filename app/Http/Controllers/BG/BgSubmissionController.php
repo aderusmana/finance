@@ -81,11 +81,25 @@ class BgSubmissionController extends Controller
                     if($row->signed_document_path) {
                         $url = asset($row->signed_document_path);
 
+                        if ($row->status === 'completed' || $row->status === 'approved') {
+                            return '
+                            <button type="button"
+                                    class="status-badge-lg bg-info text-light fw-bold btn-view-file shadow-sm px-3"
+                                    data-url="'.$url.'"
+                                    data-id="'.$row->id.'"
+                                    data-status="completed" 
+                                    data-bs-toggle="tooltip"
+                                    title="Dokumen Final (Read Only)">
+                                <i class="ph-bold ph-eye me-1"></i> View Document
+                            </button>';
+                        }
+
                         return '
                         <button type="button"
                                 class="status-badge-lg bg-primary text-light fw-bold btn-view-file shadow-sm px-3"
                                 data-url="'.$url.'"
                                 data-id="'.$row->id.'"
+                                data-status="process"
                                 data-bs-toggle="tooltip"
                                 title="Klik untuk Melihat Dokumen & Proses Approval">
                             <i class="ph-bold ph-file-search me-1"></i> Review & Process

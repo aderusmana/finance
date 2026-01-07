@@ -114,7 +114,7 @@ class CustomerBgPortalController extends Controller
                     'updated_at' => $timestamp
                 ]);
 
-                $pdf = Pdf::loadView('pdf.bg_submission_document', [
+                $pdf = Pdf::loadView('pdf.bg_confirmation', [
                     'bg' => $bg,
                     'bgs' => [$bg],
                     'customer' => $rec->customer,
@@ -172,13 +172,13 @@ class CustomerBgPortalController extends Controller
 
             // 2. Fallback: Generate ulang jika file hilang (Logic Index Matching)
             $rec = $submission->recommendation;
-            
+
             // Cari submission temannya yang dibuat barengan
             $siblings = BgSubmission::where('bg_recommendation_id', $rec->id)
                         ->where('created_at', $submission->created_at)
                         ->orderBy('id', 'asc')
                         ->pluck('id')->toArray();
-            
+
             // Saya urutan keberapa?
             $myIndex = array_search($submission->id, $siblings);
 
@@ -191,7 +191,7 @@ class CustomerBgPortalController extends Controller
             // Ambil BG yang sesuai urutan
             $bg = isset($candidateBgs[$myIndex]) ? $candidateBgs[$myIndex] : $candidateBgs->first();
 
-            $pdf = Pdf::loadView('pdf.bg_submission_document', [
+            $pdf = Pdf::loadView('pdf.bg_confirmation', [
                 'bg' => $bg,
                 'customer' => $rec->customer,
                 'submission' => $submission
@@ -314,11 +314,18 @@ class CustomerBgPortalController extends Controller
 
             $rec = $submission->recommendation;
             $customer = $rec->customer;
-
+            $batchTimestamp = $submission->created_at;
             $submissionDates = BgSubmission::where('bg_recommendation_id', $rec->id)->pluck('created_at');
             $totalBgDiserahkan = BankGaransi::where('customer_id', $customer->id)
-                                    ->whereIn('created_at', $submissionDates)
+                                    ->where('created_at', $batchTimestamp)
                                     ->sum('bg_nominal');
+
+            if ($totalBgDiserahkan == 0) {
+                $submissionDates = BgSubmission::where('bg_recommendation_id', $rec->id)->pluck('created_at');
+                $totalBgDiserahkan = BankGaransi::where('customer_id', $customer->id)
+                                        ->whereIn('created_at', $submissionDates)
+                                        ->sum('bg_nominal');
+            }
 
             $nomorPkd = $customer->no_pkd;
             if(empty($nomorPkd)) {
