@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\BgExistingMail;
 use App\Mail\BgExtensionMail;
+use App\Models\BG\BgRecommendation;
+use Illuminate\Support\Str;
 
 class BankGaransiController extends Controller
 {
@@ -77,20 +79,35 @@ class BankGaransiController extends Controller
                 ->orderColumn('customer_name', function ($query, $order) {
                     $query->orderBy('customers.name', $order);
                 })
-                ->addColumn('action', function ($row) {
-                    $btn = '<div class="dropdown">';
-                    $btn .= '<button class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" data-bs-boundary="viewport">Actions</button>';
-                    $btn .= '<ul class="dropdown-menu dropdown-menu-end shadow">';
-                    $btn .= '<li><a class="dropdown-item btn-show" href="javascript:void(0)" data-id="'.$row->id.'"><i class="ph-bold ph-eye me-2"></i> Show</a></li>';
-                    $btn .= '<li><a class="dropdown-item btn-edit" href="javascript:void(0)" data-id="'.$row->id.'"><i class="ph-bold ph-pencil-simple me-2"></i> Edit</a></li>';
-                    $btn .= '<li><a class="dropdown-item btn-extension" href="javascript:void(0)" data-id="'.$row->id.'"><i class="ph-bold ph-clock-clockwise me-2"></i> Extension</a></li>';
-                    $btn .= '<li><a class="dropdown-item btn-existing" href="javascript:void(0)" data-id="'.$row->id.'"><i class="ph-bold ph-copy me-2"></i> Existing</a></li>';
-                    $btn .= '<li><hr class="dropdown-divider"></li>';
-                    $btn .= '<li><a class="dropdown-item text-danger btn-delete" href="javascript:void(0)" data-id="'.$row->id.'"><i class="ph-bold ph-trash me-2"></i> Delete</a></li>';
-                    $btn .= '</ul></div>';
+                ->addColumn('menu', function ($row) {
+                    $btn = '<div class="d-flex justify-content-center gap-1">';
+                    $btn .= '<button class="btn btn-outline-success btn-sm btn-extension" data-id="'.$row->id.'" title="Ajukan Extension (Tambah BG)">';
+                    $btn .= '<i class="ph-bold ph-plus-square me-1"></i> Ext';
+                    $btn .= '</button>';
+
+                    $btn .= '<button class="btn btn-outline-primary btn-sm btn-existing" data-id="'.$row->id.'" title="Update Existing (Ubah Nominal)">';
+                    $btn .= '<i class="ph-bold ph-arrows-clockwise me-1"></i> Exist';
+                    $btn .= '</button>';
+                    $btn .= '</div>';
                     return $btn;
                 })
-                ->rawColumns(['action', 'bg_type', 'status'])
+
+                ->addColumn('action', function ($row) {
+                    $btn = '<div class="d-flex justify-content-center gap-2">';
+                    $btn .= '<button class="btn btn-sm btn-outline-info btn-show" data-id="'.$row->id.'" title="Lihat Detail">';
+                    $btn .= '<i class="ph-bold ph-eye"></i>';
+                    $btn .= '</button>';
+                    $btn .= '<button class="btn btn-sm btn-outline-warning btn-edit" data-id="'.$row->id.'" title="Edit Data">';
+                    $btn .= '<i class="ph-bold ph-pencil-simple"></i>';
+                    $btn .= '</button>';
+                    $btn .= '<button class="btn btn-sm btn-outline-danger btn-delete" data-id="'.$row->id.'" title="Hapus Data">';
+                    $btn .= '<i class="ph-bold ph-trash"></i>';
+                    $btn .= '</button>';
+
+                    $btn .= '</div>';
+                    return $btn;
+                })
+                ->rawColumns(['action', 'menu', 'bg_type', 'status'])
                 ->make(true);
         }
 
@@ -112,7 +129,7 @@ class BankGaransiController extends Controller
     public function show($id)
     {
         if (request()->ajax() || request()->wantsJson()) {
-            $bg = BankGaransi::with(['details', 'customer', 'creator', 'histories.user'])->findOrFail($id);
+            $bg = BankGaransi::with(['details', 'customer', 'creator    '])->findOrFail($id);
             return response()->json($bg);
         }
     }
@@ -264,13 +281,104 @@ class BankGaransiController extends Controller
             return response()->json(['success' => false, 'message' => 'Error: ' . $e->getMessage()], 500);
         }
     }
-            
+
     public function destroy($id)
     {
         try {
             $bg = BankGaransi::findOrFail($id);
             $bg->delete();
             return response()->json(['success' => true, 'message' => 'Bank Garansi deleted successfully!']);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function requestExisting(Request $request, $id)
+    {
+        try {
+            $bg = BankGaransi::with('customer')->findOrFail($id);
+
+            $bg->update([
+                'bg_type' => 'existing'
+            ]);
+
+            $metadata = json_encode([
+                'action' => 'existing',
+                'target_bg_id' => $bg->id
+            ]);
+
+            $rec = BgRecommendation::where('customer_id', $bg->customer_id)
+                                   ->latest()
+                                   ->first();
+
+            if ($rec) {
+                $rec->update([
+                    'token'      => Str::uuid(),
+                    'status'     => 'process',
+                    'notes'      => $metadata,
+                    'created_by' => auth()->id(),
+                    'updated_at' => now()
+                ]);
+            } else {
+                $rec = BgRecommendation::create([
+                    'customer_id' => $bg->customer_id,
+                    'token'       => Str::uuid(),
+                    'status'      => 'process',
+                    'created_by'  => auth()->id(),
+                    'notes'       => $metadata
+                ]);
+            }
+
+            Mail::to($bg->customer->email)->queue(new BgExistingMail($bg, $rec));
+
+            return response()->json(['success' => true, 'message' => 'Tipe BG diubah menjadi EXISTING & Link update dikirim!']);
+
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function requestExtension(Request $request)
+    {
+        try {
+            $customerId = $request->input('customer_id');
+            if($request->has('bg_id')){
+                $bg = BankGaransi::find($request->bg_id);
+                $customerId = $bg->customer_id;
+            }
+
+            $customer = Customer::findOrFail($customerId);
+
+            $metadata = json_encode([
+                'action' => 'extension'
+            ]);
+
+            $rec = BgRecommendation::where('customer_id', $customer->id)
+                                   ->latest()
+                                   ->first();
+
+            if ($rec) {
+                $rec->update([
+                    'token'      => Str::uuid(),
+                    'status'     => 'process',
+                    'notes'      => $metadata,
+                    'created_by' => auth()->id(),
+                    'updated_at' => now()
+                ]);
+            } else {
+                $rec = BgRecommendation::create([
+                    'customer_id' => $customer->id,
+                    'token'       => Str::uuid(),
+                    'status'      => 'process',
+                    'created_by'  => auth()->id(),
+                    'notes'       => $metadata
+                ]);
+            }
+
+            Mail::to($customer->email)->queue(new BgExtensionMail($rec));
+
+            return response()->json(['success' => true, 'message' => 'Request Extension diproses. Link pembuatan BG Baru dikirim!']);
+
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }

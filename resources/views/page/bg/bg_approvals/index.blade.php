@@ -38,96 +38,139 @@
         </div>
     </div>
 
-    {{-- MODAL APPROVAL / REJECT --}}
+    {{-- MODAL APPROVAL / REJECT (INLINE STYLED) --}}
     <div class="modal fade" id="approvalModal" tabindex="-1" data-bs-backdrop="static">
-        <div class="modal-dialog modal-dialog-centered modal-lg"> {{-- Pakai modal-lg biar muat tabel --}}
-            <div class="modal-content">
-                <div class="modal-header text-white" id="modalHeader">
-                    <h5 class="modal-title fw-bold" id="modalTitle">Review Submission</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content" style="border: none; box-shadow: 0 10px 40px rgba(0,0,0,0.1); border-radius: 16px; overflow: hidden;">
+
+                {{-- Header --}}
+                <div class="modal-header" style="background: #ffffff; border-bottom: 1px solid #f1f5f9; padding: 20px 25px;">
+                    <div class="d-flex align-items-center justify-content-between w-100">
+                        <div>
+                            <h5 class="modal-title fw-bold" id="modalTitle" style="color: #1e293b; font-size: 1.2rem;">Review Submission</h5>
+                            <p class="mb-0 text-muted" style="font-size: 0.85rem;">Verifikasi data Lampiran D sebelum mengambil keputusan.</p>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge" id="display_form_code" style="background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; padding: 8px 12px; border-radius: 30px; font-weight: 600; font-size: 0.8rem;">LOADING...</span>
+                            <button type="button" class="btn-close ms-2" data-bs-dismiss="modal" style="background-size: 0.8rem;"></button>
+                        </div>
+                    </div>
                 </div>
+
                 <form id="approvalForm">
                     @csrf
                     <input type="hidden" id="submission_id" name="id">
                     <input type="hidden" id="action_type" name="action">
 
-                    <div class="modal-body">
+                    <div class="modal-body" style="background: #f8fafc; padding: 25px;">
 
-                        {{-- DATA LAMPIRAN D FULL --}}
-                        <h6 class="fw-bold text-primary mb-2 border-bottom pb-2">
-                            <i class="ph-bold ph-file-text me-1"></i> Data Analisa (Lampiran D)
-                        </h6>
-
-                        <div class="table-responsive bg-light p-3 rounded border mb-3">
-                            <table class="table table-sm table-borderless small mb-0">
-                                <tr>
-                                    <td width="5%">1.</td>
-                                    <td width="40%" class="text-muted">Nama Distributor</td>
-                                    <td class="fw-bold text-dark" id="d_nama">...</td>
-                                </tr>
-                                <tr>
-                                    <td>2.</td>
-                                    <td class="text-muted">Kota</td>
-                                    <td class="fw-bold text-dark" id="d_kota">...</td>
-                                </tr>
-                                <tr>
-                                    <td>3.</td>
-                                    <td class="text-muted">Wilayah Kerja</td>
-                                    <td class="fw-bold text-dark" id="d_wilayah">...</td>
-                                </tr>
-                                <tr>
-                                    <td>4.</td>
-                                    <td class="text-muted">Periode</td>
-                                    <td class="fw-bold text-dark" id="d_periode">...</td>
-                                </tr>
-                                <tr>
-                                    <td>5.</td>
-                                    <td class="text-muted">Rata-rata Penjualan</td>
-                                    <td class="fw-bold text-dark" id="d_sales">...</td>
-                                </tr>
-                                <tr>
-                                    <td>6.</td>
-                                    <td class="text-muted">Syarat Pembayaran (TOP)</td>
-                                    <td class="fw-bold text-dark" id="d_top">...</td>
-                                </tr>
-                                <tr>
-                                    <td>7.</td>
-                                    <td class="text-muted">Lead Time</td>
-                                    <td class="fw-bold text-dark" id="d_lead">...</td>
-                                </tr>
-                                <tr>
-                                    <td>8.</td>
-                                    <td class="text-muted">Faktor Fluktuasi</td>
-                                    <td class="fw-bold text-dark" id="d_inflasi">...</td>
-                                </tr>
-                                <tr>
-                                    <td>9.</td>
-                                    <td class="text-muted">Limit Kredit</td>
-                                    <td class="fw-bold text-primary fs-6" id="d_limit">...</td>
-                                </tr>
-                                <tr>
-                                    <td>10.</td>
-                                    <td class="text-muted">Nilai BG Ditetapkan</td>
-                                    <td class="fw-bold text-dark" id="d_bg_tetap">...</td>
-                                </tr>
-                                <tr class="border-top">
-                                    <td class="pt-2">11.</td>
-                                    <td class="text-muted pt-2">Nilai BG Diserahkan</td>
-                                    <td class="fw-bold text-success fs-5 pt-2" id="d_bg_serah">...</td>
-                                </tr>
-                            </table>
+                        {{-- SECTION 1: CUSTOMER INFO --}}
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.01); display: flex; align-items: center; gap: 20px;">
+                                    <div style="background: #eff6ff; color: #3b82f6; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+                                        <i class="ph-duotone ph-buildings"></i>
+                                    </div>
+                                    <div>
+                                        <div style="font-size: 0.75rem; text-transform: uppercase; color: #94a3b8; font-weight: 700; margin-bottom: 2px;">Distributor Name</div>
+                                        <div style="font-size: 1.1rem; font-weight: 700; color: #1e293b;" id="d_nama">Loading...</div>
+                                        <div style="font-size: 0.85rem; color: #64748b; margin-top: 2px;">
+                                            <i class="ph-bold ph-map-pin me-1"></i> <span id="d_kota">...</span> - <span id="d_wilayah">...</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
-                        {{-- INPUT NOTES --}}
-                        <div class="mb-2">
-                            <label class="form-label fw-bold small">Catatan / Alasan <span class="text-danger">*</span></label>
-                            <textarea name="notes" class="form-control" rows="3" placeholder="Tuliskan catatan revisi atau alasan penolakan..." required></textarea>
+                        {{-- SECTION 2: PARAMETER ANALISA (Grid Compact) --}}
+                        <div class="row g-3 mb-4">
+                            {{-- Card Template Style --}}
+                            @php $cardStyle = "background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; height: 100%; box-shadow: 0 2px 4px rgba(0,0,0,0.01);"; @endphp
+
+                            <div class="col-md-3 col-6">
+                                <div style="{{ $cardStyle }}">
+                                    <div style="font-size: 0.7rem; text-transform: uppercase; color: #94a3b8; font-weight: 700;">Avg. Sales</div>
+                                    <div style="font-size: 0.95rem; font-weight: 700; color: #3b82f6; margin-top: 4px;" id="d_sales">...</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-6">
+                                <div style="{{ $cardStyle }}">
+                                    <div style="font-size: 0.7rem; text-transform: uppercase; color: #94a3b8; font-weight: 700;">TOP / Lead Time</div>
+                                    <div style="font-size: 0.95rem; font-weight: 700; color: #334155; margin-top: 4px;">
+                                        <span id="d_top">..</span> / <span id="d_lead">..</span> Hari
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-6">
+                                <div style="{{ $cardStyle }}">
+                                    <div style="font-size: 0.7rem; text-transform: uppercase; color: #94a3b8; font-weight: 700;">Inflasi</div>
+                                    <div style="font-size: 0.95rem; font-weight: 700; color: #334155; margin-top: 4px;" id="d_inflasi">...</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-6">
+                                <div style="{{ $cardStyle }}">
+                                    <div style="font-size: 0.7rem; text-transform: uppercase; color: #94a3b8; font-weight: 700;">Periode</div>
+                                    <div style="font-size: 0.85rem; font-weight: 600; color: #334155; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="d_periode">...</div>
+                                </div>
+                            </div>
                         </div>
+
+                        {{-- SECTION 3: FINANCIAL SUMMARY --}}
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                            <h6 style="font-size: 0.75rem; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; margin: 0;">Financial Summary</h6>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-4">
+                                <div style="background: #eff6ff; border: 1px solid #dbeafe; border-radius: 12px; padding: 15px; text-align: center;">
+                                    <div style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #3b82f6; margin-bottom: 5px;">Limit Kredit (Updated)</div>
+                                    <div style="font-size: 1.1rem; font-weight: 800; color: #1d4ed8;" id="d_limit">...</div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div style="background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; text-align: center;">
+                                    <div style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #64748b; margin-bottom: 5px;">Nilai BG Ditetapkan</div>
+                                    <div style="font-size: 1.1rem; font-weight: 800; color: #334155;" id="d_bg_tetap">...</div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div style="background: #f0fdf4; border: 1px solid #dcfce7; border-radius: 12px; padding: 15px; text-align: center; position: relative; overflow: hidden;">
+                                    <div style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #16a34a; margin-bottom: 5px;">Total BG Diserahkan</div>
+                                    <div style="font-size: 1.1rem; font-weight: 800; color: #15803d;" id="d_bg_serah">...</div>
+                                    {{-- Icon Background --}}
+                                    <i class="ph-duotone ph-check-circle" style="position: absolute; bottom: -10px; right: -10px; font-size: 4rem; color: #22c55e; opacity: 0.1;"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- SECTION 4: RINCIAN BANK --}}
+                        <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; margin-bottom: 20px;">
+                            <div style="background: #f8fafc; padding: 10px 20px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-size: 0.75rem; font-weight: 700; color: #475569; text-transform: uppercase;">Rincian Bank</span>
+                                <span class="badge" style="background: #e2e8f0; color: #475569; border-radius: 20px; font-weight: 600; font-size: 0.7rem;" id="bank_count_badge">0 Bank</span>
+                            </div>
+                            <div id="rincian_bank_list" style="max-height: 200px; overflow-y: auto;">
+                                {{-- Diisi via JS --}}
+                            </div>
+                        </div>
+
+                        {{-- SECTION 5: NOTES INPUT --}}
+                        <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px;">
+                            <label style="font-size: 0.8rem; font-weight: 700; color: #334155; margin-bottom: 8px; display: block;">
+                                <i class="ph-bold ph-note-pencil me-1"></i> Catatan Approval / Rejection <span class="text-danger">*</span>
+                            </label>
+                            <textarea name="notes" class="form-control" rows="2" placeholder="Tuliskan catatan validasi atau alasan penolakan..."
+                                    style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; resize: none;" required></textarea>
+                        </div>
+
                     </div>
-                    <div class="modal-footer bg-light">
-                        <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Batal</button>
-                        <button type="submit" class="btn btn-primary btn-sm fw-bold" id="btnSubmitModal">
-                            <i class="ph-bold ph-paper-plane-right me-1"></i> Submit Decision
+
+                    {{-- Footer --}}
+                    <div class="modal-footer" style="border: none; background: #fff; padding: 15px 25px 25px;">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal" style="font-weight: 600; padding: 10px 24px; border-radius: 50px;">Batal</button>
+                        <button type="submit" class="btn" id="btnSubmitModal" style="font-weight: 700; padding: 10px 24px; border-radius: 50px; display: flex; align-items: center; gap: 8px;">
+                            <span id="btnText">Submit Decision</span>
+                            <i class="ph-bold ph-paper-plane-right"></i>
                         </button>
                     </div>
                 </form>
@@ -154,7 +197,6 @@
                 ]
             });
 
-            // 1. QUICK APPROVE
             $(document).on('click', '.btn-quick-approve', function() {
                 let id = $(this).data('id');
                 Swal.fire({
@@ -171,7 +213,6 @@
                 });
             });
 
-            // 2. RESEND EMAIL
             $(document).on('click', '.btn-resend', function() {
                 let id = $(this).data('id');
                 Swal.fire({
@@ -189,64 +230,137 @@
                 });
             });
 
-            // 3. REVIEW (APPROVE WITH NOTES)
             $(document).on('click', '.btn-review', function() {
                 let id = $(this).data('id');
                 prepareModal(id, 'approve', 'Review with Notes', 'bg-warning', 'btn-warning');
             });
 
-            // 4. REJECT
             $(document).on('click', '.btn-reject', function() {
                 let id = $(this).data('id');
                 prepareModal(id, 'reject', 'Reject Submission', 'bg-danger', 'btn-danger');
             });
 
-            // --- FUNCTION: PREPARE MODAL ---
-            function prepareModal(id, action, title, headerClass, btnClass) {
+            function prepareModal(id, action, title, themeColor, btnClass) {
                 $('#submission_id').val(id);
                 $('#action_type').val(action);
+
                 $('#modalTitle').text(title);
 
-                // Reset Style
-                $('#modalHeader').removeClass('bg-warning bg-danger bg-success').addClass(headerClass);
-                $('#btnSubmitModal').removeClass('btn-warning btn-danger btn-success').addClass(btnClass);
                 $('textarea[name="notes"]').val('');
 
-                // Reset Text
-                $('#d_nama, #d_kota, #d_wilayah, #d_periode, #d_sales, #d_top, #d_lead, #d_inflasi, #d_limit, #d_bg_tetap, #d_bg_serah').text('Loading...');
+                let btn = $('#btnSubmitModal');
+
+                btn.removeClass('btn-primary btn-danger btn-warning btn-success text-white');
+
+                if(action === 'reject') {
+                    btn.css({ 'background-color': '#ef4444', 'border-color': '#ef4444', 'color': '#ffffff' });
+                    $('#btnText').text('Reject Submission');
+                } else {
+                    btn.css({ 'background-color': '#3b82f6', 'border-color': '#3b82f6', 'color': '#ffffff' });
+                    $('#btnText').text('Approve Submission');
+                }
+
+                $('#d_nama, #d_kota, #d_wilayah, #d_periode, #d_sales, #d_top, #d_lead, #d_inflasi, #d_limit, #d_bg_tetap, #d_bg_serah').html('<span class="spinner-border spinner-border-sm text-secondary"></span>');
+                $('#display_form_code').text('LOADING...');
+                $('#rincian_bank_list').html('<div style="padding:20px; text-align:center; color:#94a3b8; font-size:0.85rem;">Loading data...</div>');
 
                 $('#approvalModal').modal('show');
 
                 $.get("{{ url('bg/approvals/modal-data') }}/" + id, function(res) {
                     if(res.success) {
                         let d = res.data;
+
+                        $('#display_form_code').text(d.form_code);
                         $('#d_nama').text(d.nama_distributor);
                         $('#d_kota').text(d.kota);
                         $('#d_wilayah').text(d.wilayah);
                         $('#d_periode').text(d.periode);
                         $('#d_sales').text('Rp ' + d.avg_sales);
-                        $('#d_top').text(d.top + ' Hari');
-                        $('#d_lead').text(d.lead_time + ' Hari');
+                        $('#d_top').text(d.top);
+                        $('#d_lead').text(d.lead_time);
                         $('#d_inflasi').text(d.inflasi + '%');
+
                         $('#d_limit').text('Rp ' + d.limit_kredit);
                         $('#d_bg_tetap').text('Rp ' + d.bg_ditetapkan);
-                        $('#d_bg_serah').text('Rp ' + d.bg_diserahkan);
+                        $('#d_bg_serah').text('Rp ' + d.bg_diserahkan_total);
+
+                        let listHtml = '';
+                        let count = 0;
+
+                        if(d.rincian_bank && d.rincian_bank.length > 0) {
+                            d.rincian_bank.forEach(function(bank) {
+                                count++;
+                                listHtml += `
+                                    <div style="padding: 12px 20px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center;">
+                                        <div style="display: flex; align-items: center; gap: 12px;">
+                                            <div style="width: 36px; height: 36px; background: #f1f5f9; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #64748b;">
+                                                <i class="ph-bold ph-bank"></i>
+                                            </div>
+                                            <div>
+                                                <div style="font-weight: 700; font-size: 0.9rem; color: #1e293b;">${bank.bank_name}</div>
+                                                <div style="font-size: 0.75rem; color: #94a3b8;">Bank Penerbit</div>
+                                            </div>
+                                        </div>
+                                        <div style="text-align: right;">
+                                            <div style="font-weight: 700; color: #334155;">Rp ${bank.nominal}</div>
+                                            <div style="font-size: 0.7rem; color: #16a34a; display: flex; align-items: center; justify-content: flex-end; gap: 4px;">
+                                                <i class="ph-fill ph-check-circle"></i> Verified
+                                            </div>
+                                        </div>
+                                    </div>
+                                `;
+                            });
+                        } else {
+                            listHtml = `<div style="padding: 20px; text-align: center; font-style: italic; color: #94a3b8; font-size: 0.85rem;">Tidak ada rincian bank</div>`;
+                        }
+
+                        $('#rincian_bank_list').html(listHtml);
+                        $('#bank_count_badge').text(count + ' Bank');
                     }
                 });
             }
 
-            // --- SUBMIT MODAL FORM ---
             $('#approvalForm').submit(function(e) {
                 e.preventDefault();
+
+                let form = this;
+
+                if (!form.checkValidity()) {
+                    form.reportValidity();
+                    return;
+                }
+
                 let id = $('#submission_id').val();
                 let action = $('#action_type').val();
                 let notes = $('textarea[name="notes"]').val();
 
-                $('#approvalModal').modal('hide');
-                processApproval(id, action, notes);
+                let isReject = (action === 'reject');
+                let titleText = isReject ? 'Konfirmasi Penolakan?' : 'Konfirmasi Persetujuan?';
+                let msgText = isReject
+                    ? 'Anda akan <b>MENOLAK</b> pengajuan ini. Dokumen akan dikembalikan ke status revisi.'
+                    : 'Anda akan <b>MENYETUJUI</b> pengajuan ini. Dokumen Lampiran D akan diterbitkan.';
+                let btnColor = isReject ? '#ef4444' : '#3b82f6';
+                let btnText = isReject ? 'Ya, Tolak!' : 'Ya, Setujui!';
+                let iconType = isReject ? 'warning' : 'question';
+
+                Swal.fire({
+                    title: titleText,
+                    html: msgText,
+                    icon: iconType,
+                    showCancelButton: true,
+                    confirmButtonColor: btnColor,
+                    cancelButtonColor: '#64748b',
+                    confirmButtonText: btnText,
+                    cancelButtonText: 'Batal Check',
+                    reverseButtons: true
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $('#approvalModal').modal('hide');
+                        processApproval(id, action, notes);
+                    }
+                });
             });
 
-            // --- CORE PROCESS FUNCTION ---
             function processApproval(id, action, notes) {
                 Swal.fire({ title: 'Processing...', didOpen: () => Swal.showLoading() });
 

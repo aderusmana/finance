@@ -221,11 +221,13 @@ class BgReportController extends Controller
                 return back()->with('error', 'Fitur Merge dokumen ini belum tersedia.');
             }
 
+            // Untuk mode Merged, dataset sudah disiapkan di atas
             $pdf = Pdf::loadView($viewName, ['dataset' => $dataset]);
             $pdf->setPaper('A4', 'portrait');
 
             return $pdf->stream($baseFileName . '.pdf');
         } else {
+            // Mode ZIP (File Terpisah)
             $zipName = $baseFileName . '.zip';
             $zipPath = storage_path('app/public/temp_zip/' . $zipName);
 
@@ -236,7 +238,13 @@ class BgReportController extends Controller
                 foreach ($ids as $id) {
                     $info = $this->prepareViewData($id, $docType, $category);
                     if ($info) {
-                        $pdfContent = Pdf::loadView($info['view'], $info['data'])
+                        // --- PERBAIKAN: Bungkus dataset jika view adalah bg_confirmation ---
+                        $viewData = $info['data'];
+                        if ($info['view'] === 'pdf.bg_confirmation') {
+                            $viewData = ['dataset' => [$info['data']]];
+                        }
+
+                        $pdfContent = Pdf::loadView($info['view'], $viewData)
                                         ->setPaper('A4', 'portrait')
                                         ->output();
                         $zip->addFromString($info['filename'], $pdfContent);
@@ -254,7 +262,18 @@ class BgReportController extends Controller
 
         if(!$info) return abort(404, 'Data tidak ditemukan.');
 
-        $pdf = Pdf::loadView($info['view'], $info['data']);
+        // --- PERBAIKAN PENTING DI SINI ---
+        // Jika view yang dipanggil adalah bg_confirmation,
+        // kita harus membungkus datanya dalam array 'dataset'
+        // karena view tersebut menggunakan foreach($dataset as $data).
+
+        $viewData = $info['data'];
+
+        if ($info['view'] === 'pdf.bg_confirmation') {
+            $viewData = ['dataset' => [$info['data']]];
+        }
+
+        $pdf = Pdf::loadView($info['view'], $viewData);
         return $pdf->stream($info['filename']);
     }
 

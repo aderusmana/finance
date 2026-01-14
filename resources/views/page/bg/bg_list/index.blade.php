@@ -70,7 +70,8 @@
                                 <th>Issued Date</th>
                                 <th>Exp Date</th>
                                 <th class="text-center">Status</th>
-                                <th width="10%" class="text-center">Action</th>
+                                <th class="text-center">Menu</th>
+                                <th class="text-center">Action</th>
                             </tr>
                         </thead>
                     </table>
@@ -261,7 +262,6 @@
             $('.select2').select2({ theme: 'bootstrap-5' });
             $('.select2-modal').select2({ dropdownParent: $('#bgModal'), theme: 'bootstrap-5', placeholder: 'Select Option' });
 
-            // Init Datatable
             const table = $('#sampleTable').DataTable({
                 processing: true, serverSide: true,
                 ajax: {
@@ -274,7 +274,7 @@
                 columns: [
                     { data: 'DT_RowIndex', orderable: false, searchable: false, className: 'text-center' },
                     { data: 'bg_number', className: 'fw-bold' },
-                    { data: 'customer_name', className: 'text-wrap text-start', width: '25%' },
+                    { data: 'customer_name', className: 'text-wrap text-start', width: '20%' },
                     { data: 'bg_type', className: 'text-center', render: function(d) {
                         let color = d === 'new' ? 'info' : (d === 'extension' ? 'warning' : 'secondary');
                         return `<span class="badge bg-${color} text-uppercase">${d}</span>`;
@@ -284,9 +284,10 @@
                     { data: 'exp_date' },
                     { data: 'status', className: 'text-center', render: function(d) {
                         let color = d === 'approved' ? 'success' : (d === 'submitted' ? 'primary' : (d === 'expired' ? 'danger' : 'secondary'));
-                        return `<span class="badge bg-${color} status-badge-lg              ">${d.replace('_', ' ')}</span>`;
+                        return `<span class="badge bg-${color} status-badge-lg">${d.replace('_', ' ')}</span>`;
                     }},
-                    { data: 'action', orderable: false, searchable: false, className: 'text-center position-static' }
+                    { data: 'menu', orderable: false, searchable: false, className: 'text-center' },
+                    { data: 'action', orderable: false, searchable: false, className: 'text-center' }
                 ],
                 order: [[1, 'asc']]
             });
@@ -491,50 +492,78 @@
 
             $(document).on('click', '.btn-extension', function() {
                 let id = $(this).data('id');
-                $.get(baseUrl + "/" + id, function(data) {
-                    resetModal('Extension Bank Garansi');
 
-                    $('#formMethod').val('POST');
+                Swal.fire({
+                    title: 'Request Extension?',
+                    text: "Sistem akan mengirimkan email formulir kosong ke Customer untuk pengajuan BG Baru (Extension).",
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#10b981',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Ya, Kirim Form!',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        Swal.fire({
+                            title: 'Mengirim Email...',
+                            didOpen: () => Swal.showLoading()
+                        });
 
-                    isPopulating = true;
-                    $('#customer_id').val(data.customer_id).trigger('change');
-                    isPopulating = false;
-
-                    $.ajax({
-                        url: "{{ route('bg.generate-number') }}",
-                        type: "GET",
-                        data: { customer_id: data.customer_id },
-                        success: function(res) {
-                            if(res.status === 'success') {
-                                currentSequence = res.sequence;
-                                currentPrefix = res.prefix;
-                                addBgItem(null, 'extension');
-
-                                $('input[name="items[0][bg_number]"]').val(res.number);
+                        $.ajax({
+                            url: "{{ route('bg.request.extension') }}",
+                            type: "POST",
+                            data: {
+                                _token: "{{ csrf_token() }}",
+                                bg_id: id
+                            },
+                            success: function(res) {
+                                Swal.fire('Terkirim!', res.message, 'success');
+                                table.ajax.reload();
+                            },
+                            error: function(xhr) {
+                                let msg = xhr.responseJSON?.message || 'Terjadi kesalahan sistem';
+                                Swal.fire('Gagal!', msg, 'error');
                             }
-                        }
-                    });
-
-                    $('#bgModal').modal('show');
+                        });
+                    }
                 });
             });
 
             $(document).on('click', '.btn-existing', function() {
                 let id = $(this).data('id');
-                $.get(baseUrl + "/" + id, function(data) {
-                    resetModal('Existing Bank Garansi (Renewal)');
 
-                    $('#bgId').val(data.id);
-                    $('#formMethod').val('PUT');
+                Swal.fire({
+                    title: 'Request Existing Update?',
+                    text: "Sistem akan mengirimkan email ke Customer untuk memperbarui Nominal BG ini.",
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#6366f1',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Ya, Kirim Email!',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        Swal.fire({
+                            title: 'Mengirim Email...',
+                            text: 'Mohon tunggu sebentar',
+                            allowOutsideClick: false,
+                            didOpen: () => Swal.showLoading()
+                        });
 
-                    isPopulating = true;
-                    $('#customer_id').val(data.customer_id).trigger('change');
-
-                    addBgItem(data, 'existing');
-
-                    isPopulating = false;
-
-                    $('#bgModal').modal('show');
+                        $.ajax({
+                            url: "{{ url('bg/bg/request-existing') }}/" + id,
+                            type: "POST",
+                            data: { _token: "{{ csrf_token() }}" },
+                            success: function(res) {
+                                Swal.fire('Terkirim!', res.message, 'success');
+                                table.ajax.reload();
+                            },
+                            error: function(xhr) {
+                                let msg = xhr.responseJSON?.message || 'Terjadi kesalahan sistem';
+                                Swal.fire('Gagal!', msg, 'error');
+                            }
+                        });
+                    }
                 });
             });
 
@@ -669,6 +698,14 @@
                         let msg = xhr.responseJSON?.message || 'Error occurred';
                         Swal.fire('Error', msg, 'error');
                     }
+                });
+            });
+
+            $(document).ready(function() {
+                var tableContainer = $('.table-responsive'); // Sesuaikan class container tabelmu
+
+                tableContainer.on('scroll', function() {
+                    $('.btn-action-soft.show').dropdown('hide');
                 });
             });
         });

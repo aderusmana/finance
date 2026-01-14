@@ -112,7 +112,13 @@ class CustomerController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $query = Customer::query();
+            $query = Customer::leftJoin('customer_files', 'customers.id', '=', 'customer_files.customer_id')
+                ->select(
+                    'customers.*', 
+                        'customer_files.npwp_file as file_npwp', 
+                    'customer_files.nib_siup_file as file_nib', 
+                    'customer_files.ktp_file as file_ktp'
+                );
             return DataTables::of($query)
             ->addIndexColumn()
             ->addColumn('action', function ($row) {

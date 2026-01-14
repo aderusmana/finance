@@ -1,10 +1,9 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Bulk Formulir Pengajuan</title>
+    <title>Formulir Pengajuan</title>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <style>
-        /* CSS SAMA DENGAN SINGLE FORMULIR */
         body {
             font-family: Arial, sans-serif;
             font-size: 12px;
@@ -49,7 +48,11 @@
 
         {{-- HEADER --}}
         <div class="header">
-            <h2>FORMULIR PENGAJUAN BANK GARANSI</h2>
+            @if(isset($data['is_existing']) && $data['is_existing'])
+                <h2>FORMULIR PEMBARUAN (UPDATE) BANK GARANSI</h2>
+            @else
+                <h2>FORMULIR PENGAJUAN BANK GARANSI</h2>
+            @endif
             <p>No. Ref: {{ $data['submission']->form_code }}</p>
         </div>
 
@@ -73,103 +76,77 @@
             </tr>
         </table>
 
-        {{-- BAGIAN B: DATA PERHITUNGAN (LAMPIRAN D) --}}
+        {{-- BAGIAN B: RINCIAN BANK (SATU TABEL SAJA) --}}
         <div class="section-title">
-            A. DATA KEUANGAN & LIMIT KREDIT (LAMPIRAN D)
+            @if(isset($data['is_existing']) && $data['is_existing'])
+                B. RINCIAN PERUBAHAN NOMINAL BANK GARANSI
+            @else
+                B. RINCIAN BANK GARANSI YANG DISERAHKAN
+            @endif
         </div>
 
-        @php
-            $rec = $data['rec'];
-            $periods = $rec->periods;
-            $periodeTxt = '-';
-            if($periods && $periods->count() > 0) {
-                $start = $periods->min('period_date');
-                $end   = $periods->max('period_date');
-                $periodeTxt = \Carbon\Carbon::parse($start)->isoFormat('MMMM Y') . ' - ' . \Carbon\Carbon::parse($end)->isoFormat('MMMM Y');
-            }
-        @endphp
-
-        <table class="table-border" style="margin-bottom: 15px; margin-top: 0;">
-            <tr>
-                <td style="width: 5%; text-align: center;">1</td>
-                <td style="width: 40%;">PERIODE</td>
-                <td style="font-weight: bold;">{{ $periodeTxt }}</td>
-            </tr>
-            <tr>
-                <td style="text-align: center;">2</td>
-                <td>RATA-RATA PENJUALAN</td>
-                <td>
-                    Rp {{ number_format($rec->average, 0, ',', '.') }}<br>
-                    <span style="font-size: 10px; font-style: italic;">({{ ucwords(\App\Helpers\DocumentHelper::terbilang($rec->average)) }} Rupiah)</span>
-                </td>
-            </tr>
-            <tr>
-                <td style="text-align: center;">3</td>
-                <td>SYARAT PEMBAYARAN (TOP)</td>
-                <td>{{ $rec->top }} Hari</td>
-            </tr>
-            <tr>
-                <td style="text-align: center;">4</td>
-                <td>LEAD TIME</td>
-                <td>{{ $rec->lead_time }} Hari</td>
-            </tr>
-            <tr>
-                <td style="text-align: center;">5</td>
-                <td>FAKTOR FLUKTUASI BULANAN</td>
-                <td>{{ $rec->inflation }}%</td>
-            </tr>
-            <tr>
-                <td style="text-align: center;">6</td>
-                <td>LIMIT KREDIT</td>
-                <td style="font-weight: bold;">
-                    Rp {{ number_format($rec->credit_limit_updated, 0, ',', '.') }}<br>
-                    <span style="font-size: 10px; font-weight: normal; font-style: italic;">({{ ucwords(\App\Helpers\DocumentHelper::terbilang($rec->credit_limit_updated)) }} Rupiah)</span>
-                </td>
-            </tr>
-            <tr>
-                <td style="text-align: center;">7</td>
-                <td>NILAI BG DITETAPKAN</td>
-                <td style="font-weight: bold;">
-                    Rp {{ number_format($rec->set_bg, 0, ',', '.') }}<br>
-                    <span style="font-size: 10px; font-weight: normal; font-style: italic;">({{ ucwords(\App\Helpers\DocumentHelper::terbilang($rec->set_bg)) }} Rupiah)</span>
-                </td>
-            </tr>
-        </table>
-
-        {{-- BAGIAN C: RINCIAN BANK --}}
-        <div class="section-title">
-            B. RINCIAN BANK GARANSI YANG DISERAHKAN
-        </div>
-
-        <p style="margin: 5px 0 10px 0;">Mengajukan penerbitan Bank Garansi dengan rincian sebagai berikut:</p>
+        <p style="margin: 5px 0 10px 0;">
+            @if(isset($data['is_existing']) && $data['is_existing'])
+                Mengajukan <strong>perubahan/update</strong> nominal Bank Garansi dengan rincian sebagai berikut:
+            @else
+                Mengajukan penerbitan Bank Garansi dengan rincian sebagai berikut:
+            @endif
+        </p>
 
         <table class="table-border" style="margin-bottom: 15px;">
             <thead>
                 <tr style="background-color: #f0f0f0;">
                     <th style="width: 20%;">Nama Bank</th>
-                    <th style="width: 20%;">Cabang</th>
-                    <th style="width: 30%;">Alamat / Kontak</th>
+                    <th style="width: 25%;">Keterangan</th>
+                    <th style="width: 25%;">Alamat / Kontak</th>
                     <th style="width: 30%; text-align: right;">Nominal (IDR)</th>
                 </tr>
             </thead>
             <tbody>
                 @php
                     $grandTotal = 0;
-                    // Ambil BG spesifik yang dipassing dari Controller
                     $bgItem = $data['bg'];
+                    $isExisting = isset($data['is_existing']) && $data['is_existing'];
                 @endphp
 
                 @if($bgItem)
                     @foreach($bgItem->details as $detail)
                         @php $grandTotal += $detail->nominal; @endphp
                         <tr>
-                            <td>{{ $detail->bank_name }}</td>
-                            <td>{{ $detail->branch_name ?? '-' }}</td>
+                            <td>
+                                <strong>{{ $detail->bank_name }}</strong><br>
+                                {{ $detail->branch_name ?? '-' }}
+                            </td>
+
+                            {{-- KOLOM TENGAH (Dinamis Existing/New) --}}
+                            <td>
+                                @if($isExisting)
+                                    <span style="display:block; font-size:10px; color:#555;">Status:</span>
+                                    <strong>EXISTING UPDATE</strong>
+                                @else
+                                    <span style="display:block; font-size:10px; color:#555;">Status:</span>
+                                    <strong>PENGAJUAN BARU</strong>
+                                @endif
+                            </td>
+
                             <td>
                                 {{ $detail->bank_address ?? '-' }}<br>
                                 <small>PIC: {{ $detail->contact_person ?? '-' }}</small>
                             </td>
-                            <td style="text-align: right;">{{ number_format($detail->nominal, 0, ',', '.') }}</td>
+
+                            {{-- KOLOM NOMINAL (Dinamis Existing/New) --}}
+                            <td style="text-align: right;">
+                                @if($isExisting)
+                                    <div style="margin-bottom: 5px; color: #777; font-size: 10px; text-decoration: line-through;">
+                                        Lama: Rp {{ number_format($data['old_nominal'], 0, ',', '.') }}
+                                    </div>
+                                    <div style="font-weight: bold; color: #000;">
+                                        Baru: Rp {{ number_format($detail->nominal, 0, ',', '.') }}
+                                    </div>
+                                @else
+                                    {{ number_format($detail->nominal, 0, ',', '.') }}
+                                @endif
+                            </td>
                         </tr>
                     @endforeach
                 @else
@@ -177,7 +154,13 @@
                 @endif
 
                 <tr>
-                    <td colspan="3" style="text-align: right; font-weight: bold; background-color: #f9f9f9;">TOTAL PENGAJUAN</td>
+                    <td colspan="3" style="text-align: right; font-weight: bold; background-color: #f9f9f9;">
+                        @if($isExisting)
+                            TOTAL SETELAH UPDATE
+                        @else
+                            TOTAL PENGAJUAN
+                        @endif
+                    </td>
                     <td style="text-align: right; font-weight: bold; background-color: #f9f9f9;">Rp {{ number_format($grandTotal, 0, ',', '.') }}</td>
                 </tr>
             </tbody>

@@ -223,6 +223,7 @@ class BgRecommendationController extends Controller
             $rec->update([
                 'average'                   => $avg,
                 'top'                       => $top,
+                'inflation'                 => $inflation,
                 'lead_time'                 => $leadTime,
                 'recommended_credit_limit'  => $recLimit,
                 'fk_with_limit'             => $fkLimit,

@@ -10,57 +10,91 @@
     @php
         $isUploadContext = isset($submission);
         $targetBg = null;
+        $rec = null;
+        $bankDetails = [];
+        $token = '#';
+        $customer = null;
 
-        // Normalisasi Data
+        // 1. CEK KONTEKS & INISIALISASI VARIABEL
         if ($isUploadContext) {
+            // Konteks: Email Konfirmasi Upload (Submission)
             $rec = $submission->recommendation;
             $token = $submission->token;
+            $customer = $rec->customer;
+
             $pageTitle = 'Konfirmasi Pengajuan BG';
             $refNumber = 'Form Code: #' . $submission->form_code;
 
-            // --- LOGIC PENCARIAN BANK SPESIFIK (INDEX MATCHING) ---
-            // Mencari Bank Garansi yang pasangannya tepat berdasarkan urutan input (detik yang sama)
-            
-            $siblings = \App\Models\BG\BgSubmission::where('bg_recommendation_id', $rec->id)
-                        ->where('created_at', $submission->created_at)
+            // Logika pencarian BG Spesifik (Existing/New)
+            $submissionTime = \Carbon\Carbon::parse($submission->created_at);
+            $startTime = $submissionTime->copy()->subMinutes(2);
+            $endTime   = $submissionTime->copy()->addMinutes(2);
+            $customerId = $rec ? $rec->customer_id : null;
+
+            if ($customerId) {
+                $candidateBgs = \App\Models\BG\BankGaransi::where('customer_id', $customerId)
+                    ->whereBetween('created_at', [$startTime, $endTime])
+                    ->with('details')
+                    ->orderBy('id', 'asc')
+                    ->get();
+
+                if ($candidateBgs->isEmpty()) {
+                    // Fallback cek updated_at untuk existing
+                    $candidateBgs = \App\Models\BG\BankGaransi::where('customer_id', $customerId)
+                        ->whereBetween('updated_at', [$startTime, $endTime])
+                        ->with('details')
                         ->orderBy('id', 'asc')
-                        ->pluck('id')->toArray();
+                        ->get();
+                }
 
-            $myIndex = array_search($submission->id, $siblings);
+                $siblings = \App\Models\BG\BgSubmission::where('bg_recommendation_id', $rec->id)
+                    ->whereBetween('created_at', [$startTime, $endTime])
+                    ->orderBy('id', 'asc')
+                    ->pluck('id')
+                    ->toArray();
 
-            $candidateBgs = \App\Models\BG\BankGaransi::where('customer_id', $rec->customer_id)
-                            ->where('created_at', $submission->created_at)
-                            ->with('details')
-                            ->orderBy('id', 'asc')
-                            ->get();
+                $myIndex = array_search($submission->id, $siblings);
 
-            // Ambil BG sesuai urutan (Jika submission ke-2, ambil BG ke-2)
-            $targetBg = isset($candidateBgs[$myIndex]) ? $candidateBgs[$myIndex] : $candidateBgs->first();
-            // -----------------------------------------------------
+                if ($myIndex !== false && isset($candidateBgs[$myIndex])) {
+                    $targetBg = $candidateBgs[$myIndex];
+                } else {
+                    $targetBg = $candidateBgs->first();
+                }
+            }
 
-            // Link menuju halaman Upload
+            // Setup Tombol & Link untuk Upload
             $actionUrl = route('customer.portal.upload-form', ['token' => $token]);
-            
-            // Link Download PDF Formulir
             $downloadUrl = route('customer.portal.download-pdf', ['token' => $token]);
+            $btnColor = '#2563eb';
+            $btnShadow = 'rgba(37, 99, 235, 0.3)';
+            $btnText = '⬆️ Upload Dokumen Bertanda Tangan';
 
-            $btnColor = '#ea580c'; // Orange
-            $btnShadow = 'rgba(234, 88, 12, 0.2)';
-            $btnText = 'Upload Dokumen Scan &rarr;';
-        } else {
+        } elseif (isset($recommendation)) {
+            // Konteks: Email Notifikasi Awal (CustomerFillFormNotification)
             $rec = $recommendation;
             $token = $rec->token;
+            $customer = $rec->customer;
+
             $pageTitle = 'Konfirmasi & Pengisian Form Bank Garansi';
-            $refNumber = 'Ref: #BG-' . $rec->id . '/' . date('Y');
+            $refNumber = 'Ref ID: #' . substr($rec->id, 0, 8);
 
-            // Link menuju halaman Input
+            // Setup Tombol & Link untuk Input
             $actionUrl = route('customer.portal.input-form', ['token' => $token]);
-            $btnColor = '#2563eb'; // Biru
-            $btnShadow = 'rgba(37, 99, 235, 0.2)';
-            $btnText = 'Lengkapi Formulir &rarr;';
-        }
+            $downloadUrl = '#'; // Belum ada download di tahap ini
+            $btnColor = '#10b981'; // Hijau
+            $btnShadow = 'rgba(16, 185, 129, 0.3)';
+            $btnText = 'Isi Formulir Bank Garansi';
 
-        $customer = $rec->customer;
+        } else {
+            // Fallback Error Prevention
+            $pageTitle = 'Notifikasi System';
+            $refNumber = '-';
+            $actionUrl = '#';
+            $downloadUrl = '#';
+            $btnColor = '#64748b';
+            $btnShadow = 'none';
+            $btnText = 'Link Tidak Valid';
+        }
     @endphp
 
     <div style="max-width: 680px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 8px 20px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;">
@@ -86,7 +120,7 @@
             </p>
 
             {{-- INFO BANK GARANSI SPESIFIK (HANYA MUNCUL DI EMAIL UPLOAD) --}}
-            @if($isUploadContext && $targetBg)
+            @if($isUploadContext && $targetBg && $targetBg->details->first())
                 <div style="background-color: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; padding: 15px; margin-bottom: 25px;">
                     <table style="width: 100%; border-collapse: collapse;">
                         <tr>
@@ -98,7 +132,7 @@
                             <td style="padding: 10px 0 5px; color: #64748b; font-size: 13px;">Bank Tujuan</td>
                             <td style="padding: 10px 0 5px; text-align: right; color: #1e293b; font-weight: 700; font-size: 14px;">
                                 {{ $targetBg->details->first()->bank_name ?? '-' }}
-                                @if($targetBg->details->first() && $targetBg->details->first()->branch_name)
+                                @if($targetBg->details->first()->branch_name)
                                     <span style="color: #64748b; font-weight: normal; font-size: 12px;">({{ $targetBg->details->first()->branch_name }})</span>
                                 @endif
                             </td>
@@ -120,7 +154,7 @@
                         ⚠️ Tindakan Diperlukan: Download, TTD & Upload
                     </h3>
                     <ol style="margin: 0; padding-left: 20px; font-size: 14px; color: #9a3412; line-height: 1.6;">
-                        <li style="margin-bottom: 8px;"><strong>Download</strong> formulir PDF (Link khusus {{ $targetBg->details->first()->bank_name ?? 'Bank' }}).</li>
+                        <li style="margin-bottom: 8px;"><strong>Download</strong> formulir PDF.</li>
                         <li style="margin-bottom: 8px;"><strong>Cetak & Tanda Tangani</strong> (Basah + Stempel).</li>
                         <li style="margin-bottom: 8px;"><strong>Scan</strong> dokumen tersebut menjadi file PDF.</li>
                         <li><strong>Upload</strong> kembali melalui tombol Upload di bawah.</li>
@@ -132,12 +166,13 @@
                         Total Plafon Kredit (Credit Limit) Terbaru
                     </p>
                     <h1 style="margin: 10px 0 10px; font-size: 38px; color: #15803d; letter-spacing: -1px; font-weight: 800;">
-                        Rp {{ number_format($rec->credit_limit_updated, 0, ',', '.') }}
+                        Rp {{ number_format($rec->credit_limit_updated ?? 0, 0, ',', '.') }}
                     </h1>
                 </div>
             @endif
 
-            {{-- DATA TABLES (DITAMPILKAN DI KEDUA KONDISI) --}}
+            {{-- DATA TABLES --}}
+            @if($rec)
             <div style="margin-bottom: 15px; border-left: 4px solid #3b82f6; padding-left: 12px;">
                 <h3 style="margin: 0; color: #1e3a8a; font-size: 16px; font-weight: 700;">Rincian Analisa & Keputusan</h3>
             </div>
@@ -146,19 +181,19 @@
                 <tr>
                     <td style="padding: 12px 0; border-bottom: 1px solid #f1f5f9; color: #475569;">Nominal BG Disetujui (Set BG)</td>
                     <td style="padding: 12px 0; border-bottom: 1px solid #f1f5f9; text-align: right; color: #1e3a8a; font-weight: 700;">
-                        Rp {{ number_format($rec->set_bg, 0, ',', '.') }}
+                        Rp {{ number_format($rec->set_bg ?? 0, 0, ',', '.') }}
                     </td>
                 </tr>
                 <tr>
                     <td style="padding: 12px 0; border-bottom: 1px solid #f1f5f9; color: #475569;">Rata-Rata Penjualan</td>
                     <td style="padding: 12px 0; border-bottom: 1px solid #f1f5f9; text-align: right; color: #334155;">
-                        Rp {{ number_format($rec->average, 0, ',', '.') }}
+                        Rp {{ number_format($rec->average ?? 0, 0, ',', '.') }}
                     </td>
                 </tr>
                 <tr>
                     <td style="padding: 12px 0; border-bottom: 1px solid #f1f5f9; color: #475569;">System Recommended Limit</td>
                     <td style="padding: 12px 0; border-bottom: 1px solid #f1f5f9; text-align: right; color: #334155;">
-                        Rp {{ number_format($rec->recommended_credit_limit, 0, ',', '.') }}
+                        Rp {{ number_format($rec->recommended_credit_limit ?? 0, 0, ',', '.') }}
                     </td>
                 </tr>
 
@@ -171,13 +206,13 @@
                 <tr>
                     <td style="padding: 8px 0; border-bottom: 1px solid #f1f5f9; color: #64748b; font-size: 13px;">TOP / Lead Time</td>
                     <td style="padding: 8px 0; border-bottom: 1px solid #f1f5f9; text-align: right; font-size: 13px;">
-                        {{ $rec->top }} Hari / {{ $rec->lead_time }} Hari
+                        {{ $rec->top ?? 0 }} Hari / {{ $rec->lead_time ?? 0 }} Hari
                     </td>
                 </tr>
                 <tr>
                     <td style="padding: 8px 0; border-bottom: 1px solid #f1f5f9; color: #64748b; font-size: 13px;">Inflasi / Tax</td>
                     <td style="padding: 8px 0; border-bottom: 1px solid #f1f5f9; text-align: right; font-size: 13px;">
-                        {{ $rec->inflation }}% / {{ ($rec->tax ? $rec->tax->value * 100 : 11) }}%
+                        {{ $rec->inflation ?? 0 }}% / {{ ($rec->tax ? $rec->tax->value * 100 : 11) }}%
                     </td>
                 </tr>
             </table>
@@ -196,25 +231,34 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($rec->periods as $period)
-                        <tr>
-                            <td style="padding: 8px 15px; border-bottom: 1px solid #f1f5f9; color: #334155;">
-                                {{ \Carbon\Carbon::parse($period->period_date)->locale('id')->isoFormat('MMMM Y') }}
-                            </td>
-                            <td style="padding: 8px 15px; border-bottom: 1px solid #f1f5f9; text-align: right; font-family: Consolas, monospace; color: #334155;">
-                                Rp {{ number_format($period->amount, 0, ',', '.') }}
-                            </td>
-                        </tr>
-                        @empty
-                        <tr>
-                            <td colspan="2" style="padding: 15px; text-align: center; color: #94a3b8; font-style: italic;">
-                                Tidak ada rincian periode.
-                            </td>
-                        </tr>
-                        @endforelse
+                        @if($rec->periods)
+                            @forelse($rec->periods as $period)
+                            <tr>
+                                <td style="padding: 8px 15px; border-bottom: 1px solid #f1f5f9; color: #334155;">
+                                    {{ \Carbon\Carbon::parse($period->period_date)->locale('id')->isoFormat('MMMM Y') }}
+                                </td>
+                                <td style="padding: 8px 15px; border-bottom: 1px solid #f1f5f9; text-align: right; font-family: Consolas, monospace; color: #334155;">
+                                    Rp {{ number_format($period->amount, 0, ',', '.') }}
+                                </td>
+                            </tr>
+                            @empty
+                            <tr>
+                                <td colspan="2" style="padding: 15px; text-align: center; color: #94a3b8; font-style: italic;">
+                                    Tidak ada rincian periode.
+                                </td>
+                            </tr>
+                            @endforelse
+                        @else
+                            <tr>
+                                <td colspan="2" style="padding: 15px; text-align: center; color: #94a3b8; font-style: italic;">
+                                    Data periode tidak tersedia.
+                                </td>
+                            </tr>
+                        @endif
                     </tbody>
                 </table>
             </div>
+            @endif
 
             {{-- CTA SECTION --}}
             <div style="text-align: center; padding: 35px 20px; background-color: #f8fafc; border-radius: 12px; border: 1px dashed #cbd5e1;">
@@ -222,7 +266,7 @@
                     @if($isUploadContext)
                         Silakan download formulir untuk <strong>{{ $targetBg->details->first()->bank_name ?? 'Bank' }}</strong>, lalu upload kembali:
                     @else
-                        Untuk melanjutkan penerbitan BG senilai <strong>Rp {{ number_format($rec->credit_limit_updated, 0, ',', '.') }}</strong>, mohon lengkapi detail bank penjamin:
+                        Untuk melanjutkan penerbitan BG senilai <strong>Rp {{ number_format($rec->credit_limit_updated ?? 0, 0, ',', '.') }}</strong>, mohon lengkapi detail bank penjamin:
                     @endif
                 </p>
 

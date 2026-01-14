@@ -34,7 +34,7 @@
 
                     {{-- DETAIL INFO BOX (REDESIGNED) --}}
                     <div style="background: linear-gradient(to bottom right, #eff6ff, #f8fafc); border: 1px solid #bfdbfe; border-radius: 16px; padding: 20px; margin-bottom: 25px; position: relative; overflow: hidden;">
-                        
+
                         {{-- Watermark Icon --}}
                         <i class="bi bi-file-earmark-text" style="position: absolute; right: -15px; top: -10px; font-size: 6rem; opacity: 0.03; transform: rotate(15deg); pointer-events: none;"></i>
 
@@ -42,7 +42,7 @@
                             <span style="width: 24px; height: 2px; background: #3b82f6; display: inline-block;"></span>
                             Detail Pengajuan
                         </h6>
-                        
+
                         <div class="d-flex flex-column gap-3 position-relative">
                             {{-- Item 1: Kode --}}
                             <div class="d-flex justify-content-between align-items-center border-bottom border-primary border-opacity-10 pb-2">
@@ -65,7 +65,7 @@
                                         @endif
                                     </div>
                                 </div>
-                                
+
                                 {{-- Item 3: Nominal --}}
                                 <div class="d-flex justify-content-between align-items-center pt-1">
                                     <span class="text-muted small d-flex align-items-center gap-2">

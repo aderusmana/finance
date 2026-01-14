@@ -1588,3 +1588,42 @@ STYLES MOVED FROM index.blade.php
 .ph-magnifying-glass {
     color: #475569 !important; /* Ikon lebih gelap */
 }
+
+
+/* Style untuk Tombol Action Modern */
+.btn-action-modern {
+    background-color: #e0e7ff; /* Indigo Muda */
+    color: #4338ca;            /* Indigo Tua */
+    border: 1px solid transparent;
+    border-radius: 50px;       /* Bentuk Pill/Lonjong */
+    padding: 6px 16px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 5px rgba(67, 56, 202, 0.1);
+}
+
+.btn-action-modern:hover {
+    background-color: #4f46e5; /* Indigo Solid saat Hover */
+    color: #ffffff;
+    transform: translateY(-2px); /* Efek naik sedikit */
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3); /* Shadow Glow */
+}
+
+.btn-action-modern i {
+    font-size: 1.1rem;
+}
+
+/* Style tambahan untuk Symbol Customer (Kotak inisial nama) */
+.symbol-label {
+    background-color: #f1f5f9;
+    color: #2563eb;
+    font-size: 0.9rem;
+    width: 35px;
+    height: 35px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 10px;
+    border-radius: 8px;
+}

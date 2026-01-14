@@ -54,63 +54,6 @@
                 </tr>
             </table>
 
-            {{-- 3. DATA BANK GARANSI (LAMPIRAN D) --}}
-            <div style="font-size: 14px; font-weight: bold; color: #1e3a8a; text-transform: uppercase; border-bottom: 2px solid #e2e8f0; padding-bottom: 5px; margin-top: 25px; margin-bottom: 15px;">
-                Detail Bank Garansi (Lampiran D)
-            </div>
-
-            @php
-                // --- LOGIC BARU: AMBIL SEMUA BANK DALAM BATCH INI ---
-                $timestamp = $submission->created_at;
-                
-                // Ambil semua BG yang dibuat bersamaan (detik yang sama)
-                $allBgs = \App\Models\BG\BankGaransi::where('customer_id', $submission->recommendation->customer_id)
-                            ->where('created_at', $timestamp) 
-                            ->with('details')
-                            ->get();
-
-                // Hitung Grand Total dari semua bank
-                $grandTotal = $allBgs->sum('bg_nominal');
-            @endphp
-
-            @if($allBgs->count() > 0)
-                <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
-                    
-                    {{-- LOOPING SEMUA BANK GARANSI --}}
-                    @foreach($allBgs as $index => $bg)
-                        @foreach($bg->details as $detail)
-                            <tr>
-                                <td colspan="2" style="background: #f8fafc; padding: 8px 10px; font-weight: bold; font-size: 12px; color: #1e3a8a; border-bottom: 1px solid #f1f5f9; border-top: {{ $index > 0 ? '1px solid #cbd5e1' : 'none' }};">
-                                    Bank {{ $index + 1 }}
-                                </td>
-                            </tr>
-                            <tr>
-                                <td style="padding: 8px 0; border-bottom: 1px solid #f1f5f9; color: #64748b; width: 40%;">Nama Bank</td>
-                                <td style="padding: 8px 0; border-bottom: 1px solid #f1f5f9; font-weight: 600; color: #333; text-align: right;">{{ $detail->bank_name }}</td>
-                            </tr>
-                            <tr>
-                                <td style="padding: 8px 0; border-bottom: 1px solid #f1f5f9; color: #64748b; width: 40%;">Cabang</td>
-                                <td style="padding: 8px 0; border-bottom: 1px solid #f1f5f9; font-weight: 600; color: #333; text-align: right;">{{ $detail->branch_name ?? '-' }}</td>
-                            </tr>
-                            <tr>
-                                <td style="padding: 8px 0; border-bottom: 1px solid #f1f5f9; color: #64748b; width: 40%;">Nominal</td>
-                                <td style="padding: 8px 0; border-bottom: 1px solid #f1f5f9; font-weight: 600; color: #333; text-align: right;">Rp {{ number_format($bg->bg_nominal, 0, ',', '.') }}</td>
-                            </tr>
-                        @endforeach
-                    @endforeach
-
-                    {{-- TOTAL PENGAJUAN (GABUNGAN SEMUA BANK) --}}
-                    <tr>
-                        <td style="padding: 15px 0 8px; border-bottom: 1px solid #f1f5f9; color: #64748b; width: 40%; font-weight: bold;">TOTAL PENGAJUAN</td>
-                        <td style="padding: 15px 0 8px; border-bottom: 1px solid #f1f5f9; font-weight: bold; color: #1e3a8a; text-align: right; font-size: 16px;">
-                            Rp {{ number_format($grandTotal, 0, ',', '.') }}
-                        </td>
-                    </tr>
-                </table>
-            @else
-                <p style="color: #ef4444; font-style: italic;">Data Detail BG tidak ditemukan.</p>
-            @endif
-
             {{-- ACTION BUTTONS --}}
             <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px dashed #cbd5e1;">
                 <a href="{{ route('approval.process', ['token' => $log->token, 'action' => 'approve']) }}"
