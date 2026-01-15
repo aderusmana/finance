@@ -142,8 +142,6 @@
 
         // --- 2. FETCH LIST NOTIFICATION ---
         $('#notifDropdownToggle').on('show.bs.dropdown', function () {
-            // Hanya fetch jika list masih kosong atau ada indikator loading
-            // (Opsional: bisa dihapus if-nya kalau mau selalu refresh saat dibuka)
             fetchNotificationList();
         });
 
@@ -153,14 +151,12 @@
 
                 if (res.data && res.data.length > 0) {
                     res.data.forEach(n => {
-                        // Logic Tampilan (Read vs Unread)
                         let bgClass = n.read_at ? 'bg-light' : 'bg-white';
                         let borderClass = n.read_at ? '' : 'border-start border-3 border-primary';
                         let textTitle = n.read_at ? 'text-muted' : 'fw-bold text-dark';
                         let textBody = n.read_at ? 'text-muted opacity-75' : 'text-dark';
                         let iconColor = n.data.color || 'primary';
 
-                        // Kita pasang ID unik di elemen list agar mudah dihapus nanti
                         html += `
                             <div class="list-group-item list-group-item-action ${bgClass} ${borderClass} p-0 notif-item" id="notif-item-${n.id}">
                                 <div class="d-flex w-100 justify-content-between align-items-center pe-2">
@@ -218,20 +214,16 @@
 
         // --- 4. HANDLER KLIK: HAPUS NOTIFIKASI (Dropdown Tetap Buka) ---
         $(document).on('click', '.action-delete', function(e) {
-            // [KUNCI 1] Mencegah browser melakukan aksi default (scroll ke atas dll)
             e.preventDefault();
 
-            // [KUNCI 2] Mencegah Event Bubbling (PENTING AGAR DROPDOWN TIDAK MENUTUP)
             e.stopPropagation();
 
             let btn = $(this);
             let id = btn.data('id');
             let item = $('#notif-item-' + id); // Pastikan ID di HTML list sudah benar (lihat di bawah)
 
-            // Ubah icon jadi loading
             btn.html('<i class="fas fa-spinner fa-spin small"></i>');
 
-            // Gunakan Route Helper untuk URL yang akurat
             let deleteUrl = "{{ route('notifications.destroy', ':id') }}";
             deleteUrl = deleteUrl.replace(':id', id);
 
@@ -244,25 +236,20 @@
                 },
                 success: function(result) {
                     if(result.success) {
-                        // [KUNCI 3] Animasi Slide Up (Item hilang pelan-pelan)
-                        // Dropdown tetap terbuka karena kita tidak me-refresh seluruh list
                         item.animate({ opacity: 0, height: 0 }, 300, function() {
                             $(this).remove(); // Hapus elemen dari DOM setelah animasi selesai
 
-                            // Cek apakah list jadi kosong? Jika ya, tampilkan pesan kosong
                             if($('#notification-list').children().length === 0) {
                                 $('#notification-list').html('<div class="text-center p-4 text-muted"><p class="small mb-0">Tidak ada notifikasi</p></div>');
                             }
                         });
 
-                        // Update badge angka di background tanpa menutup dropdown
                         checkNotificationCount();
                     }
                 },
                 error: function(err) {
                     console.error('Gagal hapus:', err);
                     btn.html('<i class="iconoir-trash f-s-16"></i>'); // Balikin icon trash
-                    // Optional: Toast error kecil
                 }
             });
         });
@@ -272,7 +259,6 @@
             e.preventDefault();
             e.stopPropagation();
 
-            // Ubah icon jadi loading sementara
             let originalText = $(this).text();
             $(this).text('Processing...');
 
@@ -280,17 +266,14 @@
                 _token: "{{ csrf_token() }}"
             })
             .done(function(res) {
-                // Sukses: Refresh Badge & List
                 checkNotificationCount();
                 fetchNotificationList();
             })
             .fail(function(xhr) {
-                // Error: Munculkan pesan error biar tau kenapa gagal
                 console.error(xhr);
                 alert('Gagal menandai semua dibaca. Cek Console Log.');
             })
             .always(function() {
-                // Kembalikan teks tombol
                 $('#mark-all-read').text(originalText);
             });
         });
