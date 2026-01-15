@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Master;
 use App\Http\Controllers\Controller;
 use App\Models\BG\Tax;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Yajra\DataTables\Facades\DataTables;
 
 class BgTaxController extends Controller
@@ -16,7 +17,6 @@ class BgTaxController extends Controller
             return DataTables::of($data)
                 ->addIndexColumn()
                 ->editColumn('value', function($row){
-                    // Tampilkan sebagai persen di table (misal 0.11 jadi 11%)
                     return ($row->value * 100) . '%';
                 })
                 ->addColumn('action', function($row){
@@ -31,41 +31,72 @@ class BgTaxController extends Controller
     public function store(Request $request)
     {
         $request->validate(['name' => 'required', 'value' => 'required|numeric']);
-
-        // Konversi Input Persen (misal 11) ke Desimal (0.11) agar sesuai logic sebelumnya
         $decimalValue = $request->value / 100;
 
-        Tax::create([
+        $tax = Tax::create([
             'name' => $request->name,
             'value' => $decimalValue
         ]);
 
-        return response()->json(['success' => true, 'message' => 'Tax Saved']);
-    }
+        activity()
+            ->causedBy(Auth::user())
+            ->performedOn($tax)
+            ->useLog('master_bg_tax')
+            ->event('create')
+            ->withProperties(['attributes' => $tax->toArray()])
+            ->log("Created Tax: {$request->name} ({$request->value}%)");
 
-    public function show($id)
-    {
-        $tax = Tax::findOrFail($id);
-        // Kembalikan ke format persen untuk diedit (0.11 -> 11)
-        $tax->value = $tax->value * 100;
-        return response()->json($tax);
+        return response()->json(['success' => true, 'message' => 'Tax Saved']);
     }
 
     public function update(Request $request, $id)
     {
         $tax = Tax::findOrFail($id);
+        $oldData = $tax->getOriginal();
+
         $decimalValue = $request->value / 100;
 
         $tax->update([
             'name' => $request->name,
             'value' => $decimalValue
         ]);
+
+        activity()
+            ->causedBy(Auth::user())
+            ->performedOn($tax)
+            ->useLog('master_bg_tax')
+            ->event('update')
+            ->withProperties([
+                'old' => $oldData,
+                'attributes' => $tax->getChanges()
+            ])
+            ->log("Updated Tax: {$request->name}");
+
         return response()->json(['success' => true, 'message' => 'Tax Updated']);
+    }
+
+    public function show($id)
+    {
+        $tax = Tax::findOrFail($id);
+        $tax->value = $tax->value * 100;
+        return response()->json($tax);
     }
 
     public function destroy($id)
     {
+        $tax = Tax::findOrFail($id);
+        $oldData = $tax->toArray();
+
         Tax::destroy($id);
-        return response()->json(['success' => true, 'message' => 'Deleted']);
+
+        activity()
+            ->causedBy(Auth::user())
+            ->performedOn($tax)
+            ->useLog('master_bg_tax')
+            ->event('delete')
+            ->withProperties(['attributes' => $oldData])
+            ->log("Deleted Tax: {$oldData['name']}");
+
+        return response()->json(['success' => true, 'message' => 'Data Tax Deleted']);
     }
 }

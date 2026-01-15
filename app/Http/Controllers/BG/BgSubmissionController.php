@@ -23,6 +23,8 @@ use App\Models\User;
 use App\Models\BG\BgHistory;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
+use App\Notifications\SystemNotification;
+use Illuminate\Support\Facades\Notification;
 
 class BgSubmissionController extends Controller
 {
@@ -148,7 +150,7 @@ class BgSubmissionController extends Controller
         $bankName = $bg && $bg->details->first() ? $bg->details->first()->bank_name : '-';
         $nominal  = $bg ? number_format($bg->bg_nominal, 0, ',', '.') : '0';
 
-        // Tampilan sedikit berbeda untuk history vs active
+
         $badgeClass = in_array($row->status, ['completed', 'approved'])
                         ? 'bg-success bg-opacity-10 text-success border-success'
                         : 'bg-light text-primary border-primary-subtle';
@@ -325,26 +327,19 @@ class BgSubmissionController extends Controller
 
         if ($request->action_type == 'edit_submit') {
 
-            $approvalPathExists = ApprovalPath::where('category', 'BG')
-                                    ->where('sub_category', 'Lampiran D')
-                                    ->exists();
-
-            if (!$approvalPathExists) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Gagal: Approval Path untuk "BG - Lampiran D" belum dibuat.'
-                ]);
-            }
+            $approvalPathExists = ApprovalPath::where('category', 'BG')->where('sub_category', 'Lampiran D')->exists();
+            if (!$approvalPathExists) return response()->json(['success' => false, 'message' => 'Approval Path belum dibuat.']);
 
             DB::beginTransaction();
             try {
                 $rec = $submission->recommendation;
                 $customer = $rec->customer;
-                $customer->update([
-                    'name' => $request->nama_distributor,
-                    'city' => $request->kota,
-                    'area' => $request->wilayah_kerja,
-                ]);
+                $customer->update(['name' => $request->nama_distributor, 'city' => $request->kota, 'area' => $request->wilayah_kerja]);
+
+                $oldRecData = [
+                    'limit' => $rec->credit_limit_updated,
+                    'set_bg' => $rec->set_bg
+                ];
 
                 $rec->update([
                     'average' => $request->rata_rata_penjualan,
@@ -352,39 +347,18 @@ class BgSubmissionController extends Controller
                     'lead_time' => $request->lead_time,
                     'inflation' => $request->faktor_fluktuasi,
                     'credit_limit_updated' => $request->limit_kredit,
-                    'set_bg' => $request->nilai_bg_ditetapkan,
+                    'set_bg' => $request->nilai_bg_ditetapkan
                 ]);
 
-                // 2. Update Rincian BG & Details
                 if(isset($request->details)) {
                     foreach ($request->details as $detailId => $val) {
                         $detailObj = BgDetail::findOrFail($detailId);
-
-                        $detailObj->update([
-                            'bank_name' => $val['bank_name'],
-                            'branch_name' => $val['branch_name'],
-                            'nominal' => $val['nominal'],
-                        ]);
-
-                        // Update Nominal di Parent BG juga agar sinkron
+                        $detailObj->update(['bank_name' => $val['bank_name'], 'branch_name' => $val['branch_name'], 'nominal' => $val['nominal']]);
                         $parentBg = BankGaransi::find($detailObj->bank_garansi_id);
-                        if ($parentBg) {
-                            $parentBg->update([
-                                'bg_nominal' => $val['nominal']
-                            ]);
-                        }
+                        if ($parentBg) $parentBg->update(['bg_nominal' => $val['nominal']]);
                     }
                 }
 
-                $targetBgCorrection = BankGaransi::whereHas('details', function($q) use($request) {
-                    $q->whereIn('id', array_keys($request->details ?? []));
-                })->first();
-
-                if($targetBgCorrection) {
-                     $this->addToBgHistory($submission, $targetBgCorrection, 'Correction via Submission Edit');
-                }
-
-                // 3. Buat Snapshot Lampiran D (Versi Koreksi)
                 $lampiranD = LampiranD::firstOrCreate(
                     ['bg_submission_id' => $submission->id],
                     ['version_latest' => 0, 'created_by' => auth()->id()]
@@ -394,14 +368,14 @@ class BgSubmissionController extends Controller
                     'nama_distributor' => $request->nama_distributor,
                     'kota' => $request->kota,
                     'wilayah_kerja' => $request->wilayah_kerja,
-                    'periode' => $request->periode, // String dari frontend
+                    'periode' => $request->periode,
                     'rata_rata_penjualan' => $request->rata_rata_penjualan,
                     'syarat_pembayaran' => $request->syarat_pembayaran,
                     'lead_time' => $request->lead_time,
                     'faktor_fluktuasi' => $request->faktor_fluktuasi,
                     'limit_kredit' => $request->limit_kredit,
                     'nilai_bg_ditetapkan' => $request->nilai_bg_ditetapkan,
-                    'nilai_bg_diserahkan' => $request->nilai_bg_diserahkan, // Ini nominal total
+                    'nilai_bg_diserahkan' => $request->nilai_bg_diserahkan,
                     'details' => $request->details
                 ];
 
@@ -422,13 +396,10 @@ class BgSubmissionController extends Controller
                     'active_version_id' => $newVersion->id
                 ]);
 
-                // 4. Trigger Approval Workflow (Ke Finance)
                 $requester = auth()->user();
                 $logs = $this->generateApprovalLogs($requester, $submission->id, 'BG', 'Lampiran D');
 
-                if ($logs->isEmpty()) {
-                    throw new \Exception("User Role Manager Finance tidak ditemukan untuk approval.");
-                }
+                if ($logs->isEmpty()) throw new \Exception("User Role Manager Finance tidak ditemukan.");
 
                 $submission->update(['status' => 'waiting_approval']);
 
@@ -442,8 +413,48 @@ class BgSubmissionController extends Controller
                     ProcessFinanceApprovalEmail::dispatch($firstLog, $submission);
                 }
 
+                activity()
+                    ->causedBy(auth()->user())
+                    ->performedOn($submission)
+                    ->useLog('bg_submission')
+                    ->event('review_correction')
+                    ->withProperties([
+                        'form_code' => $submission->form_code,
+                        'customer' => $customer->name,
+                        'changes' => [
+                            'credit_limit' => [
+                                'from' => $oldRecData['limit'],
+                                'to' => $request->limit_kredit
+                            ],
+                            'set_bg' => [
+                                'from' => $oldRecData['set_bg'],
+                                'to' => $request->nilai_bg_ditetapkan
+                            ]
+                        ],
+                        'approval_status' => 'waiting_finance'
+                    ])
+                    ->log("Admin mengedit data Lampiran D (Koreksi) dan meneruskan ke Approval Finance");
+
+                $approvers = User::role(['manager-finance', 'head-finance'])->get();
+                Notification::send($approvers, new SystemNotification(
+                    'Approval Required',
+                    "Lampiran D <b>{$customer->name}</b> menunggu persetujuan Anda.",
+                    route('bg-approvals.index'),
+                    'ph-signature',
+                    'warning'
+                ));
+
+                $admins = User::role(['super-admin'])->get();
+                Notification::send($admins, new SystemNotification(
+                    'Submission Forwarded',
+                    "Lampiran D <b>{$customer->name}</b> diteruskan ke Finance.",
+                    route('bg-submissions.index'),
+                    'ph-paper-plane-tilt',
+                    'info'
+                ));
+
                 DB::commit();
-                return response()->json(['success' => true, 'message' => 'Data Lampiran D berhasil diperbarui, disimpan ke history version, & diteruskan ke Finance.']);
+                return response()->json(['success' => true, 'message' => 'Data dikoreksi & diteruskan ke Finance (Log Tercatat).']);
 
             } catch (\Exception $e) {
                 DB::rollBack();
@@ -457,29 +468,31 @@ class BgSubmissionController extends Controller
             try {
                 $rec = $submission->recommendation;
                 $customer = $rec->customer;
-
                 $metadata = json_decode($rec->notes, true) ?? [];
-                $bgs = collect();
 
                 $targetBgToUpdate = null;
                 $allBatchBgs = collect();
 
                 if (isset($metadata['action']) && $metadata['action'] === 'existing' && !empty($metadata['target_bg_id'])) {
                     $targetBgToUpdate = BankGaransi::where('id', $metadata['target_bg_id'])->with('details')->first();
-                    if($targetBgToUpdate) {
-                        $allBatchBgs->push($targetBgToUpdate);
-                    }
+                    if($targetBgToUpdate) $allBatchBgs->push($targetBgToUpdate);
                 }
                 else {
                     $createdAt = $submission->created_at;
                     $allBatchBgs = BankGaransi::where('customer_id', $customer->id)
-                            ->whereBetween('created_at', [$createdAt->copy()->subSeconds(5), $createdAt->copy()->addSeconds(5)])
+                            ->whereBetween('created_at', [
+                                $createdAt->copy()->subSeconds(5),
+                                $createdAt->copy()->addSeconds(5)
+                            ])
                             ->with('details')
                             ->orderBy('id', 'asc')
                             ->get();
 
                     $siblingSubmissions = BgSubmission::where('bg_recommendation_id', $rec->id)
-                                            ->where('created_at', $submission->created_at)
+                                            ->whereBetween('created_at', [
+                                                $createdAt->copy()->subSeconds(5),
+                                                $createdAt->copy()->addSeconds(5)
+                                            ])
                                             ->orderBy('id', 'asc')
                                             ->pluck('id')
                                             ->toArray();
@@ -494,7 +507,7 @@ class BgSubmissionController extends Controller
                 }
 
                 if ($allBatchBgs->isEmpty() || !$targetBgToUpdate) {
-                    throw new \Exception("Data Bank Garansi tidak ditemukan. Cek Metadata/Timestamp.");
+                    throw new \Exception("Data Bank Garansi tidak ditemukan.");
                 }
 
                 $totalBgDiserahkan = $allBatchBgs->sum('bg_nominal');
@@ -536,11 +549,7 @@ class BgSubmissionController extends Controller
                     'details' => $detailsSnapshot
                 ];
 
-                $lampiranD = LampiranD::firstOrCreate(
-                    ['bg_submission_id' => $submission->id],
-                    ['version_latest' => 0, 'created_by' => auth()->id()]
-                );
-
+                $lampiranD = LampiranD::firstOrCreate(['bg_submission_id' => $submission->id], ['version_latest' => 0, 'created_by' => auth()->id()]);
                 $nextVersion = $lampiranD->version_latest + 1;
                 $newVersion = LampiranDVersion::create([
                     'lampiran_d_id' => $lampiranD->id,
@@ -551,13 +560,9 @@ class BgSubmissionController extends Controller
                     'generated_at'  => now(),
                     'remarks'       => 'Direct Approved by Admin (Nominal Updated)'
                 ]);
+                $lampiranD->update(['version_latest' => $nextVersion, 'active_version_id' => $newVersion->id]);
 
-                $lampiranD->update([
-                    'version_latest'    => $nextVersion,
-                    'active_version_id' => $newVersion->id
-                ]);
-
-                if($targetBgToUpdate->status == 'draft' || $targetBgToUpdate->status == 'submitted') {
+                if($targetBgToUpdate->status != 'approved') {
                     $targetBgToUpdate->update([
                         'status'      => 'approved',
                         'issued_date' => now(),
@@ -567,10 +572,22 @@ class BgSubmissionController extends Controller
                     $this->addToBgHistory($submission, $targetBgToUpdate);
                 }
 
-                $submission->update([
-                    'status' => 'completed',
-                    'token'  => Str::random(60)
-                ]);
+                activity()
+                    ->causedBy(auth()->user())
+                    ->performedOn($submission)
+                    ->useLog('bg_submission')
+                    ->event('direct_approve')
+                    ->withProperties([
+                        'form_code'       => $submission->form_code,
+                        'customer'        => $customer->name,
+                        'bg_number'       => $targetBgToUpdate->bg_number,
+                        'bg_nominal'      => $targetBgToUpdate->bg_nominal,
+                        'lampiran_d_ver'  => $nextVersion,
+                        'note'            => 'Bypass Approval Workflow'
+                    ])
+                    ->log("Admin melakukan Direct Submit (Bypass Approval). Lampiran D diterbitkan & BG Approved.");
+
+                $submission->update(['status' => 'completed', 'token' => Str::random(60)]);
 
                 $pendingSiblings = BgSubmission::where('bg_recommendation_id', $submission->bg_recommendation_id)
                                     ->where('status', '!=', 'completed')
@@ -584,7 +601,7 @@ class BgSubmissionController extends Controller
                 $this->sendCompletionEmails($submission);
 
                 DB::commit();
-                return response()->json(['success' => true, 'message' => 'Dokumen disetujui. Lampiran D diterbitkan dengan nominal terbaru.']);
+                return response()->json(['success' => true, 'message' => 'Dokumen disetujui & History tercatat satu kali.']);
 
             } catch (\Exception $e) {
                 DB::rollBack();
@@ -623,7 +640,8 @@ class BgSubmissionController extends Controller
         ]);
     }
 
-    private function sendCompletionEmails($submission) {
+    private function sendCompletionEmails($submission)
+    {
         $pendingSiblings = BgSubmission::where('bg_recommendation_id', $submission->bg_recommendation_id)
                             ->where('id', '!=', $submission->id)
                             ->where('status', '!=', 'completed')
@@ -634,17 +652,36 @@ class BgSubmissionController extends Controller
             return;
         }
 
-        $customerEmail = $submission->recommendation->customer->email;
-        $salesEmails = User::role('head-SNM')->pluck('email')->toArray();
-        $financeEmails = User::role('head-finance')->pluck('email')->toArray();
+        try {
+            $internalUsers = User::role(['super-admin', 'manager-finance', 'head-finance'])->get();
+            $custName = $submission->recommendation->customer->name ?? 'Customer';
 
-        $allRecipients = array_merge([$customerEmail], $salesEmails, $financeEmails);
-        $recipients = array_unique(array_filter($allRecipients));
+            Notification::send($internalUsers, new SystemNotification(
+                'Dokumen Selesai',
+                "Lampiran D & BG untuk <b>{$custName}</b> telah Terbit & Dikirim ke Customer.",
+                route('bg-submissions.index', ['type' => 'history']),
+                'ph-files',
+                'success'
+            ));
+        } catch (\Exception $e) {
+            \Log::error("Gagal kirim notif sistem completion: " . $e->getMessage());
+        }
 
-        foreach($recipients as $email) {
-            if (!empty($email)) {
-                Mail::to($email)->queue(new CustomerBgReadyMail($submission));
+        try {
+            $customerEmail = $submission->recommendation->customer->email;
+            $salesEmails   = User::role('head-SNM')->pluck('email')->toArray();
+            $financeEmails = User::role('head-finance')->pluck('email')->toArray();
+
+            $allRecipients = array_merge([$customerEmail], $salesEmails, $financeEmails);
+            $recipients    = array_unique(array_filter($allRecipients));
+
+            foreach($recipients as $email) {
+                if (!empty($email)) {
+                    Mail::to($email)->queue(new CustomerBgReadyMail($submission));
+                }
             }
+        } catch (\Exception $e) {
+            \Log::error("Gagal kirim email completion: " . $e->getMessage());
         }
     }
 }

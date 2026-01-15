@@ -11,7 +11,8 @@ use App\Models\Customer\Sales;
 use App\Models\Customer\TOP;
 use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
-use App\Helpers\DocumentHelper;
+use App\Notifications\SystemNotification;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
@@ -36,11 +37,11 @@ class CustomerController extends Controller
         $string = strtoupper($string);
         $string = str_replace(['.', ',', '/', '-', '(', ')'], ' ', $string);
         $string = preg_replace('/[^A-Z0-9\s]/', '', $string);
-        
+
         $words = preg_split('/\s+/', $string, -1, PREG_SPLIT_NO_EMPTY);
         $acronym = "";
-        
-        $entities = ['PT', 'CV', 'UD', 'TB', 'PD']; 
+
+        $entities = ['PT', 'CV', 'UD', 'TB', 'PD'];
 
         foreach ($words as $index => $w) {
             if ($index === 0 && (in_array($w, $entities) || strlen($w) <= 3)) {
@@ -50,7 +51,7 @@ class CustomerController extends Controller
             }
         }
 
-        if (empty($acronym)) return 'GEN'; 
+        if (empty($acronym)) return 'GEN';
 
         return substr($acronym, 0, 7);
     }
@@ -66,7 +67,7 @@ class CustomerController extends Controller
     public function generatePkdPreview(Request $request)
     {
         $name = $request->name;
-        
+
         if (empty($name)) {
             return response()->json(['success' => false, 'number' => '']);
         }
@@ -96,15 +97,15 @@ class CustomerController extends Controller
         do {
             $sequenceStr = str_pad($nextSequence, 3, '0', STR_PAD_LEFT);
             $pkdNumber = sprintf("%s/PKD-%s/%s/%s", $sequenceStr, $initials, $monthRoman, $year);
-            
+
             $exists = Customer::where('no_pkd', $pkdNumber)->exists();
             if ($exists) {
-                $nextSequence++; 
+                $nextSequence++;
             }
         } while ($exists);
 
         return response()->json([
-            'success' => true, 
+            'success' => true,
             'number' => $pkdNumber
         ]);
     }
@@ -114,9 +115,9 @@ class CustomerController extends Controller
         if ($request->ajax()) {
             $query = Customer::leftJoin('customer_files', 'customers.id', '=', 'customer_files.customer_id')
                 ->select(
-                    'customers.*', 
-                        'customer_files.npwp_file as file_npwp', 
-                    'customer_files.nib_siup_file as file_nib', 
+                    'customers.*',
+                        'customer_files.npwp_file as file_npwp',
+                    'customer_files.nib_siup_file as file_nib',
                     'customer_files.ktp_file as file_ktp'
                 );
             return DataTables::of($query)
@@ -373,6 +374,16 @@ class CustomerController extends Controller
             $customerData['customer_total'] = $grandTotal;
 
             $createdCustomer = Customer::create($customerData);
+
+            $recipients = User::role(['super-admin', 'admin', 'manager-finance', 'head-finance'])->get();
+
+            Notification::send($recipients, new SystemNotification(
+                'New Customer',
+                "Customer baru {$createdCustomer->name} telah ditambahkan.",
+                route('customers.index'),
+                'ph-users',
+                'success'
+            ));
 
             if ($request->has('items') && is_array($request->items)) {
                 foreach ($request->items as $item) {

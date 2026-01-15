@@ -29,6 +29,7 @@
                 </a>
                 <ul class="collapse" id="master-management">
                     <li><a href="{{ route('approval.path') }}">Approval Path</a></li>
+                    <li><a href="{{ route('system-logs.index') }}">System Logs</a></li>
                     <li><a href="{{ route('revision.index') }}">Revision</a></li>
                     <li><a href="{{ route('account-groups.index') }}">Account Group</a></li>
                     <li><a href="{{ route('regions.index') }}">Region</a></li>

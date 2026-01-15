@@ -39,42 +39,24 @@
                         </div>
                     </li> --}}
 
-                    <li class="header-notification">
-                        <a aria-controls="notificationcanvasRight" class="d-block head-icon position-relative"
-                            data-bs-target="#notificationcanvasRight" data-bs-toggle="offcanvas" href="#"
-                            role="button" id="notification-bell">
-                            <i class="iconoir-bell"></i>
-                            <span id="notification-badge"
-                                class="position-absolute top-0 start-90 translate-middle badge rounded-pill bg-success border border-light"
-                                style="display: none; font-size: 0.55em; padding: 0.35em 0.6em;"></span>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle position-relative" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" id="notifDropdownToggle">
+                            {{-- [FIX 1] Ubah f-s-20 jadi f-s-26 agar besar sama seperti avatar/icon lain --}}
+                            <i class="iconoir-bell f-s-26"></i>
+
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notif-count" style="display: none; font-size: 9px;">
+                                0
+                            </span>
                         </a>
-                        <div aria-labelledby="notificationcanvasRightLabel"
-                            class="offcanvas offcanvas-end header-notification-canvas" id="notificationcanvasRight"
-                            tabindex="-1">
-                            <div class="offcanvas-header">
-                                <h5 class="offcanvas-title">Notifications (<span id="notification-count">0</span>)</h5>
-                                <button aria-label="Close" class="btn-close" data-bs-dismiss="offcanvas"
-                                    type="button"></button>
+
+                        <div class="dropdown-menu dropdown-menu-end p-0 border-0 shadow-lg" style="width: 320px; max-height: 400px; overflow-y: auto;">
+                            <div class="p-3 border-bottom d-flex justify-content-between align-items-center bg-white sticky-top">
+                                <h6 class="mb-0 fw-bold">Notifications</h6>
+                                <a href="#" id="mark-all-read" class="text-decoration-none small text-primary" style="font-size: 11px;">Mark all read</a>
                             </div>
-                            <div class="offcanvas-body notification-offcanvas-body app-scroll p-0">
-                                <div id="notification-list-container"
-                                    class="head-container notification-head-container">
-                                    {{-- Notifikasi akan diisi oleh JavaScript --}}
-                                </div>
-                                {{-- Template Loading & Empty State --}}
-                                <div id="notification-loading" class="text-center py-5">
-                                    <div class="spinner-border text-primary" role="status"></div>
-                                </div>
-                                <div id="notification-empty" class="hidden-massage py-4 px-3" style="display: none;">
-                                    <img alt="" class="w-25 h25 mb-3 mt-2"
-                                        src="{{ asset('assets/images/icons/bell.png') }}">
-                                    <div>
-                                        <h6 class="mb-0">No New Notifications</h6>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="offcanvas-footer p-3 border-top">
-                                <button class="btn btn-primary w-100" id="mark-all-read-btn">Mark all as read</button>
+
+                            <div class="list-group list-group-flush" id="notification-list">
+                                <div class="text-center p-3 text-muted">Loading...</div>
                             </div>
                         </div>
                     </li>
@@ -142,121 +124,177 @@
 
     @push('scripts')
         <script>
-            $(document).ready(function() {
-                // === BAGIAN YANG DIGUNAKAN ===
-                const listContainer = $('#notification-list-container');
-                const loadingEl = $('#notification-loading');
-                const emptyEl = $('#notification-empty');
-                const badgeEl = $('#notification-badge');
-                const countEl = $('#notification-count');
-                const markAllReadBtn = $('#mark-all-read-btn');
-
-                // =================================================================
-                // [BARU] FUNGSI UNTUK MEMERIKSA JUMLAH NOTIFIKASI SAAT PAGE LOAD
-                // =================================================================
-                function checkNotificationCount() {
-                    $.getJSON("{{ route('notifications.count') }}", function(response) {
-                        const count = response.count;
-                        countEl.text(count); // Update angka di dalam dropdown
-
-                        if (count > 0) {
-                            // Tampilkan badge jika ada notifikasi
-                            badgeEl.text(count > 9 ? '9+' : count).show();
-                            markAllReadBtn.show();
-                        } else {
-                            // Sembunyikan badge jika tidak ada
-                            badgeEl.hide();
-                            markAllReadBtn.hide();
-                        }
-                    }).fail(function() {
-                        console.error('Failed to check notification count.');
-                    });
+    $(document).ready(function() {
+        // --- 1. CONFIG & POLLING ---
+        function checkNotificationCount() {
+            $.get("{{ route('notifications.count') }}", function(res) {
+                if (res.count > 0) {
+                    $('#notif-count').text(res.count).show();
+                } else {
+                    $('#notif-count').hide();
                 }
-
-                // === FUNGSI LAMA (TETAP DIPERLUKAN) ===
-                // Fungsi ini sekarang HANYA untuk mengambil dan menampilkan list detail
-                function fetchNotificationList() {
-                    loadingEl.show();
-                    listContainer.hide().empty();
-                    emptyEl.hide();
-
-                    $.getJSON("{{ route('notifications.fetch') }}", function(response) {
-                        const notifications = response.notifications;
-
-                        if (notifications.length > 0) {
-                            notifications.forEach(function(notif) {
-                                const notifHtml = `
-                                <div class="notification-message head-box mark-as-read" data-id="${notif.id}" data-url="${notif.url}" style="cursor: pointer;">
-                                    <div class="message-images">
-                                        <span class="${notif.color} h-35 w-35 d-flex-center b-r-10">
-                                            <i class="${notif.icon}"></i>
-                                        </span>
-                                    </div>
-                                    <div class="message-content-box flex-grow-1 ps-2">
-                                        <p class="f-s-14 mb-0">${notif.text}</p>
-                                        <span class="f-s-12 text-muted">${notif.time}</span>
-                                    </div>
-                                </div>`;
-                                listContainer.append(notifHtml);
-                            });
-                            listContainer.show();
-                        } else {
-                            emptyEl.show();
-                        }
-                    }).fail(function() {
-                        emptyEl.show().find('h6').text('Failed to load notifications.');
-                    }).always(function() {
-                        loadingEl.hide();
-                    });
-                }
-
-                // === PANGGILAN FUNGSI & EVENT LISTENERS ===
-
-                // [MODIFIKASI] Panggil fungsi count saat dokumen siap (page load)
-                checkNotificationCount();
-
-                // [MODIFIKASI] Saat lonceng diklik, panggil kedua fungsi
-                $('#notification-bell').on('click', function() {
-                    checkNotificationCount(); // Perbarui count untuk jaga-jaga
-                    fetchNotificationList(); // Ambil list detailnya
-                });
-
-                // Tandai satu notifikasi sebagai dibaca saat diklik (TIDAK ADA PERUBAHAN)
-                $(document).on('click', '.mark-as-read', function() {
-                    const notifEl = $(this);
-                    const id = notifEl.data('id');
-                    const url = notifEl.data('url');
-
-                    $.post("{{ route('notifications.read') }}", {
-                            id: id,
-                            _token: "{{ csrf_token() }}"
-                        })
-                        .done(function(res) {
-                            if (res.success) {
-                                if (url && url !== '#') {
-                                    window.location.href = url;
-                                } else {
-                                    checkNotificationCount(); // Muat ulang count
-                                    fetchNotificationList(); // Muat ulang list
-                                }
-                            }
-                        }).fail(function() {
-                            alert('Failed to mark as read. Please try again.');
-                        });
-                });
-
-                // Tandai semua sebagai dibaca (TIDAK ADA PERUBAHAN)
-                markAllReadBtn.on('click', function() {
-                    $.post("{{ route('notifications.read.all') }}", {
-                        _token: "{{ csrf_token() }}"
-                    }, function(res) {
-                        if (res.success) {
-                            checkNotificationCount(); // Muat ulang count
-                            fetchNotificationList(); // Muat ulang list
-                        }
-                    });
-                });
             });
-        </script>
+        }
+
+        // Init & Interval
+        checkNotificationCount();
+        setInterval(checkNotificationCount, 3000);
+
+        // --- 2. FETCH LIST NOTIFICATION ---
+        $('#notifDropdownToggle').on('show.bs.dropdown', function () {
+            // Hanya fetch jika list masih kosong atau ada indikator loading
+            // (Opsional: bisa dihapus if-nya kalau mau selalu refresh saat dibuka)
+            fetchNotificationList();
+        });
+
+        function fetchNotificationList() {
+            $.get("{{ route('notifications.fetch') }}", function(res) {
+                let html = '';
+
+                if (res.data && res.data.length > 0) {
+                    res.data.forEach(n => {
+                        // Logic Tampilan (Read vs Unread)
+                        let bgClass = n.read_at ? 'bg-light' : 'bg-white';
+                        let borderClass = n.read_at ? '' : 'border-start border-3 border-primary';
+                        let textTitle = n.read_at ? 'text-muted' : 'fw-bold text-dark';
+                        let textBody = n.read_at ? 'text-muted opacity-75' : 'text-dark';
+                        let iconColor = n.data.color || 'primary';
+
+                        // Kita pasang ID unik di elemen list agar mudah dihapus nanti
+                        html += `
+                            <div class="list-group-item list-group-item-action ${bgClass} ${borderClass} p-0 notif-item" id="notif-item-${n.id}">
+                                <div class="d-flex w-100 justify-content-between align-items-center pe-2">
+
+                                    <a href="${n.data.url}" class="d-flex align-items-start p-3 w-100 text-decoration-none action-read"
+                                       data-id="${n.id}">
+
+                                        <div class="flex-shrink-0 me-3">
+                                            <span class="avatar-title bg-${iconColor}-subtle text-${iconColor} rounded-circle p-2 d-inline-block">
+                                                <i class="${n.data.icon} fs-5"></i>
+                                            </span>
+                                        </div>
+
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-1 ${textTitle}" style="font-size: 13px;">${n.data.title}</h6>
+                                            <div class="mb-1 small ${textBody}" style="word-break: break-word; white-space: normal; line-height: 1.4;">
+                                                ${n.data.message}
+                                            </div>
+                                            <small class="text-muted" style="font-size: 10px;">${n.created_at}</small>
+                                        </div>
+                                    </a>
+
+                                    <button type="button" class="btn btn-sm btn-link text-muted action-delete p-2"
+                                            data-id="${n.id}"
+                                            title="Hapus Pesan"
+                                            style="z-index: 10;">
+                                        <i class="iconoir-trash f-s-16"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                } else {
+                    html = '<div class="text-center p-4 text-muted"><i class="iconoir-bell-off fs-3 mb-2"></i><p class="small mb-0">Tidak ada notifikasi</p></div>';
+                }
+                $('#notification-list').html(html);
+            });
+        }
+
+        $(document).on('click', '.action-read', function(e) {
+            e.preventDefault();
+
+            let url = $(this).attr('href');
+            let id = $(this).data('id');
+
+            if(url && url !== '#' && url !== 'javascript:void(0);') {
+                window.location.href = url;
+            }
+
+            $.post("{{ route('notifications.read') }}", {
+                id: id,
+                _token: "{{ csrf_token() }}"
+            });
+        });
+
+        // --- 4. HANDLER KLIK: HAPUS NOTIFIKASI (Dropdown Tetap Buka) ---
+        $(document).on('click', '.action-delete', function(e) {
+            // [KUNCI 1] Mencegah browser melakukan aksi default (scroll ke atas dll)
+            e.preventDefault();
+
+            // [KUNCI 2] Mencegah Event Bubbling (PENTING AGAR DROPDOWN TIDAK MENUTUP)
+            e.stopPropagation();
+
+            let btn = $(this);
+            let id = btn.data('id');
+            let item = $('#notif-item-' + id); // Pastikan ID di HTML list sudah benar (lihat di bawah)
+
+            // Ubah icon jadi loading
+            btn.html('<i class="fas fa-spinner fa-spin small"></i>');
+
+            // Gunakan Route Helper untuk URL yang akurat
+            let deleteUrl = "{{ route('notifications.destroy', ':id') }}";
+            deleteUrl = deleteUrl.replace(':id', id);
+
+            $.ajax({
+                url: deleteUrl,
+                type: 'POST',
+                data: {
+                    _method: 'DELETE', // Method Spoofing
+                    _token: "{{ csrf_token() }}"
+                },
+                success: function(result) {
+                    if(result.success) {
+                        // [KUNCI 3] Animasi Slide Up (Item hilang pelan-pelan)
+                        // Dropdown tetap terbuka karena kita tidak me-refresh seluruh list
+                        item.animate({ opacity: 0, height: 0 }, 300, function() {
+                            $(this).remove(); // Hapus elemen dari DOM setelah animasi selesai
+
+                            // Cek apakah list jadi kosong? Jika ya, tampilkan pesan kosong
+                            if($('#notification-list').children().length === 0) {
+                                $('#notification-list').html('<div class="text-center p-4 text-muted"><p class="small mb-0">Tidak ada notifikasi</p></div>');
+                            }
+                        });
+
+                        // Update badge angka di background tanpa menutup dropdown
+                        checkNotificationCount();
+                    }
+                },
+                error: function(err) {
+                    console.error('Gagal hapus:', err);
+                    btn.html('<i class="iconoir-trash f-s-16"></i>'); // Balikin icon trash
+                    // Optional: Toast error kecil
+                }
+            });
+        });
+
+        // --- 5. MARK ALL READ ---
+        $('#mark-all-read').click(function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            // Ubah icon jadi loading sementara
+            let originalText = $(this).text();
+            $(this).text('Processing...');
+
+            $.post("{{ route('notifications.read.all') }}", {
+                _token: "{{ csrf_token() }}"
+            })
+            .done(function(res) {
+                // Sukses: Refresh Badge & List
+                checkNotificationCount();
+                fetchNotificationList();
+            })
+            .fail(function(xhr) {
+                // Error: Munculkan pesan error biar tau kenapa gagal
+                console.error(xhr);
+                alert('Gagal menandai semua dibaca. Cek Console Log.');
+            })
+            .always(function() {
+                // Kembalikan teks tombol
+                $('#mark-all-read').text(originalText);
+            });
+        });
+    });
+</script>
     @endpush
 </header>

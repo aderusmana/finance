@@ -236,6 +236,20 @@ class BgRecommendationController extends Controller
             ]);
 
             $recForMail = BgRecommendation::with(['customer', 'periods', 'tax'])->findOrFail($id);
+            activity()
+                ->causedBy(auth()->user())
+                ->performedOn($recForMail)
+                ->useLog('bg_recommendation')
+                ->event('submit_credit_limit')
+                ->withProperties([
+                    'customer' => $recForMail->customer->name,
+                    'calculated_limit' => $rounded,
+                    'final_credit_limit' => $limitUpdated,
+                    'set_bg_nominal' => $setBg,
+                    'inflation_rate' => $inflation . '%'
+                ])
+                ->log("Admin menetapkan Credit Limit Baru: Rp " . number_format($limitUpdated, 0, ',', '.') . " (BG: Rp " . number_format($setBg, 0, ',', '.') . ")");
+
             if ($recForMail->customer && $recForMail->customer->email) {
                 Mail::to($recForMail->customer->email)
                     ->queue(new CustomerFillFormNotification($recForMail)); // Kirim objek yg lengkap

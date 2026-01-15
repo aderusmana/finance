@@ -13,6 +13,7 @@ use App\Mail\BgExistingMail;
 use App\Mail\BgExtensionMail;
 use App\Models\BG\BgRecommendation;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Auth;
 
 class BankGaransiController extends Controller
 {
@@ -182,6 +183,11 @@ class BankGaransiController extends Controller
                         Mail::to($bg->customer->email)->queue(new BgExtensionMail($bg));
                     }
                 }
+
+                activity()
+                    ->causedBy(auth()->user())
+                    ->performedOn($bg)
+                    ->log('Generated New Bank Garansi');
             }
 
             DB::commit();
@@ -297,6 +303,7 @@ class BankGaransiController extends Controller
     {
         try {
             $bg = BankGaransi::with('customer')->findOrFail($id);
+            $currentNominal = $bg->bg_nominal;
 
             $bg->update([
                 'bg_type' => 'existing'
@@ -330,6 +337,18 @@ class BankGaransiController extends Controller
             }
 
             Mail::to($bg->customer->email)->queue(new BgExistingMail($bg, $rec));
+
+            activity()
+                ->causedBy(Auth::user())
+                ->performedOn($bg)
+                ->useLog('bg_transaction')
+                ->event('trigger_existing')
+                ->withProperties([
+                    'bg_number' => $bg->bg_number,
+                    'current_nominal' => $currentNominal,
+                    'customer' => $bg->customer->name
+                ])
+                ->log("Admin memulai proses EXISTING untuk BG {$bg->bg_number}");
 
             return response()->json(['success' => true, 'message' => 'Tipe BG diubah menjadi EXISTING & Link update dikirim!']);
 
@@ -376,6 +395,23 @@ class BankGaransiController extends Controller
             }
 
             Mail::to($customer->email)->queue(new BgExtensionMail($rec));
+
+            $parentBgNumber = '-';
+            if($request->has('bg_id')) {
+                $parentBg = BankGaransi::find($request->bg_id);
+                $parentBgNumber = $parentBg ? $parentBg->bg_number : '-';
+            }
+
+            activity()
+                ->causedBy(Auth::user())
+                ->performedOn($rec)
+                ->useLog('bg_transaction')
+                ->event('trigger_extension')
+                ->withProperties([
+                    'customer' => $customer->name,
+                    'parent_bg' => $parentBgNumber
+                ])
+                ->log("Admin memulai proses EXTENSION untuk Customer {$customer->name}");
 
             return response()->json(['success' => true, 'message' => 'Request Extension diproses. Link pembuatan BG Baru dikirim!']);
 

@@ -12,7 +12,10 @@ use Illuminate\Support\Facades\Mail;
 use App\Mail\CustomerBgReadyMail;
 use App\Models\BG\BgHistory;
 use App\Models\BG\LampiranD;
+use App\Notifications\SystemNotification;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 
 class ApprovalProcessController extends Controller
@@ -54,19 +57,16 @@ class ApprovalProcessController extends Controller
 
         $submission = BgSubmission::with('recommendation.customer')->findOrFail($log->related_id);
 
-        // --- [FIX START] LOGIC PENCARIAN BG (METADATA AWARE) ---
         $rec = $submission->recommendation;
         $metadata = json_decode($rec->notes, true) ?? [];
         $bg = null;
 
-        // SKENARIO 1: EXISTING (Cari by ID dari Metadata)
         if (isset($metadata['action']) && $metadata['action'] === 'existing' && !empty($metadata['target_bg_id'])) {
             $bg = BankGaransi::with('details')->find($metadata['target_bg_id']);
         }
-        // SKENARIO 2: NEW / EXTENSION (Cari by Timestamp)
         else {
             $createdAt = Carbon::parse($submission->created_at);
-            $start = $createdAt->copy()->subMinutes(2); // Perlebar range sedikit
+            $start = $createdAt->copy()->subMinutes(2);
             $end   = $createdAt->copy()->addMinutes(2);
 
             $siblingSubmissions = BgSubmission::where('bg_recommendation_id', $submission->bg_recommendation_id)
@@ -88,7 +88,6 @@ class ApprovalProcessController extends Controller
                 $bg = $candidateBgs->first();
             }
         }
-        // --- [FIX END] ---
 
         if (!$bg) {
              return abort(404, 'Data Bank Garansi tidak ditemukan. Kemungkinan Timestamp mismatch atau ID salah.');
@@ -106,26 +105,68 @@ class ApprovalProcessController extends Controller
                           ->where('status', 'Pending')
                           ->firstOrFail();
 
+        $sub = BgSubmission::with('recommendation.customer')->find($log->related_id);
+
+        if (!$sub) {
+            return abort(404, 'Data Submission tidak ditemukan');
+        }
+
         $action = $request->action;
         $status = ($action == 'reject') ? 'Rejected' : 'Approved';
 
-        $log->update([
-            'status' => $status,
-            'notes' => $request->notes,
-            'updated_at' => now(),
-            'token' => null
-        ]);
+        DB::beginTransaction();
+        try {
+            $log->update([
+                'status'     => $status,
+                'notes'      => $request->notes,
+                'updated_at' => now(),
+                'token'      => null
+            ]);
 
-        if ($status == 'Rejected') {
-            $sub = BgSubmission::find($log->related_id);
-            if ($sub) {
+            $causer = auth()->user() ?? User::where('nik', $log->approver_nik)->first();
+            $actionText = ($status == 'Rejected') ? 'Rejected Approval' : 'Approved Document';
+
+            activity()
+                ->causedBy($causer)
+                ->performedOn($sub)
+                ->useLog('approval_process')
+                ->event($action)
+                ->withProperties(['notes' => $request->notes, 'approver' => $log->approver_name])
+                ->log("{$actionText} oleh Finance ({$log->approver_name})");
+
+            if ($status == 'Rejected') {
                 $sub->update(['status' => 'rejected_by_finance']);
+            } else {
+                $this->finalizeSubmission($log->related_id);
             }
-        } else {
-            $this->finalizeSubmission($log->related_id);
-        }
 
-        return view('page.customer_portal.form-success', ['type' => 'upload', 'title' => 'Processed Successfully']);
+            $admins = User::role(['super-admin'])->get();
+            $statusBold = "<b>" . ($status == 'Approved' ? 'Disetujui' : 'Ditolak') . "</b>";
+            $color = ($status == 'Approved') ? 'success' : 'danger';
+            $icon  = ($status == 'Approved') ? 'ph-check-circle' : 'ph-x-circle';
+
+            $custName = $sub->recommendation->customer->name ?? 'Unknown Customer';
+            Notification::send($admins, new SystemNotification(
+                "Submission {$statusBold}",
+                "Pengajuan <b>{$custName}</b> telah {$statusBold} oleh Finance.",
+                route('bg-submissions.index'),
+                $icon,
+                $color
+            ));
+
+            DB::commit();
+
+            return view('page.customer_portal.form-success', [
+                'type' => 'approval',
+                'title' => 'Processed Successfully',
+                'message' => 'Terima kasih, keputusan approval Anda telah disimpan.'
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error("Approval Error: " . $e->getMessage());
+            return abort(500, 'Terjadi kesalahan sistem saat memproses approval.');
+        }
     }
 
     private function finalizeSubmission($submissionId) {
@@ -141,16 +182,13 @@ class ApprovalProcessController extends Controller
             $financeUser = User::role(['manager-finance', 'head-finance'])->first();
             $approverId = $financeUser ? $financeUser->id : null;
 
-            // --- [FIX START] LOGIC FINALIZE JUGA HARUS DIPERBAIKI ---
             $rec = $sub->recommendation;
             $metadata = json_decode($rec->notes, true) ?? [];
             $targetBg = null;
 
-            // 1. Existing Check
             if (isset($metadata['action']) && $metadata['action'] === 'existing' && !empty($metadata['target_bg_id'])) {
                 $targetBg = BankGaransi::find($metadata['target_bg_id']);
             }
-            // 2. New/Extension Check
             else {
                 $createdAt = Carbon::parse($sub->created_at);
                 $start = $createdAt->copy()->subMinutes(2);
@@ -174,17 +212,14 @@ class ApprovalProcessController extends Controller
                     $targetBg = $candidateBgs->first();
                 }
             }
-            // --- [FIX END] ---
 
             if ($targetBg) {
-                // Update BG jadi Approved
                 $targetBg->update([
                     'status'      => 'approved',
                     'issued_date' => now(),
                     'exp_date'    => now()->addYear(),
                 ]);
 
-                // Cari BG Sebelumnya (Logic History)
                 $prevBg = BankGaransi::where('customer_id', $targetBg->customer_id)
                             ->where('id', '<', $targetBg->id)
                             ->whereNotIn('status', ['draft', 'rejected', 'returned'])
@@ -197,7 +232,6 @@ class ApprovalProcessController extends Controller
                     $remarks = $lampiranD->activeVersion->remarks;
                 }
 
-                // Catat History Perubahan
                 BgHistory::create([
                     'bank_garansi_id'   => $targetBg->id,
                     'previous_nominal'  => $prevBg ? $prevBg->bg_nominal : 0,

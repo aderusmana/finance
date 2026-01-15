@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Customer\AccountGroupController;
 use App\Http\Controllers\Master\ApprovalPathController;
 use App\Http\Controllers\Customer\BranchController;
@@ -30,9 +29,8 @@ use App\Http\Controllers\BG\ApprovalProcessController;
 use App\Http\Controllers\BG\BgApprovalInboxController;
 use App\Http\Controllers\BG\BgReportController;
 use App\Http\Controllers\BG\LampiranDController;
-use Carbon\Carbon;
+use App\Http\Controllers\Master\SystemLogController;
 use Illuminate\Support\Facades\Route;
-use Maatwebsite\Excel\Row;
 
 // Redirect root to the named login route (actual login routes are defined in routes/auth.php)
 Route::get('/', function () {
@@ -111,6 +109,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/notifications/fetch', [NotificationController::class, 'fetch'])->name('notifications.fetch');
     Route::post('/notifications/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
     Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.read.all');
+    Route::delete('/notifications/{id}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
 
     // --- MASTER DATA ROUTES ---
     Route::prefix('master')->group(function () {
@@ -169,7 +168,7 @@ Route::group(['middleware' => ['role:super-admin|admin']], function () {
     Route::resource('permissions', PermissionController::class);
     Route::resource('roles', RoleController::class);
     Route::resource('positions', PositionController::class);
-
+    Route::get('/system-logs', [SystemLogController::class, 'index'])->name('system-logs.index');
     Route::get('roles/{roleId}/give-permissions', [RoleController::class, 'addPermissionToRole'])->name('roles.give-permissions');
     Route::post('roles/{roleId}/give-permissions', [RoleController::class, 'givePermissionToRole'])->name('roles.give-permission');
 
