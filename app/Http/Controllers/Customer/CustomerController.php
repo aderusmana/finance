@@ -284,6 +284,7 @@ class CustomerController extends Controller
 
     public function store(CustomerRequest $request)
     {
+        // 1. Cek Apakah Approval Path Tersedia
         $category = 'Customer';
         $subCategory = 'CBD';
 
@@ -311,15 +312,18 @@ class CustomerController extends Controller
         $logs = collect();
         $firstLog = null;
 
+        // 2. Mulai Transaksi Database
         DB::transaction(function () use ($request, &$createdCustomer, &$logs, &$firstLog) {
             $user = Auth::user();
 
+            // --- A. Persiapan Data Customer ---
             $customerData = $request->except(['file_npwp', 'file_nib', 'file_ktp', 'items']);
             $year = date('Y');
             $monthRoman = $this->getRomanMonth(date('n'));
             $initials = $this->generateInitials($request->name);
             $maxSequence = 0;
 
+            // Generate No PKD
             $existingNumbers = Customer::where('no_pkd', 'LIKE', "%/{$year}")
                                 ->pluck('no_pkd')
                                 ->toArray();
@@ -340,9 +344,7 @@ class CustomerController extends Controller
             do {
                 $sequenceStr = str_pad($nextSequence, 3, '0', STR_PAD_LEFT);
                 $pkdNumber = sprintf("%s/PKD-%s/%s/%s", $sequenceStr, $initials, $monthRoman, $year);
-
                 $exists = Customer::where('no_pkd', $pkdNumber)->exists();
-
                 if ($exists) {
                     $nextSequence++;
                 }
@@ -350,6 +352,7 @@ class CustomerController extends Controller
 
             $customerData['no_pkd'] = $pkdNumber;
 
+            // Kalkulasi TOP & Lead Time
             if ($request->filled('top_calc')) {
                 $customerData['top_calc'] = $request->top_calc;
             } else {
@@ -361,8 +364,8 @@ class CustomerController extends Controller
                 $customerData['lead_time'] = 0;
             }
 
+            // Hitung Grand Total
             $grandTotal = 0;
-
             if ($request->has('items') && is_array($request->items)) {
                 foreach ($request->items as $item) {
                     $qty = (float) ($item['quantity'] ?? 0);
@@ -370,21 +373,26 @@ class CustomerController extends Controller
                     $grandTotal += ($qty * $price);
                 }
             }
-
             $customerData['customer_total'] = $grandTotal;
 
+            // --- B. Create Customer ---
             $createdCustomer = Customer::create($customerData);
 
-            $recipients = User::role(['super-admin', 'admin', 'manager-finance', 'head-finance'])->get();
+            // --- C. Notifikasi General (Ke Admin/Finance) ---
+            try {
+                $recipients = User::role(['super-admin', 'manager-finance', 'head-finance'])->get();
+                Notification::send($recipients, new SystemNotification(
+                    'New Customer',
+                    "Customer baru <b>{$createdCustomer->name}</b> telah ditambahkan.",
+                    route('customers.index'),
+                    'ph-users',
+                    'success'
+                ));
+            } catch (\Exception $e) {
+                // Ignore error notif general agar tidak rollback transaksi
+            }
 
-            Notification::send($recipients, new SystemNotification(
-                'New Customer',
-                "Customer baru {$createdCustomer->name} telah ditambahkan.",
-                route('customers.index'),
-                'ph-users',
-                'success'
-            ));
-
+            // --- D. Simpan Items ---
             if ($request->has('items') && is_array($request->items)) {
                 foreach ($request->items as $item) {
                     if (!empty($item['item_name']) && !empty($item['quantity'])) {
@@ -398,6 +406,7 @@ class CustomerController extends Controller
                 }
             }
 
+            // --- E. Activity Log ---
             activity()
                 ->causedBy($user)
                 ->performedOn($createdCustomer)
@@ -409,8 +418,8 @@ class CustomerController extends Controller
                 ])
                 ->log("Created new customer: {$createdCustomer->name}");
 
+            // --- F. Upload Files ---
             $storageFolder = 'customer_files/' . $createdCustomer->id;
-
             $fileData = [
                 'customer_id' => $createdCustomer->id,
                 'npwp_file' => null,
@@ -421,19 +430,19 @@ class CustomerController extends Controller
             if ($request->hasFile('file_npwp')) {
                 $fileData['npwp_file'] = $request->file('file_npwp')->store($storageFolder, 'public');
             }
-
             if ($request->hasFile('file_nib')) {
                 $fileData['nib_siup_file'] = $request->file('file_nib')->store($storageFolder, 'public');
             }
-
             if ($request->hasFile('file_ktp')) {
                 $fileData['ktp_file'] = $request->file('file_ktp')->store($storageFolder, 'public');
             }
-
             CustomerFile::create($fileData);
+
+            // --- G. Generate Approval Logs ---
             $subCategory = 'CBD';
             $logs = $this->generateApprovalLogs($user, $createdCustomer->id, 'Customer', $subCategory);
 
+            // --- H. Cari First Approver & Kirim Notifikasi ---
             $firstLog = ApprovalLog::where('category', 'Customer')
                 ->where('related_id', $createdCustomer->id)
                 ->orderBy('level', 'asc')
@@ -441,8 +450,22 @@ class CustomerController extends Controller
 
             if ($firstLog) {
                 $firstApprover = User::where('nik', $firstLog->approver_nik)->first();
+
                 if ($firstApprover) {
+                    // 1. Update Route To Customer
                     $createdCustomer->update(['route_to' => $firstApprover->name, 'status_approval' => 'Pending']);
+                    try {
+                        Notification::send($firstApprover, new SystemNotification(
+                            'Butuh Persetujuan', // Judul
+                            "Customer Baru <b>{$createdCustomer->name}</b> menunggu persetujuan Anda.", // Pesan
+                            route('customers.approval'), // Link
+                            'ph-signature', // Icon
+                            'warning' // Warna
+                        ));
+                    } catch (\Exception $e) {
+                        Log::error("Gagal kirim notif sistem ke approver level 1: " . $e->getMessage());
+                    }
+
                 } else {
                     $createdCustomer->update(['status_approval' => 'Error', 'route_to' => 'Error: First Approver Not Found']);
                     Log::error("Approver pertama dengan NIK {$firstLog->approver_nik} tidak ditemukan.");
@@ -450,17 +473,31 @@ class CustomerController extends Controller
             } else {
                 $createdCustomer->update(['status_approval' => 'Completed', 'route_to' => 'Finished (No Path)']);
             }
+
+            try {
+                $approvers = User::role(['manager-finance', 'head-finance'])->get();
+                Notification::send($approvers, new SystemNotification(
+                    'Approval Customer Baru',
+                    "Customer Baru <b>{$createdCustomer->name}</b> telah dibuat & menunggu approval berjenjang.",
+                    route('customers.approval'),
+                    'ph-user-plus',
+                    'info'
+                ));
+            } catch (\Exception $e) {
+                \Log::error("Gagal notif customer baru: " . $e->getMessage());
+            }
         });
 
         if (! $createdCustomer) {
             return response()->json(['success' => false, 'message' => 'Failed to create customer'], 500);
         }
 
+        // 3. Dispatch Job Email (Di Luar Transaksi agar tidak block)
         try {
-            $firstLog = $logs->firstWhere('level', 1);
+            $firstLogData = $logs->firstWhere('level', 1);
 
-            if ($firstLog) {
-                $approverNik = $firstLog['approver_nik'];
+            if ($firstLogData) {
+                $approverNik = $firstLogData['approver_nik'];
                 $approverUser = User::where('nik', $approverNik)->first();
 
                 if ($approverUser && $approverUser->email) {
@@ -469,26 +506,18 @@ class CustomerController extends Controller
                             'nik' => $approverUser->nik,
                             'email' => $approverUser->email,
                             'name' => $approverUser->name,
-                            'level' => $firstLog['level'],
+                            'level' => $firstLogData['level'],
                             'is_first' => true,
                         ]
                     ];
 
-                    $token = $firstLog['token'];
+                    $token = $firstLogData['token'];
                     CustomerJob::dispatch($createdCustomer->id, $recipients, $token, 'approval');
                     Log::info("Email approval level 1 dikirim ke: " . $approverUser->email);
                 } else {
                     Log::warning("User Level 1 tidak punya email atau NIK tidak ditemukan: " . $approverNik);
                 }
             }
-
-            // (Opsional) Notif ke Admin
-            // $adminEmail = config('mail.from.address');
-            // if ($adminEmail) {
-            //     // Uncomment jika ingin kirim notif ke admin juga
-            //     CustomerJob::dispatch($createdCustomer->id, [['nik' => null, 'email' => $adminEmail, 'name' => 'Admin', 'level' => null, 'is_first' => false]], null, 'notification');
-            // }
-
         } catch (\Exception $e) {
             Log::error('Error dispatching CustomerJob', [
                 'customer_id' => $createdCustomer->id ?? null,
@@ -737,21 +766,34 @@ class CustomerController extends Controller
                     ]);
 
                     // Kirim Email ke Next Approver
-                    if ($nextApproverUser && $nextApproverUser->email) {
-                        $recipients = [[
-                            'nik' => $nextApproverUser->nik,
-                            'email' => $nextApproverUser->email,
-                            'name' => $nextApproverUser->name,
-                            'level' => $nextLog->level,
-                            'is_first' => false
-                        ]];
+                    if ($nextApproverUser) {
 
-                        // Dispatch Job untuk Next Approver
-                        CustomerJob::dispatch($customer->id, $recipients, $nextLog->token, 'approval');
-                        Log::info("APPROVAL FLOW: Customer #{$customer->id} lanjut ke Level {$nextLog->level}. Email dikirim ke: {$nextApproverUser->email}");
+                        // A. Kirim Notifikasi Sistem (Lonceng)
+                        try {
+                            Notification::send($nextApproverUser, new SystemNotification(
+                                "Butuh Persetujuan (Level {$nextLog->level})",
+                                "Customer <b>{$customer->name}</b> menunggu persetujuan Anda.",
+                                route('customers.approval'),
+                                'ph-signature',
+                                'warning'
+                            ));
+                        } catch (\Exception $e) {
+                            Log::error("Gagal kirim notif sistem ke next approver: " . $e->getMessage());
+                        }
+
+                        // B. Kirim Email (Logika Existing)
+                        if ($nextApproverUser->email) {
+                            $recipients = [[
+                                'nik' => $nextApproverUser->nik,
+                                'email' => $nextApproverUser->email,
+                                'name' => $nextApproverUser->name,
+                                'level' => $nextLog->level,
+                                'is_first' => false
+                            ]];
+                            CustomerJob::dispatch($customer->id, $recipients, $nextLog->token, 'approval');
+                        }
                     } else {
-                        // [LOG TAMBAHAN] Warning jika user tidak punya email
-                        Log::warning("APPROVAL FLOW: Gagal kirim email ke Level {$nextLog->level}. User/Email tidak ditemukan untuk NIK: {$nextLog->approver_nik}");
+                        Log::warning("User/Email tidak ditemukan untuk NIK: {$nextLog->approver_nik}");
                     }
 
                 } else {

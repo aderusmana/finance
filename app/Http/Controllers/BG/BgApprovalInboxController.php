@@ -11,7 +11,9 @@ use App\Models\Master\ApprovalLog;
 use App\Jobs\ProcessFinanceApprovalEmail;
 use App\Mail\CustomerBgReadyMail;
 use App\Models\User;
+use App\Notifications\SystemNotification;
 use Illuminate\Http\Request;
+use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
@@ -210,6 +212,18 @@ class BgApprovalInboxController extends Controller
                 ->where('category', 'BG')
                 ->where('status', 'Pending')
                 ->first();
+
+        $approverUser = User::where('email', $log->approver_email)->first();
+
+        if($approverUser) {
+             Notification::send($approverUser, new SystemNotification(
+                'Reminder Approval',
+                "Halo, mohon segera review pengajuan <b>{$log->description}</b>.",
+                route('bg-approvals.index'),
+                'ph-bell-ringing',
+                'danger'
+            ));
+        }
 
         if ($log) {
             ProcessFinanceApprovalEmail::dispatch($log, $sub);

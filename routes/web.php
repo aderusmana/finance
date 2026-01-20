@@ -69,19 +69,19 @@ Route::prefix('customer-portal')->name('customer.portal.')->group(function () {
 
 Route::middleware('auth')->group(function () {
     Route::post('/customers/generate-pkd-preview', [CustomerController::class, 'generatePkdPreview'])->name('customers.generate-pkd-preview');
-    Route::prefix('dashboard/data')->name('dashboard.data.')->group(function () {
-        Route::get('/metric-counts', [DashboardController::class, 'getMetricCounts'])->name('metric-counts');
-        Route::get('/monthly-stats', [DashboardController::class, 'getMonthlyStats'])->name('monthly-stats');
-        Route::get('/top-items', [DashboardController::class, 'getTopItems'])->name('top-items');
-        Route::get('/top-customers', [DashboardController::class, 'getTopCustomers'])->name('top-customers');
-        Route::get('/recent-activities', [DashboardController::class, 'getRecentActivities'])->name('recent-activities');
-        Route::get('/my-actions', [DashboardController::class, 'getMyActions'])->name('my-actions');
-        Route::get('/available-years', [DashboardController::class, 'getAvailableYearsApi'])->name('available-years');
-        Route::get('/bg-metrics', [DashboardController::class, 'bgMetrics'])->name('bg-metrics');
-        Route::get('/customer-metrics', [DashboardController::class, 'customerMetrics'])->name('customer-metrics');
-        Route::get('/recent-bgs', [DashboardController::class, 'recentBgs'])->name('recent-bgs');
-        Route::get('/top-customers-bg', [DashboardController::class, 'topCustomersByBg'])->name('top-customers-bg');
-    });
+        Route::prefix('dashboard/data')->name('dashboard.data.')->group(function () {
+            Route::get('/metric-counts', [DashboardController::class, 'getMetricCounts'])->name('metric-counts');
+            Route::get('/monthly-stats', [DashboardController::class, 'getMonthlyStats'])->name('monthly-stats');
+            Route::get('/top-items', [DashboardController::class, 'getTopItems'])->name('top-items');
+            Route::get('/top-customers', [DashboardController::class, 'getTopCustomers'])->name('top-customers');
+            Route::get('/recent-activities', [DashboardController::class, 'getRecentActivities'])->name('recent-activities');
+            Route::get('/my-actions', [DashboardController::class, 'getMyActions'])->name('my-actions');
+            Route::get('/available-years', [DashboardController::class, 'getAvailableYearsApi'])->name('available-years');
+            Route::get('/bg-metrics', [DashboardController::class, 'bgMetrics'])->name('bg-metrics');
+            Route::get('/customer-metrics', [DashboardController::class, 'customerMetrics'])->name('customer-metrics');
+            Route::get('/recent-bgs', [DashboardController::class, 'recentBgs'])->name('recent-bgs');
+            Route::get('/top-customers-bg', [DashboardController::class, 'topCustomersByBg'])->name('top-customers-bg');
+        });
 
     Route::get('/customers/approval', [CustomerController::class, 'approvalPage'])->name('customers.approval');
     Route::get('/customers-approval/data', [CustomerController::class, 'getApprovalData'])->name('customers.approval.data');

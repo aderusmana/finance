@@ -41,7 +41,6 @@
 
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle position-relative" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" id="notifDropdownToggle">
-                            {{-- [FIX 1] Ubah f-s-20 jadi f-s-26 agar besar sama seperti avatar/icon lain --}}
                             <i class="iconoir-bell f-s-26"></i>
 
                             <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notif-count" style="display: none; font-size: 9px;">
@@ -49,14 +48,18 @@
                             </span>
                         </a>
 
-                        <div class="dropdown-menu dropdown-menu-end p-0 border-0 shadow-lg" style="width: 320px; max-height: 400px; overflow-y: auto;">
-                            <div class="p-3 border-bottom d-flex justify-content-between align-items-center bg-white sticky-top">
+                        <div class="dropdown-menu dropdown-menu-end p-0 border-0 shadow-lg custom-scroll"
+                             style="width: 360px; max-height: 75vh; overflow-y: auto; overscroll-behavior: contain;">
+
+                            <div class="p-3 border-bottom d-flex justify-content-between align-items-center bg-white sticky-top"
+                                 style="z-index: 100;">
                                 <h6 class="mb-0 fw-bold">Notifications</h6>
-                                <a href="#" id="mark-all-read" class="text-decoration-none small text-primary" style="font-size: 11px;">Mark all read</a>
+                                <a href="#" id="mark-all-read" class="text-decoration-none small text-primary"
+                                   style="font-size: 11px;">Mark all read</a>
                             </div>
 
                             <div class="list-group list-group-flush" id="notification-list">
-                                <div class="text-center p-3 text-muted">Loading...</div>
+                                <div class="text-center p-4 text-muted small">Loading...</div>
                             </div>
                         </div>
                     </li>
@@ -124,160 +127,128 @@
 
     @push('scripts')
         <script>
-    $(document).ready(function() {
-        // --- 1. CONFIG & POLLING ---
-        function checkNotificationCount() {
-            $.get("{{ route('notifications.count') }}", function(res) {
-                if (res.count > 0) {
-                    $('#notif-count').text(res.count).show();
-                } else {
-                    $('#notif-count').hide();
-                }
-            });
-        }
-
-        // Init & Interval
-        checkNotificationCount();
-        setInterval(checkNotificationCount, 3000);
-
-        // --- 2. FETCH LIST NOTIFICATION ---
-        $('#notifDropdownToggle').on('show.bs.dropdown', function () {
-            fetchNotificationList();
-        });
-
-        function fetchNotificationList() {
-            $.get("{{ route('notifications.fetch') }}", function(res) {
-                let html = '';
-
-                if (res.data && res.data.length > 0) {
-                    res.data.forEach(n => {
-                        let bgClass = n.read_at ? 'bg-light' : 'bg-white';
-                        let borderClass = n.read_at ? '' : 'border-start border-3 border-primary';
-                        let textTitle = n.read_at ? 'text-muted' : 'fw-bold text-dark';
-                        let textBody = n.read_at ? 'text-muted opacity-75' : 'text-dark';
-                        let iconColor = n.data.color || 'primary';
-
-                        html += `
-                            <div class="list-group-item list-group-item-action ${bgClass} ${borderClass} p-0 notif-item" id="notif-item-${n.id}">
-                                <div class="d-flex w-100 justify-content-between align-items-center pe-2">
-
-                                    <a href="${n.data.url}" class="d-flex align-items-start p-3 w-100 text-decoration-none action-read"
-                                       data-id="${n.id}">
-
-                                        <div class="flex-shrink-0 me-3">
-                                            <span class="avatar-title bg-${iconColor}-subtle text-${iconColor} rounded-circle p-2 d-inline-block">
-                                                <i class="${n.data.icon} fs-5"></i>
-                                            </span>
-                                        </div>
-
-                                        <div class="flex-grow-1">
-                                            <h6 class="mb-1 ${textTitle}" style="font-size: 13px;">${n.data.title}</h6>
-                                            <div class="mb-1 small ${textBody}" style="word-break: break-word; white-space: normal; line-height: 1.4;">
-                                                ${n.data.message}
-                                            </div>
-                                            <small class="text-muted" style="font-size: 10px;">${n.created_at}</small>
-                                        </div>
-                                    </a>
-
-                                    <button type="button" class="btn btn-sm btn-link text-muted action-delete p-2"
-                                            data-id="${n.id}"
-                                            title="Hapus Pesan"
-                                            style="z-index: 10;">
-                                        <i class="iconoir-trash f-s-16"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        `;
+            $(document).ready(function() {
+                // --- 1. CONFIG & POLLING ---
+                function checkNotificationCount() {
+                    $.get("{{ route('notifications.count') }}", function(res) {
+                        if (res.count > 0) {
+                            $('#notif-count').text(res.count).show();
+                        } else {
+                            $('#notif-count').hide();
+                        }
                     });
-                } else {
-                    html = '<div class="text-center p-4 text-muted"><i class="iconoir-bell-off fs-3 mb-2"></i><p class="small mb-0">Tidak ada notifikasi</p></div>';
                 }
-                $('#notification-list').html(html);
-            });
-        }
-
-        $(document).on('click', '.action-read', function(e) {
-            e.preventDefault();
-
-            let url = $(this).attr('href');
-            let id = $(this).data('id');
-
-            if(url && url !== '#' && url !== 'javascript:void(0);') {
-                window.location.href = url;
-            }
-
-            $.post("{{ route('notifications.read') }}", {
-                id: id,
-                _token: "{{ csrf_token() }}"
-            });
-        });
-
-        // --- 4. HANDLER KLIK: HAPUS NOTIFIKASI (Dropdown Tetap Buka) ---
-        $(document).on('click', '.action-delete', function(e) {
-            e.preventDefault();
-
-            e.stopPropagation();
-
-            let btn = $(this);
-            let id = btn.data('id');
-            let item = $('#notif-item-' + id); // Pastikan ID di HTML list sudah benar (lihat di bawah)
-
-            btn.html('<i class="fas fa-spinner fa-spin small"></i>');
-
-            let deleteUrl = "{{ route('notifications.destroy', ':id') }}";
-            deleteUrl = deleteUrl.replace(':id', id);
-
-            $.ajax({
-                url: deleteUrl,
-                type: 'POST',
-                data: {
-                    _method: 'DELETE', // Method Spoofing
-                    _token: "{{ csrf_token() }}"
-                },
-                success: function(result) {
-                    if(result.success) {
-                        item.animate({ opacity: 0, height: 0 }, 300, function() {
-                            $(this).remove(); // Hapus elemen dari DOM setelah animasi selesai
-
-                            if($('#notification-list').children().length === 0) {
-                                $('#notification-list').html('<div class="text-center p-4 text-muted"><p class="small mb-0">Tidak ada notifikasi</p></div>');
-                            }
-                        });
-
-                        checkNotificationCount();
-                    }
-                },
-                error: function(err) {
-                    console.error('Gagal hapus:', err);
-                    btn.html('<i class="iconoir-trash f-s-16"></i>'); // Balikin icon trash
-                }
-            });
-        });
-
-        // --- 5. MARK ALL READ ---
-        $('#mark-all-read').click(function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-
-            let originalText = $(this).text();
-            $(this).text('Processing...');
-
-            $.post("{{ route('notifications.read.all') }}", {
-                _token: "{{ csrf_token() }}"
-            })
-            .done(function(res) {
                 checkNotificationCount();
-                fetchNotificationList();
-            })
-            .fail(function(xhr) {
-                console.error(xhr);
-                alert('Gagal menandai semua dibaca. Cek Console Log.');
-            })
-            .always(function() {
-                $('#mark-all-read').text(originalText);
+                setInterval(checkNotificationCount, 3000);
+
+                // --- 2. FETCH & BODY LOCK (PENTING DISINI) ---
+
+                // SAAT DIBUKA: Kunci Scroll Body & Ambil Data
+                $('#notifDropdownToggle').on('show.bs.dropdown', function () {
+                    // 1. KUNCI Scroll Halaman Utama
+                    $('body').css('overflow', 'hidden');
+
+                    // 2. Ambil Data
+                    fetchNotificationList();
+                });
+
+                // SAAT DITUTUP: Buka Kembali Scroll Body
+                $('#notifDropdownToggle').on('hidden.bs.dropdown', function () {
+                    $('body').css('overflow', ''); // Reset ke default (auto)
+                });
+
+                // Fungsi Render List (Sama seperti sebelumnya)
+                function fetchNotificationList() {
+                    $.get("{{ route('notifications.fetch') }}", function(res) {
+                        let html = '';
+
+                        if (res.data && res.data.length > 0) {
+                            res.data.forEach((n, index) => {
+                                let isUnread = n.read_at === null;
+                                let bgStyle = isUnread ? 'background-color: #f0f7ff;' : 'background-color: #ffffff;';
+                                let borderLeftStyle = isUnread ? 'border-left: 3px solid #0d6efd;' : 'border-left: 3px solid transparent;';
+                                let isLastItem = index === res.data.length - 1;
+                                let borderBottomStyle = isLastItem ? '' : 'border-bottom: 1px solid #eaeaea;';
+                                let titleClass = isUnread ? 'fw-bold text-primary' : 'text-muted fw-semibold';
+                                let textMessageColor = isUnread ? '#212529' : '#6c757d';
+                                let iconOpacity = isUnread ? '1' : '0.75';
+
+                                let iconClass = n.data.icon || 'iconoir-bell';
+                                if (iconClass.includes('ph-users') || iconClass.includes('ph-user')) iconClass = 'iconoir-user';
+                                else if (iconClass.includes('ph-signature')) iconClass = 'iconoir-edit-pencil';
+                                else if (iconClass.includes('ph-bell')) iconClass = 'iconoir-bell';
+
+                                let colorMap = { 'primary': 'primary', 'success': 'success', 'warning': 'warning', 'danger': 'danger', 'info': 'info' };
+                                let colorKey = colorMap[n.data.color] || 'primary';
+                                let avatarClass = `bg-${colorKey}-subtle text-${colorKey}`;
+                                let targetUrl = n.data.url ? n.data.url : '#';
+
+                                html += `
+                                    <div class="list-group-item list-group-item-action p-0" id="notif-item-${n.id}"
+                                        style="${bgStyle} ${borderLeftStyle} ${borderBottomStyle} transition: background-color 0.2s;">
+                                        <div class="d-flex w-100 position-relative">
+                                            <a href="${targetUrl}" class="d-flex align-items-start p-3 w-100 text-decoration-none action-read" data-id="${n.id}">
+                                                <div class="flex-shrink-0 me-3">
+                                                    <span class="rounded-circle d-inline-flex align-items-center justify-content-center ${avatarClass}"
+                                                        style="width: 40px; height: 40px; opacity: ${iconOpacity}; border: 1px solid rgba(0,0,0,0.05);">
+                                                        <i class="${iconClass} fs-5"></i>
+                                                    </span>
+                                                </div>
+                                                <div class="flex-grow-1 pe-4">
+                                                    <span class="${titleClass}" style="font-size: 13px; display: block; margin-bottom: 3px;">${n.data.title}</span>
+                                                    <div style="font-size: 12px; line-height: 1.4; color: ${textMessageColor}; margin-bottom: 5px; word-break: break-word;">${n.data.message}</div>
+                                                    <div style="font-size: 10px; color: #adb5bd; display: flex; align-items: center; gap: 4px;">
+                                                        <i class="iconoir-clock" style="font-size: 10px;"></i> ${n.created_at}
+                                                    </div>
+                                                </div>
+                                            </a>
+                                            <button type="button" class="action-delete" data-id="${n.id}" title="Hapus Notifikasi"
+                                                    style="position: absolute; top: 10px; right: 10px; z-index: 20; border: none; background: transparent; color: #343a40; padding: 4px; cursor: pointer; transition: all 0.2s;">
+                                                <i class="iconoir-xmark" style="font-size: 16px; font-weight: 700; stroke-width: 2.5;"></i>
+                                            </button>
+                                        </div>
+                                    </div>`;
+                            });
+                        } else {
+                            html = '<div class="text-center p-4 text-muted"><p class="small mb-0">Tidak ada notifikasi</p></div>';
+                        }
+                        $('#notification-list').html(html);
+                    });
+                }
+
+                // --- 3. EVENT HANDLERS LAINNYA (TETAP SAMA) ---
+                $(document).on('click', '.action-read', function(e) {
+                    let url = $(this).attr('href');
+                    let id = $(this).data('id');
+                    $.post("{{ route('notifications.read') }}", { id: id, _token: "{{ csrf_token() }}" });
+                    if (!url || url === '#' || url === 'javascript:void(0);') e.preventDefault();
+                });
+
+                $(document).on('click', '.action-delete', function(e) {
+                    e.preventDefault(); e.stopPropagation();
+                    let btn = $(this); let id = btn.data('id'); let item = $('#notif-item-' + id);
+                    btn.html('<div class="spinner-border spinner-border-sm text-secondary" role="status"></div>');
+                    $.ajax({
+                        url: "{{ route('notifications.destroy', ':id') }}".replace(':id', id),
+                        type: 'POST',
+                        data: { _method: 'DELETE', _token: "{{ csrf_token() }}" },
+                        success: function(result) {
+                            if(result.success) {
+                                item.animate({ opacity: 0, height: 0, padding: 0 }, 300, function() { $(this).remove(); if($('#notification-list').children().length === 0) $('#notification-list').html('<div class="text-center p-4 text-muted"><p class="small mb-0">Tidak ada notifikasi</p></div>'); });
+                                checkNotificationCount();
+                            }
+                        }
+                    });
+                });
+
+                $('#mark-all-read').click(function(e) {
+                    e.preventDefault(); e.stopPropagation();
+                    $(this).text('Processing...');
+                    $.post("{{ route('notifications.read.all') }}", { _token: "{{ csrf_token() }}" })
+                    .done(function() { checkNotificationCount(); fetchNotificationList(); })
+                    .always(function() { $('#mark-all-read').text('Mark all read'); });
+                });
             });
-        });
-    });
-</script>
+        </script>
     @endpush
 </header>
