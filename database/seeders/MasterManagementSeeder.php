@@ -125,38 +125,27 @@ class MasterManagementSeeder extends Seeder
         // ==========================================
         // 6. Seed Sales (Relasi ke User)
         // ==========================================
+        $anyRegion = Regions::inRandomOrder()->first();
+        $anyBranch = Branch::inRandomOrder()->first();
+        $anyAccountGroup = AccountGroup::inRandomOrder()->first();
 
-        // Mengambil User yang sudah dibuat di AllSeeder.php
-        $salesUser = User::where('username', 'staff.sales1')->first();
-        $headSalesUser = User::where('username', 'head.sales')->first();
+        $targetUsers = User::whereIn('username', ['staff.sales1', 'head.sales'])->get();
 
-        // Data pendukung untuk Foreign Keys
-        $jktRegion = Regions::where('region_name', 'DKI Jakarta')->first();
-        $hoBranch = Branch::where('branch_name', 'Head Office - Jakarta')->first();
-        $distAccountGroup = AccountGroup::where('name_account_group', 'Trading / Distributor')->first();
-
-        // Membuat data Sales untuk Staff Sales 1
-        if ($salesUser && $jktRegion && $hoBranch && $distAccountGroup) {
-            Sales::updateOrCreate(
-                ['user_id' => $salesUser->id], // Key unik sekarang adalah user_id
-                [
-                    'region_id' => $jktRegion->id,
-                    'branch_id' => $hoBranch->id,
-                    'account_group_id' => $distAccountGroup->id,
-                ]
-            );
+        if ($targetUsers->isEmpty()) {
+            $targetUsers = User::limit(2)->get();
         }
 
-        // Membuat data Sales untuk Head Sales
-        if ($headSalesUser && $jktRegion && $hoBranch && $distAccountGroup) {
-            Sales::updateOrCreate(
-                ['user_id' => $headSalesUser->id], // Key unik sekarang adalah user_id
-                [
-                    'region_id' => $jktRegion->id,
-                    'branch_id' => $hoBranch->id,
-                    'account_group_id' => $distAccountGroup->id,
-                ]
-            );
+        if ($anyRegion && $anyBranch && $anyAccountGroup) {
+            foreach ($targetUsers as $user) {
+                Sales::updateOrCreate(
+                    ['user_id' => $user->id],
+                    [
+                        'region_id' => $anyRegion->id,
+                        'branch_id' => $anyBranch->id,
+                        'account_group_id' => $anyAccountGroup->id,
+                    ]
+                );
+            }
         }
     }
 }

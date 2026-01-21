@@ -191,7 +191,7 @@
 
         {{-- Side Stats (Breakdown & Extremes) --}}
         <div class="col-lg-4">
-            <div class="d-flex flex-column gap-3 h-100">
+            <div class="d-flex flex-column gap-1 h-100">
                 {{-- Donut (White - BORDER TEGAS) --}}
                 <div class="card bg-white flex-grow-1" style="border: 1px solid #d1d5db; border-radius: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); overflow: hidden;">
                     {{-- Header dengan Icon & Judul --}}
@@ -266,7 +266,7 @@
                 </div>
 
                 {{-- Longest Customer (White - BORDER TEGAS) --}}
-                <div class="card bg-white p-3" style="border: 1px solid #d1d5db; border-radius: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s;"
+                <div class="card bg-white p-3" style="border: 1px solid #1449e9; border-radius: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s;"
                      onmouseover="this.style.transform='translateY(-5px)'"
                      onmouseout="this.style.transform='translateY(0)'">
                     <div class="d-flex align-items-center">

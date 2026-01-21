@@ -119,7 +119,8 @@ class CustomerController extends Controller
                         'customer_files.npwp_file as file_npwp',
                     'customer_files.nib_siup_file as file_nib',
                     'customer_files.ktp_file as file_ktp'
-                );
+                )->orderBy('customers.created_at', 'desc');
+
             return DataTables::of($query)
             ->addIndexColumn()
             ->addColumn('action', function ($row) {
@@ -174,9 +175,9 @@ class CustomerController extends Controller
                 $dataAttrs .= ' data-status_approval="' . e($row->status_approval) . '"';
                 $dataAttrs .= ' data-created_by="' . e($row->created_by) . '"';
 
-                $pathNpwp = $row->file_npwp ? asset('storage/' . $row->file_npwp) : '';
-                $pathNib  = $row->file_nib ? asset('storage/' . $row->file_nib) : '';
-                $pathKtp  = $row->file_ktp ? asset('storage/' . $row->file_ktp) : '';
+                $pathNpwp = $row->file_npwp ? asset('storage/' . ltrim($row->file_npwp, '/')) : '';
+                $pathNib  = $row->file_nib ? asset('storage/' . ltrim($row->file_nib, '/')) : '';
+                $pathKtp  = $row->file_ktp ? asset('storage/' . ltrim($row->file_ktp, '/')) : '';
 
                 $dataAttrs .= ' data-file_npwp_path="' . $pathNpwp . '"';
                 $dataAttrs .= ' data-file_nib_path="' . $pathNib . '"';
@@ -855,9 +856,6 @@ class CustomerController extends Controller
         }
     }
 
-    /**
-     * Menampilkan halaman daftar approval untuk user yang login.
-     */
     public function approvalPage()
     {
         $user = Auth::user();
