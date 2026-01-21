@@ -68,11 +68,20 @@ class DashboardController extends Controller
     public function getMonthlyStats(Request $request)
     {
         $type = $request->input('type', 'bg');
-        // Parse tanggal akan otomatis handle default jika frontend belum kirim tanggal
+        // Parse tanggal
         [$startDate, $endDate] = $this->parseDateRange($request->input('date_range'));
 
-        $query = BankGaransi::query()->whereBetween('created_at', [$startDate, $endDate]);
+        // --- PERBAIKAN DI SINI: Switch Query Berdasarkan Tipe ---
+        if ($type === 'customer') {
+            $query = Customer::query()->whereBetween('created_at', [$startDate, $endDate]);
+        } else {
+            $query = BankGaransi::query()->whereBetween('created_at', [$startDate, $endDate]);
+        }
 
+        // Ambil data status dan bulan
+        // Pastikan model Customer memiliki kolom 'status' (active/pending/dll).
+        // Jika tidak ada, kode ini tetap menghitung 'Created' dengan benar,
+        // tapi Approved/Pending mungkin 0 jika nama statusnya beda.
         $data = $query->select('status', DB::raw('MONTH(created_at) as month'))->get();
 
         $created = array_fill(0, 12, 0);
@@ -82,20 +91,37 @@ class DashboardController extends Controller
 
         foreach ($data as $row) {
             $idx = $row->month - 1;
+
+            // 1. Hitung Created (Semua data yang masuk query = Created)
             $created[$idx]++;
 
-            if (in_array($row->status, ['approved', 'completed', 'active'])) {
+            // 2. Mapping Status (Sesuaikan dengan value di database Anda)
+            // Lowercase agar case-insensitive
+            $st = strtolower($row->status ?? '');
+
+            // Logic untuk Bank Garansi & Customer
+            if (in_array($st, ['approved', 'completed', 'active', 'verified'])) {
                 $approved[$idx]++;
-            } elseif (in_array($row->status, ['rejected', 'expired', 'returned'])) {
+            } elseif (in_array($st, ['rejected', 'expired', 'returned', 'inactive'])) {
                 $rejected[$idx]++;
-            } else {
+            } elseif (in_array($st, ['draft', 'pending', 'process', 'new', 'waiting_approval'])) {
                 $pending[$idx]++;
+            } else {
+                // Jika status kosong atau null, anggap sebagai Pending atau biarkan hanya masuk Created
+                if($type === 'customer' && $st == '') {
+                    // Opsional: Jika customer tidak punya kolom status, bisa dianggap Approved otomatis
+                    // $approved[$idx]++;
+                } else {
+                    $pending[$idx]++;
+                }
             }
         }
 
         return response()->json([
-            'created' => $created, 'approved' => $approved,
-            'pending' => $pending, 'rejected' => $rejected
+            'created' => $created,
+            'approved' => $approved,
+            'pending' => $pending,
+            'rejected' => $rejected
         ]);
     }
 
