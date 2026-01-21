@@ -13,7 +13,9 @@ class SystemLogController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $query = Activity::with(['causer', 'subject'])->orderBy('created_at', 'desc');
+            // Do not eager-load `subject` because some activity rows may reference
+            // classes that no longer exist (would trigger MorphTo exceptions).
+            $query = Activity::with('causer')->orderBy('created_at', 'desc');
 
             return DataTables::of($query)
                 ->addIndexColumn()
@@ -39,13 +41,22 @@ class SystemLogController extends Controller
                     return '<span class="badge bg-'.$color.'"><i class="ph-bold '.$icon.' me-1"></i>'.ucfirst($row->description).'</span>';
                 })
                 ->addColumn('subject_description', function ($row) {
-                    if (!$row->subject) return '-';
-                    $class = class_basename($row->subject_type);
-                    $ref = $row->properties['attributes']['form_code'] ?? $row->subject->id;
-                    if(isset($row->subject->bg_number)) $ref = $row->subject->bg_number;
-                    if(isset($row->subject->name)) $ref = $row->subject->name;
+                    $subjectType = $row->subject_type ?? null;
+                    $class = $subjectType ? class_basename($subjectType) : 'N/A';
 
-                    return '<small class="text-muted">'.$class.'</small><br><strong>'.$ref.'</strong>';
+                    // If the subject class doesn't exist anymore, avoid accessing ->subject
+                    if (empty($subjectType) || !class_exists($subjectType)) {
+                        $ref = $row->properties['attributes']['form_code'] ?? '-';
+                        return '<small class="text-muted">'.e($class).'</small><br><strong>'.e($ref).'</strong>';
+                    }
+
+                    // Safe to attempt to access the relation (may still be null)
+                    $subject = $row->subject;
+                    $ref = $row->properties['attributes']['form_code'] ?? ($subject->id ?? '-');
+                    if(isset($subject->bg_number)) $ref = $subject->bg_number;
+                    if(isset($subject->name)) $ref = $subject->name;
+
+                    return '<small class="text-muted">'.e($class).'</small><br><strong>'.e($ref).'</strong>';
                 })
                 ->addColumn('properties', function ($row) {
                     return '<button class="btn btn-xs btn-outline-info btn-view-json" data-json=\''.json_encode($row->properties).'\'><i class="ph-bold ph-code"></i> Details</button>';

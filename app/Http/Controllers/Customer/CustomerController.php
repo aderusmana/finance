@@ -1156,7 +1156,9 @@ class CustomerController extends Controller
     {
         // Pastikan model Activity di-import: use Spatie\Activitylog\Models\Activity;
 
-        $query = Activity::with(['causer', 'subject'])
+                // Avoid eager-loading `subject` because some activity records may reference
+                // classes that no longer exist (causes MorphTo instantiation errors).
+                $query = Activity::with('causer')
             ->where(function ($q) {
                 $q->where('log_name', 'like', '%customer%')
                   ->orWhere('log_name', 'like', 'sample%')
@@ -1194,34 +1196,94 @@ class CustomerController extends Controller
             })
             // --- 2. TAMBAHKAN KOLOM PROPERTIES ---
             ->addColumn('properties', function ($log) {
-                $props = $log->properties;
+                $props = $log->properties ?? [];
 
-                if (empty($props) || $props->isEmpty()) {
+                // Normalize empty
+                if (empty($props) || (is_object($props) && method_exists($props, 'isEmpty') && $props->isEmpty())) {
                     return '<span class="text-muted small">-</span>';
                 }
 
-                // Format JSON menjadi list HTML rapi
-                $output = '<ul class="m-0 p-0" style="list-style: none; font-size: 0.8rem;">';
+                $output = '<div class="small">';
+
                 foreach ($props as $key => $value) {
-                    // Skip atribut internal yang panjang (opsional)
-                    if ($key === 'attributes' || $key === 'old') {
+                    // Skip raw 'old' payload to avoid noise
+                    if ($key === 'old') continue;
+
+                    $label = ucfirst(str_replace(['_', '-'], ' ', $key));
+
+                    // Special: attributes -> provide a small "Details" button with JSON payload
+                    if ($key === 'attributes') {
+                        $json = json_encode($value, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES);
+                        $escaped = e($json);
+                        $output .= '<div class="mb-1"><span class="text-muted">'.e($label).':</span> '
+                                 . '<button class="btn btn-xs btn-outline-secondary btn-view-json ms-2" data-json="'. $escaped .'">View details</button></div>';
                         continue;
                     }
 
-                    // Jika value array (seperti approvers list), encode jadi string
-                    if (is_array($value)) {
-                        $value = json_encode($value);
+                    // If value is a Collection or array, render nicely
+                    if (is_array($value) || $value instanceof \Illuminate\Support\Collection) {
+                        // Approvers or lists -> badges
+                        if (str_contains(strtolower($key), 'approver') || str_contains(strtolower($key), 'approvers')) {
+                            // Render approver list as bullet points for readability
+                            $output .= '<div class="mb-1"><span class=" text-muted text-dark">'.e($label).':</span>';
+                            $output .= '<ul class="m-0 ps-3" style="font-size:0.9rem;">';
+                            foreach ((array) $value as $v) {
+                                if (is_array($v)) {
+                                    $name = $v['name'] ?? reset($v);
+                                } else {
+                                    $name = $v;
+                                }
+                                $output .= '<li class="text-dark">'.e($name).'</li>';
+                            }
+                            $output .= '</ul></div>';
+                            continue;
+                        }
+
+                        // Generic arrays -> comma separated preview
+                        $preview = implode(', ', array_map(function ($i) {
+                            if (is_array($i)) return json_encode($i, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES);
+                            return (string) $i;
+                        }, (array) $value));
+
+                        $output .= '<div class="mb-1"><span class="">'.e($label).':</span> <span class="fw-bold text-dark">'.e(Str::limit($preview, 80)).'</span></div>';
+                        continue;
                     }
 
-                    $output .= "<li><span class='text-muted'>" . ucfirst($key) . ":</span> <span class='fw-bold text-dark'>" . Str::limit($value, 40) . "</span></li>";
+                    // If string that contains JSON, try to decode and render
+                    if (is_string($value)) {
+                        $decoded = json_decode($value, true);
+                        if (json_last_error() === JSON_ERROR_NONE && (is_array($decoded) || is_object($decoded))) {
+                            // If this property looks like approvers, render badges instead of JSON preview
+                            if (str_contains(strtolower($key), 'approver') || str_contains(strtolower($key), 'approvers')) {
+                                $output .= '<div class="mb-1"><span class="fw-bold text-dark">'.e($label).':</span>';
+                                $output .= '<ul class="m-0 ps-3" style="font-size:0.9rem;">';
+                                foreach ((array) $decoded as $v) {
+                                    if (is_array($v)) {
+                                        $name = $v['name'] ?? reset($v);
+                                    } else {
+                                        $name = $v;
+                                    }
+                                    $output .= '<li class="text-dark">'.e($name).'</li>';
+                                }
+                                $output .= '</ul></div>';
+                                continue;
+                            }
+
+                            $preview = is_array($decoded) ? implode(', ', array_map(function ($i) {
+                                return is_array($i) ? json_encode($i) : (string) $i;
+                            }, $decoded)) : json_encode($decoded, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES);
+
+                            $output .= '<div class="mb-1"><span class="">'.e($label).':</span> <span class="fw-bold text-dark">'.e(Str::limit($preview, 80)).'</span></div>';
+                            continue;
+                        }
+                    }
+
+                    // Default scalar rendering
+                    $display = is_null($value) ? '-' : (string) $value;
+                    $output .= '<div class="mb-1"><span class="text-muted">'.e($label).':</span> <span class="fw-bold text-dark">'.e(Str::limit($display, 80)).'</span></div>';
                 }
 
-                // Jika ada 'attributes' (data yang berubah), tampilkan tombol detail kecil
-                if (isset($props['attributes'])) {
-                     $output .= "<li><span class='badge bg-light text-dark border mt-1'>+ Has detailed changes</span></li>";
-                }
-
-                $output .= '</ul>';
+                $output .= '</div>';
 
                 return $output;
             })

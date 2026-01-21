@@ -22,14 +22,21 @@ class MasterManagementSeeder extends Seeder
         // 1. Seed Regions (Wilayah)
         // ==========================================
         $regions = [
-            ['region_name' => 'DKI Jakarta'],
-            ['region_name' => 'Jawa Barat'],
-            ['region_name' => 'Jawa Tengah'],
-            ['region_name' => 'Jawa Timur'],
-            ['region_name' => 'Sumatera'],
-            ['region_name' => 'Kalimantan'],
-            ['region_name' => 'Sulawesi'],
-            ['region_name' => 'Bali & Nusa Tenggara'],
+            ['region_name' => 'COMMERCIAL'],
+            ['region_name' => 'KEY ACCOUNT'],
+            ['region_name' => 'REGION 1A'],
+            ['region_name' => 'REGION 1B'],
+            ['region_name' => 'REGION 1C'],
+            ['region_name' => 'REGION 1D'],
+            ['region_name' => 'REGION 2A'],
+            ['region_name' => 'REGION 2B'],
+            ['region_name' => 'REGION 2C'],
+            ['region_name' => 'REGION 2D'],
+            ['region_name' => 'REGION 3A'],
+            ['region_name' => 'REGION 3B'],
+            ['region_name' => 'REGION 3C'],
+            ['region_name' => 'REGION 4A'],
+            ['region_name' => 'REGION 4B'],
         ];
 
         foreach ($regions as $reg) {
@@ -45,6 +52,8 @@ class MasterManagementSeeder extends Seeder
             ['branch_name' => 'Branch Surabaya'],
             ['branch_name' => 'Branch Medan'],
             ['branch_name' => 'Branch Makassar'],
+            ['branch_name' => 'Pusat'],
+
         ];
 
         foreach ($branches as $branch) {
@@ -53,44 +62,32 @@ class MasterManagementSeeder extends Seeder
 
         // ==========================================
         // 3. Seed Account Groups
+        //    - create groups from region names (name_account_group == region_name)
+        //    - add some extra random groups (including Trading / Distributor)
         // ==========================================
-        $accountGroups = [
-            [
-                'name_account_group' => 'Trading / Distributor',
-                'bank_garansi' => true,
-                'ccar' => 'smd_idr'
-            ],
-            [
-                'name_account_group' => 'Retailer',
-                'bank_garansi' => false,
-                'ccar' => 'smd_idr'
-            ],
-            [
-                'name_account_group' => 'Industry / End User',
-                'bank_garansi' => true,
-                'ccar' => 'smd_idr'
-            ],
-            [
-                'name_account_group' => 'Government / BUMN',
-                'bank_garansi' => true,
-                'ccar' => 'smd_idr'
-            ],
-            [
-                'name_account_group' => 'Export Market',
-                'bank_garansi' => true,
-                'ccar' => 'smd_usd'
-            ],
-        ];
+        $accountGroups = [];
+
+        // Create account group per region (name matches region)
+        foreach ($regions as $reg) {
+            $accountGroups[] = [
+            'name_account_group' => $reg['region_name'],
+            'bank_garansi' => (bool) rand(0, 1),
+            'ccar' => rand(0, 1) ? 'smd_idr' : 'smd_usd',
+            ];
+        }
+
+        // No additional random account groups; use region names only
 
         foreach ($accountGroups as $group) {
             AccountGroup::updateOrCreate(
-                ['name_account_group' => $group['name_account_group']],
-                [
-                    'bank_garansi' => $group['bank_garansi'],
-                    'ccar' => $group['ccar']
-                ]
+            ['name_account_group' => $group['name_account_group']],
+            [
+                'bank_garansi' => $group['bank_garansi'],
+                'ccar' => $group['ccar']
+            ]
             );
         }
+
 
         // ==========================================
         // 4. Seed TOP (Terms of Payment)
@@ -111,11 +108,14 @@ class MasterManagementSeeder extends Seeder
         // 5. Seed Customer Class
         // ==========================================
         $classes = [
-            ['name_class' => 'Platinum'],
-            ['name_class' => 'Gold'],
-            ['name_class' => 'Silver'],
-            ['name_class' => 'Bronze'],
-            ['name_class' => 'General'],
+            ['name_class' => 'Bakery'],
+            ['name_class' => 'Key Account'],
+            ['name_class' => 'Distributor'],
+            ['name_class' => 'Food Service'],
+            ['name_class' => 'HORECA'],
+            ['name_class' => 'Bulk Olein/Oil'],
+            ['name_class' => 'Export'],
+
         ];
 
         foreach ($classes as $cls) {
