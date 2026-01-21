@@ -131,9 +131,9 @@ class MasterManagementSeeder extends Seeder
         $headSalesUser = User::where('username', 'head.sales')->first();
 
         // Data pendukung untuk Foreign Keys
-        $jktRegion = Regions::where('region_name', 'DKI Jakarta')->first();
+        $jktRegion = Regions::where('region_name', 'COMMERCIAL')->first();
         $hoBranch = Branch::where('branch_name', 'Head Office - Jakarta')->first();
-        $distAccountGroup = AccountGroup::where('name_account_group', 'Trading / Distributor')->first();
+        $distAccountGroup = AccountGroup::where('name_account_group', 'COMMERCIAL')->first();
 
         // Membuat data Sales untuk Staff Sales 1
         if ($salesUser && $jktRegion && $hoBranch && $distAccountGroup) {
