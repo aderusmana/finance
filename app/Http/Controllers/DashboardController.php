@@ -8,27 +8,48 @@ use App\Models\Customer\Customer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Spatie\Activitylog\Models\Activity;
+use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
-    /**
-     * Menampilkan halaman dashboard utama.
-     */
     public function index()
     {
-        // Get available years from requisition table
-        $availableYears = $this->getAvailableYears();
-
-        return view('dashboard', compact('availableYears'));
+        return view('dashboard');
     }
 
     /**
-     * Mendapatkan daftar tahun yang tersedia dari data requisition.
+     * Helper: Parse Date Range (YYYY-MM-DD to YYYY-MM-DD)
      */
-    public function getAvailableYears()
+    private function parseDateRange($dateString)
     {
-        // Use BankGaransi created year as available years for dashboard
+        // JIKA KOSONG -> DEFAULT KE TAHUN INI SAMPAI HARI INI (REALTIME)
+        if (empty($dateString)) {
+            return [
+                Carbon::now()->startOfYear(), // 1 Jan Tahun ini
+                Carbon::now()->endOfDay()     // Hari ini (Detik ini)
+            ];
+        }
+
+        if (str_contains($dateString, ' to ')) {
+            $parts = explode(' to ', $dateString);
+            return [
+                Carbon::parse($parts[0])->startOfDay(),
+                Carbon::parse($parts[1])->endOfDay()
+            ];
+        }
+
+        // Single Date
+        return [
+            Carbon::parse($dateString)->startOfDay(),
+            Carbon::parse($dateString)->endOfDay()
+        ];
+    }
+
+    /**
+     * Helper: Get Available Years (untuk dropdown filter)
+     */
+    public function getAvailableYearsApi()
+    {
         $years = BankGaransi::select(DB::raw('YEAR(created_at) as year'))
             ->whereNotNull('created_at')
             ->distinct()
@@ -36,126 +57,179 @@ class DashboardController extends Controller
             ->pluck('year')
             ->toArray();
 
-        if (empty($years)) {
-            $years = [now()->year];
-        }
+        if (empty($years)) $years = [now()->year];
 
-        return $years;
+        return response()->json($years);
     }
 
     /**
-     * Menyediakan data agregat untuk kartu metrik di dashboard.
-     */
-    public function getMetricCounts()
-    {
-        // Provide BG/Customer based metrics mapped to the legacy keys used by the view
-        $user = Auth::user();
-
-        $bgQuery = BankGaransi::query();
-        if (!$user->hasRole('super-admin')) {
-            $bgQuery->where('created_by', $user->id);
-        }
-
-        $totalBgOpen = $bgQuery->whereNotIn('status', ['expired'])->count();
-        $totalBgExpiring = (clone $bgQuery)->whereBetween('exp_date', [now()->startOfDay(), now()->addDays(60)->endOfDay()])->count();
-        $totalBgValue = (clone $bgQuery)->whereNotIn('status', ['expired'])->sum('bg_nominal');
-        $totalCustomers = Customer::count();
-        $customersWithBg = Customer::whereHas('bankGaransis', function ($q) use ($user) {
-            if (!$user->hasRole('super-admin')) {
-                $q->where('created_by', $user->id);
-            }
-            $q->whereNotIn('status', ['expired']);
-        })->count();
-
-        // Map to legacy keys so frontend doesn't need immediate changes
-        $counts = [
-            'sample_fg' => (int)$totalBgOpen,
-            'sample_pkg' => (int)$totalBgExpiring,
-            'sample_so' => (float)$totalBgValue,
-            'complain' => (int)$totalCustomers,
-            'free_goods' => (int)$customersWithBg,
-        ];
-
-        return response()->json($counts);
-    }
-
-    /**
-     * Menyediakan data untuk chart statistik per bulan.
+     * STAT 1: Main Chart Data (Monthly)
      */
     public function getMonthlyStats(Request $request)
     {
-        // Monthly stats derived from BankGaransi created_at and statuses.
-        $user = Auth::user();
-        $year = $request->input('year', now()->year);
+        $type = $request->input('type', 'bg');
+        // Parse tanggal akan otomatis handle default jika frontend belum kirim tanggal
+        [$startDate, $endDate] = $this->parseDateRange($request->input('date_range'));
 
-        $query = BankGaransi::select(
-            DB::raw('MONTH(created_at) as month'),
-            DB::raw('COUNT(id) as created'),
-            DB::raw("SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END) as approved"),
-            DB::raw("SUM(CASE WHEN status = 'submitted' THEN 1 ELSE 0 END) as pending"),
-            DB::raw("SUM(CASE WHEN status = 'reviewed' THEN 1 ELSE 0 END) as in_progress"),
-            DB::raw("SUM(CASE WHEN status = 'expired' THEN 1 ELSE 0 END) as expired"),
-            DB::raw("SUM(CASE WHEN status = 'draft' THEN 1 ELSE 0 END) as draft")
-        );
+        $query = BankGaransi::query()->whereBetween('created_at', [$startDate, $endDate]);
+
+        $data = $query->select('status', DB::raw('MONTH(created_at) as month'))->get();
+
+        $created = array_fill(0, 12, 0);
+        $approved = array_fill(0, 12, 0);
+        $pending  = array_fill(0, 12, 0);
+        $rejected = array_fill(0, 12, 0);
+
+        foreach ($data as $row) {
+            $idx = $row->month - 1;
+            $created[$idx]++;
+
+            if (in_array($row->status, ['approved', 'completed', 'active'])) {
+                $approved[$idx]++;
+            } elseif (in_array($row->status, ['rejected', 'expired', 'returned'])) {
+                $rejected[$idx]++;
+            } else {
+                $pending[$idx]++;
+            }
+        }
+
+        return response()->json([
+            'created' => $created, 'approved' => $approved,
+            'pending' => $pending, 'rejected' => $rejected
+        ]);
+    }
+
+    /**
+     * STAT 2: Advanced Stats (Donut Chart, Largest BG, Longest Cust)
+     */
+    public function getAdvancedStats(Request $request)
+    {
+        [$startDate, $endDate] = $this->parseDateRange($request->input('date_range'));
+
+        // 1. BG Composition
+        $bgTypes = BankGaransi::select('bg_type', DB::raw('count(*) as total'))
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->groupBy('bg_type')
+            ->pluck('total', 'bg_type')->toArray();
+
+        // 2. Largest Active BG (Snapshot saat ini dalam periode terpilih)
+        $largestBg = BankGaransi::with('customer')
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->whereNotIn('status', ['expired', 'rejected', 'draft'])
+            ->orderBy('bg_nominal', 'desc')
+            ->first();
+
+        // 3. Customer Growth
+        $totalNewCust = Customer::whereBetween('created_at', [$startDate, $endDate])->count();
+
+        // 4. Longest Customer (Global fact)
+        $oldestCustomer = Customer::orderBy('join_date', 'asc')->first()
+                          ?? Customer::orderBy('created_at', 'asc')->first();
+
+        return response()->json([
+            'bg_composition' => [
+                'new' => $bgTypes['new'] ?? 0,
+                'extension' => $bgTypes['extension'] ?? 0,
+                'existing' => $bgTypes['existing'] ?? 0,
+            ],
+            'largest_bg' => [
+                'nominal' => $largestBg ? $largestBg->bg_nominal : 0,
+                'customer' => $largestBg && $largestBg->customer ? $largestBg->customer->name : '-',
+                'number' => $largestBg ? $largestBg->bg_number : '-'
+            ],
+            'longest_customer' => [
+                'name' => $oldestCustomer ? $oldestCustomer->name : '-',
+                'year' => $oldestCustomer ? date('Y', strtotime($oldestCustomer->join_date ?? $oldestCustomer->created_at)) : '-'
+            ],
+            'cust_growth' => $totalNewCust,
+        ]);
+    }
+
+    /**
+     * STAT 3: BG Metrics Card (Total Value & Expiring)
+     */
+    public function bgMetrics(Request $request)
+    {
+        [$startDate, $endDate] = $this->parseDateRange($request->input('date_range'));
+
+        $query = BankGaransi::whereBetween('created_at', [$startDate, $endDate]);
+
+        // Expiring selalu melihat masa depan (H+60 hari), tidak terpengaruh filter tanggal "created_at"
+        $expiringCount = BankGaransi::whereBetween('exp_date', [now(), now()->addDays(60)])
+                                    ->whereNotIn('status', ['expired', 'returned'])
+                                    ->count();
+
+        return response()->json([
+            'total_value' => $query->sum('bg_nominal'),
+            'expiring' => $expiringCount,
+        ]);
+    }
+
+    /**
+     * STAT 4: Customer Metrics Card (Total & Overlimit)
+     */
+    public function customerMetrics()
+    {
+        // Total Customer Global
+        $total = Customer::count();
+
+        // Credit Exceeded (Global Check)
+        $creditExceeded = 0;
+        // Optimization: Gunakan raw query atau chunk jika data customer ribuan
+        $customers = Customer::whereNotNull('credit_limit')->where('credit_limit', '>', 0)->get(['id','credit_limit']);
+
+        foreach ($customers as $c) {
+            $sumBg = BankGaransi::where('customer_id', $c->id)
+                                ->where('status', 'approved') // Hanya BG aktif
+                                ->sum('bg_nominal');
+            if ($sumBg > $c->credit_limit) {
+                $creditExceeded++;
+            }
+        }
+
+        return response()->json([
+            'total' => $total,
+            'credit_exceeded' => $creditExceeded,
+        ]);
+    }
+
+    /**
+     * LIST 1: Top Customers (By Count OR Value)
+     */
+    public function topCustomersByBg(Request $request)
+    {
+        $metric = $request->input('metric', 'bg_count'); // 'bg_count' or 'value'
+        $user = Auth::user();
+
+        $query = Customer::leftJoin('bank_garansi', 'customers.id', '=', 'bank_garansi.customer_id');
+
+        if ($metric === 'value') {
+            $query->select('customers.id', 'customers.name', DB::raw('SUM(bank_garansi.bg_nominal) as bg_value'))
+                  ->orderByDesc('bg_value');
+        } else {
+            $query->select('customers.id', 'customers.name', DB::raw('COUNT(bank_garansi.id) as bg_count'))
+                  ->orderByDesc('bg_count');
+        }
+
+        $query->groupBy('customers.id', 'customers.name');
 
         if (!$user->hasRole('super-admin')) {
-            $query->where('created_by', $user->id);
+            $query->where('bank_garansi.created_by', $user->id);
         }
 
-        $stats = $query->whereYear('created_at', $year)
-            ->groupBy(DB::raw('MONTH(created_at)'))
-            ->orderBy(DB::raw('MONTH(created_at)'), 'ASC')
-            ->get();
+        $list = $query->limit(5)->get();
 
-        $chartData = [
-            'created'     => array_fill(0, 12, 0),
-            'approved'    => array_fill(0, 12, 0),
-            'pending'     => array_fill(0, 12, 0),
-            'in_progress' => array_fill(0, 12, 0),
-            'completed'   => array_fill(0, 12, 0),
-            'rejected'    => array_fill(0, 12, 0),
-            'recalled'    => array_fill(0, 12, 0),
-        ];
-
-        foreach ($stats as $stat) {
-            $monthIndex = $stat->month - 1;
-            $chartData['created'][$monthIndex]     = (int)$stat->created;
-            $chartData['approved'][$monthIndex]    = (int)$stat->approved;
-            $chartData['pending'][$monthIndex]     = (int)$stat->pending;
-            $chartData['in_progress'][$monthIndex] = (int)$stat->in_progress;
-            $chartData['completed'][$monthIndex]   = (int)$stat->approved; // map approved to completed for compatibility
-            $chartData['rejected'][$monthIndex]    = (int)$stat->expired; // map expired to rejected
-            $chartData['recalled'][$monthIndex]    = (int)$stat->draft; // map draft to recalled placeholder
-        }
-
-        return response()->json($chartData);
+        return response()->json($list);
     }
 
     /**
-     * Menyediakan data Top 5 Item yang paling sering direquest.
-     */
-    public function getTopItems(Request $request)
-    {
-        // Return empty or top customers by BG as a replacement for items
-        return $this->topCustomersByBg($request);
-    }
-
-    /**
-     * Menyediakan data Top 5 Customer yang paling sering melakukan request.
-     */
-    public function getTopCustomers(Request $request)
-    {
-        return $this->topCustomersByBg($request);
-    }
-
-    /**
-     * Mengambil aktivitas requisition terbaru.
+     * LIST 2: Recent Activities (Updated from BG table)
      */
     public function getRecentActivities()
     {
-        // Replace recent activities with recent BG entries
         $user = Auth::user();
         $query = BankGaransi::with('customer')->orderBy('updated_at', 'desc');
+
         if (!$user->hasRole('super-admin')) {
             $query->where('created_by', $user->id);
         }
@@ -174,19 +248,18 @@ class DashboardController extends Controller
     }
 
     /**
-     * Mengambil notifikasi atau tindakan yang perlu dilakukan user.
+     * LIST 3: My Actions (Notifications)
      */
     public function getMyActions()
     {
-        // Fungsi ini sudah spesifik per user, tidak perlu diubah
         $user = Auth::user();
-        $notifications = $user->unreadNotifications()->limit(5)->get()->map(function ($notification) {
+        $notifications = $user->unreadNotifications()->limit(5)->get()->map(function ($n) {
             return [
-                'id' => $notification->id,
-                'message' => $notification->data['message'],
-                'url' => $notification->data['url'] ?? '#',
-                'timestamp' => $notification->created_at->diffForHumans(),
-                'causer_name' => $notification->data['causer_name'] ?? 'System',
+                'id' => $n->id,
+                'message' => $n->data['message'] ?? 'Notification',
+                'url' => $n->data['url'] ?? '#',
+                'timestamp' => $n->created_at->diffForHumans(),
+                'causer_name' => $n->data['causer_name'] ?? 'System',
             ];
         });
 
@@ -194,133 +267,5 @@ class DashboardController extends Controller
             'count' => $user->unreadNotifications->count(),
             'notifications' => $notifications
         ]);
-    }
-
-    /**
-     * API endpoint untuk mendapatkan daftar tahun yang tersedia.
-     */
-    public function getAvailableYearsApi()
-    {
-        $years = $this->getAvailableYears();
-        return response()->json($years);
-    }
-
-    /**
-     * BG specific metrics: open count, expiring within 60 days, total value, pending approvals.
-     */
-    public function bgMetrics()
-    {
-        $user = Auth::user();
-
-        $query = BankGaransi::query();
-
-        if (!$user->hasRole('super-admin')) {
-            $query->where('created_by', $user->id);
-        }
-
-        $today = now()->startOfDay();
-        $threshold = now()->addDays(60)->endOfDay();
-
-        $openCount = (clone $query)->whereNotIn('status', ['expired'])->count();
-        $expiringCount = (clone $query)->whereBetween('exp_date', [$today, $threshold])->count();
-        $totalValue = (clone $query)->whereNotIn('status', ['expired'])->sum('bg_nominal');
-        // pending approvals: consider statuses 'submitted' or 'reviewed' as awaiting approval
-        $pendingApprovals = (clone $query)->whereIn('status', ['submitted', 'reviewed'])->count();
-
-        return response()->json([
-            'open' => (int)$openCount,
-            'expiring' => (int)$expiringCount,
-            'total_value' => (float)$totalValue,
-            'pending_approvals' => (int)$pendingApprovals,
-        ]);
-    }
-
-    /**
-     * Customer metrics: total customers, credit exceeded, customers with active BG.
-     */
-    public function customerMetrics()
-    {
-        $user = Auth::user();
-
-        // total customers (no role restriction here)
-        $total = Customer::count();
-
-        // customers with active BG (status not expired)
-        $withBg = Customer::whereHas('bankGaransis', function ($q) use ($user) {
-            if (!$user->hasRole('super-admin')) {
-                $q->where('created_by', $user->id);
-            }
-            $q->whereNotIn('status', ['expired']);
-        })->count();
-
-        // credit exceeded: customers where credit_limit < sum of active BG nominal
-        $creditExceeded = 0;
-        $customers = Customer::whereNotNull('credit_limit')->get(['id','credit_limit']);
-        foreach ($customers as $c) {
-            $sumBg = BankGaransi::where('customer_id', $c->id)->whereNotIn('status', ['expired'])->sum('bg_nominal');
-            if ($c->credit_limit < $sumBg) {
-                $creditExceeded++;
-            }
-        }
-
-        return response()->json([
-            'total' => (int)$total,
-            'with_bg' => (int)$withBg,
-            'credit_exceeded' => (int)$creditExceeded,
-        ]);
-    }
-
-    /**
-     * Recent Bank Garansi entries (latest 5)
-     */
-    public function recentBgs()
-    {
-        $user = Auth::user();
-        $query = BankGaransi::with('customer')->orderBy('created_at', 'desc');
-        if (!$user->hasRole('super-admin')) {
-            $query->where('created_by', $user->id);
-        }
-
-        $bgs = $query->limit(5)->get()->map(function ($bg) {
-            return [
-                'id' => $bg->id,
-                'bg_number' => $bg->bg_number,
-                'customer_name' => optional($bg->customer)->name ?? null,
-                'status' => $bg->status,
-                'exp_date' => $bg->exp_date ? $bg->exp_date->toDateString() : null,
-            ];
-        });
-
-        return response()->json($bgs);
-    }
-
-    /**
-     * Top customers by BG count.
-     */
-    public function topCustomersByBg()
-    {
-        $user = Auth::user();
-
-        $query = Customer::select('customers.id', 'customers.name', DB::raw('COUNT(bank_garansi.id) as bg_count'))
-            ->leftJoin('bank_garansi', 'customers.id', '=', 'bank_garansi.customer_id')
-            ->groupBy('customers.id', 'customers.name');
-
-        if (!$user->hasRole('super-admin')) {
-            $query->where(function($q) use ($user) {
-                $q->whereNotNull('bank_garansi.created_by')
-                  ->where('bank_garansi.created_by', $user->id);
-            });
-        }
-
-        $list = $query->orderByDesc('bg_count')->limit(5)->get()->map(function ($row) {
-            return [
-                'id' => $row->id,
-                'name' => $row->name,
-                'code' => $row->id,
-                'bg_count' => (int)$row->bg_count,
-            ];
-        });
-
-        return response()->json($list);
     }
 }
