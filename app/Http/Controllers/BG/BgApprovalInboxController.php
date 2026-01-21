@@ -11,9 +11,12 @@ use App\Models\Master\ApprovalLog;
 use App\Jobs\ProcessFinanceApprovalEmail;
 use App\Mail\CustomerBgReadyMail;
 use App\Models\User;
+use App\Notifications\SystemNotification;
 use Illuminate\Http\Request;
+use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use Yajra\DataTables\Facades\DataTables;
 
 class BgApprovalInboxController extends Controller
@@ -38,12 +41,12 @@ class BgApprovalInboxController extends Controller
                     return '<span class="fw-bold text-primary">'.$row->form_code.'</span>';
                 })
                 ->addColumn('bg_nominal', function($row){
-                    // LOGIC BARU: Ambil BG terbaru berdasarkan Customer ID (Tanpa filter status ketat)
-                    $bg = BankGaransi::where('customer_id', $row->recommendation->customer_id)
-                            ->latest() // Ambil yang paling baru dibuat
-                            ->first();
+                    // --- PERBAIKAN: SUM SEMUA NOMINAL BG DALAM BATCH INI ---
+                    $total = BankGaransi::where('customer_id', $row->recommendation->customer_id)
+                            ->where('created_at', $row->created_at) // Mencocokkan timestamp batch submission
+                            ->sum('bg_nominal');
 
-                    return $bg ? 'Rp ' . number_format($bg->bg_nominal, 0, ',', '.') : '-';
+                    return 'Rp ' . number_format($total, 0, ',', '.');
                 })
                 ->addColumn('submitted_at', function($row){
                     return $row->updated_at->format('d M Y H:i');
@@ -82,10 +85,23 @@ class BgApprovalInboxController extends Controller
         $rec = $sub->recommendation;
         $cust = $rec->customer;
 
-        // Ambil BG Terbaru
-        $bg = BankGaransi::where('customer_id', $cust->id)
-                ->latest()
-                ->first();
+        // --- PERBAIKAN: AMBIL SEMUA BG & DETAILNYA ---
+        $bgs = BankGaransi::where('customer_id', $cust->id)
+                ->where('created_at', $sub->created_at)
+                ->with('details') // Load relasi details untuk ambil nama bank
+                ->get();
+
+        $totalNominal = $bgs->sum('bg_nominal');
+
+        // Buat Array Rincian Bank untuk dikirim ke JS
+        $rincianBank = [];
+        foreach ($bgs as $bgItem) {
+            $detail = $bgItem->details->first();
+            $rincianBank[] = [
+                'bank_name' => $detail ? $detail->bank_name : 'Bank',
+                'nominal'   => number_format($bgItem->bg_nominal, 0, ',', '.')
+            ];
+        }
 
         // Cek periode
         $periodeStr = '-';
@@ -109,9 +125,11 @@ class BgApprovalInboxController extends Controller
                 'inflasi' => $rec->inflation,
                 'limit_kredit' => number_format($rec->credit_limit_updated, 0, ',', '.'),
                 'bg_ditetapkan' => number_format($rec->set_bg, 0, ',', '.'),
-                'bg_diserahkan' => number_format($bg->bg_nominal ?? 0, 0, ',', '.'),
 
-                // Extra Info
+                // Data Baru
+                'bg_diserahkan_total' => number_format($totalNominal, 0, ',', '.'),
+                'rincian_bank' => $rincianBank, // Array list bank
+
                 'form_code' => $sub->form_code,
             ]
         ]);
@@ -139,14 +157,13 @@ class BgApprovalInboxController extends Controller
         try {
             $status = ($request->action == 'reject') ? 'rejected_by_finance' : 'completed';
             $notes  = $request->notes ?? 'Processed via Dashboard (Quick Action)';
-
-            // 1. Update Submission
+            $newToken = ($status == 'completed') ? Str::random(60) : null;
             $sub->update([
                 'status' => $status,
+                'token' => $newToken,
                 'reviewed_at' => now()
             ]);
 
-            // 2. Update Log
             if ($log) {
                 $log->update([
                     'status' => ($request->action == 'reject') ? 'Rejected' : 'Approved',
@@ -156,12 +173,26 @@ class BgApprovalInboxController extends Controller
                 ]);
             }
 
-            // 3. Trigger History & Email
             if ($status == 'completed') {
                 if ($sub->recommendation) {
                     $sub->recommendation->update(['status' => 'approved']);
                 }
-                $this->addToHistoryLogic($sub);
+
+                // Update Status SEMUA BG dalam batch ini
+                $bgs = BankGaransi::where('customer_id', $sub->recommendation->customer_id)
+                        ->where('created_at', $sub->created_at) // Pakai created_at agar semua kena
+                        ->get();
+
+                foreach($bgs as $bg) {
+                    $bg->update([
+                        'status'      => 'approved',
+                        'issued_date' => now(),
+                        'exp_date'    => now()->addYear(),
+                    ]);
+                    // Add history per BG
+                    $this->addToHistoryLogic($sub, $bg);
+                }
+
                 $this->sendCompletionEmails($sub);
             }
 
@@ -182,6 +213,18 @@ class BgApprovalInboxController extends Controller
                 ->where('status', 'Pending')
                 ->first();
 
+        $approverUser = User::where('email', $log->approver_email)->first();
+
+        if($approverUser) {
+             Notification::send($approverUser, new SystemNotification(
+                'Reminder Approval',
+                "Halo, mohon segera review pengajuan <b>{$log->description}</b>.",
+                route('bg-approvals.index'),
+                'ph-bell-ringing',
+                'danger'
+            ));
+        }
+
         if ($log) {
             ProcessFinanceApprovalEmail::dispatch($log, $sub);
             return response()->json(['success' => true, 'message' => 'Email notification resent to Approver.']);
@@ -191,12 +234,8 @@ class BgApprovalInboxController extends Controller
 
     // --- PRIVATE METHODS ---
 
-    private function addToHistoryLogic($submission)
+    private function addToHistoryLogic($submission, $currentBg)
     {
-        $currentBg = BankGaransi::where('customer_id', $submission->recommendation->customer_id)
-                    ->latest() // Ambil yang paling baru
-                    ->first();
-
         if (!$currentBg) return;
 
         $prevBg = BankGaransi::where('customer_id', $currentBg->customer_id)
@@ -223,9 +262,18 @@ class BgApprovalInboxController extends Controller
 
     private function sendCompletionEmails($submission)
     {
+        $pendingSiblings = BgSubmission::where('bg_recommendation_id', $submission->bg_recommendation_id)
+                            ->where('status', '!=', 'completed')
+                            ->where('status', '!=', 'approved')
+                            ->count();
+
+        if ($pendingSiblings > 0) {
+            return;
+        }
+
         $customerEmail = $submission->recommendation->customer->email;
         $salesEmails = User::role('head-SNM')->pluck('email')->toArray();
-        $financeEmails = User::role('manager-finance')->pluck('email')->toArray();
+        $financeEmails = User::role('head-finance')->pluck('email')->toArray();
 
         $allRecipients = array_merge([$customerEmail], $salesEmails, $financeEmails);
         $recipients = array_unique(array_filter($allRecipients));

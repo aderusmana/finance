@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Master;
 use App\Http\Controllers\Controller;
 use App\Models\BG\BgLimitRule;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Yajra\DataTables\Facades\DataTables;
 
 class BgLimitRuleController extends Controller
@@ -44,7 +45,16 @@ class BgLimitRuleController extends Controller
             'description' => 'required'
         ]);
 
-        BgLimitRule::create($request->all());
+        $rule = BgLimitRule::create($request->all());
+
+        activity()
+            ->causedBy(Auth::user())
+            ->performedOn($rule)
+            ->useLog('master_bg_limit')
+            ->event('create')
+            ->withProperties(['attributes' => $request->all()])
+            ->log("Created BG Limit Rule: {$request->min_year}-{$request->max_year} Tahun ({$request->percentage}%)");
+
         return response()->json(['success' => true, 'message' => 'Rule Saved']);
     }
 
@@ -56,13 +66,36 @@ class BgLimitRuleController extends Controller
     public function update(Request $request, $id)
     {
         $rule = BgLimitRule::findOrFail($id);
+        $oldData = $rule->getOriginal();
         $rule->update($request->all());
+
+        activity()
+            ->causedBy(Auth::user())
+            ->performedOn($rule)
+            ->useLog('master_bg_limit')
+            ->event('update')
+            ->withProperties([
+                'old' => $oldData,
+                'attributes' => $rule->getChanges()
+            ])
+            ->log("Updated BG Limit Rule ID: {$id}");
+
         return response()->json(['success' => true, 'message' => 'Rule Updated']);
     }
 
     public function destroy($id)
     {
-        BgLimitRule::destroy($id);
-        return response()->json(['success' => true, 'message' => 'Deleted']);
+        $rule = BgLimitRule::findOrFail($id);
+        $oldData = $rule->toArray();
+        $rule->delete();
+
+        activity()
+            ->causedBy(Auth::user())
+            ->useLog('master_bg_limit')
+            ->event('delete')
+            ->withProperties(['deleted_data' => $oldData])
+            ->log("Deleted BG Limit Rule: {$oldData['min_year']}-{$oldData['max_year']} Tahun");
+
+        return response()->json(['success' => true, 'message' => 'Rule Deleted']);
     }
 }

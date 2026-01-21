@@ -70,7 +70,8 @@
                                 <th>Issued Date</th>
                                 <th>Exp Date</th>
                                 <th class="text-center">Status</th>
-                                <th width="10%" class="text-center">Action</th>
+                                <th class="text-center">Menu</th>
+                                <th class="text-center">Action</th>
                             </tr>
                         </thead>
                     </table>
@@ -128,258 +129,586 @@
         </div>
     </div>
 
-    @push('scripts')
-        <script src="{{ asset('assets/vendor/select/select2.min.js') }}"></script>
-        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        <script>
-            // --- GLOBAL HELPER: Format Rupiah ---
-            function formatRupiah(element) {
-                let value = element.value.replace(/[^,\d]/g, '').toString();
-                let split = value.split(',');
-                let sisa = split[0].length % 3;
-                let rupiah = split[0].substr(0, sisa);
-                let ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+    {{-- DETAIL MODAL (Modern & Professional) --}}
+    <div class="modal fade" id="bgDetailModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0 shadow-lg overflow-hidden" style="border-radius: 12px;">
 
-                if (ribuan) {
-                    let separator = sisa ? '.' : '';
-                    rupiah += separator + ribuan.join('.');
-                }
-                rupiah = split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
-                element.value = rupiah;
-            }
+                {{-- Modal Header with Gradient --}}
+                <div class="modal-header text-white px-4 py-3" style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="bg-white bg-opacity-25 rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;">
+                            <i class="ph-bold ph-file-text fs-4"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-title fw-bold mb-0">Bank Garansi Detail</h5>
+                            <small class="text-white-50" id="detail-bg-number">Loading...</small>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
 
-            $(document).ready(function() {
-                $('.select2').select2({ theme: 'bootstrap-5' });
-                $('.select2-modal').select2({ dropdownParent: $('#bgModal'), theme: 'bootstrap-5', placeholder: 'Select Option' });
+                <div class="modal-body p-0">
 
-                const table = $('#sampleTable').DataTable({
-                    processing: true, serverSide: true,
-                    ajax: {
-                        url: "{{ route('bg-list.index') }}",
-                        data: function(d) { d.status = $('#statusFilter').val(); d.bg_type = $('#typeFilter').val(); }
-                    },
-                    columns: [
-                        { data: 'DT_RowIndex', orderable: false, searchable: false, className: 'text-center' },
-                        { data: 'bg_number', className: 'fw-bold' },
-                        { data: 'customer_name', className: 'text-wrap text-start', width: '25%' },
-                        { data: 'bg_type', className: 'text-center', render: function(d) { return `<span class="badge bg-${d==='new'?'info':(d==='extension'?'warning':'secondary')} text-uppercase">${d}</span>`; } },
-                        { data: 'bg_nominal', className: 'text-end fw-bold' },
-                        { data: 'issued_date' }, { data: 'exp_date' },
-                        { data: 'status', className: 'text-center', render: function(d) { return `<span class="badge bg-${d==='approved'?'success':(d==='submitted'?'primary':(d==='expired'?'danger':'secondary'))} text-uppercase">${d.replace('_', ' ')}</span>`; } },
-                        { data: 'action', orderable: false, searchable: false, className: 'text-center' }
-                    ],
-                    order: [[1, 'asc']]
-                });
+                    {{-- Status Banner --}}
+                    <div class="px-4 py-3 bg-light d-flex justify-content-between align-items-center border-bottom">
+                        <span class="text-muted fw-bold text-uppercase small letter-spacing-1">Current Status</span>
+                        <span class="badge rounded-pill px-3 py-2 fs-6" id="detail-status">Loading...</span>
+                    </div>
 
-                $('#statusFilter, #typeFilter').on('change', function() { table.ajax.reload(); });
-                $('#resetFilters').on('click', function() { $('#statusFilter, #typeFilter').val('all').trigger('change'); });
+                    <div class="row g-0">
+                        {{-- LEFT COLUMN: Main Info --}}
+                        <div class="col-md-7 p-4 border-end">
+                            <h6 class="fw-bold text-primary mb-3"><i class="ph-duotone ph-buildings me-2"></i>Customer Information</h6>
 
-                // --- DYNAMIC ITEMS LOGIC ---
-                let itemIndex = 0;
-
-                function addBgItem(data = null) {
-                    const index = itemIndex++;
-
-                    // PERBAIKAN: Gunakan || '' untuk mencegah "undefined" pada input value
-                    const bgNumber = (data && data.bg_number) ? data.bg_number : '';
-                    const bgType = (data && data.bg_type) ? data.bg_type : 'new';
-
-                    // Nominal Logic (Format ke Ribuan)
-                    let nominalVal = '';
-                    if (data && data.bg_nominal && parseFloat(data.bg_nominal) > 0) {
-                        nominalVal = new Intl.NumberFormat('id-ID').format(data.bg_nominal);
-                    }
-
-                    // Dates
-                    const today = new Date().toISOString().split('T')[0];
-                    const issued = (data && data.issued_date) ? data.issued_date.substring(0,10) : today;
-                    const exp = (data && data.exp_date) ? data.exp_date.substring(0,10) : today;
-
-                    // Detail Logic (Safe Navigation)
-                    let detail = (data && data.details && data.details.length > 0) ? data.details[0] : {};
-                    const bankName = detail.bank_name || '';
-                    const branch = detail.branch_name || '';
-                    const address = detail.bank_address || '';
-                    const pic = detail.contact_person || '';
-
-                    const html = `
-                        <div class="card mb-3 border bg-item-row" data-index="${index}">
-                            <div class="card-header bg-light d-flex justify-content-between align-items-center py-2">
-                                <h6 class="mb-0 fw-bold text-dark fs-6">Bank Garansi Information #${index + 1}</h6>
-                                <button type="button" class="btn btn-sm btn-outline-danger btn-remove-item" ${index === 0 && !data ? '' : ''}>
-                                    <i class="ph-bold ph-trash"></i>
-                                </button>
+                            <div class="mb-4">
+                                <label class="text-muted small text-uppercase fw-bold">Customer Name</label>
+                                <div class="fs-6 fw-bold text-dark" id="detail-customer">...</div>
                             </div>
-                            <div class="card-body p-3">
-                                <div class="row g-3">
-                                    {{-- Baris 1: BG Info --}}
-                                    <div class="col-md-4">
-                                        <label class="form-label small text-muted">BG Number <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" name="items[${index}][bg_number]" value="${bgNumber}" required placeholder="e.g. BG/2025/001">
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label class="form-label small text-muted">Type <span class="text-danger">*</span></label>
-                                        <select class="form-select" name="items[${index}][bg_type]">
-                                            <option value="new" ${bgType === 'new' ? 'selected' : ''}>New</option>
-                                            <option value="existing" ${bgType === 'existing' ? 'selected' : ''}>Existing</option>
-                                            <option value="extension" ${bgType === 'extension' ? 'selected' : ''}>Extension</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label class="form-label small text-muted">Nominal (IDR) <span class="text-danger">*</span></label>
-                                        <div class="input-group">
-                                            <span class="input-group-text bg-light">Rp</span>
-                                            <input type="text" class="form-control fw-bold rupiah-input"
-                                                   name="items[${index}][nominal]"
-                                                   value="${nominalVal}"
-                                                   required placeholder="0"
-                                                   onkeyup="formatRupiah(this)">
-                                        </div>
-                                    </div>
 
-                                    {{-- Baris 2: Dates (Readonly) --}}
-                                    <div class="col-md-6">
-                                        <label class="form-label small text-muted">Issued Date</label>
-                                        <input type="date" class="form-control bg-light" name="items[${index}][issued_date]" value="${issued}" readonly>
+                            <div class="row g-3 mb-4">
+                                <div class="col-6">
+                                    <label class="text-muted small text-uppercase fw-bold">Type</label>
+                                    <div class="d-flex align-items-center gap-2 mt-1">
+                                        <i class="ph-fill ph-tag text-info"></i>
+                                        <span class="fw-bold text-dark" id="detail-type">...</span>
                                     </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label small text-muted">Expiry Date</label>
-                                        <input type="date" class="form-control bg-light" name="items[${index}][exp_date]" value="${exp}" readonly>
-                                    </div>
-
-                                    <div class="col-12"><hr class="my-1 border-dashed"></div>
-
-                                    {{-- Baris 3: Bank Details --}}
-                                    <div class="col-md-6">
-                                        <label class="form-label small text-muted">Bank Name <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" name="items[${index}][bank_name]" value="${bankName}" required placeholder="e.g. Bank Mandiri">
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label small text-muted">Branch</label>
-                                        <input type="text" class="form-control" name="items[${index}][branch_name]" value="${branch}" placeholder="Branch Name">
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label small text-muted">PIC Name</label>
-                                        <input type="text" class="form-control" name="items[${index}][contact_person]" value="${pic}" placeholder="PIC Name">
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label small text-muted">Bank Address</label>
-                                        <input type="text" class="form-control" name="items[${index}][bank_address]" value="${address}" placeholder="Address">
+                                </div>
+                                <div class="col-6">
+                                    <label class="text-muted small text-uppercase fw-bold">Nominal</label>
+                                    <div class="d-flex align-items-center gap-2 mt-1">
+                                        <i class="ph-fill ph-coins text-warning"></i>
+                                        <span class="fw-bold text-dark" id="detail-nominal">...</span>
                                     </div>
                                 </div>
                             </div>
-                        </div>`;
-                    $('#items-container').append(html);
-                }
 
-                $('#btn-add-item').on('click', function() { addBgItem(); });
+                            <h6 class="fw-bold text-primary mb-3 mt-4"><i class="ph-duotone ph-bank me-2"></i>Bank Details</h6>
+                            <div class="p-3 rounded bg-light border border-dashed" id="detail-bank-container">
+                                {{-- Bank details will be injected here --}}
+                            </div>
+                        </div>
 
-                $(document).on('click', '.btn-remove-item', function() {
-                    $(this).closest('.bg-item-row').remove();
-                });
+                        {{-- RIGHT COLUMN: Dates & Meta --}}
+                        <div class="col-md-5 p-4 bg-light-subtle">
+                            <h6 class="fw-bold text-primary mb-3"><i class="ph-duotone ph-calendar me-2"></i>Timeline</h6>
 
-                // --- CREATE MODE ---
-                $('#btn-create-bg').on('click', function() {
-                    $('#bgForm')[0].reset();
-                    $('#bgId').val(''); $('#formMethod').val('POST');
+                            <div class="timeline-simple">
+                                <div class="mb-3">
+                                    <label class="text-muted small fw-bold">Issued Date</label>
+                                    <div class="d-flex align-items-center gap-2 text-dark">
+                                        <i class="ph-bold ph-calendar-plus text-success"></i>
+                                        <span id="detail-issued">...</span>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="text-muted small fw-bold">Expired Date</label>
+                                    <div class="d-flex align-items-center gap-2 text-dark">
+                                        <i class="ph-bold ph-calendar-x text-danger"></i>
+                                        <span id="detail-expired">...</span>
+                                    </div>
+                                </div>
+                            </div>
 
-                    itemIndex = 0; // Reset index agar mulai dari #1
-                    $('#items-container').empty();
+                            <hr class="border-dashed my-4">
 
-                    $('.select2-modal').val(null).trigger('change');
-                    $('#btn-add-item').show();
-                    $('#bgModalLabel').text('Create New Bank Garansi');
-                    addBgItem();
-                    $('#bgModal').modal('show');
-                });
+                            <div class="mb-3">
+                                <label class="text-muted small fw-bold">Created By</label>
+                                <div class="d-flex align-items-center gap-2 mt-1">
+                                    <div class="bg-secondary bg-opacity-10 rounded-circle p-1">
+                                        <i class="ph-fill ph-user text-secondary"></i>
+                                    </div>
+                                    <span class="small fw-bold" id="detail-creator">...</span>
+                                </div>
+                            </div>
 
-                // --- EDIT MODE ---
-                $(document).on('click', '.btn-edit-bg', function() {
-                    const id = $(this).data('id');
-                    const url = "{{ route('bg-list.show', ':id') }}".replace(':id', id);
-                    Swal.fire({ title: 'Loading...', didOpen: () => Swal.showLoading() });
+                            <div class="mb-3">
+                                <label class="text-muted small fw-bold">Last Updated</label>
+                                <div class="small text-dark" id="detail-updated">...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-                    $.get(url, function(data) {
-                        Swal.close();
-                        $('#bgForm')[0].reset();
+                <div class="modal-footer bg-light px-4 py-2">
+                    <button type="button" class="btn btn-light border fw-bold" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-                        itemIndex = 0; // Reset index
-                        $('#items-container').empty();
+    @push('scripts')
+    <script src="{{ asset('assets/vendor/select/select2.min.js') }}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        // --- GLOBAL HELPER: Format Rupiah ---
+        function formatRupiah(element) {
+            let value = element.value.replace(/[^,\d]/g, '').toString();
+            let split = value.split(',');
+            let sisa = split[0].length % 3;
+            let rupiah = split[0].substr(0, sisa);
+            let ribuan = split[0].substr(sisa).match(/\d{3}/gi);
 
-                        $('#bgId').val(data.id);
-                        $('#customer_id').val(data.customer_id).trigger('change');
-                        $('#formMethod').val('PUT');
+            if (ribuan) {
+                let separator = sisa ? '.' : '';
+                rupiah += separator + ribuan.join('.');
+            }
+            rupiah = split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
+            element.value = rupiah;
+        }
 
-                        $('#btn-add-item').hide();
-                        $('#bgModalLabel').text('Edit Bank Garansi');
+        $(document).ready(function() {
+            // Init Plugins
+            $('.select2').select2({ theme: 'bootstrap-5' });
+            $('.select2-modal').select2({ dropdownParent: $('#bgModal'), theme: 'bootstrap-5', placeholder: 'Select Option' });
 
-                        // Load data yang diterima dari controller (sekarang sudah pasti JSON)
-                        addBgItem(data);
-
-                        $('#bgModal').modal('show');
-                    }).fail(function() {
-                        Swal.fire('Error', 'Failed to fetch data', 'error');
-                    });
-                });
-
-                // --- SUBMIT ---
-                $('#bgForm').on('submit', function(e) {
-                    e.preventDefault();
-                    const id = $('#bgId').val();
-                    let url = "{{ route('bg-list.store') }}";
-                    if(id) {
-                        url = "{{ route('bg-list.update', ':id') }}".replace(':id', id);
-                        $('#formMethod').val('PUT');
+            const table = $('#sampleTable').DataTable({
+                processing: true, serverSide: true,
+                ajax: {
+                    url: "{{ route('bg-list.index') }}",
+                    data: function(d) {
+                        d.status = $('#statusFilter').val();
+                        d.bg_type = $('#typeFilter').val();
                     }
+                },
+                columns: [
+                    { data: 'DT_RowIndex', orderable: false, searchable: false, className: 'text-center' },
+                    { data: 'bg_number', className: 'fw-bold' },
+                    { data: 'customer_name', className: 'text-wrap text-start', width: '20%' },
+                    { data: 'bg_type', className: 'text-center', render: function(d) {
+                        let color = d === 'new' ? 'info' : (d === 'extension' ? 'warning' : 'secondary');
+                        return `<span class="badge bg-${color} text-uppercase">${d}</span>`;
+                    }},
+                    { data: 'bg_nominal', className: 'text-end fw-bold' },
+                    { data: 'issued_date' },
+                    { data: 'exp_date' },
+                    { data: 'status', className: 'text-center', render: function(d) {
+                        let color = d === 'approved' ? 'success' : (d === 'submitted' ? 'primary' : (d === 'expired' ? 'danger' : 'secondary'));
+                        return `<span class="badge bg-${color} status-badge-lg">${d.replace('_', ' ')}</span>`;
+                    }},
+                    { data: 'menu', orderable: false, searchable: false, className: 'text-center' },
+                    { data: 'action', orderable: false, searchable: false, className: 'text-center' }
+                ],
+                order: [[1, 'asc']]
+            });
 
-                    const formData = new FormData(this);
+            $('#statusFilter, #typeFilter').on('change', function() { table.ajax.reload(); });
+            $('#resetFilters').on('click', function() { $('#statusFilter, #typeFilter').val('all').trigger('change'); });
 
-                    // Bersihkan format Rupiah sebelum kirim
-                    const keys = Array.from(formData.keys());
-                    for (const key of keys) {
-                        if (key.includes('[nominal]')) {
-                            let rawVal = formData.get(key);
-                            if(rawVal) {
-                                let cleanVal = rawVal.replace(/\./g, '');
-                                formData.set(key, cleanVal);
+            let isPopulating = false;
+            let currentSequence = 0;
+            let currentPrefix = '';
+
+            $('#customer_id').on('change', function() {
+                if (isPopulating) return;
+
+                let custId = $(this).val();
+                if(!custId) return;
+
+                $.ajax({
+                    url: "{{ route('bg.generate-number') }}",
+                    type: "GET",
+                    data: { customer_id: custId },
+                    success: function(res) {
+                        if(res.status === 'success') {
+                            currentSequence = res.sequence;
+                            currentPrefix = res.prefix;
+
+                            let firstInput = $('input[name="items[0][bg_number]"]');
+
+                            if(firstInput.val() === '' || firstInput.val().startsWith('BG-')) {
+                                firstInput.val(res.number);
                             }
                         }
                     }
-
-                    Swal.fire({ title: 'Saving...', didOpen: () => Swal.showLoading() });
-
-                    $.ajax({
-                        url: url, method: 'POST', data: formData, processData: false, contentType: false,
-                        success: function(res) {
-                            Swal.fire('Success', res.message, 'success');
-                            $('#bgModal').modal('hide');
-                            table.ajax.reload();
-                        },
-                        error: function(xhr) {
-                            let msg = xhr.responseJSON?.message || 'Error occurred';
-                            Swal.fire('Error', msg, 'error');
-                        }
-                    });
-                });
-
-                // Delete Handler (Code sama seperti sebelumnya)
-                $(document).on('click', '.btn-delete-bg', function() {
-                    const id = $(this).data('id');
-                    const url = "{{ route('bg-list.destroy', ':id') }}".replace(':id', id);
-                    Swal.fire({
-                        title: 'Are you sure?', text: "Deleted data cannot be recovered.", icon: 'warning',
-                        showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'Yes, delete!'
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            $.ajax({
-                                url: url, method: 'DELETE', data: { _token: "{{ csrf_token() }}" },
-                                success: function(res) { Swal.fire('Deleted!', res.message, 'success'); table.ajax.reload(); },
-                                error: function() { Swal.fire('Error', 'Failed to delete', 'error'); }
-                            });
-                        }
-                    });
                 });
             });
-        </script>
+
+            function updateRowNumbers() {
+                $('.bg-item-row').each(function(index) {
+                    let rowNumber = index + 1
+                    let rowIndex = index;
+
+                    $(this).find('.card-header h6').text(`Bank Garansi Information #${rowNumber}`);
+
+                    $(this).find('input, select').each(function() {
+                        let name = $(this).attr('name');
+                        if (name) {
+                            let newName = name.replace(/items\[\d+\]/, `items[${rowIndex}]`);
+                            $(this).attr('name', newName);
+                        }
+                    });
+                });
+            }
+
+            function addBgItem(data = null, forceType = null) {
+                const tempIndex = new Date().getTime() + Math.floor(Math.random() * 1000);
+                let bgNumber = '';
+                if (data && data.bg_number) {
+                    bgNumber = data.bg_number;
+                } else {
+                    if (currentPrefix !== '' && currentSequence > 0) {
+                        let existingRows = $('.bg-item-row').length;
+                        let nextSeq = currentSequence + existingRows;
+                        let seqStr = nextSeq.toString().padStart(4, '0');
+                        bgNumber = currentPrefix + seqStr;
+                    }
+                }
+
+                let bgType = 'new';
+                if(forceType) {
+                    bgType = forceType;
+                } else if (data && data.bg_type) {
+                    bgType = data.bg_type;
+                }
+
+                let nominalVal = '';
+                if (data && data.bg_nominal && parseFloat(data.bg_nominal) > 0) {
+                    nominalVal = new Intl.NumberFormat('id-ID').format(data.bg_nominal);
+                }
+
+                const today = new Date().toISOString().split('T')[0];
+                const issued = (data && data.issued_date) ? data.issued_date.substring(0,10) : new Date().toISOString().split('T')[0];
+                const exp = (data && data.exp_date) ? data.exp_date.substring(0,10) : new Date().toISOString().split('T')[0];
+
+                let detail = (data && data.details && data.details.length > 0) ? data.details[0] : (data && data.details ? data.details : {}); // Handle structure variations
+                const bankName = detail.bank_name || '';
+                const branch = detail.branch_name || '';
+                const address = detail.bank_address || '';
+                const pic = detail.contact_person || '';
+
+                const html = `
+                    <div class="card mb-3 border bg-item-row">
+                        <div class="card-header bg-light d-flex justify-content-between align-items-center py-2">
+                            <h6 class="mb-0 fw-bold text-dark fs-6">Bank Garansi Information #...</h6>
+                            ${!data ? `<button type="button" class="btn btn-sm btn-outline-danger btn-remove-item"><i class="ph-bold ph-trash"></i></button>` : ''}
+                        </div>
+                        <div class="card-body p-3">
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label class="form-label small text-muted">BG Number <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="items[${tempIndex}][bg_number]" value="${bgNumber}" required placeholder="e.g. BG/2025/001">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small text-muted">Type <span class="text-danger">*</span></label>
+                                    <select class="form-select bg-type-select" name="items[${tempIndex}][bg_type]">
+                                        <option value="new" ${bgType === 'new' ? 'selected' : ''}>New</option>
+                                        <option value="existing" ${bgType === 'existing' ? 'selected' : ''}>Existing</option>
+                                        <option value="extension" ${bgType === 'extension' ? 'selected' : ''}>Extension</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small text-muted">Nominal (IDR) <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light">Rp</span>
+                                        <input type="text" class="form-control fw-bold rupiah-input"
+                                                name="items[${tempIndex}][nominal]"
+                                                value="${nominalVal}"
+                                                required placeholder="0"
+                                                onkeyup="formatRupiah(this)">
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label small text-muted">Issued Date</label>
+                                    <input type="date" class="form-control bg-light" name="items[${tempIndex}][issued_date]" value="${issued}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small text-muted">Expiry Date</label>
+                                    <input type="date" class="form-control bg-light" name="items[${tempIndex}][exp_date]" value="${exp}">
+                                </div>
+
+                                <div class="col-12"><hr class="my-1 border-dashed"></div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label small text-muted">Bank Name <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="items[${tempIndex}][bank_name]" value="${bankName}" required placeholder="e.g. Bank Mandiri">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small text-muted">Branch</label>
+                                    <input type="text" class="form-control" name="items[${tempIndex}][branch_name]" value="${branch}" placeholder="Branch Name">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small text-muted">PIC Name</label>
+                                    <input type="text" class="form-control" name="items[${tempIndex}][contact_person]" value="${pic}" placeholder="PIC Name">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small text-muted">Bank Address</label>
+                                    <input type="text" class="form-control" name="items[${tempIndex}][bank_address]" value="${address}" placeholder="Address">
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
+
+                $('#items-container').append(html);
+                updateRowNumbers();
+            }
+
+            $('#btn-add-item').on('click', function() { addBgItem(); });
+            $(document).on('click', '.btn-remove-item', function() {
+                $(this).closest('.bg-item-row').remove();
+                updateRowNumbers();
+            });
+
+            function resetModal(title) {
+                $('#bgForm')[0].reset();
+                $('#bgId').val('');
+                $('#formMethod').val('POST');
+                $('#items-container').empty();
+                $('.select2-modal').val(null).trigger('change');
+                $('#bgModalLabel').text(title);
+                $('#btn-add-item').hide();
+                currentSequence = 0;
+                currentPrefix = '';
+            }
+
+            $('#btn-create-bg').on('click', function() {
+                resetModal('Create New Bank Garansi');
+                $('#btn-add-item').show();
+                addBgItem();
+                $('#bgModal').modal('show');
+            });
+
+            const baseUrl = "{{ route('bg-list.index') }}";
+
+            $(document).on('click', '.btn-edit', function() {
+                let id = $(this).data('id');
+                $.get(baseUrl + "/" + id, function(data) {
+                    resetModal('Edit Bank Garansi');
+                    $('#bgId').val(data.id);
+                    $('#formMethod').val('PUT');
+
+                    isPopulating = true;
+
+                    $('#customer_id').val(data.customer_id).trigger('change');
+
+                    addBgItem(data);
+                    isPopulating = false;
+
+                    $('#btn-add-item').show();
+                    $('#bgModal').modal('show');
+                });
+            });
+
+            $(document).on('click', '.btn-extension', function() {
+                let id = $(this).data('id');
+
+                Swal.fire({
+                    title: 'Request Extension?',
+                    text: "Sistem akan mengirimkan email formulir kosong ke Customer untuk pengajuan BG Baru (Extension).",
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#10b981',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Ya, Kirim Form!',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        Swal.fire({
+                            title: 'Mengirim Email...',
+                            didOpen: () => Swal.showLoading()
+                        });
+
+                        $.ajax({
+                            url: "{{ route('bg.request.extension') }}",
+                            type: "POST",
+                            data: {
+                                _token: "{{ csrf_token() }}",
+                                bg_id: id
+                            },
+                            success: function(res) {
+                                Swal.fire('Terkirim!', res.message, 'success');
+                                table.ajax.reload();
+                            },
+                            error: function(xhr) {
+                                let msg = xhr.responseJSON?.message || 'Terjadi kesalahan sistem';
+                                Swal.fire('Gagal!', msg, 'error');
+                            }
+                        });
+                    }
+                });
+            });
+
+            $(document).on('click', '.btn-existing', function() {
+                let id = $(this).data('id');
+
+                Swal.fire({
+                    title: 'Request Existing Update?',
+                    text: "Sistem akan mengirimkan email ke Customer untuk memperbarui Nominal BG ini.",
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#6366f1',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Ya, Kirim Email!',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        Swal.fire({
+                            title: 'Mengirim Email...',
+                            text: 'Mohon tunggu sebentar',
+                            allowOutsideClick: false,
+                            didOpen: () => Swal.showLoading()
+                        });
+
+                        $.ajax({
+                            url: "{{ url('bg/bg/request-existing') }}/" + id,
+                            type: "POST",
+                            data: { _token: "{{ csrf_token() }}" },
+                            success: function(res) {
+                                Swal.fire('Terkirim!', res.message, 'success');
+                                table.ajax.reload();
+                            },
+                            error: function(xhr) {
+                                let msg = xhr.responseJSON?.message || 'Terjadi kesalahan sistem';
+                                Swal.fire('Gagal!', msg, 'error');
+                            }
+                        });
+                    }
+                });
+            });
+
+            $(document).on('click', '.btn-show', function() {
+                let id = $(this).data('id');
+                $('#detail-bg-number').text('Loading...');
+                $('#bgDetailModal').modal('show');
+
+                const formatDate = (dateStr) => {
+                    if (!dateStr) return '-';
+                    const options = { day: 'numeric', month: 'long', year: 'numeric' };
+                    return new Date(dateStr).toLocaleDateString('id-ID', options);
+                };
+
+                $.get(baseUrl + "/" + id, function(data) {
+                    $('#detail-bg-number').text(data.bg_number);
+
+                    let statusClass = 'secondary';
+                    if(data.status === 'approved') statusClass = 'success';
+                    else if(data.status === 'submitted') statusClass = 'primary';
+                    else if(data.status === 'expired') statusClass = 'danger';
+
+                    $('#detail-status').text(data.status.toUpperCase())
+                        .attr('class', `badge rounded-pill px-3 py-2 fs-6 bg-${statusClass}`);
+
+                    $('#detail-customer').text(data.customer ? data.customer.name : '-');
+                    $('#detail-type').text(data.bg_type.toUpperCase());
+                    $('#detail-nominal').text('Rp ' + new Intl.NumberFormat('id-ID').format(data.bg_nominal));
+
+                    $('#detail-issued').text(formatDate(data.issued_date));
+                    $('#detail-expired').text(formatDate(data.exp_date));
+
+                    $('#detail-creator').text(data.creator ? data.creator.name : 'System');
+                    $('#detail-updated').text(formatDate(data.updated_at));
+
+                    let bankHtml = '<p class="text-muted text-center mb-0">No bank details found.</p>';
+                    if(data.details && data.details.length > 0) {
+                        let d = data.details[0];
+
+                        bankHtml = `
+                            <div class="d-flex justify-content-between mb-2 border-bottom pb-1">
+                                <span class="text-muted small">Bank Name:</span>
+                                <span class="fw-bold text-dark text-end">${d.bank_name}</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2 border-bottom pb-1">
+                                <span class="text-muted small">Branch:</span>
+                                <span class="fw-bold text-dark text-end">${d.branch_name || '-'}</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2 border-bottom pb-1">
+                                <span class="text-muted small">Address:</span>
+                                <span class="fw-bold text-dark text-end text-wrap w-50" style="line-height: 1.2;">${d.bank_address || '-'}</span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span class="text-muted small">PIC:</span>
+                                <span class="fw-bold text-dark text-end">${d.contact_person || '-'}</span>
+                            </div>
+                        `;
+                    }
+                    $('#detail-bank-container').html(bankHtml);
+                }).fail(function() {
+                    Swal.fire('Error', 'Failed to load data details.', 'error');
+                });
+            });
+
+            $(document).on('click', '.btn-delete', function() {
+                let id = $(this).data('id');
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: "You won't be able to revert this!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Yes, delete it!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: baseUrl + "/" + id,
+                            type: 'DELETE',
+                            data: { _token: "{{ csrf_token() }}" },
+                            success: function(res) {
+                                Swal.fire('Deleted!', res.message, 'success');
+                                table.ajax.reload();
+                            },
+                            error: function(xhr) {
+                                Swal.fire('Error', 'Failed to delete data.', 'error');
+                            }
+                        });
+                    }
+                });
+            });
+
+            $('#bgForm').on('submit', function(e) {
+                e.preventDefault();
+                const id = $('#bgId').val();
+                const method = $('#formMethod').val();
+
+                let url = "{{ route('bg-list.store') }}";
+
+                if(method === 'PUT' && id) {
+                    url = "{{ route('bg-list.update', ':id') }}".replace(':id', id);
+                }
+
+                const formData = new FormData(this);
+
+                const keys = Array.from(formData.keys());
+                for (const key of keys) {
+                    if (key.includes('[nominal]')) {
+                        let rawVal = formData.get(key);
+                        if(rawVal) {
+                            let cleanVal = rawVal.replace(/\./g, '').replace(/,/g, '.');
+                            cleanVal = rawVal.replace(/\./g, '');
+                            formData.set(key, cleanVal);
+                        }
+                    }
+                }
+
+                Swal.fire({ title: 'Saving...', didOpen: () => Swal.showLoading() });
+
+                $.ajax({
+                    url: url,
+                    method: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(res) {
+                        Swal.fire('Success', res.message, 'success');
+                        $('#bgModal').modal('hide');
+                        table.ajax.reload();
+                    },
+                    error: function(xhr) {
+                        let msg = xhr.responseJSON?.message || 'Error occurred';
+                        Swal.fire('Error', msg, 'error');
+                    }
+                });
+            });
+
+            $(document).ready(function() {
+                var tableContainer = $('.table-responsive'); // Sesuaikan class container tabelmu
+
+                tableContainer.on('scroll', function() {
+                    $('.btn-action-soft.show').dropdown('hide');
+                });
+            });
+        });
+    </script>
     @endpush
 </x-app-layout>

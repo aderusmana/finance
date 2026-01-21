@@ -50,6 +50,13 @@ class BgRecommendationController extends Controller
 
                 return DataTables::of($query)
                     ->addIndexColumn()
+                    ->addColumn('bg_number', function($row) {
+                        $bg = BankGaransi::where('customer_id', $row->customer_id)
+                                ->latest()
+                                ->first();
+
+                        return $bg ? $bg->bg_number : '-';
+                    })
                     ->addColumn('customer_name', fn($row) => $row->customer->name ?? '-')
                     ->editColumn('current_bg', fn($row) => 'Rp ' . number_format($row->current_bg, 0, ',', '.'))
                     ->addColumn('action', function ($row) {
@@ -65,13 +72,20 @@ class BgRecommendationController extends Controller
 
                 return DataTables::of($query)
                     ->addIndexColumn()
+                    ->addColumn('bg_number', function($row) {
+                        $bg = BankGaransi::where('customer_id', $row->customer_id)
+                                ->latest()
+                                ->first();
+
+                        return $bg ? $bg->bg_number : '-';
+                    })
                     ->addColumn('customer_name', fn($row) => $row->customer->name ?? '-')
                     ->editColumn('average', fn($row) => 'Rp ' . number_format($row->average, 0, ',', '.'))
                     ->editColumn('recommended_credit_limit', fn($row) => 'Rp ' . number_format($row->recommended_credit_limit, 0, ',', '.'))
                     ->editColumn('set_bg', fn($row) => 'Rp ' . number_format($row->set_bg, 0, ',', '.'))
                     ->editColumn('status', function($row){
                         $color = $row->status == 'completed' ? 'success' : 'primary';
-                        return '<span class="badge bg-'.$color.'">'.ucfirst(str_replace('_', ' ', $row->status)).'</span>';
+                        return '<span class="badge bg-'.$color.' status-badge-lg">'.ucfirst(str_replace('_', ' ', $row->status)).'</span>';
                     })
 
                     ->addColumn('action', function($row){
@@ -158,6 +172,7 @@ class BgRecommendationController extends Controller
         $request->validate([
             'average' => 'required|numeric',
             'set_bg'  => 'required|numeric',
+            'credit_limit_updated' => 'nullable|numeric',
         ]);
 
         DB::beginTransaction();
@@ -181,7 +196,6 @@ class BgRecommendationController extends Controller
             }
             $rulePercent = $this->getLimitRulePercent($rec->customer);
 
-            // Perhitungan Ulang di Backend (Validasi)
             $estPpnValue = $avg * $taxRate;
             $timeFactor = $top > 0 ? ($top + $leadTime) / $top : 1;
             $inflationFactor = $inflation / 100;
@@ -189,10 +203,14 @@ class BgRecommendationController extends Controller
             $fkLimit = $recLimit * ($rulePercent / 100);
             $rounded = round($fkLimit, -6);
 
-            if ($rulePercent > 0) {
-                 $limitUpdated = $setBg / ($rulePercent / 100);
+            if ($request->filled('credit_limit_updated')) {
+                $limitUpdated = (float) $request->credit_limit_updated;
             } else {
-                 $limitUpdated = $setBg;
+                if ($rulePercent > 0) {
+                     $limitUpdated = $setBg / ($rulePercent / 100);
+                } else {
+                     $limitUpdated = $setBg;
+                }
             }
 
             $notes = $request->notes;
@@ -205,6 +223,7 @@ class BgRecommendationController extends Controller
             $rec->update([
                 'average'                   => $avg,
                 'top'                       => $top,
+                'inflation'                 => $inflation,
                 'lead_time'                 => $leadTime,
                 'recommended_credit_limit'  => $recLimit,
                 'fk_with_limit'             => $fkLimit,
@@ -216,18 +235,21 @@ class BgRecommendationController extends Controller
                 'token'                     => $token,
             ]);
 
-            BgSubmission::firstOrCreate(
-                ['bg_recommendation_id' => $rec->id],
-                [
-                    'form_code' => 'SUB-' . date('Ymd') . '-' . strtoupper(Str::random(5)),
-                    'status'    => 'pending_print',
-                    'token'     => Str::random(60),
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]
-            );
-
             $recForMail = BgRecommendation::with(['customer', 'periods', 'tax'])->findOrFail($id);
+            activity()
+                ->causedBy(auth()->user())
+                ->performedOn($recForMail)
+                ->useLog('bg_recommendation')
+                ->event('submit_credit_limit')
+                ->withProperties([
+                    'customer' => $recForMail->customer->name,
+                    'calculated_limit' => $rounded,
+                    'final_credit_limit' => $limitUpdated,
+                    'set_bg_nominal' => $setBg,
+                    'inflation_rate' => $inflation . '%'
+                ])
+                ->log("Admin menetapkan Credit Limit Baru: Rp " . number_format($limitUpdated, 0, ',', '.') . " (BG: Rp " . number_format($setBg, 0, ',', '.') . ")");
+
             if ($recForMail->customer && $recForMail->customer->email) {
                 Mail::to($recForMail->customer->email)
                     ->queue(new CustomerFillFormNotification($recForMail)); // Kirim objek yg lengkap

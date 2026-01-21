@@ -56,7 +56,7 @@
     <p>Hormat Kami,<br>
     <strong>PT. Sinar Meadow International Indonesia</strong></p>
     <br><br>
-    <strong style="text-decoration: underline;">{{ strtoupper($finance_name) }}</strong><br>
+    <strong style="text-decoration: underline;">{{ strtoupper($finance_name) ?? '-'}}</strong><br>
     Fin. & Admin Dept. Head
 </body>
 </html>

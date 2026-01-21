@@ -78,7 +78,7 @@
                                     <input type="text" class="form-control fw-bold text-primary"
                                         name="update_code" id="it_code"
                                         value="{{ $customer->code }}"
-                                        placeholder="e.g. CUST-001"
+                                        placeholder="e.g. ID-0001"
                                         form="approvalForm" required>
                                 </div>
 

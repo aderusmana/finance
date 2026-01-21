@@ -39,42 +39,27 @@
                         </div>
                     </li> --}}
 
-                    <li class="header-notification">
-                        <a aria-controls="notificationcanvasRight" class="d-block head-icon position-relative"
-                            data-bs-target="#notificationcanvasRight" data-bs-toggle="offcanvas" href="#"
-                            role="button" id="notification-bell">
-                            <i class="iconoir-bell"></i>
-                            <span id="notification-badge"
-                                class="position-absolute top-0 start-90 translate-middle badge rounded-pill bg-success border border-light"
-                                style="display: none; font-size: 0.55em; padding: 0.35em 0.6em;"></span>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle position-relative" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" id="notifDropdownToggle">
+                            <i class="iconoir-bell f-s-26"></i>
+
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notif-count" style="display: none; font-size: 9px;">
+                                0
+                            </span>
                         </a>
-                        <div aria-labelledby="notificationcanvasRightLabel"
-                            class="offcanvas offcanvas-end header-notification-canvas" id="notificationcanvasRight"
-                            tabindex="-1">
-                            <div class="offcanvas-header">
-                                <h5 class="offcanvas-title">Notifications (<span id="notification-count">0</span>)</h5>
-                                <button aria-label="Close" class="btn-close" data-bs-dismiss="offcanvas"
-                                    type="button"></button>
+
+                        <div class="dropdown-menu dropdown-menu-end p-0 border-0 shadow-lg custom-scroll"
+                             style="width: 360px; max-height: 75vh; overflow-y: auto; overscroll-behavior: contain;">
+
+                            <div class="p-3 border-bottom d-flex justify-content-between align-items-center bg-white sticky-top"
+                                 style="z-index: 100;">
+                                <h6 class="mb-0 fw-bold">Notifications</h6>
+                                <a href="#" id="mark-all-read" class="text-decoration-none small text-primary"
+                                   style="font-size: 11px;">Mark all read</a>
                             </div>
-                            <div class="offcanvas-body notification-offcanvas-body app-scroll p-0">
-                                <div id="notification-list-container"
-                                    class="head-container notification-head-container">
-                                    {{-- Notifikasi akan diisi oleh JavaScript --}}
-                                </div>
-                                {{-- Template Loading & Empty State --}}
-                                <div id="notification-loading" class="text-center py-5">
-                                    <div class="spinner-border text-primary" role="status"></div>
-                                </div>
-                                <div id="notification-empty" class="hidden-massage py-4 px-3" style="display: none;">
-                                    <img alt="" class="w-25 h25 mb-3 mt-2"
-                                        src="{{ asset('assets/images/icons/bell.png') }}">
-                                    <div>
-                                        <h6 class="mb-0">No New Notifications</h6>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="offcanvas-footer p-3 border-top">
-                                <button class="btn btn-primary w-100" id="mark-all-read-btn">Mark all as read</button>
+
+                            <div class="list-group list-group-flush" id="notification-list">
+                                <div class="text-center p-4 text-muted small">Loading...</div>
                             </div>
                         </div>
                     </li>
@@ -143,118 +128,125 @@
     @push('scripts')
         <script>
             $(document).ready(function() {
-                // === BAGIAN YANG DIGUNAKAN ===
-                const listContainer = $('#notification-list-container');
-                const loadingEl = $('#notification-loading');
-                const emptyEl = $('#notification-empty');
-                const badgeEl = $('#notification-badge');
-                const countEl = $('#notification-count');
-                const markAllReadBtn = $('#mark-all-read-btn');
-
-                // =================================================================
-                // [BARU] FUNGSI UNTUK MEMERIKSA JUMLAH NOTIFIKASI SAAT PAGE LOAD
-                // =================================================================
+                // --- 1. CONFIG & POLLING ---
                 function checkNotificationCount() {
-                    $.getJSON("{{ route('notifications.count') }}", function(response) {
-                        const count = response.count;
-                        countEl.text(count); // Update angka di dalam dropdown
-
-                        if (count > 0) {
-                            // Tampilkan badge jika ada notifikasi
-                            badgeEl.text(count > 9 ? '9+' : count).show();
-                            markAllReadBtn.show();
+                    $.get("{{ route('notifications.count') }}", function(res) {
+                        if (res.count > 0) {
+                            $('#notif-count').text(res.count).show();
                         } else {
-                            // Sembunyikan badge jika tidak ada
-                            badgeEl.hide();
-                            markAllReadBtn.hide();
+                            $('#notif-count').hide();
                         }
-                    }).fail(function() {
-                        console.error('Failed to check notification count.');
                     });
                 }
-
-                // === FUNGSI LAMA (TETAP DIPERLUKAN) ===
-                // Fungsi ini sekarang HANYA untuk mengambil dan menampilkan list detail
-                function fetchNotificationList() {
-                    loadingEl.show();
-                    listContainer.hide().empty();
-                    emptyEl.hide();
-
-                    $.getJSON("{{ route('notifications.fetch') }}", function(response) {
-                        const notifications = response.notifications;
-
-                        if (notifications.length > 0) {
-                            notifications.forEach(function(notif) {
-                                const notifHtml = `
-                                <div class="notification-message head-box mark-as-read" data-id="${notif.id}" data-url="${notif.url}" style="cursor: pointer;">
-                                    <div class="message-images">
-                                        <span class="${notif.color} h-35 w-35 d-flex-center b-r-10">
-                                            <i class="${notif.icon}"></i>
-                                        </span>
-                                    </div>
-                                    <div class="message-content-box flex-grow-1 ps-2">
-                                        <p class="f-s-14 mb-0">${notif.text}</p>
-                                        <span class="f-s-12 text-muted">${notif.time}</span>
-                                    </div>
-                                </div>`;
-                                listContainer.append(notifHtml);
-                            });
-                            listContainer.show();
-                        } else {
-                            emptyEl.show();
-                        }
-                    }).fail(function() {
-                        emptyEl.show().find('h6').text('Failed to load notifications.');
-                    }).always(function() {
-                        loadingEl.hide();
-                    });
-                }
-
-                // === PANGGILAN FUNGSI & EVENT LISTENERS ===
-
-                // [MODIFIKASI] Panggil fungsi count saat dokumen siap (page load)
                 checkNotificationCount();
+                setInterval(checkNotificationCount, 3000);
 
-                // [MODIFIKASI] Saat lonceng diklik, panggil kedua fungsi
-                $('#notification-bell').on('click', function() {
-                    checkNotificationCount(); // Perbarui count untuk jaga-jaga
-                    fetchNotificationList(); // Ambil list detailnya
+                // --- 2. FETCH & BODY LOCK (PENTING DISINI) ---
+
+                // SAAT DIBUKA: Kunci Scroll Body & Ambil Data
+                $('#notifDropdownToggle').on('show.bs.dropdown', function () {
+                    // 1. KUNCI Scroll Halaman Utama
+                    $('body').css('overflow', 'hidden');
+
+                    // 2. Ambil Data
+                    fetchNotificationList();
                 });
 
-                // Tandai satu notifikasi sebagai dibaca saat diklik (TIDAK ADA PERUBAHAN)
-                $(document).on('click', '.mark-as-read', function() {
-                    const notifEl = $(this);
-                    const id = notifEl.data('id');
-                    const url = notifEl.data('url');
+                // SAAT DITUTUP: Buka Kembali Scroll Body
+                $('#notifDropdownToggle').on('hidden.bs.dropdown', function () {
+                    $('body').css('overflow', ''); // Reset ke default (auto)
+                });
 
-                    $.post("{{ route('notifications.read') }}", {
-                            id: id,
-                            _token: "{{ csrf_token() }}"
-                        })
-                        .done(function(res) {
-                            if (res.success) {
-                                if (url && url !== '#') {
-                                    window.location.href = url;
-                                } else {
-                                    checkNotificationCount(); // Muat ulang count
-                                    fetchNotificationList(); // Muat ulang list
-                                }
+                // Fungsi Render List (Sama seperti sebelumnya)
+                function fetchNotificationList() {
+                    $.get("{{ route('notifications.fetch') }}", function(res) {
+                        let html = '';
+
+                        if (res.data && res.data.length > 0) {
+                            res.data.forEach((n, index) => {
+                                let isUnread = n.read_at === null;
+                                let bgStyle = isUnread ? 'background-color: #f0f7ff;' : 'background-color: #ffffff;';
+                                let borderLeftStyle = isUnread ? 'border-left: 3px solid #0d6efd;' : 'border-left: 3px solid transparent;';
+                                let isLastItem = index === res.data.length - 1;
+                                let borderBottomStyle = isLastItem ? '' : 'border-bottom: 1px solid #eaeaea;';
+                                let titleClass = isUnread ? 'fw-bold text-primary' : 'text-muted fw-semibold';
+                                let textMessageColor = isUnread ? '#212529' : '#6c757d';
+                                let iconOpacity = isUnread ? '1' : '0.75';
+
+                                let iconClass = n.data.icon || 'iconoir-bell';
+                                if (iconClass.includes('ph-users') || iconClass.includes('ph-user')) iconClass = 'iconoir-user';
+                                else if (iconClass.includes('ph-signature')) iconClass = 'iconoir-edit-pencil';
+                                else if (iconClass.includes('ph-bell')) iconClass = 'iconoir-bell';
+
+                                let colorMap = { 'primary': 'primary', 'success': 'success', 'warning': 'warning', 'danger': 'danger', 'info': 'info' };
+                                let colorKey = colorMap[n.data.color] || 'primary';
+                                let avatarClass = `bg-${colorKey}-subtle text-${colorKey}`;
+                                let targetUrl = n.data.url ? n.data.url : '#';
+
+                                html += `
+                                    <div class="list-group-item list-group-item-action p-0" id="notif-item-${n.id}"
+                                        style="${bgStyle} ${borderLeftStyle} ${borderBottomStyle} transition: background-color 0.2s;">
+                                        <div class="d-flex w-100 position-relative">
+                                            <a href="${targetUrl}" class="d-flex align-items-start p-3 w-100 text-decoration-none action-read" data-id="${n.id}">
+                                                <div class="flex-shrink-0 me-3">
+                                                    <span class="rounded-circle d-inline-flex align-items-center justify-content-center ${avatarClass}"
+                                                        style="width: 40px; height: 40px; opacity: ${iconOpacity}; border: 1px solid rgba(0,0,0,0.05);">
+                                                        <i class="${iconClass} fs-5"></i>
+                                                    </span>
+                                                </div>
+                                                <div class="flex-grow-1 pe-4">
+                                                    <span class="${titleClass}" style="font-size: 13px; display: block; margin-bottom: 3px;">${n.data.title}</span>
+                                                    <div style="font-size: 12px; line-height: 1.4; color: ${textMessageColor}; margin-bottom: 5px; word-break: break-word;">${n.data.message}</div>
+                                                    <div style="font-size: 10px; color: #adb5bd; display: flex; align-items: center; gap: 4px;">
+                                                        <i class="iconoir-clock" style="font-size: 10px;"></i> ${n.created_at}
+                                                    </div>
+                                                </div>
+                                            </a>
+                                            <button type="button" class="action-delete" data-id="${n.id}" title="Hapus Notifikasi"
+                                                    style="position: absolute; top: 10px; right: 10px; z-index: 20; border: none; background: transparent; color: #343a40; padding: 4px; cursor: pointer; transition: all 0.2s;">
+                                                <i class="iconoir-xmark" style="font-size: 16px; font-weight: 700; stroke-width: 2.5;"></i>
+                                            </button>
+                                        </div>
+                                    </div>`;
+                            });
+                        } else {
+                            html = '<div class="text-center p-4 text-muted"><p class="small mb-0">Tidak ada notifikasi</p></div>';
+                        }
+                        $('#notification-list').html(html);
+                    });
+                }
+
+                // --- 3. EVENT HANDLERS LAINNYA (TETAP SAMA) ---
+                $(document).on('click', '.action-read', function(e) {
+                    let url = $(this).attr('href');
+                    let id = $(this).data('id');
+                    $.post("{{ route('notifications.read') }}", { id: id, _token: "{{ csrf_token() }}" });
+                    if (!url || url === '#' || url === 'javascript:void(0);') e.preventDefault();
+                });
+
+                $(document).on('click', '.action-delete', function(e) {
+                    e.preventDefault(); e.stopPropagation();
+                    let btn = $(this); let id = btn.data('id'); let item = $('#notif-item-' + id);
+                    btn.html('<div class="spinner-border spinner-border-sm text-secondary" role="status"></div>');
+                    $.ajax({
+                        url: "{{ route('notifications.destroy', ':id') }}".replace(':id', id),
+                        type: 'POST',
+                        data: { _method: 'DELETE', _token: "{{ csrf_token() }}" },
+                        success: function(result) {
+                            if(result.success) {
+                                item.animate({ opacity: 0, height: 0, padding: 0 }, 300, function() { $(this).remove(); if($('#notification-list').children().length === 0) $('#notification-list').html('<div class="text-center p-4 text-muted"><p class="small mb-0">Tidak ada notifikasi</p></div>'); });
+                                checkNotificationCount();
                             }
-                        }).fail(function() {
-                            alert('Failed to mark as read. Please try again.');
-                        });
-                });
-
-                // Tandai semua sebagai dibaca (TIDAK ADA PERUBAHAN)
-                markAllReadBtn.on('click', function() {
-                    $.post("{{ route('notifications.read.all') }}", {
-                        _token: "{{ csrf_token() }}"
-                    }, function(res) {
-                        if (res.success) {
-                            checkNotificationCount(); // Muat ulang count
-                            fetchNotificationList(); // Muat ulang list
                         }
                     });
+                });
+
+                $('#mark-all-read').click(function(e) {
+                    e.preventDefault(); e.stopPropagation();
+                    $(this).text('Processing...');
+                    $.post("{{ route('notifications.read.all') }}", { _token: "{{ csrf_token() }}" })
+                    .done(function() { checkNotificationCount(); fetchNotificationList(); })
+                    .always(function() { $('#mark-all-read').text('Mark all read'); });
                 });
             });
         </script>

@@ -3,116 +3,200 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $type == 'input' ? 'Input Berhasil' : 'Upload Berhasil' }}</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.0/font/bootstrap-icons.min.css">
+    <title>{{ $title ?? 'Berhasil' }} | Corporate Portal</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+
+    <style>
+        /* Animasi & Hover tidak bisa ditaruh inline style secara teknis, jadi tetap disini */
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        @keyframes cardEntrance {
+            0% { opacity: 0; transform: translateY(30px) scale(0.95); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes iconPop {
+            0% { transform: scale(0); opacity: 0; }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes pulse-ring {
+            0% { transform: scale(0.8); opacity: 0.5; box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { transform: scale(1); opacity: 1; box-shadow: 0 0 0 20px rgba(16, 185, 129, 0); }
+            100% { transform: scale(0.8); opacity: 0.5; box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+
+        /* Class helper untuk hover effect */
+        .btn-hover-primary:hover {
+            background-color: #1e293b !important;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(15, 23, 42, 0.25);
+        }
+        .btn-hover-outline:hover {
+            background-color: #ffffff !important;
+            border-color: #cbd5e1 !important;
+            transform: translateY(-1px);
+        }
+    </style>
 </head>
-<body style="background-color: #f0f2f5; font-family: sans-serif; height: 100vh; display: flex; align-items: center; justify-content: center; margin: 0;">
+<body style="font-family: 'Plus Jakarta Sans', sans-serif; margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; overflow: hidden; background: linear-gradient(-45deg, #e2e8f0, #f8fafc, #dbeafe, #eff6ff); background-size: 400% 400%; animation: gradientBG 15s ease infinite;">
 
-<div class="container">
-    <div class="row justify-content-center">
-        <div class="col-md-8 col-lg-6">
+    <div style="background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.6); border-radius: 24px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 0 0 1px rgba(0,0,0,0.02); width: 100%; max-width: 500px; overflow: hidden; position: relative; animation: cardEntrance 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;">
 
-            <div class="success-card" style="background: white; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); padding: 40px; text-align: center; position: relative;">
+        <div style="height: 6px; width: 100%; background: linear-gradient(90deg, #10b981, #3b82f6);"></div>
 
-                {{-- Icon --}}
-                <div class="icon-box" style="font-size: 80px; color: #198754; margin-bottom: 20px;">
-                    <i class="bi bi-check-circle-fill"></i>
-                </div>
+        <div style="padding: 48px 40px; text-align: center;" id="mainContent">
 
-                {{-- Dynamic Title --}}
-                <h3 class="fw-bold text-success mb-3">
-                    {{ $type == 'input' ? 'Data Berhasil Disimpan!' : 'Dokumen Berhasil Diterima!' }}
-                </h3>
+            <div style="width: 100px; height: 100px; background: linear-gradient(135deg, #d1fae5 0%, #ecfdf5 100%); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 28px; position: relative; box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.1); opacity: 0; animation: iconPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s forwards;">
+                <div style="position: absolute; width: 100%; height: 100%; border-radius: 50%; border: 2px solid #10b981; animation: pulse-ring 2s infinite;"></div>
 
-                {{-- KONDISI 1: SETELAH INPUT FORM (STEP 1) --}}
-                @if($type == 'input')
-                    <p class="text-muted">Dokumen PDF formulir sedang didownload otomatis...</p>
-
-                    <div class="alert alert-warning text-start mt-4" role="alert" style="font-size: 0.9rem;">
-                        <h6 class="fw-bold"><i class="bi bi-info-circle me-2"></i>Langkah Selanjutnya:</h6>
-                        <ol class="mb-0 ps-3">
-                            <li>Cetak & Tanda tangani dokumen PDF.</li>
-                            <li>Scan dokumen tersebut.</li>
-                            <li>Klik tombol <b>"Lanjut Upload Dokumen"</b> di bawah.</li>
-                        </ol>
-                    </div>
-
-                    {{-- Iframe Auto Download --}}
-                    <iframe id="downloadFrame" style="display:none;"></iframe>
-
-                    <div class="d-grid gap-2 mt-4">
-                        <a href="{{ $downloadUrl }}" class="btn btn-outline-secondary btn-sm" download>
-                            <i class="bi bi-download me-2"></i> Download Ulang PDF
-                        </a>
-                        <a href="{{ route('customer.portal.upload-form', $uploadToken) }}" class="btn btn-primary fw-bold">
-                            Lanjut Upload Dokumen <i class="bi bi-arrow-right ms-2"></i>
-                        </a>
-                    </div>
-
-                {{-- KONDISI 2: SETELAH UPLOAD FILE (STEP 2) --}}
-                @elseif($type == 'upload')
-                    <p class="text-muted mb-4">
-                        Terima kasih. Dokumen Anda sedang kami validasi.<br>
-                        Anda akan menerima notifikasi email jika BG diterbitkan.
-                    </p>
-
-                    <div class="alert alert-info border-0 d-inline-block text-start py-3 px-4 rounded-3" style="background-color: #e0f2f1; color: #00695c;">
-                        <div class="d-flex align-items-center">
-                            <i class="bi bi-shield-check fs-2 me-3"></i>
-                            <div>
-                                <strong class="d-block">Proses Selesai</strong>
-                                <small>Data Anda aman bersama kami.</small>
-                            </div>
-                        </div>
-                    </div>
-                @endif
-
-                {{-- AUTO CLOSE NOTICE --}}
-                <div class="mt-4 pt-3 border-top">
-                    <p class="text-muted small mb-2">
-                        Tab ini akan tertutup otomatis dalam <b id="countdown" style="color: #dc3545; font-size: 1.2em;">7</b> detik.
-                    </p>
-                    <button type="button" onclick="window.close()" class="btn btn-link text-muted text-decoration-none btn-sm">
-                        <i class="bi bi-x-circle me-1"></i> Tutup Sekarang
-                    </button>
-                </div>
-
+                <i class="bi bi-check-lg" style="font-size: 52px; color: #059669; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); position: relative; z-index: 2;"></i>
             </div>
 
-            <p class="text-center text-muted mt-4 small">&copy; {{ date('Y') }} PT Sinar Meadow International Indonesia</p>
+            <h2 style="color: #1e293b; font-weight: 800; font-size: 1.85rem; margin: 0 0 12px 0; letter-spacing: -0.025em;">
+                {{ $title ?? 'Permintaan Diterima!' }}
+            </h2>
+
+            @if(isset($type) && $type == 'input')
+                <p style="color: #64748b; font-size: 1rem; line-height: 1.6; margin-bottom: 32px;">
+                    Sistem sedang memproses dokumen formulir Anda.<br>
+                    Pengunduhan akan dimulai secara otomatis.
+                </p>
+
+                <div style="text-align: left; padding: 20px; border-radius: 16px; margin-bottom: 24px; background-color: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af;">
+                    <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 8px; display: flex; align-items: center; gap: 10px;">
+                        <i class="bi bi-printer-fill" style="color: #3b82f6;"></i> Instruksi Selanjutnya
+                    </div>
+                    <ul style="margin: 0; padding-left: 24px; font-size: 0.9rem; color: #475569;">
+                        <li style="margin-bottom: 6px;">Cetak & tanda tangani dokumen yang terunduh.</li>
+                        <li style="margin-bottom: 6px;">Scan kembali menjadi format <strong>PDF</strong>.</li>
+                        <li>Unggah melalui tombol di bawah ini.</li>
+                    </ul>
+                </div>
+
+                {{-- Hidden Iframe for Download --}}
+                <iframe id="downloadFrame" style="display:none;"></iframe>
+
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    @if(isset($uploadToken))
+                    <a href="{{ route('customer.portal.upload-form', $uploadToken) }}" class="btn-hover-primary" style="display: inline-flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 14px 24px; border-radius: 14px; font-weight: 600; font-size: 0.95rem; text-decoration: none; transition: all 0.3s ease; cursor: pointer; border: none; background: #0f172a; color: white; box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.2); box-sizing: border-box;">
+                        Lanjut Upload Dokumen <i class="bi bi-cloud-upload-fill"></i>
+                    </a>
+                    @endif
+
+                    @if(isset($downloadUrl))
+                    <a href="{{ $downloadUrl }}" class="btn-hover-outline" style="display: inline-flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 14px 24px; border-radius: 14px; font-weight: 600; font-size: 0.95rem; text-decoration: none; transition: all 0.3s ease; cursor: pointer; background: transparent; color: #334155; border: 2px solid #e2e8f0; box-sizing: border-box;">
+                        <i class="bi bi-download"></i> Unduh Manual
+                    </a>
+                    @endif
+                </div>
+
+            @elseif(isset($type) && $type == 'input_multi')
+                <div style="text-align: left; padding: 20px; border-radius: 16px; margin-bottom: 24px; background-color: #f0fdf4; border: 1px solid #bbf7d0; color: #166534;">
+                    <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 8px; display: flex; align-items: center; gap: 10px; color: #059669;">
+                        <i class="bi bi-envelope-check-fill"></i> Submission Berhasil
+                    </div>
+                    <p style="margin: 0; font-size: 0.9rem; opacity: 0.9;">
+                        {{ $message ?? 'Data pengajuan Anda telah tersimpan aman di database kami.' }}
+                    </p>
+                </div>
+
+                <p style="color: #64748b; font-size: 1rem; line-height: 1.6; margin-bottom: 32px;">
+                    Instruksi pembayaran dan kelengkapan berkas untuk masing-masing bank telah dikirimkan ke <strong>email Anda</strong>. Mohon cek folder Inbox/Spam.
+                </p>
+
+                <button type="button" onclick="forceCloseWindow()" class="btn-hover-primary" style="display: inline-flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 14px 24px; border-radius: 14px; font-weight: 600; font-size: 0.95rem; text-decoration: none; transition: all 0.3s ease; cursor: pointer; border: none; background: #0f172a; color: white; box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.2);">
+                    Tutup Halaman
+                </button>
+
+            @else
+                <p style="color: #64748b; font-size: 1rem; line-height: 1.6; margin-bottom: 32px;">
+                    Terima kasih telah melengkapi data. Perubahan Anda telah berhasil direkam ke dalam sistem.<br>
+                    Halaman ini akan tertutup otomatis.
+                </p>
+
+                <button type="button" onclick="forceCloseWindow()" class="btn-hover-outline" style="display: inline-flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 14px 24px; border-radius: 14px; font-weight: 600; font-size: 0.95rem; text-decoration: none; transition: all 0.3s ease; cursor: pointer; background: transparent; color: #334155; border: 2px solid #e2e8f0;">
+                    Tutup Sekarang
+                </button>
+            @endif
+        </div>
+
+        <div style="background: rgba(248, 250, 252, 0.8); padding: 16px 32px; border-top: 1px solid rgba(226, 232, 240, 0.8); display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; color: #94a3b8; font-weight: 500;" id="mainFooter">
+            <div style="display: flex; align-items: center; gap: 6px; color: #059669; background: rgba(16, 185, 129, 0.1); padding: 4px 10px; border-radius: 20px;">
+                <i class="bi bi-shield-fill-check"></i> SSL Secured
+            </div>
+
+            @if(!isset($type) || ($type != 'input' && $type != 'input_multi'))
+                <span id="countdown-wrapper">
+                    Menutup dalam <strong id="countdown" style="color: #0f172a; font-size: 1.1em;">3</strong>s
+                </span>
+            @endif
+        </div>
+
+        <div id="fallbackUI" style="display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; height: 100%; padding: 60px 20px; color: #64748b;">
+            <i class="bi bi-check-circle" style="color: #cbd5e1; font-size: 4rem; margin-bottom: 20px;"></i>
+            <h3 style="color: #334155; margin: 0 0 10px 0;">Sesi Selesai</h3>
+            <p style="margin: 0;">Anda dapat menutup tab browser ini secara manual.</p>
         </div>
     </div>
-</div>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // 1. Logic Auto Download (Hanya jika tipe input)
-        @if($type == 'input' && isset($downloadUrl))
-            const pdfUrl = "{{ $downloadUrl }}";
-            const iframe = document.getElementById('downloadFrame');
-            if(pdfUrl) {
-                setTimeout(() => { iframe.src = pdfUrl; }, 1000);
-            }
-        @endif
+    <script>
+        // Fungsi Custom Close Window
+        function forceCloseWindow() {
+            // Coba tutup standar
+            window.opener = null;
+            window.open('', '_self');
+            window.close();
 
-        // 2. Logic Auto Close (7 Detik)
-        let seconds = 7;
-        const countdownEl = document.getElementById('countdown');
+            // Fallback jika browser memblokir
+            setTimeout(() => {
+                const content = document.getElementById('mainContent');
+                const footer = document.getElementById('mainFooter');
+                const fallback = document.getElementById('fallbackUI');
 
-        const interval = setInterval(() => {
-            seconds--;
-            if(countdownEl) countdownEl.innerText = seconds;
+                if(content) content.style.display = 'none';
+                if(footer) footer.style.display = 'none';
+                if(fallback) {
+                    fallback.style.display = 'flex';
+                    fallback.style.animation = 'cardEntrance 0.5s ease';
+                }
+            }, 200);
+        }
 
-            if (seconds <= 0) {
-                clearInterval(interval);
-                window.close();
-                // Fallback visual jika browser memblokir close
-                document.body.innerHTML = "<div style='display:flex; height:100vh; justify-content:center; align-items:center; color:#64748b; font-family:sans-serif;'>Sesi selesai. Silakan tutup tab ini secara manual.</div>";
-            }
-        }, 1000);
-    });
-</script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 1. Logic Auto Download
+            @if(isset($type) && $type == 'input' && isset($downloadUrl))
+                const pdfUrl = "{{ $downloadUrl }}";
+                const iframe = document.getElementById('downloadFrame');
+                if(pdfUrl && iframe) {
+                    setTimeout(() => {
+                        iframe.src = pdfUrl;
+                    }, 1500);
+                }
+            @endif
 
+            // 2. Logic Auto Close dengan Countdown 3 Detik
+            @if(!isset($type) || ($type != 'input' && $type != 'input_multi'))
+                let seconds = 3;
+                const countdownEl = document.getElementById('countdown');
+
+                if(countdownEl) {
+                    const interval = setInterval(() => {
+                        seconds--;
+                        countdownEl.innerText = seconds;
+
+                        if (seconds <= 0) {
+                            clearInterval(interval);
+                            forceCloseWindow();
+                        }
+                    }, 1000);
+                }
+            @endif
+        });
+    </script>
 </body>
 </html>

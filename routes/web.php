@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Customer\AccountGroupController;
 use App\Http\Controllers\Master\ApprovalPathController;
 use App\Http\Controllers\Customer\BranchController;
@@ -30,9 +29,8 @@ use App\Http\Controllers\BG\ApprovalProcessController;
 use App\Http\Controllers\BG\BgApprovalInboxController;
 use App\Http\Controllers\BG\BgReportController;
 use App\Http\Controllers\BG\LampiranDController;
-use Carbon\Carbon;
+use App\Http\Controllers\Master\SystemLogController;
 use Illuminate\Support\Facades\Route;
-use Maatwebsite\Excel\Row;
 
 // Redirect root to the named login route (actual login routes are defined in routes/auth.php)
 Route::get('/', function () {
@@ -66,22 +64,24 @@ Route::prefix('customer-portal')->name('customer.portal.')->group(function () {
     Route::get('/upload/{token}', [CustomerBgPortalController::class, 'showUploadForm'])->name('upload-form');
     Route::post('/upload/{token}', [CustomerBgPortalController::class, 'storeUploadData'])->name('store-upload');
     Route::get('/download/{token}', [CustomerBgPortalController::class, 'downloadPdf'])->name('download-pdf');
+    Route::get('/download-lampiran-d/{token}', [CustomerBgPortalController::class, 'downloadLampiranD'])->name('download-lampiran-d');
 });
 
 Route::middleware('auth')->group(function () {
-    Route::prefix('dashboard/data')->name('dashboard.data.')->group(function () {
-        Route::get('/metric-counts', [DashboardController::class, 'getMetricCounts'])->name('metric-counts');
-        Route::get('/monthly-stats', [DashboardController::class, 'getMonthlyStats'])->name('monthly-stats');
-        Route::get('/top-items', [DashboardController::class, 'getTopItems'])->name('top-items');
-        Route::get('/top-customers', [DashboardController::class, 'getTopCustomers'])->name('top-customers');
-        Route::get('/recent-activities', [DashboardController::class, 'getRecentActivities'])->name('recent-activities');
-        Route::get('/my-actions', [DashboardController::class, 'getMyActions'])->name('my-actions');
-        Route::get('/available-years', [DashboardController::class, 'getAvailableYearsApi'])->name('available-years');
-        Route::get('/bg-metrics', [DashboardController::class, 'bgMetrics'])->name('bg-metrics');
-        Route::get('/customer-metrics', [DashboardController::class, 'customerMetrics'])->name('customer-metrics');
-        Route::get('/recent-bgs', [DashboardController::class, 'recentBgs'])->name('recent-bgs');
-        Route::get('/top-customers-bg', [DashboardController::class, 'topCustomersByBg'])->name('top-customers-bg');
-    });
+    Route::post('/customers/generate-pkd-preview', [CustomerController::class, 'generatePkdPreview'])->name('customers.generate-pkd-preview');
+        Route::prefix('dashboard/data')->name('dashboard.data.')->group(function () {
+            Route::get('/metric-counts', [DashboardController::class, 'getMetricCounts'])->name('metric-counts');
+            Route::get('/monthly-stats', [DashboardController::class, 'getMonthlyStats'])->name('monthly-stats');
+            Route::get('/top-items', [DashboardController::class, 'getTopItems'])->name('top-items');
+            Route::get('/top-customers', [DashboardController::class, 'getTopCustomers'])->name('top-customers');
+            Route::get('/recent-activities', [DashboardController::class, 'getRecentActivities'])->name('recent-activities');
+            Route::get('/my-actions', [DashboardController::class, 'getMyActions'])->name('my-actions');
+            Route::get('/available-years', [DashboardController::class, 'getAvailableYearsApi'])->name('available-years');
+            Route::get('/bg-metrics', [DashboardController::class, 'bgMetrics'])->name('bg-metrics');
+            Route::get('/customer-metrics', [DashboardController::class, 'customerMetrics'])->name('customer-metrics');
+            Route::get('/recent-bgs', [DashboardController::class, 'recentBgs'])->name('recent-bgs');
+            Route::get('/top-customers-bg', [DashboardController::class, 'topCustomersByBg'])->name('top-customers-bg');
+        });
 
     Route::get('/customers/approval', [CustomerController::class, 'approvalPage'])->name('customers.approval');
     Route::get('/customers-approval/data', [CustomerController::class, 'getApprovalData'])->name('customers.approval.data');
@@ -109,32 +109,15 @@ Route::middleware('auth')->group(function () {
     Route::get('/notifications/fetch', [NotificationController::class, 'fetch'])->name('notifications.fetch');
     Route::post('/notifications/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
     Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.read.all');
+    Route::delete('/notifications/{id}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
 
-    // --- MASTER DATA ROUTES ---
-    Route::prefix('master')->group(function () {
-        Route::get('items', [ItemController::class, 'indexMaster'])->name('items.indexMaster');
-        Route::post('items', [ItemController::class, 'store'])->name('items.store');
-        Route::get('items/{id}/edit', [ItemController::class, 'edit'])->name('items.edit');
-        Route::put('items/{id}', [ItemController::class, 'update'])->name('items.update');
-        Route::delete('items/{id}', [ItemController::class, 'destroy'])->name('items.destroy');
-        Route::get('items/details', [ItemController::class, 'detailsAll'])->name('items.details.all');
-        Route::get('items/select2', [ItemController::class, 'select2'])->name('items.select2');
-        Route::post('items/details', [ItemController::class, 'storeDetailAll'])->name('items.details.storeAll');
-        Route::get('items/details/{id}/edit', [ItemController::class, 'editDetailAll'])->name('items.details.editAll');
-        Route::put('items/details/{id}', [ItemController::class, 'updateDetailAll'])->name('items.details.updateAll');
-        Route::delete('items/details/{id}', [ItemController::class, 'destroyDetailAll'])->name('items.details.destroyAll');
-
-        Route::get('items/{item_id}/details', [ItemController::class, 'detailsIndex'])->name('items.details.index');
-        Route::post('items/{item_id}/details', [ItemController::class, 'storeDetail'])->name('items.details.store');
-        Route::get('items/{item_id}/details/{id}/edit', [ItemController::class, 'editDetail'])->name('items.details.edit');
-        Route::put('items/{item_id}/details/{id}', [ItemController::class, 'updateDetail'])->name('items.details.update');
-        Route::delete('items/{item_id}/details/{id}', [ItemController::class, 'destroyDetail'])->name('items.details.destroy');
-    });
-
+    
     Route::group(['prefix' => 'bg'], function () {
         Route::resource('bg-list', BankGaransiController::class);
+        Route::get('generate-number', [BankGaransiController::class, 'generateNumber'])->name('bg.generate-number');
         Route::resource('bg-recommendations', BgRecommendationController::class);
         Route::resource('bg-submissions', BgSubmissionController::class);
+        Route::get('bg-histories/export', [BgHistoryController::class, 'export'])->name('bg-histories.export');
         Route::resource('bg-histories', BgHistoryController::class)->only(['index', 'destroy']);
         Route::post('bg-recommendations/{id}/periods', [BgRecommendationController::class, 'savePeriods'])->name('bg-recommendations.save-periods');
         Route::get('customer/bg-form/{id}', [BgRecommendationController::class, 'showForm'])->name('customer.bg.form');
@@ -149,8 +132,11 @@ Route::middleware('auth')->group(function () {
         Route::post('approvals/process', [BgApprovalInboxController::class, 'process'])->name('bg-approvals.process');
         Route::post('approvals/resend/{id}', [BgApprovalInboxController::class, 'resendEmail']);
         Route::get('reports', [BgReportController::class, 'index'])->name('bg-reports.index');
+        Route::post('reports/bulk-download', [BgReportController::class, 'bulkDownload'])->name('bg-reports.bulk-download');
         Route::get('reports/download/{id}/{doc_type}', [BgReportController::class, 'downloadDoc'])->name('bg-reports.download');
         Route::get('reports/letters/{id}/{letter_type}', [BgReportController::class, 'downloadLetters'])->name('bg-reports.download-letters');
+        Route::post('bg/request-existing/{id}', [BankGaransiController::class, 'requestExisting'])->name('bg.request.existing');
+        Route::post('bg/request-extension', [BankGaransiController::class, 'requestExtension'])->name('bg.request.extension');
     });
 });
 
@@ -162,7 +148,7 @@ Route::group(['middleware' => ['role:super-admin|admin']], function () {
     Route::resource('permissions', PermissionController::class);
     Route::resource('roles', RoleController::class);
     Route::resource('positions', PositionController::class);
-
+    Route::get('/system-logs', [SystemLogController::class, 'index'])->name('system-logs.index');
     Route::get('roles/{roleId}/give-permissions', [RoleController::class, 'addPermissionToRole'])->name('roles.give-permissions');
     Route::post('roles/{roleId}/give-permissions', [RoleController::class, 'givePermissionToRole'])->name('roles.give-permission');
 

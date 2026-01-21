@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('customers', function (Blueprint $table) {
             $table->id();
             $table->string('code', 50)->unique()->nullable();
+            $table->string('no_pkd', 50)->nullable();
             $table->string('name', 255);
             $table->string('customer_class', 100)->nullable();
             $table->string('account_group', 100)->nullable();

@@ -30,6 +30,6 @@ class BgHistory extends Model
 
     public function creator()
     {
-        return $this->belongsTo(Customer    ::class, 'created_by');
+        return $this->belongsTo(Customer::class, 'created_by');
     }
 }
