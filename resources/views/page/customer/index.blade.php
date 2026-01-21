@@ -550,21 +550,248 @@
         </div>
     </div>
 
-    <div class="modal fade" id="fileViewerModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
-        <div class="modal-dialog modal-dialog-centered" id="fileViewerDialog" style="transition: all 0.3s ease-out;">
-            <div class="modal-content shadow-lg border-0 bg-dark">
-                <div class="modal-header border-0 py-2 px-3">
-                    <h6 class="modal-title text-white" id="fileViewerTitle">
-                        <i class="ph-bold ph-file-text me-2"></i> Document Preview
+    <div class="modal fade" id="customerDetailModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-xl">
+            <div class="modal-content border-0 overflow-hidden">
+                <div class="modal-header bg-primary text-white py-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="bg-white bg-opacity-25 rounded-circle p-2">
+                            <i class="ph-bold ph-user-circle f-s-32"></i>
+                        </div>
+                        <div>
+                            <h4 class="modal-title mb-0 fw-bold" id="view_header_name">Customer Name</h4>
+                            <div class="opacity-75 f-s-14 mt-1" id="view_header_code">CODE-001</div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body bg-light p-4" style="max-height: 85vh; overflow-y: auto;">
+
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-body p-4">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div class="d-flex align-items-center gap-4">
+                                    <div>
+                                        <label class="fw-bold text-dark text-uppercase f-s-12 mb-1">Account Status</label>
+                                        <div><span id="view_status_badge" class="badge bg-secondary f-s-12 px-3 py-2">STATUS</span></div>
+                                    </div>
+                                    <div class="vr" style="height: 40px; opacity: 0.1;"></div>
+                                    <div>
+                                        <label class="fw-bold text-dark text-uppercase f-s-12 mb-1">Approval Progress</label>
+                                        <div id="view_approval_badge" class="fw-bold text-dark f-s-16">Pending</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h5 class="fw-bold text-primary mb-3 d-flex align-items-center">
+                        <i class="ph-fill ph-info me-2"></i> General Information
+                    </h5>
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-body p-4">
+                            <div class="row g-4">
+                                <div class="col-md-6 border-end">
+                                    <div class="row g-4">
+                                        <div class="col-md-12">
+                                            <label class="fw-bold text-secondary text-uppercase f-s-12 mb-1">Customer Name</label>
+                                            <div class="fw-bold text-dark f-s-16" id="view_name">-</div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="fw-bold text-secondary text-uppercase f-s-12 mb-1">Sort Name / Alias</label>
+                                            <div class="fw-bold text-dark f-s-14" id="view_sort_name">-</div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="fw-bold text-secondary text-uppercase f-s-12 mb-1">No. PKD</label>
+                                            <div class="fw-bold text-dark f-s-14" id="view_no_pkd">-</div>
+                                        </div>
+                                        <div class="col-md-12">
+                                            <label class="fw-bold text-secondary text-uppercase f-s-12 mb-1">Email Address</label>
+                                            <div class="fw-bold text-dark f-s-14" id="view_email">-</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 ps-md-4">
+                                    <div class="row g-4">
+                                        <div class="col-12">
+                                            <label class="fw-bold text-secondary text-uppercase f-s-12 mb-1">Main Address</label>
+                                            <div class="fw-bold text-dark f-s-14 lh-base" id="view_full_address">-</div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="fw-bold text-secondary text-uppercase f-s-12 mb-1">City</label>
+                                            <div class="fw-bold text-dark f-s-14" id="view_city">-</div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="fw-bold text-secondary text-uppercase f-s-12 mb-1">Area</label>
+                                            <div class="fw-bold text-dark f-s-14" id="view_area">-</div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="fw-bold text-secondary text-uppercase f-s-12 mb-1">Postal Code</label>
+                                            <div class="fw-bold text-dark f-s-14" id="view_postal_code">-</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h5 class="fw-bold text-primary mb-3 d-flex align-items-center">
+                        <i class="ph-fill ph-currency-dollar me-2"></i> Financial & Tax
+                    </h5>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <div class="card bg-primary text-white border-0 shadow-sm h-100">
+                                <div class="card-body p-4">
+                                    <div class="d-flex justify-content-between align-items-start mb-3">
+                                        <div>
+                                            <label class="text-white text-opacity-75 text-uppercase f-s-12 fw-bold">Credit Limit</label>
+                                            <h3 class="mb-0 fw-bold mt-1" id="view_credit_limit">IDR 0</h3>
+                                        </div>
+                                        <i class="ph-duotone ph-wallet f-s-40 text-white text-opacity-50"></i>
+                                    </div>
+                                    <div class="mt-4 pt-3 border-top border-white border-opacity-25 d-flex justify-content-between align-items-center">
+                                        <span class="f-s-13 opacity-75">Term of Payment</span>
+                                        <span class="fw-bold f-s-16 bg-warning bg-opacity-20 px-2 py-1 rounded"><span id="view_top">-</span> Days</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-body p-4">
+                                    <h6 class="fw-bold text-dark border-bottom pb-3 mb-3">Tax Information</h6>
+                                    <div class="d-flex justify-content-between mb-3">
+                                        <span class="fw-bold text-secondary f-s-13">NPWP No.</span>
+                                        <span class="fw-bold text-dark" id="view_npwp">-</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-3">
+                                        <span class="fw-bold text-secondary f-s-13">NPWP Date</span>
+                                        <span class="fw-bold text-dark" id="view_tanggal_npwp">-</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-3">
+                                        <span class="fw-bold text-secondary f-s-13">NPPKP</span>
+                                        <span class="fw-bold text-dark" id="view_nppkp">-</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between">
+                                        <span class="fw-bold text-secondary f-s-13">Output Tax</span>
+                                        <span class="fw-bold text-dark" id="view_output_tax">-</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-body p-4">
+                                    <h6 class="fw-bold text-dark border-bottom pb-3 mb-3">Billing Contact</h6>
+                                    <div class="mb-3">
+                                        <label class="fw-bold text-secondary text-uppercase f-s-11 mb-1">Contact Name</label>
+                                        <div class="fw-bold text-dark f-s-15" id="view_penagihan_nama">-</div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="fw-bold text-secondary text-uppercase f-s-11 mb-1">Phone Number</label>
+                                        <div class="fw-bold text-dark f-s-15" id="view_penagihan_telp">-</div>
+                                    </div>
+                                    <div>
+                                        <label class="fw-bold text-secondary text-uppercase f-s-11 mb-1">Billing Address</label>
+                                        <div class="fw-bold text-dark f-s-14 lh-sm" id="view_penagihan_addr">-</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h5 class="fw-bold text-primary mb-3 d-flex align-items-center">
+                        <i class="ph-fill ph-users-three me-2"></i> Management & Logistics
+                    </h5>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-8">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-body p-0">
+                                    <table class="table table-hover mb-0 align-middle">
+                                        <thead class="bg-light">
+                                            <tr>
+                                                <th class="ps-4 py-3 fw-bold text-secondary text-uppercase f-s-12">Position Role</th>
+                                                <th class="py-3 fw-bold text-secondary text-uppercase f-s-12">Full Name</th>
+                                                <th class="py-3 fw-bold text-secondary text-uppercase f-s-12">Email Address</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td class="ps-4 text-secondary fw-bold">Purchasing Mgr</td>
+                                                <td class="fw-bold text-dark" id="view_purc_name">-</td>
+                                                <td class="text-dark" id="view_purc_email">-</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="ps-4 text-secondary fw-bold">Finance Mgr</td>
+                                                <td class="fw-bold text-dark" id="view_fin_name">-</td>
+                                                <td class="text-dark" id="view_fin_email">-</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="ps-4 text-secondary fw-bold">Tax Contact</td>
+                                                <td class="fw-bold text-dark" id="view_tax_name">-</td>
+                                                <td class="text-dark" id="view_tax_email">-</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="card border-0 shadow-sm h-100 bg-warning bg-opacity-10 border-warning border-opacity-25">
+                                <div class="card-body p-4">
+                                    <h6 class="fw-bold text-dark mb-3 pb-2 border-bottom border-warning border-opacity-25">
+                                        <i class="ph-fill ph-truck me-2 text-warning"></i>Shipping Destination
+                                    </h6>
+
+                                    <div class="mb-3">
+                                        <label class="fw-bold text-secondary text-uppercase f-s-11 mb-1">Recipient Name</label>
+                                        <div class="fw-bold text-dark f-s-16" id="view_shipping_name">-</div>
+                                    </div>
+
+                                    <div>
+                                        <label class="fw-bold text-secondary text-uppercase f-s-11 mb-1">Shipping Address</label>
+                                        <div class="fw-bold text-dark f-s-14 lh-base" id="view_shipping_address">-</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h5 class="fw-bold text-primary mb-3 d-flex align-items-center">
+                        <i class="ph-fill ph-files me-2"></i> Documents
+                    </h5>
+                    <div class="row g-3" id="document_grid">
+                        </div>
+                    <div id="no_documents" class="text-center py-5 text-muted border border-dashed rounded bg-white" style="display:none;">
+                        <i class="ph-duotone ph-folder-notch-open f-s-48 mb-3 opacity-50"></i>
+                        <p class="mb-0 f-s-16">No documents uploaded for this customer.</p>
+                    </div>
+
+                </div>
+
+                <div class="modal-footer bg-white border-top py-3">
+                    <button type="button" class="btn btn-secondary px-5 rounded-pill" data-bs-dismiss="modal">Close Detail</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="fileViewerModal" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
+        <div class="modal-dialog modal-dialog-centered modal-xl" id="fileViewerDialog">
+            <div class="modal-content border-0">
+                <div class="modal-header bg-dark text-white border-0 py-2">
+                    <h6 class="modal-title text-white fw-bold f-s-14" id="fileViewerTitle">
+                        FILE PREVIEW
                     </h6>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body p-0 d-flex align-items-center justify-content-center bg-black">
-                    <div id="fileContentArea" style="width: 100%; height: 100%;">
-                        <div class="p-5 text-center">
-                            <div class="spinner-border text-light" role="status"></div>
+                <div class="modal-body p-0 d-flex align-items-center justify-content-center" style="min-height: 500px; background-color: #1a1a1a;">
+                    <div id="fileContentArea" class="w-100 h-100 d-flex align-items-center justify-content-center">
                         </div>
-                    </div>
                 </div>
             </div>
         </div>
@@ -965,8 +1192,7 @@
                             className: 'text-center dt-no-wrap'
                         }
                     ],
-                    order: [[1, 'desc']],
-                    // Opsional: Atur lebar kolom otomatis
+                    order: [],
                     autoWidth: false
                 });
 
@@ -1062,138 +1288,109 @@
                 $(document).on('click', '.btn-show-customer', function() {
                     const btn = $(this);
 
-                    $('#customerForm')[0].reset();
-                    $('#customerModalLabel').html('<i class="ph-bold ph-eye"></i> View Customer Details (Read Only)');
-                    $('#preview_npwp, #preview_nib, #preview_ktp').hide();
-                    $('#preview_npwp a, #preview_nib a, #preview_ktp a').attr('href', '#')
-                    $('input[type="file"]').prop('required', false);
-                    $('#user_id').val(btn.data('user_id')).trigger('change');
+                    // 1. HEADER & STATUS
+                    $('#view_header_name').text(btn.data('name'));
+                    $('#view_header_code').text(btn.data('code') || 'New');
 
-                    setTimeout(() => {
-                        $('#account_group').val(btn.data('account_group')).trigger('change');
-                        $('#customer_class').val(btn.data('customer_class')).trigger('change');
-                        $('#term_of_payment').val(btn.data('term_of_payment')).trigger('change');
+                    // Status Badges
+                    const status = btn.data('status');
+                    $('#view_status_badge').text(status)
+                        .removeClass('bg-success bg-secondary')
+                        .addClass(status === 'Active' ? 'bg-success' : 'bg-secondary');
 
-                        let outTax = btn.data('output_tax');
-                        $('#output_tax').val(outTax).trigger('change');
+                    const approval = btn.data('status_approval');
+                    let approvalColor = 'text-muted';
+                    if(approval === 'Approved') approvalColor = 'text-success';
+                    if(approval === 'Rejected') approvalColor = 'text-danger';
+                    if(approval === 'Processing') approvalColor = 'text-primary';
+                    $('#view_approval_badge').text(approval).attr('class', 'fw-bold ' + approvalColor);
 
-                        let bgVal = btn.data('bank_garansi');
-                        if(!bgVal) {
-                            const agSel = $('#account_group').find(':selected');
-                            bgVal = agSel.data('bank_garansi') == 1 ? 'YA' : 'TIDAK';
-                        }
-                        $('#bank_garansi').val(bgVal).trigger('change');
+                    // (Opsional) Tambahkan created_at/updated_at jika ada datanya di controller
+                    // $('#view_updated_at').text(btn.data('updated_at') || '-');
 
-                        let ccarVal = btn.data('ccar');
-                        if(!ccarVal) {
-                            const agSel = $('#account_group').find(':selected');
-                            ccarVal = agSel.data('ccar');
-                        }
-                        $('#ccar').val(ccarVal).trigger('change');
+                    // 2. GENERAL INFO
+                    $('#view_name').text(btn.data('name'));
+                    $('#view_sort_name').text(btn.data('sort_name') || '-');
+                    $('#view_email').text(btn.data('email'));
+                    $('#view_no_pkd').text(btn.data('no_pkd') || '-');
 
-                        $('#customerForm').find('input, textarea, select').prop('disabled', true);
-                    }, 100);
+                    const addr1 = btn.data('address1') || '';
+                    const addr2 = btn.data('address2') ? ', ' + btn.data('address2') : '';
+                    const addr3 = btn.data('address3') ? ', ' + btn.data('address3') : '';
+                    $('#view_full_address').text(addr1 + addr2 + addr3);
 
-                    const setupDocPreview = (elementId, path, typeName) => {
-                        if (path && path.length > 15 && !path.includes('null')) {
-                            $(elementId).show();
-                            $(elementId + ' a.file-link')
-                                .attr('href', path)
-                                .data('type', typeName) 
-                                .html(`<i class="ph-bold ph-eye me-1"></i> View ${typeName}`);
-                        } else {
-                            $(elementId).hide();
-                        }
-                    };
+                    $('#view_city').text(btn.data('city'));
+                    $('#view_area').text(btn.data('area'));
+                    $('#view_postal_code').text(btn.data('postal_code'));
 
-                    setupDocPreview('#preview_npwp', btn.data('file_npwp_path'), 'NPWP');
-                    setupDocPreview('#preview_nib', btn.data('file_nib_path'), 'NIB/SIUP');
-                    setupDocPreview('#preview_ktp', btn.data('file_ktp_path'), 'KTP');
+                    // 3. FINANCIAL
+                    const cl = parseFloat(btn.data('credit_limit')) || 0;
+                    $('#view_credit_limit').text('IDR ' + cl.toLocaleString('id-ID'));
+                    $('#view_top').text(btn.data('term_of_payment'));
 
-                    $('#name').val(btn.data('name'));
-                    $('#code').val(btn.data('code'));
-                    $('#no_pkd').val(btn.data('no_pkd') || '');
-                    $('#address1').val(btn.data('address1'));
-                    $('#address2').val(btn.data('address2'));
-                    $('#address3').val(btn.data('address3'));
-                    $('#city').val(btn.data('city'));
-                    $('#postal_code').val(btn.data('postal_code'));
-                    $('#country').val(btn.data('country'));
-                    $('#email').val(btn.data('email'));
-                    $('#area').val(btn.data('area'));
-                    $('#join_date').val(btn.data('join_date'));
+                    $('#view_npwp').text(btn.data('npwp'));
+                    $('#view_tanggal_npwp').text(btn.data('tanggal_npwp') || '-');
+                    $('#view_nppkp').text(btn.data('nppkp'));
+                    $('#view_output_tax').text(btn.data('output_tax'));
 
-                    $('#shipping_to_name').val(btn.data('shipping_to_name'));
-                    $('#shipping_to_address').val(btn.data('shipping_to_address'));
+                    $('#view_penagihan_nama').text(btn.data('penagihan_nama_kontak'));
+                    $('#view_penagihan_telp').text(btn.data('penagihan_telepon'));
+                    $('#view_penagihan_addr').text(btn.data('penagihan_address'));
 
-                    $('#purchasing_manager_name').val(btn.data('purchasing_manager_name'));
-                    $('#purchasing_manager_email').val(btn.data('purchasing_manager_email'));
-                    $('#finance_manager_name').val(btn.data('finance_manager_name'));
-                    $('#finance_manager_email').val(btn.data('finance_manager_email'));
+                    // 4. MANAGEMENT
+                    $('#view_purc_name').text(btn.data('purchasing_manager_name'));
+                    $('#view_purc_email').text(btn.data('purchasing_manager_email'));
+                    $('#view_fin_name').text(btn.data('finance_manager_name'));
+                    $('#view_fin_email').text(btn.data('finance_manager_email'));
+                    $('#view_tax_name').text(btn.data('tax_contact_name'));
+                    $('#view_tax_email').text(btn.data('tax_contact_email'));
 
-                    $('#penagihan_nama_kontak').val(btn.data('penagihan_nama_kontak'));
-                    $('#penagihan_telepon').val(btn.data('penagihan_telepon'));
-                    $('#penagihan_address').val(btn.data('penagihan_address'));
-                    $('#surat_menyurat_address').val(btn.data('surat_menyurat_address'));
-                    $('#sort_name').val(btn.data('sort_name'));
+                    $('#view_shipping_name').text(btn.data('shipping_to_name'));
+                    $('#view_shipping_address').text(btn.data('shipping_to_address'));
 
-                    $('#tax_contact_name').val(btn.data('tax_contact_name'));
-                    $('#tax_contact_email').val(btn.data('tax_contact_email'));
-                    $('#tax_contact_phone').val(btn.data('tax_contact_phone'));
-                    $('#npwp').val(btn.data('npwp'));
-                    $('#tanggal_npwp').val(btn.data('tanggal_npwp'));
-                    $('#nppkp').val(btn.data('nppkp'));
-                    $('#tanggal_nppkp').val(btn.data('tanggal_nppkp'));
-                    $('#no_pengukuhan_kaber').val(btn.data('no_pengukuhan_kaber') || '-');
+                    // 5. DOCUMENTS
+                    const docs = [
+                        { name: 'NPWP Document', path: btn.data('file_npwp_path'), icon: 'ph-file-text' },
+                        { name: 'NIB / SIUP', path: btn.data('file_nib_path'), icon: 'ph-file-code' },
+                        { name: 'KTP Penanggung Jawab', path: btn.data('file_ktp_path'), icon: 'ph-cardholder' }
+                    ];
 
-                    $('#output_tax').val(btn.data('output_tax'));
-                    $('#term_of_payment').val(btn.data('term_of_payment')).trigger('change');
-                    $('#lead_time').val(btn.data('lead_time'));
-                    $('#credit_limit').val(btn.data('credit_limit'));
-                    $('#ccar').val(btn.data('ccar'));
-                    $('#bank_garansi').val(btn.data('bank_garansi'));
+                    let docHtml = '';
+                    let hasDoc = false;
 
-                    const npwpPath = btn.data('file_npwp_path');
-                    if (npwpPath && npwpPath.length > 10) {
-                        $('#preview_npwp a.file-link').attr('href', npwpPath);
-                        $('#preview_npwp').show();
-                    }
-
-                    const nibPath = btn.data('file_nib_path');
-                    if (nibPath && nibPath.length > 10) {
-                        $('#preview_nib a.file-link').attr('href', nibPath);
-                        $('#preview_nib').show();
-                    }
-
-                    const ktpPath = btn.data('file_ktp_path');
-                    if (ktpPath && ktpPath.length > 10) {
-                        $('#preview_ktp a.file-link').attr('href', ktpPath);
-                        $('#preview_ktp').show();
-                    }
-
-                    $('input[type="file"]').prop('disabled', true);
-                    $('#btn-save-customer').hide();
-                    $('#customerForm').find('input, textarea').prop('disabled', true);
-                    $('#customerModal').modal('show');
-                });
-
-                $(document).on('click', '.delete-customer-btn', function(e) {
-                    e.preventDefault();
-                    const form = $(this).closest('form');
-
-                    Swal.fire({
-                        title: 'Are you sure?',
-                        text: "You won't be able to revert this!",
-                        icon: 'warning',
-                        showCancelButton: true,
-                        confirmButtonColor: '#d33',
-                        cancelButtonColor: '#3085d6',
-                        confirmButtonText: 'Yes, delete it!'
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            form.submit();
+                    docs.forEach(doc => {
+                        if(doc.path && typeof doc.path === 'string' && doc.path.length > 20 && !doc.path.includes('null')) {
+                            hasDoc = true;
+                            docHtml += `
+                                <div class="col-md-4">
+                                    <div class="card h-100 border border-secondary border-opacity-25 shadow-sm hover-shadow transition-all">
+                                        <div class="card-body text-center p-3">
+                                            <div class="bg-light rounded p-2 mb-2 d-inline-block">
+                                                <i class="ph-duotone ${doc.icon} f-s-28 text-primary"></i>
+                                            </div>
+                                            <h6 class="fw-bold text-dark f-s-14 mb-1">${doc.name}</h6>
+                                            <button class="btn btn-sm btn-primary w-100 mt-2 btn-view-file-trigger"
+                                                data-path="${doc.path}"
+                                                data-title="${doc.name}">
+                                                <i class="ph-bold ph-eye me-1"></i> Preview
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
                         }
                     });
+
+                    if(hasDoc) {
+                        $('#document_grid').html(docHtml).show();
+                        $('#no_documents').hide();
+                    } else {
+                        $('#document_grid').hide();
+                        $('#no_documents').show();
+                    }
+
+                    // Show Modal
+                    $('#customerDetailModal').modal('show');
                 });
 
                 $(document).on('click focus', '#credit_limit', function(e) {
@@ -1298,72 +1495,114 @@
                     $('#calc_products').trigger('input');
                 });
 
-                // --- UPDATE LOGIC VIEW FILE (FIT CONTENT) ---
-                $(document).on('click', '.file-link', function(e) {
-                    e.preventDefault();
-                    
-                    let fileUrl = $(this).attr('href');
-                    let fileType = $(this).data('type') || 'Document';
-                    let extension = fileUrl.split('.').pop().toLowerCase();
-                    
-                    // 1. Reset Judul & Loading
-                    $('#fileViewerTitle').html(`<i class="ph-bold ph-eye me-2"></i> ${fileType.toUpperCase()}`);
-                    let container = $('#fileContentArea');
-                    container.html('<div class="p-5 text-center"><div class="spinner-border text-light" role="status"></div></div>');
-                    
-                    // 2. Reset Style Modal Dulu (Supaya bersih)
-                    let dialog = $('#fileViewerDialog');
-                    dialog.removeClass('modal-xl modal-lg modal-sm');
-                    dialog.attr('style', ''); // Reset inline styles
+                $(document).ready(function() {
 
-                    // 3. Tampilkan Modal
-                    $('#fileViewerModal').modal('show');
+    // --- 1. LOGIKA TOMBOL VIEW FILE (DIPERBAIKI) ---
+    $(document).on('click', '.btn-view-file-trigger', function(e) {
+        e.preventDefault();
 
-                    // 4. Render Konten (Delay sedikit agar transisi smooth)
-                    setTimeout(() => {
-                        if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension)) {
-                            // --- MODE GAMBAR (FIT CONTENT) ---
-                            
-                            // Trik CSS: Ubah modal jadi "fit-content" agar membungkus gambar
-                            dialog.css({
-                                'max-width': 'fit-content',
-                                'width': 'auto',
-                                'margin-left': 'auto',
-                                'margin-right': 'auto'
-                            });
+        let filePath = $(this).data('path');
+        const title = $(this).data('title');
 
-                            container.html(`
-                                <img src="${fileUrl}" 
-                                    class="d-block" 
-                                    style="max-height: 85vh; max-width: 90vw; width: auto; height: auto;" 
-                                    alt="Preview">
-                            `);
+        console.log('Mencoba buka file:', filePath);
 
-                        } else if (extension === 'pdf') {
-                            // --- MODE PDF (FULL LEBAR) ---
-                            
-                            // PDF butuh lebar, jadi kita pakai modal-xl bawaan bootstrap
-                            dialog.addClass('modal-xl');
-                            
-                            container.html(`
-                                <iframe src="${fileUrl}" style="width: 100%; height: 85vh; border: none;"></iframe>
-                            `);
+        // Validasi: Jika path kosong atau cuma berisi folder storage doang
+        if (!filePath || filePath.trim() === '' || filePath.endsWith('/storage/')) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'File Kosong',
+                text: 'Belum ada dokumen fisik yang diupload untuk data ini.',
+                confirmButtonColor: '#3085d6'
+            });
+            return;
+        }
 
-                        } else {
-                            // --- MODE LAINNYA ---
-                            dialog.addClass('modal-lg');
-                            container.html(`
-                                <div class="text-center py-5 text-white">
-                                    <i class="ph-duotone ph-file-x fs-1 mb-3"></i>
-                                    <div class="mb-3">Preview tidak tersedia untuk format .${extension}</div>
-                                    <a href="${fileUrl}" target="_blank" class="btn btn-primary">
-                                        <i class="ph-bold ph-download-simple me-2"></i> Download File
-                                    </a>
-                                </div>
-                            `);
-                        }
-                    }, 300); // Delay 300ms cukup
-                });
+        // Setup Judul & Loading
+        $('#fileViewerTitle').html(`<i class="ph-bold ph-eye me-2"></i> ${title.toUpperCase()}`);
+        let container = $('#fileContentArea');
+
+        container.html(`
+            <div class="text-center py-5">
+                <div class="spinner-border text-light mb-3" role="status"></div>
+                <div class="text-white-50">Sedang memuat file...</div>
+            </div>
+        `);
+
+        // Tampilkan Modal
+        $('#fileViewerModal').modal('show');
+
+        // Analisa Ekstensi
+        let cleanPath = filePath.split('?')[0];
+        let extension = cleanPath.split('.').pop().toLowerCase();
+        let dialog = $('#fileViewerDialog');
+
+        dialog.removeClass('modal-xl modal-lg modal-sm').attr('style', '');
+
+        // Delay sedikit agar animasi modal smooth
+        setTimeout(() => {
+            // GAMBAR
+            if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension)) {
+                dialog.css('max-width', 'fit-content'); // Inline CSS via JS
+
+                container.html(`
+                    <img src="${filePath}"
+                         class="d-block shadow-lg rounded"
+                         style="max-height: 85vh; max-width: 90vw; border: 1px solid #555;"
+                         alt="Preview"
+                         onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'text-center py-5\'><i class=\'ph-duotone ph-warning-circle text-danger f-s-48 mb-3\'></i><h5 class=\'text-white\'>Gagal Memuat Gambar</h5><p class=\'text-white-50 small\'>File tidak ditemukan di server.<br>Coba jalankan: <code>php artisan storage:link</code></p></div>';"
+                    >
+                `);
+            }
+            // PDF
+            else if (extension === 'pdf') {
+                dialog.addClass('modal-xl');
+                container.html(`
+                    <iframe src="${filePath}"
+                            style="width: 100%; height: 85vh; border: none; background: white;"
+                            allowfullscreen>
+                    </iframe>
+                `);
+            }
+            // FORMAT LAIN
+            else {
+                dialog.addClass('modal-lg');
+                container.html(`
+                    <div class="text-center py-5 text-white">
+                        <i class="ph-duotone ph-file-arrow-down f-s-48 mb-3 opacity-50"></i>
+                        <p>Preview tidak tersedia untuk format <b>.${extension}</b></p>
+                        <a href="${filePath}" target="_blank" class="btn btn-primary rounded-pill px-4">
+                            <i class="ph-bold ph-download-simple me-2"></i> Download File
+                        </a>
+                    </div>
+                `);
+            }
+        }, 300);
+    });
+
+    // --- 2. HACK Z-INDEX VIA JAVASCRIPT (PENTING!) ---
+    // Ini pengganti CSS di <style>.
+    // Kita paksa modal file viewer agar selalu di atas modal detail customer.
+    $('#fileViewerModal').on('show.bs.modal', function () {
+        // 1. Ubah Z-Index Modal Viewer agar paling depan
+        $(this).css('z-index', '1060');
+
+        // 2. Ubah Z-Index Backdrop (Latar hitam transparan) agar menutupi modal sebelumnya
+        // Kita tunggu 10ms karena Bootstrap butuh waktu generate backdrop
+        setTimeout(function() {
+            $('.modal-backdrop').last().css('z-index', '1055');
+        }, 10);
+    });
+
+    // Reset saat modal ditutup agar tidak mengganggu modal lain
+    $('#fileViewerModal').on('hidden.bs.modal', function () {
+        if ($('.modal.show').length > 0) {
+            // Jika masih ada modal lain yg terbuka (misal Detail Customer),
+            // pastikan scroll body tetap jalan
+            $('body').addClass('modal-open');
+        }
+    });
+
+});
 
                 $('#creditCalcForm').on('submit', function(e) {
                     e.preventDefault();
