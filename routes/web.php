@@ -108,27 +108,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.read.all');
     Route::delete('/notifications/{id}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
 
-    // --- MASTER DATA ROUTES ---
-    Route::prefix('master')->group(function () {
-        Route::get('items', [ItemController::class, 'indexMaster'])->name('items.indexMaster');
-        Route::post('items', [ItemController::class, 'store'])->name('items.store');
-        Route::get('items/{id}/edit', [ItemController::class, 'edit'])->name('items.edit');
-        Route::put('items/{id}', [ItemController::class, 'update'])->name('items.update');
-        Route::delete('items/{id}', [ItemController::class, 'destroy'])->name('items.destroy');
-        Route::get('items/details', [ItemController::class, 'detailsAll'])->name('items.details.all');
-        Route::get('items/select2', [ItemController::class, 'select2'])->name('items.select2');
-        Route::post('items/details', [ItemController::class, 'storeDetailAll'])->name('items.details.storeAll');
-        Route::get('items/details/{id}/edit', [ItemController::class, 'editDetailAll'])->name('items.details.editAll');
-        Route::put('items/details/{id}', [ItemController::class, 'updateDetailAll'])->name('items.details.updateAll');
-        Route::delete('items/details/{id}', [ItemController::class, 'destroyDetailAll'])->name('items.details.destroyAll');
-
-        Route::get('items/{item_id}/details', [ItemController::class, 'detailsIndex'])->name('items.details.index');
-        Route::post('items/{item_id}/details', [ItemController::class, 'storeDetail'])->name('items.details.store');
-        Route::get('items/{item_id}/details/{id}/edit', [ItemController::class, 'editDetail'])->name('items.details.edit');
-        Route::put('items/{item_id}/details/{id}', [ItemController::class, 'updateDetail'])->name('items.details.update');
-        Route::delete('items/{item_id}/details/{id}', [ItemController::class, 'destroyDetail'])->name('items.details.destroy');
-    });
-
+    
     Route::group(['prefix' => 'bg'], function () {
         Route::resource('bg-list', BankGaransiController::class);
         Route::get('generate-number', [BankGaransiController::class, 'generateNumber'])->name('bg.generate-number');
