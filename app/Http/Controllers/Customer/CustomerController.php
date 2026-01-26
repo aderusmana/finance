@@ -116,7 +116,7 @@ class CustomerController extends Controller
             $query = Customer::leftJoin('customer_files', 'customers.id', '=', 'customer_files.customer_id')
                 ->select(
                     'customers.*',
-                        'customer_files.npwp_file as file_npwp',
+                    'customer_files.npwp_file as file_npwp',
                     'customer_files.nib_siup_file as file_nib',
                     'customer_files.ktp_file as file_ktp'
                 )->orderBy('customers.created_at', 'desc');
@@ -124,6 +124,17 @@ class CustomerController extends Controller
             return DataTables::of($query)
             ->addIndexColumn()
             ->addColumn('action', function ($row) {
+                $row->load('items');
+                $rowData = $row->toArray();
+
+                $rowData['tanggal_npwp']  = $row->tanggal_npwp ? Carbon::parse($row->tanggal_npwp)->format('Y-m-d') : null;
+                $rowData['tanggal_nppkp'] = $row->tanggal_nppkp ? Carbon::parse($row->tanggal_nppkp)->format('Y-m-d') : null;
+
+                $rowData['file_npwp_path'] = $row->file_npwp ? asset('storage/' . ltrim($row->file_npwp, '/')) : null;
+                $rowData['file_nib_path']  = $row->file_nib ? asset('storage/' . ltrim($row->file_nib, '/')) : null;
+                $rowData['file_ktp_path']  = $row->file_ktp ? asset('storage/' . ltrim($row->file_ktp, '/')) : null;
+
+                $jsonRow = htmlspecialchars(json_encode($rowData), ENT_QUOTES, 'UTF-8');
 
                 $tglNpwp = $row->tanggal_npwp ? Carbon::parse($row->tanggal_npwp)->format('Y-m-d') : '';
                 $tglNppkp = $row->tanggal_nppkp ? Carbon::parse($row->tanggal_nppkp)->format('Y-m-d') : '';
@@ -174,35 +185,40 @@ class CustomerController extends Controller
                 $dataAttrs .= ' data-route_to="' . e($row->route_to) . '"';
                 $dataAttrs .= ' data-status_approval="' . e($row->status_approval) . '"';
                 $dataAttrs .= ' data-created_by="' . e($row->created_by) . '"';
+                $dataAttrs .= ' data-file_npwp_path="' . $rowData['file_npwp_path'] . '"';
+                $dataAttrs .= ' data-file_nib_path="' . $rowData['file_nib_path'] . '"';
+                $dataAttrs .= ' data-file_ktp_path="' . $rowData['file_ktp_path'] . '"';
 
-                $pathNpwp = $row->file_npwp ? asset('storage/' . ltrim($row->file_npwp, '/')) : '';
-                $pathNib  = $row->file_nib ? asset('storage/' . ltrim($row->file_nib, '/')) : '';
-                $pathKtp  = $row->file_ktp ? asset('storage/' . ltrim($row->file_ktp, '/')) : '';
+                $btn = '<div class="d-flex gap-2">';
 
-                $dataAttrs .= ' data-file_npwp_path="' . $pathNpwp . '"';
-                $dataAttrs .= ' data-file_nib_path="' . $pathNib . '"';
-                $dataAttrs .= ' data-file_ktp_path="' . $pathKtp . '"';
+                if ($row->status_approval === 'Rejected') {
+                    $btn .= '<button type="button" class="btn btn-warning btn-recall-customer shadow-sm" 
+                                data-json="' . $jsonRow . '" 
+                                data-bs-toggle="tooltip" 
+                                title="Recall / Revisi Pengajuan">
+                                <i class="ph-bold ph-arrow-u-up-left text-white"></i>
+                             </button>';
+                }
 
-                return '
-                <div class="d-flex gap-2">
-                    <button type="button" class="btn btn-info btn-show-customer" ' . $dataAttrs . '>
-                        <i class="fa-solid fa-eye text-white"></i>
-                    </button>
-                    <form action="' . route('customers.destroy', $row->id) . '" method="POST" class="delete-form delete-customer-btn" style="display:inline;">
-                        ' . csrf_field() . method_field('DELETE') . '
-                        <button type="submit" class="btn btn-danger">
-                        <i class="fas fa-trash-alt text-white"></i>
-                        </button>
-                    </form>
-                </div>
-            ';
+                $btn .= '<button type="button" class="btn btn-info btn-show-customer" ' . $dataAttrs . ' title="Lihat Detail">
+                            <i class="fa-solid fa-eye text-white"></i>
+                        </button>';
+
+                $btn .= '<form action="' . route('customers.destroy', $row->id) . '" method="POST" class="delete-form delete-customer-btn" style="display:inline;">
+                            ' . csrf_field() . method_field('DELETE') . '
+                            <button type="submit" class="btn btn-danger" title="Hapus Data">
+                            <i class="fas fa-trash-alt text-white"></i>
+                            </button>
+                        </form>';
+
+                $btn .= '</div>';
+                return $btn;
             })
             ->addColumn('credit_limit_formatted', function ($row) {
                 return '<div class="badge status-badge-lg bg-warning">
                             IDR ' . number_format($row->credit_limit, 0, ',', '.') . '
                         </div>';
             })
-
             ->addColumn('financial_info', function ($row) {
                 if ($row->bank_garansi === 'YA') {
                     $bgBadge = '<span class="srs-badge"><i class="fas fa-file-contract me-1"></i> BG: YES</span>';
@@ -215,14 +231,13 @@ class CustomerController extends Controller
                             <div>' . $bgBadge . '</div>
                         </div>';
             })
-
             ->addColumn('status_approval', function ($row) {
                 $baseClass = match($row->status_approval) {
-                    'Approved', 'Completed' => 'bg-success', // Hijau Gradient
-                    'Rejected', 'Canceled' => 'bg-danger',   // Merah Gradient
-                    'Processing' => 'bg-primary',            // Ungu Gradient (sesuai CSS Anda)
-                    'Pending' => 'bg-warning',               // Oranye Gradient
-                    default => 'bg-secondary'                // Abu Gradient
+                    'Approved', 'Completed' => 'bg-success',
+                    'Rejected', 'Canceled' => 'bg-danger', 
+                    'Processing' => 'bg-primary', 
+                    'Pending' => 'bg-warning', 
+                    default => 'bg-secondary'
                 };
 
                 $icon = match($row->status_approval) {
@@ -234,7 +249,6 @@ class CustomerController extends Controller
 
                 return '<span class="badge status-badge-lg ' . $baseClass . '">' . $icon . strtoupper($row->status_approval) . '</span>';
             })
-
             ->addColumn('route_to', function ($row) {
                  if($row->status_approval === 'Approved' || $row->status_approval === 'Completed'){
                     return '<span class="badge route-to-badge-lg bg-info text-white"><i class="ph-bold ph-check-circle me-1 text-white"></i>-</span>';
@@ -244,7 +258,6 @@ class CustomerController extends Controller
                             <i class="ph-bold ph-user me-1"></i> ' . strtoupper($row->route_to ?? '-') . '
                         </span>';
             })
-
             ->addColumn('status', function ($row) {
                 $badge = $row->status === 'Active' ? 'bg-success' : 'bg-secondary';
                 return '<span class="badge status-badge-lg ' . $badge . '">' . strtoupper($row->status) . '</span>';
@@ -257,6 +270,7 @@ class CustomerController extends Controller
         $top = TOP::all();
         $accountgroup = AccountGroup::all();
         $customerClass = CustomerClass::all();
+        
         $pendingCount = Customer::whereIn('status_approval', ['Pending', 'Processing'])->count();
         $processingCount = Customer::where('status_approval', 'Processing')->count();
         $approvedCount = Customer::whereIn('status_approval', ['Approved', 'Completed'])->count();
@@ -265,17 +279,151 @@ class CustomerController extends Controller
             $q->where('bank_garansi', '!=', 'YA')
               ->orWhereNull('bank_garansi');
         })->count();
-        $approvalStatuses = Customer::whereNotNull('status_approval')
-                                ->distinct()
-                                ->pluck('status_approval');
-
-        $accountStatuses = Customer::whereNotNull('status')
-                                ->distinct()
-                                ->pluck('status');
+        
+        $approvalStatuses = Customer::whereNotNull('status_approval')->distinct()->pluck('status_approval');
+        $accountStatuses = Customer::whereNotNull('status')->distinct()->pluck('status');
 
         return view('page.customer.index', compact(
             'sales', 'top', 'accountgroup','customerClass', 'pendingCount',
-            'processingCount', 'approvedCount', 'activeCount', 'inactiveCount', 'approvalStatuses', 'accountStatuses'));
+            'processingCount', 'approvedCount', 'activeCount', 'inactiveCount', 'approvalStatuses', 'accountStatuses'
+        ));
+    }
+    
+    public function recall(Request $request, $id)
+    {
+        $customer = Customer::findOrFail($id);
+
+        if ($customer->status_approval !== 'Rejected') {
+            return response()->json(['success' => false, 'message' => 'Hanya data dengan status Rejected yang bisa diajukan ulang (Recall).'], 403);
+        }
+
+        $newLogs = null;
+
+        DB::transaction(function () use ($request, $customer, &$newLogs) {
+            $user = Auth::user();
+            $customerData = $request->except(['file_npwp', 'file_nib', 'file_ktp', 'items', '_token']);
+            $grandTotal = 0;
+            if ($request->has('items') && is_array($request->items)) {
+                foreach ($request->items as $item) {
+                    $qty = (float) ($item['quantity'] ?? 0);
+                    $price = (float) ($item['price'] ?? 0);
+                    $grandTotal += ($qty * $price);
+                }
+            }
+            $customerData['customer_total'] = $grandTotal;
+            $customerData['status_approval'] = 'Pending';
+            
+            $customer->update($customerData);
+            CustomerItem::where('customer_id', $customer->id)->delete();
+            if ($request->has('items') && is_array($request->items)) {
+                foreach ($request->items as $item) {
+                    if (!empty($item['item_name']) && !empty($item['quantity'])) {
+                        CustomerItem::create([
+                            'customer_id' => $customer->id,
+                            'item_name'   => $item['item_name'],
+                            'quantity'    => $item['quantity'],
+                            'price'       => $item['price'] ?? 0,
+                        ]);
+                    }
+                }
+            }
+
+            $storageFolder = 'customer_files/' . $customer->id;
+            $fileData = [];
+            $existingFiles = CustomerFile::where('customer_id', $customer->id)->first();
+
+            if ($request->hasFile('file_npwp')) {
+                $fileData['npwp_file'] = $request->file('file_npwp')->store($storageFolder, 'public');
+            }
+            if ($request->hasFile('file_nib')) {
+                $fileData['nib_siup_file'] = $request->file('file_nib')->store($storageFolder, 'public');
+            }
+            if ($request->hasFile('file_ktp')) {
+                $fileData['ktp_file'] = $request->file('file_ktp')->store($storageFolder, 'public');
+            }
+
+            if (!empty($fileData)) {
+                if ($existingFiles) {
+                    $existingFiles->update($fileData);
+                } else {
+                    $fileData['customer_id'] = $customer->id;
+                    CustomerFile::create($fileData);
+                }
+            }
+
+            ApprovalLog::where('related_id', $customer->id)
+                ->where('category', 'Customer')
+                ->update(['status' => 'Canceled']);
+
+            $subCategory = 'CBD'; 
+            $newLogs = $this->generateApprovalLogs($user, $customer->id, 'Customer', $subCategory);
+
+            $firstLog = ApprovalLog::where('category', 'Customer')
+                ->where('related_id', $customer->id)
+                ->where('status', 'Pending') 
+                ->orderBy('level', 'asc')
+                ->first();
+
+            if ($firstLog) {
+                $firstApprover = User::where('nik', $firstLog->approver_nik)->first();
+                $customer->update(['route_to' => $firstApprover ? $firstApprover->name : 'Unknown User']);
+
+                if ($firstApprover) {
+                    try {
+                        Notification::send($firstApprover, new SystemNotification(
+                            'Butuh Persetujuan (Revisi)', 
+                            "Customer <b>{$customer->name}</b> telah direvisi dan diajukan ulang.", 
+                            route('customers.approval'), 
+                            'ph-arrow-u-up-left', 
+                            'warning' 
+                        ));
+                    } catch (\Exception $e) {
+                        Log::error("Gagal kirim notif sistem recall: " . $e->getMessage());
+                    }
+                }
+            } else {
+                $customer->update(['status_approval' => 'Error', 'route_to' => 'No Approver Found']);
+            }
+
+            activity()
+                ->causedBy($user)
+                ->performedOn($customer)
+                ->useLog('customer')
+                ->event('recall')
+                ->withProperties(['name' => $customer->name])
+                ->log("Recalled and resubmitted customer: {$customer->name}");
+        });
+
+        try {
+            if ($newLogs) {
+                $firstLogData = $newLogs->firstWhere('level', 1);
+
+                if ($firstLogData) {
+                    $approverNik = $firstLogData['approver_nik'];
+                    $approverUser = User::where('nik', $approverNik)->first();
+                    $token = $firstLogData['token'] ?? $firstLogData->token; 
+
+                    if ($approverUser && $approverUser->email) {
+                        $recipients = [
+                            [
+                                'nik' => $approverUser->nik,
+                                'email' => $approverUser->email,
+                                'name' => $approverUser->name,
+                                'level' => 1,
+                                'is_first' => true,
+                            ]
+                        ];
+
+                        CustomerJob::dispatch($customer->id, $recipients, $token, 'approval');
+                        Log::info("Email recall (Level 1) dikirim ke: " . $approverUser->email);
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            Log::error('Gagal mengirim email recall: ' . $e->getMessage());
+        }
+
+        return response()->json(['success' => true, 'message' => 'Data berhasil diajukan ulang! Status kembali ke Pending.']);
     }
 
     public function show(Customer $customer)
@@ -671,7 +819,7 @@ class CustomerController extends Controller
                 if ($customer->email) {
                     try {
                         Mail::to($customer->email)
-                            ->send(new CustomerWelcomeMail($customer));
+                            ->queue(new CustomerWelcomeMail($customer));
 
                         $notes .= "\n[System]: Welcome Email sent to Customer ($customer->email).";
                     } catch (\Exception $e) {
@@ -1076,75 +1224,6 @@ class CustomerController extends Controller
         }
     }
 
-    // public function reportsPage()
-    // {
-    //     return view('page.sample.report.index');
-    // }
-
-    // public function printMultipleReport(Request $request)
-    // {
-    //     $request->validate([
-    //         'selected_ids'   => 'required|array',
-    //         'selected_ids.*' => 'integer|exists:requisitions,id'
-    //     ]);
-
-    //     $requisitions = Requisition::with([
-    //         'customer',
-    //         'requester.department',
-    //         'requisitionItems.itemMaster',
-    //         'requisitionItems.itemDetail',
-    //         'requisitionSpecial',
-    //         'approvalLogs' => fn($q) => $q->orderBy('level', 'asc'),
-    //         'approvalLogs.approver.roles'
-    //     ])->whereIn('id', $request->selected_ids)->get();
-
-    //     $revisionData = Revision::first();
-
-    //     if ($requisitions->isEmpty()) {
-    //         return redirect()->back()->with('error', 'Tidak ada data yang dipilih untuk dicetak.');
-    //     }
-
-    //     $pdf = Pdf::loadView('page.sample.report.print', [
-    //         'requisitions' => $requisitions,
-    //         'revision'     => $revisionData
-    //     ])->setPaper('a4', 'landscape');
-
-    //     return $pdf->stream('Bulk-RS-Sample-' . now()->format('Y-m-d') . '.pdf');
-    // }
-
-    // public function getReportsData(Request $request)
-    // {
-    //     $query = Requisition::with(['requester', 'customer']) // Eager load relationships
-    //         ->where('category', 'SAMPLE')
-    //         ->select('requisitions.*');
-
-    //     // Filter based on date range if provided
-    //     if ($request->filled('start_date') && $request->filled('end_date')) {
-    //         try {
-    //             $startDate = Carbon::createFromFormat('Y-m-d', $request->start_date)->startOfDay();
-    //             $endDate = Carbon::createFromFormat('Y-m-d', $request->end_date)->endOfDay();
-    //             $query->whereBetween('request_date', [$startDate, $endDate]);
-    //         } catch (\Exception $e) {
-    //             Log::error('Invalid date format for report filter: ' . $e->getMessage());
-    //         }
-    //     }
-
-    //     // Filter by user if not a super-admin
-    //     if (!Auth::user()->hasRole('super-admin')) {
-    //         $query->where('requester_nik', Auth::user()->nik);
-    //     }
-
-    //     // Return the DataTables response without column modifications
-    //     return DataTables::of($query)->make(true);
-    // }
-
-    //======================================================================
-    // [BARU] FUNGSI-FUNGSI UNTUK HALAMAN Logs INTERNAL
-    //======================================================================
-
-    /**
-     * Menampilkan halaman daftar logs untuk user yang login.
-     */
     public function logPage()
     {
         return view('page.customer.log.index');
@@ -1152,11 +1231,7 @@ class CustomerController extends Controller
 
     public function getLogData()
     {
-        // Pastikan model Activity di-import: use Spatie\Activitylog\Models\Activity;
-
-                // Avoid eager-loading `subject` because some activity records may reference
-                // classes that no longer exist (causes MorphTo instantiation errors).
-                $query = Activity::with('causer')
+        $query = Activity::with('causer')
             ->where(function ($q) {
                 $q->where('log_name', 'like', '%customer%')
                   ->orWhere('log_name', 'like', 'sample%')
@@ -1166,12 +1241,8 @@ class CustomerController extends Controller
 
         return DataTables::of($query)
             ->addIndexColumn()
-            // --- 1. PERBAIKI LOG NAME (AMBIL DARI DB) ---
             ->editColumn('log_name', function ($log) {
-                // Ambil nilai asli dari DB
                 $logName = $log->log_name;
-
-                // Tentukan warna badge
                 $badgeClass = 'bg-secondary';
                 $icon = 'ph-scroll';
 
@@ -1186,17 +1257,13 @@ class CustomerController extends Controller
                     $icon = 'ph-flask';
                 }
 
-                // Tampilkan nama asli dari DB, hanya dirapikan kapitalisasinya
-                // str_replace('-', ' ', ...) agar "path - customer" jadi "Path Customer" (opsional, sesuaikan selera)
                 $displayText = ucwords(str_replace('-', ' ', $logName));
 
                 return '<span class="badge ' . $badgeClass . '"><i class="ph-bold ' . $icon . ' me-1"></i>' . e($displayText) . '</span>';
             })
-            // --- 2. TAMBAHKAN KOLOM PROPERTIES ---
             ->addColumn('properties', function ($log) {
                 $props = $log->properties ?? [];
 
-                // Normalize empty
                 if (empty($props) || (is_object($props) && method_exists($props, 'isEmpty') && $props->isEmpty())) {
                     return '<span class="text-muted small">-</span>';
                 }
@@ -1204,12 +1271,9 @@ class CustomerController extends Controller
                 $output = '<div class="small">';
 
                 foreach ($props as $key => $value) {
-                    // Skip raw 'old' payload to avoid noise
                     if ($key === 'old') continue;
-
                     $label = ucfirst(str_replace(['_', '-'], ' ', $key));
 
-                    // Special: attributes -> provide a small "Details" button with JSON payload
                     if ($key === 'attributes') {
                         $json = json_encode($value, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES);
                         $escaped = e($json);
@@ -1218,11 +1282,8 @@ class CustomerController extends Controller
                         continue;
                     }
 
-                    // If value is a Collection or array, render nicely
                     if (is_array($value) || $value instanceof \Illuminate\Support\Collection) {
-                        // Approvers or lists -> badges
                         if (str_contains(strtolower($key), 'approver') || str_contains(strtolower($key), 'approvers')) {
-                            // Render approver list as bullet points for readability
                             $output .= '<div class="mb-1"><span class=" text-muted text-dark">'.e($label).':</span>';
                             $output .= '<ul class="m-0 ps-3" style="font-size:0.9rem;">';
                             foreach ((array) $value as $v) {
@@ -1237,7 +1298,6 @@ class CustomerController extends Controller
                             continue;
                         }
 
-                        // Generic arrays -> comma separated preview
                         $preview = implode(', ', array_map(function ($i) {
                             if (is_array($i)) return json_encode($i, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES);
                             return (string) $i;
@@ -1247,11 +1307,9 @@ class CustomerController extends Controller
                         continue;
                     }
 
-                    // If string that contains JSON, try to decode and render
                     if (is_string($value)) {
                         $decoded = json_decode($value, true);
                         if (json_last_error() === JSON_ERROR_NONE && (is_array($decoded) || is_object($decoded))) {
-                            // If this property looks like approvers, render badges instead of JSON preview
                             if (str_contains(strtolower($key), 'approver') || str_contains(strtolower($key), 'approvers')) {
                                 $output .= '<div class="mb-1"><span class="fw-bold text-dark">'.e($label).':</span>';
                                 $output .= '<ul class="m-0 ps-3" style="font-size:0.9rem;">';
@@ -1276,7 +1334,6 @@ class CustomerController extends Controller
                         }
                     }
 
-                    // Default scalar rendering
                     $display = is_null($value) ? '-' : (string) $value;
                     $output .= '<div class="mb-1"><span class="text-muted">'.e($label).':</span> <span class="fw-bold text-dark">'.e(Str::limit($display, 80)).'</span></div>';
                 }
@@ -1287,7 +1344,6 @@ class CustomerController extends Controller
             })
             ->addColumn('subject_info', function ($log) {
 
-                // 1. LOG CUSTOMER (Tetap seperti sebelumnya)
                 if ($log->subject_type === Customer::class) {
                     $code = $log->subject ? $log->subject->code : ($log->properties['code'] ?? '-');
                     $name = $log->subject ? $log->subject->name : ($log->properties['name'] ?? '-');
@@ -1347,7 +1403,6 @@ class CustomerController extends Controller
             ->editColumn('created_at', function ($log) {
                 return Carbon::parse($log->created_at)->format('d M Y, H:i');
             })
-            // Tambahkan 'properties' ke rawColumns agar HTML list-nya terender
             ->rawColumns(['log_name', 'event', 'subject_info', 'causer_info', 'subject_id', 'properties'])
             ->make(true);
     }

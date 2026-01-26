@@ -36,10 +36,6 @@ class Customer extends Model
 
     protected $table = 'customers';
 
-    public function requisitions()
-    {
-        return $this->hasMany(Requisition::class, 'customer_id');
-    }
 
     public function createdBy()
     {
@@ -89,4 +85,5 @@ class Customer extends Model
     public function items() {
         return $this->hasMany(CustomerItem::class, 'customer_id');
     }
+    
 }

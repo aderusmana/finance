@@ -80,6 +80,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/my-actions', [DashboardController::class, 'getMyActions'])->name('my-actions');
     });
 
+    Route::post('/customers/{customer}/recall', [CustomerController::class, 'recall'])->name('customers.recall');
+    
     Route::get('/customers/approval', [CustomerController::class, 'approvalPage'])->name('customers.approval');
     Route::get('/customers-approval/data', [CustomerController::class, 'getApprovalData'])->name('customers.approval.data');
     Route::post('/approvals/resend/{token}', [CustomerController::class, 'resendApprovalEmail'])->name('approvals.resend');
@@ -108,7 +110,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.read.all');
     Route::delete('/notifications/{id}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
 
-    
+
     Route::group(['prefix' => 'bg'], function () {
         Route::resource('bg-list', BankGaransiController::class);
         Route::get('generate-number', [BankGaransiController::class, 'generateNumber'])->name('bg.generate-number');
