@@ -18,5 +18,6 @@ class DatabaseSeeder extends Seeder
         $this->call(TaxsTableSeeder::class);
         $this->call(BGLimitRulesSeeder::class);
         $this->call(BgLampiranDApprovalSeeder::class);
+        $this->call(CustomerApprovalSeeder::class);
     }
 }

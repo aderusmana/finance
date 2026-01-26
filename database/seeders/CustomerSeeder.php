@@ -16,7 +16,7 @@ class CustomerSeeder extends Seeder
         $faker = Faker::create('id_ID');
         $userId = User::first()->id ?? 1;
 
-        for ($i = 0; $i < 10; $i++) {
+        for ($i = 0; $i <3; $i++) {
 
             DB::beginTransaction();
             try {

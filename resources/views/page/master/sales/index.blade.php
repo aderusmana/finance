@@ -10,8 +10,8 @@
             <h4 class="main-title">Sales Records</h4>
             <ul class="app-line-breadcrumbs mb-3">
                 <li>
-                    <a class="f-s-14 f-w-500" href="{{ route('items.indexMaster') }}">
-                        <i class="ph-duotone ph-arrow-left f-s-16"></i> Back
+                     <a class="f-s-14 f-w-500" href="#">
+                        <i class="ph-duotone ph ph-address-book f-s-16"></i> Master Data
                     </a>
                 </li>
                 <li class="active">

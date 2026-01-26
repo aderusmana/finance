@@ -550,22 +550,555 @@
         </div>
     </div>
 
-    <div class="modal fade" id="fileViewerModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
-        <div class="modal-dialog modal-dialog-centered" id="fileViewerDialog" style="transition: all 0.3s ease-out;">
-            <div class="modal-content shadow-lg border-0 bg-dark">
-                <div class="modal-header border-0 py-2 px-3">
-                    <h6 class="modal-title text-white" id="fileViewerTitle">
-                        <i class="ph-bold ph-file-text me-2"></i> Document Preview
+    <div class="modal fade" id="customerDetailModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-xl">
+            <div class="modal-content border-0 overflow-hidden">
+                <div class="modal-header bg-primary text-white py-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="bg-white bg-opacity-25 rounded-circle p-2">
+                            <i class="ph-bold ph-user-circle f-s-32"></i>
+                        </div>
+                        <div>
+                            <h4 class="modal-title mb-0 fw-bold" id="view_header_name">Customer Name</h4>
+                            <div class="opacity-75 f-s-14 mt-1" id="view_header_code">CODE-001</div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body bg-light p-4" style="max-height: 85vh; overflow-y: auto;">
+
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-body p-4">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div class="d-flex align-items-center gap-4">
+                                    <div>
+                                        <label class="fw-bold text-dark text-uppercase f-s-12 mb-1">Account Status</label>
+                                        <div><span id="view_status_badge" class="badge bg-secondary f-s-12 px-3 py-2">STATUS</span></div>
+                                    </div>
+                                    <div class="vr" style="height: 40px; opacity: 0.1;"></div>
+                                    <div>
+                                        <label class="fw-bold text-dark text-uppercase f-s-12 mb-1">Approval Progress</label>
+                                        <div id="view_approval_badge" class="fw-bold text-dark f-s-16">Pending</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h5 class="fw-bold text-primary mb-3 d-flex align-items-center">
+                        <i class="ph-fill ph-info me-2"></i> General Information
+                    </h5>
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-body p-4">
+                            <div class="row g-4">
+                                <div class="col-md-6 border-end">
+                                    <div class="row g-4">
+                                        <div class="col-md-12">
+                                            <label class="fw-bold text-secondary text-uppercase f-s-12 mb-1">Customer Name</label>
+                                            <div class="fw-bold text-dark f-s-16" id="view_name">-</div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="fw-bold text-secondary text-uppercase f-s-12 mb-1">Sort Name / Alias</label>
+                                            <div class="fw-bold text-dark f-s-14" id="view_sort_name">-</div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="fw-bold text-secondary text-uppercase f-s-12 mb-1">No. PKD</label>
+                                            <div class="fw-bold text-dark f-s-14" id="view_no_pkd">-</div>
+                                        </div>
+                                        <div class="col-md-12">
+                                            <label class="fw-bold text-secondary text-uppercase f-s-12 mb-1">Email Address</label>
+                                            <div class="fw-bold text-dark f-s-14" id="view_email">-</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 ps-md-4">
+                                    <div class="row g-4">
+                                        <div class="col-12">
+                                            <label class="fw-bold text-secondary text-uppercase f-s-12 mb-1">Main Address</label>
+                                            <div class="fw-bold text-dark f-s-14 lh-base" id="view_full_address">-</div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="fw-bold text-secondary text-uppercase f-s-12 mb-1">City</label>
+                                            <div class="fw-bold text-dark f-s-14" id="view_city">-</div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="fw-bold text-secondary text-uppercase f-s-12 mb-1">Area</label>
+                                            <div class="fw-bold text-dark f-s-14" id="view_area">-</div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="fw-bold text-secondary text-uppercase f-s-12 mb-1">Postal Code</label>
+                                            <div class="fw-bold text-dark f-s-14" id="view_postal_code">-</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h5 class="fw-bold text-primary mb-3 d-flex align-items-center">
+                        <i class="ph-fill ph-currency-dollar me-2"></i> Financial & Tax
+                    </h5>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <div class="card bg-primary text-white border-0 shadow-sm h-100">
+                                <div class="card-body p-4">
+                                    <div class="d-flex justify-content-between align-items-start mb-3">
+                                        <div>
+                                            <label class="text-white text-opacity-75 text-uppercase f-s-12 fw-bold">Credit Limit</label>
+                                            <h3 class="mb-0 fw-bold mt-1" id="view_credit_limit">IDR 0</h3>
+                                        </div>
+                                        <i class="ph-duotone ph-wallet f-s-40 text-white text-opacity-50"></i>
+                                    </div>
+                                    <div class="mt-4 pt-3 border-top border-white border-opacity-25 d-flex justify-content-between align-items-center">
+                                        <span class="f-s-13 opacity-75">Term of Payment</span>
+                                        <span class="fw-bold f-s-16 bg-warning bg-opacity-20 px-2 py-1 rounded"><span id="view_top">-</span> Days</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-body p-4">
+                                    <h6 class="fw-bold text-dark border-bottom pb-3 mb-3">Tax Information</h6>
+                                    <div class="d-flex justify-content-between mb-3">
+                                        <span class="fw-bold text-secondary f-s-13">NPWP No.</span>
+                                        <span class="fw-bold text-dark" id="view_npwp">-</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-3">
+                                        <span class="fw-bold text-secondary f-s-13">NPWP Date</span>
+                                        <span class="fw-bold text-dark" id="view_tanggal_npwp">-</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-3">
+                                        <span class="fw-bold text-secondary f-s-13">NPPKP</span>
+                                        <span class="fw-bold text-dark" id="view_nppkp">-</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between">
+                                        <span class="fw-bold text-secondary f-s-13">Output Tax</span>
+                                        <span class="fw-bold text-dark" id="view_output_tax">-</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-body p-4">
+                                    <h6 class="fw-bold text-dark border-bottom pb-3 mb-3">Billing Contact</h6>
+                                    <div class="mb-3">
+                                        <label class="fw-bold text-secondary text-uppercase f-s-11 mb-1">Contact Name</label>
+                                        <div class="fw-bold text-dark f-s-15" id="view_penagihan_nama">-</div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="fw-bold text-secondary text-uppercase f-s-11 mb-1">Phone Number</label>
+                                        <div class="fw-bold text-dark f-s-15" id="view_penagihan_telp">-</div>
+                                    </div>
+                                    <div>
+                                        <label class="fw-bold text-secondary text-uppercase f-s-11 mb-1">Billing Address</label>
+                                        <div class="fw-bold text-dark f-s-14 lh-sm" id="view_penagihan_addr">-</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h5 class="fw-bold text-primary mb-3 d-flex align-items-center">
+                        <i class="ph-fill ph-users-three me-2"></i> Management & Logistics
+                    </h5>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-8">
+                            <div class="card border-0 shadow-sm h-100">
+                                <div class="card-body p-0">
+                                    <table class="table table-hover mb-0 align-middle">
+                                        <thead class="bg-light">
+                                            <tr>
+                                                <th class="ps-4 py-3 fw-bold text-secondary text-uppercase f-s-12">Position Role</th>
+                                                <th class="py-3 fw-bold text-secondary text-uppercase f-s-12">Full Name</th>
+                                                <th class="py-3 fw-bold text-secondary text-uppercase f-s-12">Email Address</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td class="ps-4 text-secondary fw-bold">Purchasing Mgr</td>
+                                                <td class="fw-bold text-dark" id="view_purc_name">-</td>
+                                                <td class="text-dark" id="view_purc_email">-</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="ps-4 text-secondary fw-bold">Finance Mgr</td>
+                                                <td class="fw-bold text-dark" id="view_fin_name">-</td>
+                                                <td class="text-dark" id="view_fin_email">-</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="ps-4 text-secondary fw-bold">Tax Contact</td>
+                                                <td class="fw-bold text-dark" id="view_tax_name">-</td>
+                                                <td class="text-dark" id="view_tax_email">-</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="card border-0 shadow-sm h-100 bg-warning bg-opacity-10 border-warning border-opacity-25">
+                                <div class="card-body p-4">
+                                    <h6 class="fw-bold text-dark mb-3 pb-2 border-bottom border-warning border-opacity-25">
+                                        <i class="ph-fill ph-truck me-2 text-warning"></i>Shipping Destination
+                                    </h6>
+
+                                    <div class="mb-3">
+                                        <label class="fw-bold text-secondary text-uppercase f-s-11 mb-1">Recipient Name</label>
+                                        <div class="fw-bold text-dark f-s-16" id="view_shipping_name">-</div>
+                                    </div>
+
+                                    <div>
+                                        <label class="fw-bold text-secondary text-uppercase f-s-11 mb-1">Shipping Address</label>
+                                        <div class="fw-bold text-dark f-s-14 lh-base" id="view_shipping_address">-</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h5 class="fw-bold text-primary mb-3 d-flex align-items-center">
+                        <i class="ph-fill ph-files me-2"></i> Documents
+                    </h5>
+                    <div class="row g-3" id="document_grid">
+                        </div>
+                    <div id="no_documents" class="text-center py-5 text-muted border border-dashed rounded bg-white" style="display:none;">
+                        <i class="ph-duotone ph-folder-notch-open f-s-48 mb-3 opacity-50"></i>
+                        <p class="mb-0 f-s-16">No documents uploaded for this customer.</p>
+                    </div>
+
+                </div>
+
+                <div class="modal-footer bg-white border-top py-3">
+                    <button type="button" class="btn btn-secondary px-5 rounded-pill" data-bs-dismiss="modal">Close Detail</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="fileViewerModal" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
+        <div class="modal-dialog modal-dialog-centered modal-xl" id="fileViewerDialog">
+            <div class="modal-content border-0">
+                <div class="modal-header bg-dark text-white border-0 py-2">
+                    <h6 class="modal-title text-white fw-bold f-s-14" id="fileViewerTitle">
+                        FILE PREVIEW
                     </h6>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body p-0 d-flex align-items-center justify-content-center bg-black">
-                    <div id="fileContentArea" style="width: 100%; height: 100%;">
-                        <div class="p-5 text-center">
-                            <div class="spinner-border text-light" role="status"></div>
+                <div class="modal-body p-0 d-flex align-items-center justify-content-center" style="min-height: 500px; background-color: #1a1a1a;">
+                    <div id="fileContentArea" class="w-100 h-100 d-flex align-items-center justify-content-center">
+                        </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="recallCustomerModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered modal-xl">
+            <div class="modal-content border-0 shadow-lg">
+                
+                <div class="modal-header bg-gradient bg-warning text-dark border-0 py-3">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-white bg-opacity-25 rounded-circle p-2 me-3">
+                            <i class="ph-bold ph-arrow-u-up-left f-s-24"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-title fw-bold mb-0">Recall Submission</h5>
+                            <small class="opacity-75">Perbaiki data yang ditolak dan ajukan ulang.</small>
                         </div>
                     </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
+                
+                <form id="recallCustomerForm" enctype="multipart/form-data">
+                    @csrf
+                    <input type="hidden" id="recall_customer_id" name="id">
+                    <input type="hidden" name="user_id" id="recall_user_id">
+                    <input type="hidden" name="country" id="recall_country" value="Indonesia">
+
+                    <div class="modal-body bg-light p-0">
+                        
+                        <div class="alert alert-warning border-0 rounded-0 mb-0 d-flex align-items-center px-4 py-3" role="alert">
+                            <i class="ph-fill ph-info f-s-24 me-3"></i>
+                            <div>
+                                <strong>Note:</strong> Proses Recall akan mereset status menjadi <strong>Process</strong> (Approval Level 1). Pastikan revisi sudah sesuai catatan reject.
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-items-start">
+                            <div class="nav flex-column nav-pills me-3 bg-white h-100 p-3 border-end" style="min-width: 200px;" id="v-pills-tab" role="tablist" aria-orientation="vertical">
+                                <button class="nav-link active text-start fw-bold mb-2" id="v-pills-home-tab" data-bs-toggle="pill" data-bs-target="#tab-recall-general" type="button" role="tab">
+                                    <i class="ph-bold ph-user-circle me-2"></i> General Info
+                                </button>
+                                <button class="nav-link text-start fw-bold mb-2" id="v-pills-items-tab" data-bs-toggle="pill" data-bs-target="#tab-recall-items" type="button" role="tab">
+                                    <i class="ph-bold ph-shopping-cart me-2"></i> Items / Product
+                                </button>
+                                <button class="nav-link text-start fw-bold mb-2" id="v-pills-finance-tab" data-bs-toggle="pill" data-bs-target="#tab-recall-finance" type="button" role="tab">
+                                    <i class="ph-bold ph-currency-circle-dollar me-2"></i> Financial
+                                </button>
+                                <button class="nav-link text-start fw-bold mb-2" id="v-pills-mgmt-tab" data-bs-toggle="pill" data-bs-target="#tab-recall-mgmt" type="button" role="tab">
+                                    <i class="ph-bold ph-users-three me-2"></i> Management
+                                </button>
+                                <button class="nav-link text-start fw-bold mb-2" id="v-pills-docs-tab" data-bs-toggle="pill" data-bs-target="#tab-recall-docs" type="button" role="tab">
+                                    <i class="ph-bold ph-files me-2"></i> Documents
+                                </button>
+                            </div>
+
+                            <div class="tab-content p-4 w-100" id="v-pills-tabContent" style="max-height: 70vh; overflow-y: auto;">
+                                
+                                <div class="tab-pane fade show active" id="tab-recall-general" role="tabpanel">
+                                    <h6 class="fw-bold text-primary border-bottom pb-2 mb-3">Informasi Utama Customer</h6>
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-bold text-dark">Customer Name</label>
+                                            <input type="text" class="form-control" name="name" id="recall_name" required>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-bold text-dark">Sort Name / Alias</label>
+                                            <input type="text" class="form-control" name="sort_name" id="recall_sort_name">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-bold text-dark">Email</label>
+                                            <input type="email" class="form-control" name="email" id="recall_email" required>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-bold text-dark">No PKD (Readonly)</label>
+                                            <input type="text" class="form-control bg-light" name="no_pkd" id="recall_no_pkd" readonly>
+                                        </div>
+                                        <div class="col-12">
+                                            <label class="form-label small fw-bold text-dark">Main Address</label>
+                                            <input type="text" class="form-control mb-2" name="address1" id="recall_address1" placeholder="Line 1" required>
+                                            <div class="d-flex gap-2">
+                                                <input type="text" class="form-control" name="address2" id="recall_address2" placeholder="Line 2">
+                                                <input type="text" class="form-control" name="address3" id="recall_address3" placeholder="Line 3">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label small fw-bold text-dark">City</label>
+                                            <input type="text" class="form-control" name="city" id="recall_city" required>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label small fw-bold text-dark">Area</label>
+                                            <input type="text" class="form-control" name="area" id="recall_area" required>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label small fw-bold text-dark">Postal Code</label>
+                                            <input type="text" class="form-control" name="postal_code" id="recall_postal_code" required>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="tab-pane fade" id="tab-recall-items" role="tabpanel">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <h6 class="fw-bold text-primary mb-0">Daftar Item / Produk</h6>
+                                        <button type="button" class="btn btn-sm btn-primary rounded-pill px-3" id="btn-recall-add-item">
+                                            <i class="ph-bold ph-plus me-1"></i> Tambah Item
+                                        </button>
+                                    </div>
+                                    <div class="table-responsive border rounded">
+                                        <table class="table table-hover align-middle mb-0" id="recall_items_table">
+                                            <thead class="bg-light">
+                                                <tr>
+                                                    <th class="ps-4 fw-bold text-dark" width="40%">Nama Item</th>
+                                                    <th class="fw-bold text-dark" width="20%">Qty</th>
+                                                    <th class="fw-bold text-dark" width="30%">Harga (Est)</th>
+                                                    <th width="10%" class="text-center fw-bold text-dark">Aksi</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="recall_items_body"></tbody>
+                                        </table>
+                                    </div>
+                                    <div id="recall_no_items" class="text-center py-5 text-muted bg-white border rounded mt-2">
+                                        <i class="ph-duotone ph-basket f-s-32 mb-2"></i>
+                                        <p class="mb-0">Belum ada item ditambahkan.</p>
+                                    </div>
+                                </div>
+
+                                <div class="tab-pane fade" id="tab-recall-finance" role="tabpanel">
+                                    <h6 class="fw-bold text-primary border-bottom pb-2 mb-3">Financial Settings</h6>
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-bold text-dark">Account Group</label>
+                                            <select class="form-select select2-recall" id="recall_account_group" name="account_group" style="width: 100%;" required>
+                                                @foreach ($accountgroup as $ag)
+                                                    <option value="{{ $ag->id }}" data-bank_garansi="{{ $ag->bank_garansi }}">{{ $ag->name_account_group }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-bold text-dark">Customer Class</label>
+                                            <select class="form-select select2-recall" id="recall_customer_class" name="customer_class" style="width: 100%;" required>
+                                                @foreach ($customerClass as $cc)
+                                                    <option value="{{ $cc->id }}">{{ $cc->name_class }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label small fw-bold text-dark">Term of Payment</label>
+                                            <select class="form-select select2-recall" name="term_of_payment" id="recall_term_of_payment" style="width:100%" required>
+                                                @foreach ($top as $t)
+                                                    <option value="{{ $t->name_top }}">{{ $t->desc_top }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label small fw-bold text-dark">Credit Limit</label>
+                                            <input type="text" class="form-control" name="credit_limit" id="recall_credit_limit" required>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label small fw-bold text-dark">Bank Garansi</label>
+                                            <select class="form-select select2-recall" name="bank_garansi" id="recall_bank_garansi" style="width:100%" required>
+                                                <option value="YA">Yes</option>
+                                                <option value="TIDAK">No</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label small fw-bold text-dark">Output Tax</label>
+                                            <select class="form-select select2-recall" name="output_tax" id="recall_output_tax" style="width:100%" required>
+                                                <option value="Terhutang PPN">Terhutang PPN</option>
+                                                <option value="NON-PPN">Tidak Terhutang (NON-PPN)</option>
+                                                <option value="PPN">PPN</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label small fw-bold text-dark">CCAR</label>
+                                            <select class="form-select select2-recall" name="ccar" id="recall_ccar" style="width:100%" required>
+                                                <option value="smd_idr">SMD (IDR)</option>
+                                                <option value="smd_usd">SMD USD</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="col-12 mt-4">
+                                            <h6 class="fw-bold text-dark border-bottom pb-2 mb-3"><i class="ph-bold ph-receipt me-2"></i>Billing Information</h6>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold small text-dark text-uppercase">Billing Contact Name</label>
+                                            <input type="text" class="form-control" name="penagihan_nama_kontak" id="recall_penagihan_nama_kontak">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold small text-dark text-uppercase">Billing Phone</label>
+                                            <input type="text" class="form-control" name="penagihan_telepon" id="recall_penagihan_telepon">
+                                        </div>
+                                        <div class="col-12">
+                                            <label class="form-label fw-bold small text-dark text-uppercase">Billing Address</label>
+                                            <textarea class="form-control" name="penagihan_address" id="recall_penagihan_address" rows="2"></textarea>
+                                        </div>
+                                        <div class="col-12">
+                                            <label class="form-label fw-bold small text-dark text-uppercase">Correspondence Address</label>
+                                            <textarea class="form-control" name="surat_menyurat_address" id="recall_surat_menyurat_address" rows="2"></textarea>
+                                        </div>
+
+
+                                        <div class="col-12 mt-4">
+                                            <h6 class="fw-bold text-dark border-bottom pb-2 mb-3"><i class="ph-bold ph-calculator me-2"></i>Tax Information</h6>
+                                        </div>
+
+                                        <div class="col-md-3">
+                                            <label class="form-label fw-bold small text-dark text-uppercase">NPWP Number</label>
+                                            <input type="text" class="form-control" name="npwp" id="recall_npwp" placeholder="00.000.000.0-000.000">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label fw-bold small text-dark text-uppercase">NPWP Date</label>
+                                            <input type="date" class="form-control" name="tanggal_npwp" id="recall_tanggal_npwp">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label fw-bold small text-dark text-uppercase">NPPKP Number</label>
+                                            <input type="text" class="form-control" name="nppkp" id="recall_nppkp">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label fw-bold small text-dark text-uppercase">NPPKP Date</label>
+                                            <input type="date" class="form-control" name="tanggal_nppkp" id="recall_tanggal_nppkp">
+                                        </div>
+
+                                        <div class="col-md-4 mt-3">
+                                            <label class="form-label fw-bold small text-dark text-uppercase">Tax Contact Name</label>
+                                            <input type="text" class="form-control" name="tax_contact_name" id="recall_tax_contact_name">
+                                        </div>
+                                        <div class="col-md-4 mt-3">
+                                            <label class="form-label fw-bold small text-dark text-uppercase">Tax Email</label>
+                                            <input type="email" class="form-control" name="tax_contact_email" id="recall_tax_contact_email">
+                                        </div>
+                                        <div class="col-md-4 mt-3">
+                                            <label class="form-label fw-bold small text-dark text-uppercase">Tax Phone</label>
+                                            <input type="text" class="form-control" name="tax_contact_phone" id="recall_tax_contact_phone">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="tab-pane fade" id="tab-recall-mgmt" role="tabpanel">
+                                    <h6 class="fw-bold text-primary border-bottom pb-2 mb-3">Management Personnel</h6>
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-bold text-dark">Purchasing Manager Name</label>
+                                            <input type="text" class="form-control" name="purchasing_manager_name" id="recall_purchasing_manager_name">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-bold text-dark">Purchasing Manager Email</label>
+                                            <input type="email" class="form-control" name="purchasing_manager_email" id="recall_purchasing_manager_email">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-bold text-dark">Finance Manager Name</label>
+                                            <input type="text" class="form-control" name="finance_manager_name" id="recall_finance_manager_name">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-bold text-dark">Finance Manager Email</label>
+                                            <input type="email" class="form-control" name="finance_manager_email" id="recall_finance_manager_email">
+                                        </div>
+
+                                        <div class="col-12 mt-3"><h6 class="fw-bold text-secondary border-bottom pb-1">Shipping Info</h6></div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-bold text-dark">Shipping Recipient Name</label>
+                                            <input type="text" class="form-control" name="shipping_to_name" id="recall_shipping_to_name">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-bold text-dark">Shipping Address</label>
+                                            <textarea class="form-control" name="shipping_to_address" id="recall_shipping_to_address" rows="2"></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="tab-pane fade" id="tab-recall-docs" role="tabpanel">
+                                    <h6 class="fw-bold text-primary border-bottom pb-2 mb-3">Dokumen Pendukung</h6>
+                                    <div class="mb-3 border rounded p-2 bg-white">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <label class="fw-bold small mb-0 text-dark">NPWP</label>
+                                            <div id="recall_preview_npwp"></div>
+                                        </div>
+                                        <input type="file" class="form-control form-control-sm" name="file_npwp">
+                                    </div>
+
+                                    <div class="mb-3 border rounded p-2 bg-white">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <label class="fw-bold small mb-0 text-dark">NIB / SIUP</label>
+                                            <div id="recall_preview_nib"></div>
+                                        </div>
+                                        <input type="file" class="form-control form-control-sm" name="file_nib">
+                                    </div>
+
+                                    <div class="mb-0 border rounded p-2 bg-white">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <label class="fw-bold small mb-0 text-dark">KTP Penanggung Jawab</label>
+                                            <div id="recall_preview_ktp"></div>
+                                        </div>
+                                        <input type="file" class="form-control form-control-sm" name="file_ktp">
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="modal-footer bg-white border-top py-3">
+                        <button type="button" class="btn btn-light border text-muted px-4" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-warning px-4 fw-bold shadow-sm">
+                            <i class="ph-bold ph-paper-plane-tilt me-2"></i> Submit & Resend Approval
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -581,6 +1114,11 @@
                     theme: 'bootstrap-5'
                 });
 
+                $('.select2-recall').select2({
+                    dropdownParent: $('#recallCustomerModal'),
+                    theme: 'bootstrap-5'
+                });
+
                 $('#user_id').select2({
                     dropdownParent: $('#customerModal'),
                     theme: 'bootstrap-5',
@@ -592,6 +1130,235 @@
                     dropdownParent: $('#customerModal'),
                     theme: 'bootstrap-5',
                     placeholder: 'Select Option'
+                });
+
+                function addRecallItemRow(name = '', qty = '', price = '') {
+                    const index = $('#recall_items_body tr').length;
+                    const row = `
+                        <tr class="recall-item-row">
+                            <td class="ps-4">
+                                <input type="text" class="form-control form-control-sm" 
+                                    name="items[${index}][item_name]" 
+                                    value="${name}" placeholder="Contoh: Jasa Web Dev" required>
+                            </td>
+                            <td>
+                                <input type="number" class="form-control form-control-sm" 
+                                    name="items[${index}][quantity]" 
+                                    value="${qty}" placeholder="0" min="1" required>
+                            </td>
+                            <td>
+                                <input type="number" class="form-control form-control-sm" 
+                                    name="items[${index}][price]" 
+                                    value="${price}" placeholder="0" min="0">
+                            </td>
+                            <td class="text-center">
+                                <button type="button" class="btn btn-sm text-danger btn-remove-recall-item hover-bg-light rounded-circle">
+                                    <i class="ph-bold ph-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                    $('#recall_items_body').append(row);
+                    checkRecallEmptyState();
+                }
+
+                function checkRecallEmptyState() {
+                    if ($('#recall_items_body tr').length === 0) {
+                        $('#recall_no_items').show();
+                        $('#recall_items_table').hide();
+                    } else {
+                        $('#recall_no_items').hide();
+                        $('#recall_items_table').show();
+                    }
+                }
+
+                // Event Add Item
+                $('#btn-recall-add-item').on('click', function() {
+                    addRecallItemRow();
+                });
+
+                $(document).on('click', '.btn-remove-recall-item', function() {
+                    $(this).closest('tr').remove();
+                    // Re-index names untuk array items[...]
+                    $('#recall_items_body tr').each(function(idx) {
+                        $(this).find('input').each(function() {
+                            let name = $(this).attr('name');
+                            if(name) {
+                                const newName = name.replace(/items\[\d+\]/, `items[${idx}]`);
+                                $(this).attr('name', newName);
+                            }
+                        });
+                    });
+                    checkRecallEmptyState();
+                });
+
+                $(document).on('click', '.btn-recall-customer', function() {
+                    let btn = $(this);
+                    
+                    // 1. Ambil DATA JSON LENGKAP dari attribute button
+                    // (Ini kunci agar data tidak hilang/terpotong)
+                    let rawData = btn.attr('data-json'); 
+                    let data = {};
+                    
+                    try {
+                        data = JSON.parse(rawData);
+                    } catch(e) {
+                        console.error("Gagal parse data JSON recall:", e);
+                        Swal.fire('Error', 'Gagal memuat data customer.', 'error');
+                        return;
+                    }
+
+                    // Reset Form & Table
+                    $('#recallCustomerForm')[0].reset();
+                    $('#recall_items_body').empty();
+                    
+                    // Set ID & Reset Tabs ke awal
+                    $('#recall_customer_id').val(data.id);
+                    $('.nav-pills button:first').tab('show'); 
+
+                    // --- 2. POPULATE FIELDS (Mapping JSON ke ID Input) ---
+                    
+                    // Select2 Fields (Set Value & Trigger Change)
+                    $('#recall_user_id').val(data.user_id);
+                    $('#recall_account_group').val(data.account_group).trigger('change');
+                    $('#recall_customer_class').val(data.customer_class).trigger('change');
+                    $('#recall_term_of_payment').val(data.term_of_payment).trigger('change');
+                    
+                    // Perbaikan Logika BG (Boolean/String conversion)
+                    let bgVal = (data.bank_garansi == '1' || data.bank_garansi == 'YA') ? 'YA' : 'TIDAK';
+                    $('#recall_bank_garansi').val(bgVal).trigger('change');
+
+                    $('#recall_output_tax').val(data.output_tax).trigger('change');
+                    $('#recall_ccar').val(data.ccar).trigger('change');
+
+                    // Text Inputs (General)
+                    $('#recall_name').val(data.name);
+                    $('#recall_sort_name').val(data.sort_name);
+                    $('#recall_email').val(data.email);
+                    $('#recall_no_pkd').val(data.no_pkd);
+                    
+                    // Address Inputs
+                    $('#recall_address1').val(data.address1);
+                    $('#recall_address2').val(data.address2);
+                    $('#recall_address3').val(data.address3);
+                    $('#recall_city').val(data.city);
+                    $('#recall_area').val(data.area);
+                    $('#recall_postal_code').val(data.postal_code);
+                    $('#recall_credit_limit').val(data.credit_limit);
+
+                    // Management & Shipping (Previously Hidden/Missing)
+                    $('#recall_shipping_to_name').val(data.shipping_to_name);
+                    $('#recall_shipping_to_address').val(data.shipping_to_address);
+                    
+                    $('#recall_purchasing_manager_name').val(data.purchasing_manager_name);
+                    $('#recall_purchasing_manager_email').val(data.purchasing_manager_email);
+                    $('#recall_finance_manager_name').val(data.finance_manager_name);
+                    $('#recall_finance_manager_email').val(data.finance_manager_email);
+
+                    // Billing & Tax
+                    $('#recall_penagihan_nama_kontak').val(data.penagihan_nama_kontak);
+                    $('#recall_penagihan_telepon').val(data.penagihan_telepon);
+                    $('#recall_penagihan_address').val(data.penagihan_address);
+                    $('#recall_surat_menyurat_address').val(data.surat_menyurat_address);
+
+                    $('#recall_npwp').val(data.npwp);
+                    $('#recall_tanggal_npwp').val(data.tanggal_npwp);
+                    $('#recall_nppkp').val(data.nppkp);
+                    $('#recall_tanggal_nppkp').val(data.tanggal_nppkp);
+                    $('#recall_tax_contact_name').val(data.tax_contact_name);
+                    $('#recall_tax_contact_email').val(data.tax_contact_email);
+                    $('#recall_tax_contact_phone').val(data.tax_contact_phone);
+
+                    // --- 3. POPULATE ITEMS ---
+                    if (data.items && data.items.length > 0) {
+                        data.items.forEach(item => {
+                            // Panggil function addRecallItemRow yang sudah ada di script Anda
+                            addRecallItemRow(item.item_name, item.quantity, item.price);
+                        });
+                    } else {
+                        checkRecallEmptyState(); // Show empty state
+                    }
+
+                    // --- 4. POPULATE FILE PREVIEWS ---
+                    function createPreviewBtn(path, title) {
+                        if(path && !path.includes('null')) {
+                            return `
+                                <button type="button" class="btn btn-xs btn-primary btn-view-file-trigger rounded-pill"
+                                    data-path="${path}"
+                                    data-title="${title} - EXISTING">
+                                    <i class="ph-bold ph-eye me-1"></i> Preview
+                                </button>
+                            `;
+                        }
+                        return '<span class="badge bg-secondary opacity-50">Empty</span>';
+                    }
+
+                    $('#recall_preview_npwp').html(createPreviewBtn(data.file_npwp_path, 'NPWP'));
+                    $('#recall_preview_nib').html(createPreviewBtn(data.file_nib_path, 'NIB'));
+                    $('#recall_preview_ktp').html(createPreviewBtn(data.file_ktp_path, 'KTP'));
+
+                    // Show Modal
+                    $('#recallCustomerModal').modal('show');
+                });
+
+                // --- SUBMIT RECALL ---
+                $('#recallCustomerForm').on('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const id = $('#recall_customer_id').val();
+                    const formData = new FormData(this);
+                    const url = `/customers/${id}/recall`; 
+
+                    Swal.fire({
+                        title: 'Konfirmasi Recall',
+                        text: "Data akan diajukan ulang (Resubmit) dan status kembali Pending. Pastikan revisi sudah benar.",
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonColor: '#ffc107',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Ya, Submit!',
+                        cancelButtonText: 'Batal'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            Swal.fire({
+                                title: 'Processing...',
+                                html: 'Sedang menyimpan perubahan...',
+                                allowOutsideClick: false,
+                                didOpen: () => { Swal.showLoading(); }
+                            });
+
+                            $.ajax({
+                                url: url,
+                                method: 'POST',
+                                data: formData,
+                                processData: false,
+                                contentType: false,
+                                success: function(response) {
+                                    Swal.close();
+                                    if(response.success) {
+                                        Swal.fire({
+                                            icon: 'success',
+                                            title: 'Recall Berhasil!',
+                                            text: response.message,
+                                            timer: 2000,
+                                            showConfirmButton: false
+                                        }).then(() => {
+                                            $('#recallCustomerModal').modal('hide');
+                                            $('#customerTable').DataTable().ajax.reload();
+                                        });
+                                    } else {
+                                        Swal.fire('Gagal!', response.message, 'error');
+                                    }
+                                },
+                                error: function(xhr) {
+                                    Swal.close();
+                                    let msg = 'Terjadi kesalahan server.';
+                                    if(xhr.responseJSON && xhr.responseJSON.message) msg = xhr.responseJSON.message;
+                                    Swal.fire('Error!', msg, 'error');
+                                }
+                            });
+                        }
+                    });
                 });
 
                 $('#customerForm').on('submit', function(e) {
@@ -965,8 +1732,7 @@
                             className: 'text-center dt-no-wrap'
                         }
                     ],
-                    order: [[1, 'desc']],
-                    // Opsional: Atur lebar kolom otomatis
+                    order: [],
                     autoWidth: false
                 });
 
@@ -1062,138 +1828,109 @@
                 $(document).on('click', '.btn-show-customer', function() {
                     const btn = $(this);
 
-                    $('#customerForm')[0].reset();
-                    $('#customerModalLabel').html('<i class="ph-bold ph-eye"></i> View Customer Details (Read Only)');
-                    $('#preview_npwp, #preview_nib, #preview_ktp').hide();
-                    $('#preview_npwp a, #preview_nib a, #preview_ktp a').attr('href', '#')
-                    $('input[type="file"]').prop('required', false);
-                    $('#user_id').val(btn.data('user_id')).trigger('change');
+                    // 1. HEADER & STATUS
+                    $('#view_header_name').text(btn.data('name'));
+                    $('#view_header_code').text(btn.data('code') || 'New');
 
-                    setTimeout(() => {
-                        $('#account_group').val(btn.data('account_group')).trigger('change');
-                        $('#customer_class').val(btn.data('customer_class')).trigger('change');
-                        $('#term_of_payment').val(btn.data('term_of_payment')).trigger('change');
+                    // Status Badges
+                    const status = btn.data('status');
+                    $('#view_status_badge').text(status)
+                        .removeClass('bg-success bg-secondary')
+                        .addClass(status === 'Active' ? 'bg-success' : 'bg-secondary');
 
-                        let outTax = btn.data('output_tax');
-                        $('#output_tax').val(outTax).trigger('change');
+                    const approval = btn.data('status_approval');
+                    let approvalColor = 'text-muted';
+                    if(approval === 'Approved') approvalColor = 'text-success';
+                    if(approval === 'Rejected') approvalColor = 'text-danger';
+                    if(approval === 'Processing') approvalColor = 'text-primary';
+                    $('#view_approval_badge').text(approval).attr('class', 'fw-bold ' + approvalColor);
 
-                        let bgVal = btn.data('bank_garansi');
-                        if(!bgVal) {
-                            const agSel = $('#account_group').find(':selected');
-                            bgVal = agSel.data('bank_garansi') == 1 ? 'YA' : 'TIDAK';
-                        }
-                        $('#bank_garansi').val(bgVal).trigger('change');
+                    // (Opsional) Tambahkan created_at/updated_at jika ada datanya di controller
+                    // $('#view_updated_at').text(btn.data('updated_at') || '-');
 
-                        let ccarVal = btn.data('ccar');
-                        if(!ccarVal) {
-                            const agSel = $('#account_group').find(':selected');
-                            ccarVal = agSel.data('ccar');
-                        }
-                        $('#ccar').val(ccarVal).trigger('change');
+                    // 2. GENERAL INFO
+                    $('#view_name').text(btn.data('name'));
+                    $('#view_sort_name').text(btn.data('sort_name') || '-');
+                    $('#view_email').text(btn.data('email'));
+                    $('#view_no_pkd').text(btn.data('no_pkd') || '-');
 
-                        $('#customerForm').find('input, textarea, select').prop('disabled', true);
-                    }, 100);
+                    const addr1 = btn.data('address1') || '';
+                    const addr2 = btn.data('address2') ? ', ' + btn.data('address2') : '';
+                    const addr3 = btn.data('address3') ? ', ' + btn.data('address3') : '';
+                    $('#view_full_address').text(addr1 + addr2 + addr3);
 
-                    const setupDocPreview = (elementId, path, typeName) => {
-                        if (path && path.length > 15 && !path.includes('null')) {
-                            $(elementId).show();
-                            $(elementId + ' a.file-link')
-                                .attr('href', path)
-                                .data('type', typeName) 
-                                .html(`<i class="ph-bold ph-eye me-1"></i> View ${typeName}`);
-                        } else {
-                            $(elementId).hide();
-                        }
-                    };
+                    $('#view_city').text(btn.data('city'));
+                    $('#view_area').text(btn.data('area'));
+                    $('#view_postal_code').text(btn.data('postal_code'));
 
-                    setupDocPreview('#preview_npwp', btn.data('file_npwp_path'), 'NPWP');
-                    setupDocPreview('#preview_nib', btn.data('file_nib_path'), 'NIB/SIUP');
-                    setupDocPreview('#preview_ktp', btn.data('file_ktp_path'), 'KTP');
+                    // 3. FINANCIAL
+                    const cl = parseFloat(btn.data('credit_limit')) || 0;
+                    $('#view_credit_limit').text('IDR ' + cl.toLocaleString('id-ID'));
+                    $('#view_top').text(btn.data('term_of_payment'));
 
-                    $('#name').val(btn.data('name'));
-                    $('#code').val(btn.data('code'));
-                    $('#no_pkd').val(btn.data('no_pkd') || '');
-                    $('#address1').val(btn.data('address1'));
-                    $('#address2').val(btn.data('address2'));
-                    $('#address3').val(btn.data('address3'));
-                    $('#city').val(btn.data('city'));
-                    $('#postal_code').val(btn.data('postal_code'));
-                    $('#country').val(btn.data('country'));
-                    $('#email').val(btn.data('email'));
-                    $('#area').val(btn.data('area'));
-                    $('#join_date').val(btn.data('join_date'));
+                    $('#view_npwp').text(btn.data('npwp'));
+                    $('#view_tanggal_npwp').text(btn.data('tanggal_npwp') || '-');
+                    $('#view_nppkp').text(btn.data('nppkp'));
+                    $('#view_output_tax').text(btn.data('output_tax'));
 
-                    $('#shipping_to_name').val(btn.data('shipping_to_name'));
-                    $('#shipping_to_address').val(btn.data('shipping_to_address'));
+                    $('#view_penagihan_nama').text(btn.data('penagihan_nama_kontak'));
+                    $('#view_penagihan_telp').text(btn.data('penagihan_telepon'));
+                    $('#view_penagihan_addr').text(btn.data('penagihan_address'));
 
-                    $('#purchasing_manager_name').val(btn.data('purchasing_manager_name'));
-                    $('#purchasing_manager_email').val(btn.data('purchasing_manager_email'));
-                    $('#finance_manager_name').val(btn.data('finance_manager_name'));
-                    $('#finance_manager_email').val(btn.data('finance_manager_email'));
+                    // 4. MANAGEMENT
+                    $('#view_purc_name').text(btn.data('purchasing_manager_name'));
+                    $('#view_purc_email').text(btn.data('purchasing_manager_email'));
+                    $('#view_fin_name').text(btn.data('finance_manager_name'));
+                    $('#view_fin_email').text(btn.data('finance_manager_email'));
+                    $('#view_tax_name').text(btn.data('tax_contact_name'));
+                    $('#view_tax_email').text(btn.data('tax_contact_email'));
 
-                    $('#penagihan_nama_kontak').val(btn.data('penagihan_nama_kontak'));
-                    $('#penagihan_telepon').val(btn.data('penagihan_telepon'));
-                    $('#penagihan_address').val(btn.data('penagihan_address'));
-                    $('#surat_menyurat_address').val(btn.data('surat_menyurat_address'));
-                    $('#sort_name').val(btn.data('sort_name'));
+                    $('#view_shipping_name').text(btn.data('shipping_to_name'));
+                    $('#view_shipping_address').text(btn.data('shipping_to_address'));
 
-                    $('#tax_contact_name').val(btn.data('tax_contact_name'));
-                    $('#tax_contact_email').val(btn.data('tax_contact_email'));
-                    $('#tax_contact_phone').val(btn.data('tax_contact_phone'));
-                    $('#npwp').val(btn.data('npwp'));
-                    $('#tanggal_npwp').val(btn.data('tanggal_npwp'));
-                    $('#nppkp').val(btn.data('nppkp'));
-                    $('#tanggal_nppkp').val(btn.data('tanggal_nppkp'));
-                    $('#no_pengukuhan_kaber').val(btn.data('no_pengukuhan_kaber') || '-');
+                    // 5. DOCUMENTS
+                    const docs = [
+                        { name: 'NPWP Document', path: btn.data('file_npwp_path'), icon: 'ph-file-text' },
+                        { name: 'NIB / SIUP', path: btn.data('file_nib_path'), icon: 'ph-file-code' },
+                        { name: 'KTP Penanggung Jawab', path: btn.data('file_ktp_path'), icon: 'ph-cardholder' }
+                    ];
 
-                    $('#output_tax').val(btn.data('output_tax'));
-                    $('#term_of_payment').val(btn.data('term_of_payment')).trigger('change');
-                    $('#lead_time').val(btn.data('lead_time'));
-                    $('#credit_limit').val(btn.data('credit_limit'));
-                    $('#ccar').val(btn.data('ccar'));
-                    $('#bank_garansi').val(btn.data('bank_garansi'));
+                    let docHtml = '';
+                    let hasDoc = false;
 
-                    const npwpPath = btn.data('file_npwp_path');
-                    if (npwpPath && npwpPath.length > 10) {
-                        $('#preview_npwp a.file-link').attr('href', npwpPath);
-                        $('#preview_npwp').show();
-                    }
-
-                    const nibPath = btn.data('file_nib_path');
-                    if (nibPath && nibPath.length > 10) {
-                        $('#preview_nib a.file-link').attr('href', nibPath);
-                        $('#preview_nib').show();
-                    }
-
-                    const ktpPath = btn.data('file_ktp_path');
-                    if (ktpPath && ktpPath.length > 10) {
-                        $('#preview_ktp a.file-link').attr('href', ktpPath);
-                        $('#preview_ktp').show();
-                    }
-
-                    $('input[type="file"]').prop('disabled', true);
-                    $('#btn-save-customer').hide();
-                    $('#customerForm').find('input, textarea').prop('disabled', true);
-                    $('#customerModal').modal('show');
-                });
-
-                $(document).on('click', '.delete-customer-btn', function(e) {
-                    e.preventDefault();
-                    const form = $(this).closest('form');
-
-                    Swal.fire({
-                        title: 'Are you sure?',
-                        text: "You won't be able to revert this!",
-                        icon: 'warning',
-                        showCancelButton: true,
-                        confirmButtonColor: '#d33',
-                        cancelButtonColor: '#3085d6',
-                        confirmButtonText: 'Yes, delete it!'
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            form.submit();
+                    docs.forEach(doc => {
+                        if(doc.path && typeof doc.path === 'string' && doc.path.length > 20 && !doc.path.includes('null')) {
+                            hasDoc = true;
+                            docHtml += `
+                                <div class="col-md-4">
+                                    <div class="card h-100 border border-secondary border-opacity-25 shadow-sm hover-shadow transition-all">
+                                        <div class="card-body text-center p-3">
+                                            <div class="bg-light rounded p-2 mb-2 d-inline-block">
+                                                <i class="ph-duotone ${doc.icon} f-s-28 text-primary"></i>
+                                            </div>
+                                            <h6 class="fw-bold text-dark f-s-14 mb-1">${doc.name}</h6>
+                                            <button class="btn btn-sm btn-primary w-100 mt-2 btn-view-file-trigger"
+                                                data-path="${doc.path}"
+                                                data-title="${doc.name}">
+                                                <i class="ph-bold ph-eye me-1"></i> Preview
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
                         }
                     });
+
+                    if(hasDoc) {
+                        $('#document_grid').html(docHtml).show();
+                        $('#no_documents').hide();
+                    } else {
+                        $('#document_grid').hide();
+                        $('#no_documents').show();
+                    }
+
+                    // Show Modal
+                    $('#customerDetailModal').modal('show');
                 });
 
                 $(document).on('click focus', '#credit_limit', function(e) {
@@ -1298,71 +2035,93 @@
                     $('#calc_products').trigger('input');
                 });
 
-                // --- UPDATE LOGIC VIEW FILE (FIT CONTENT) ---
-                $(document).on('click', '.file-link', function(e) {
-                    e.preventDefault();
-                    
-                    let fileUrl = $(this).attr('href');
-                    let fileType = $(this).data('type') || 'Document';
-                    let extension = fileUrl.split('.').pop().toLowerCase();
-                    
-                    // 1. Reset Judul & Loading
-                    $('#fileViewerTitle').html(`<i class="ph-bold ph-eye me-2"></i> ${fileType.toUpperCase()}`);
-                    let container = $('#fileContentArea');
-                    container.html('<div class="p-5 text-center"><div class="spinner-border text-light" role="status"></div></div>');
-                    
-                    // 2. Reset Style Modal Dulu (Supaya bersih)
-                    let dialog = $('#fileViewerDialog');
-                    dialog.removeClass('modal-xl modal-lg modal-sm');
-                    dialog.attr('style', ''); // Reset inline styles
+                $(document).ready(function() {
+                    $(document).on('click', '.btn-view-file-trigger', function(e) {
+                        e.preventDefault();
 
-                    // 3. Tampilkan Modal
-                    $('#fileViewerModal').modal('show');
+                        let filePath = $(this).data('path');
+                        const title = $(this).data('title');
 
-                    // 4. Render Konten (Delay sedikit agar transisi smooth)
-                    setTimeout(() => {
-                        if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension)) {
-                            // --- MODE GAMBAR (FIT CONTENT) ---
-                            
-                            // Trik CSS: Ubah modal jadi "fit-content" agar membungkus gambar
-                            dialog.css({
-                                'max-width': 'fit-content',
-                                'width': 'auto',
-                                'margin-left': 'auto',
-                                'margin-right': 'auto'
+                        console.log('Mencoba buka file:', filePath);
+
+                        if (!filePath || filePath.trim() === '' || filePath.endsWith('/storage/')) {
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'File Kosong',
+                                text: 'Belum ada dokumen fisik yang diupload untuk data ini.',
+                                confirmButtonColor: '#3085d6'
                             });
-
-                            container.html(`
-                                <img src="${fileUrl}" 
-                                    class="d-block" 
-                                    style="max-height: 85vh; max-width: 90vw; width: auto; height: auto;" 
-                                    alt="Preview">
-                            `);
-
-                        } else if (extension === 'pdf') {
-                            // --- MODE PDF (FULL LEBAR) ---
-                            
-                            // PDF butuh lebar, jadi kita pakai modal-xl bawaan bootstrap
-                            dialog.addClass('modal-xl');
-                            
-                            container.html(`
-                                <iframe src="${fileUrl}" style="width: 100%; height: 85vh; border: none;"></iframe>
-                            `);
-
-                        } else {
-                            // --- MODE LAINNYA ---
-                            dialog.addClass('modal-lg');
-                            container.html(`
-                                <div class="text-center py-5 text-white">
-                                    <i class="ph-duotone ph-file-x fs-1 mb-3"></i>
-                                    <div class="mb-3">Preview tidak tersedia untuk format .${extension}</div>
-                                    <a href="${fileUrl}" target="_blank" class="btn btn-primary">
-                                        <i class="ph-bold ph-download-simple me-2"></i> Download File
-                                    </a>
-                                </div>
-                            `);
+                            return;
                         }
-                    }, 300); // Delay 300ms cukup
+
+                        $('#fileViewerTitle').html(`<i class="ph-bold ph-eye me-2"></i> ${title.toUpperCase()}`);
+                        let container = $('#fileContentArea');
+
+                        container.html(`
+                            <div class="text-center py-5">
+                                <div class="spinner-border text-light mb-3" role="status"></div>
+                                <div class="text-white-50">Sedang memuat file...</div>
+                            </div>
+                        `);
+
+                        $('#fileViewerModal').modal('show');
+
+                        let cleanPath = filePath.split('?')[0];
+                        let extension = cleanPath.split('.').pop().toLowerCase();
+                        let dialog = $('#fileViewerDialog');
+
+                        dialog.removeClass('modal-xl modal-lg modal-sm').attr('style', '');
+
+                        setTimeout(() => {
+                            if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension)) {
+                                dialog.css('max-width', 'fit-content');
+
+                                container.html(`
+                                    <img src="${filePath}"
+                                        class="d-block shadow-lg rounded"
+                                        style="max-height: 85vh; max-width: 90vw; border: 1px solid #555;"
+                                        alt="Preview"
+                                        onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'text-center py-5\'><i class=\'ph-duotone ph-warning-circle text-danger f-s-48 mb-3\'></i><h5 class=\'text-white\'>Gagal Memuat Gambar</h5><p class=\'text-white-50 small\'>File tidak ditemukan di server.<br>Coba jalankan: <code>php artisan storage:link</code></p></div>';"
+                                    >
+                                `);
+                            }
+                            else if (extension === 'pdf') {
+                                dialog.addClass('modal-xl');
+                                container.html(`
+                                    <iframe src="${filePath}"
+                                            style="width: 100%; height: 85vh; border: none; background: white;"
+                                            allowfullscreen>
+                                    </iframe>
+                                `);
+                            }
+                            else {
+                                dialog.addClass('modal-lg');
+                                container.html(`
+                                    <div class="text-center py-5 text-white">
+                                        <i class="ph-duotone ph-file-arrow-down f-s-48 mb-3 opacity-50"></i>
+                                        <p>Preview tidak tersedia untuk format <b>.${extension}</b></p>
+                                        <a href="${filePath}" target="_blank" class="btn btn-primary rounded-pill px-4">
+                                            <i class="ph-bold ph-download-simple me-2"></i> Download File
+                                        </a>
+                                    </div>
+                                `);
+                            }
+                        }, 300);
+                    });
+
+                    $('#fileViewerModal').on('show.bs.modal', function () {
+                        $(this).css('z-index', '1060');
+                        setTimeout(function() {
+                            $('.modal-backdrop').last().css('z-index', '1055');
+                        }, 10);
+                    });
+
+                    $('#fileViewerModal').on('hidden.bs.modal', function () {
+                        if ($('.modal.show').length > 0) {
+                            $('body').addClass('modal-open');
+                        }
+                    });
+
                 });
 
                 $('#creditCalcForm').on('submit', function(e) {
