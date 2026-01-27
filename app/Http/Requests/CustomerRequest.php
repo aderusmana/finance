@@ -31,8 +31,8 @@ class CustomerRequest extends FormRequest
             // --- 3. Documents (File Uploads) ---
             // Validasi file: Wajib, harus file, tipe pdf/jpg/png, max 5MB (5120KB)
             'file_npwp' => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120',
-            'file_nib'  => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120',
-            'file_ktp'  => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'file_nib'  => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'file_ktp'  => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
 
             // --- 4. General Info ---
             'name' => 'required|string|max:255',
@@ -100,11 +100,9 @@ class CustomerRequest extends FormRequest
             'file_npwp.mimes'    => 'Format file NPWP harus PDF, JPG, atau PNG.',
             'file_npwp.max'      => 'Ukuran file NPWP maksimal 5MB.',
             // NIB/SIUP
-            'file_nib.required' => 'Dokumen NIB/SIUP wajib diupload.',
             'file_nib.mimes'    => 'Format file NIB/SIUP harus PDF, JPG, atau PNG.',
             'file_nib.max'      => 'Ukuran file NIB/SIUP maksimal 5MB.',
             // KTP
-            'file_ktp.required' => 'Dokumen KTP wajib diupload.',
             'file_ktp.mimes'    => 'Format file KTP harus PDF, JPG, atau PNG.',
             'file_ktp.max'      => 'Ukuran file KTP maksimal 5MB.',
 

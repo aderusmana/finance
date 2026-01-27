@@ -127,6 +127,14 @@ class CustomerController extends Controller
                 $row->load('items');
                 $rowData = $row->toArray();
 
+                $lastRejectLog = ApprovalLog::where('category', 'Customer')
+                    ->where('related_id', $row->id)
+                    ->where('status', 'Rejected')
+                    ->latest('updated_at')
+                    ->first();
+                
+                $rowData['reject_note'] = $lastRejectLog ? $lastRejectLog->notes : 'Tidak ada catatan rejection.';
+
                 $rowData['tanggal_npwp']  = $row->tanggal_npwp ? Carbon::parse($row->tanggal_npwp)->format('Y-m-d') : null;
                 $rowData['tanggal_nppkp'] = $row->tanggal_nppkp ? Carbon::parse($row->tanggal_nppkp)->format('Y-m-d') : null;
 
@@ -192,9 +200,9 @@ class CustomerController extends Controller
                 $btn = '<div class="d-flex gap-2">';
 
                 if ($row->status_approval === 'Rejected') {
-                    $btn .= '<button type="button" class="btn btn-warning btn-recall-customer shadow-sm" 
-                                data-json="' . $jsonRow . '" 
-                                data-bs-toggle="tooltip" 
+                    $btn .= '<button type="button" class="btn btn-warning btn-recall-customer shadow-sm"
+                                data-json="' . $jsonRow . '"
+                                data-bs-toggle="tooltip"
                                 title="Recall / Revisi Pengajuan">
                                 <i class="ph-bold ph-arrow-u-up-left text-white"></i>
                              </button>';
@@ -204,12 +212,18 @@ class CustomerController extends Controller
                             <i class="fa-solid fa-eye text-white"></i>
                         </button>';
 
-                $btn .= '<form action="' . route('customers.destroy', $row->id) . '" method="POST" class="delete-form delete-customer-btn" style="display:inline;">
-                            ' . csrf_field() . method_field('DELETE') . '
-                            <button type="submit" class="btn btn-danger" title="Hapus Data">
-                            <i class="fas fa-trash-alt text-white"></i>
-                            </button>
-                        </form>';
+                if ($row->status_approval === 'Pending' || $row->status_approval === 'Rejected') {
+                    $btn .= '<form action="' . route('customers.destroy', $row->id) . '" method="POST" class="delete-form delete-customer-btn" style="display:inline;">
+                                ' . csrf_field() . method_field('DELETE') . '
+                                <button type="submit" class="btn btn-danger" title="Hapus Data">
+                                <i class="fas fa-trash-alt text-white"></i>
+                                </button>
+                            </form>';
+                } else {
+                    $btn .= '<button type="button" class="btn btn-secondary" title="Tidak bisa dihapus (Approval sedang berjalan/selesai)" onclick="Swal.fire(\'Action Locked\', \'Data tidak dapat dihapus karena proses approval sudah berjalan (Status: ' . $row->status_approval . ').\', \'info\')">
+                                <i class="fas fa-lock text-white"></i>
+                             </button>';
+                }
 
                 $btn .= '</div>';
                 return $btn;
@@ -234,9 +248,9 @@ class CustomerController extends Controller
             ->addColumn('status_approval', function ($row) {
                 $baseClass = match($row->status_approval) {
                     'Approved', 'Completed' => 'bg-success',
-                    'Rejected', 'Canceled' => 'bg-danger', 
-                    'Processing' => 'bg-primary', 
-                    'Pending' => 'bg-warning', 
+                    'Rejected', 'Canceled' => 'bg-danger',
+                    'Processing' => 'bg-primary',
+                    'Pending' => 'bg-warning',
                     default => 'bg-secondary'
                 };
 
@@ -270,7 +284,7 @@ class CustomerController extends Controller
         $top = TOP::all();
         $accountgroup = AccountGroup::all();
         $customerClass = CustomerClass::all();
-        
+
         $pendingCount = Customer::whereIn('status_approval', ['Pending', 'Processing'])->count();
         $processingCount = Customer::where('status_approval', 'Processing')->count();
         $approvedCount = Customer::whereIn('status_approval', ['Approved', 'Completed'])->count();
@@ -279,7 +293,7 @@ class CustomerController extends Controller
             $q->where('bank_garansi', '!=', 'YA')
               ->orWhereNull('bank_garansi');
         })->count();
-        
+
         $approvalStatuses = Customer::whereNotNull('status_approval')->distinct()->pluck('status_approval');
         $accountStatuses = Customer::whereNotNull('status')->distinct()->pluck('status');
 
@@ -288,7 +302,7 @@ class CustomerController extends Controller
             'processingCount', 'approvedCount', 'activeCount', 'inactiveCount', 'approvalStatuses', 'accountStatuses'
         ));
     }
-    
+
     public function recall(Request $request, $id)
     {
         $customer = Customer::findOrFail($id);
@@ -312,7 +326,7 @@ class CustomerController extends Controller
             }
             $customerData['customer_total'] = $grandTotal;
             $customerData['status_approval'] = 'Pending';
-            
+
             $customer->update($customerData);
             CustomerItem::where('customer_id', $customer->id)->delete();
             if ($request->has('items') && is_array($request->items)) {
@@ -355,12 +369,12 @@ class CustomerController extends Controller
                 ->where('category', 'Customer')
                 ->update(['status' => 'Canceled']);
 
-            $subCategory = 'CBD'; 
+            $subCategory = 'CBD';
             $newLogs = $this->generateApprovalLogs($user, $customer->id, 'Customer', $subCategory);
 
             $firstLog = ApprovalLog::where('category', 'Customer')
                 ->where('related_id', $customer->id)
-                ->where('status', 'Pending') 
+                ->where('status', 'Pending')
                 ->orderBy('level', 'asc')
                 ->first();
 
@@ -371,11 +385,11 @@ class CustomerController extends Controller
                 if ($firstApprover) {
                     try {
                         Notification::send($firstApprover, new SystemNotification(
-                            'Butuh Persetujuan (Revisi)', 
-                            "Customer <b>{$customer->name}</b> telah direvisi dan diajukan ulang.", 
-                            route('customers.approval'), 
-                            'ph-arrow-u-up-left', 
-                            'warning' 
+                            'Butuh Persetujuan (Revisi)',
+                            "Customer <b>{$customer->name}</b> telah direvisi dan diajukan ulang.",
+                            route('customers.approval'),
+                            'ph-arrow-u-up-left',
+                            'warning'
                         ));
                     } catch (\Exception $e) {
                         Log::error("Gagal kirim notif sistem recall: " . $e->getMessage());
@@ -401,7 +415,7 @@ class CustomerController extends Controller
                 if ($firstLogData) {
                     $approverNik = $firstLogData['approver_nik'];
                     $approverUser = User::where('nik', $approverNik)->first();
-                    $token = $firstLogData['token'] ?? $firstLogData->token; 
+                    $token = $firstLogData['token'] ?? $firstLogData->token;
 
                     if ($approverUser && $approverUser->email) {
                         $recipients = [
@@ -411,6 +425,7 @@ class CustomerController extends Controller
                                 'name' => $approverUser->name,
                                 'level' => 1,
                                 'is_first' => true,
+                                'is_it' => $approverUser->hasRole('it')
                             ]
                         ];
 
@@ -657,6 +672,7 @@ class CustomerController extends Controller
                             'name' => $approverUser->name,
                             'level' => $firstLogData['level'],
                             'is_first' => true,
+                            'is_it' => $approverUser->hasRole('it')
                         ]
                     ];
 
@@ -737,7 +753,8 @@ class CustomerController extends Controller
             return view('page.customer.links.approval-invalid');
         }
 
-        $customer = Customer::with(['user', 'accountGroup', 'customerClass'])
+        // [UPDATE DISINI] Tambahkan 'files' agar data dokumen terpanggil
+        $customer = Customer::with(['user', 'accountGroup', 'customerClass', 'files']) 
                     ->findOrFail($log->related_id);
 
         $preSelectedAction = $request->query('pre_action', 'approve');
@@ -777,7 +794,7 @@ class CustomerController extends Controller
         $currentLog = ApprovalLog::where('token', $token)
             ->where('related_id', $customer->id)
             ->where('category', 'Customer')
-            ->where('status', 'Pending') // Pastikan hanya memproses yang Pending
+            ->where('status', 'Pending')
             ->first();
 
         if (!$currentLog) {
@@ -792,9 +809,9 @@ class CustomerController extends Controller
             if ($action === 'review' && $isFinanceAdjuster) {
                 if (request()->has('update_top') || request()->has('update_lead_time')) {
                     $customer->update([
-                        'term_of_payment' => request('update_top'), // Update TOP
-                        'lead_time'       => request('update_lead_time'), // Update Lead Time
-                        'credit_limit'    => request('update_credit_limit_value') // Update Credit Limit Hasil Hitung Ulang
+                        'term_of_payment' => request('update_top'),
+                        'lead_time'       => request('update_lead_time'),
+                        'credit_limit'    => request('update_credit_limit_value')
                     ]);
 
                     $notes .= "\n[System]: Terms & Limit adjusted by Finance (" . $actor->name . ")";
@@ -894,30 +911,29 @@ class CustomerController extends Controller
 
             // --- 3. Cek Alur Selanjutnya ---
             if ($dbStatus === 'Approved') {
-
-                // Cek apakah ada level selanjutnya di database
                 $nextLevel = $currentLog->level + 1;
                 $nextLog = ApprovalLog::where('category', 'Customer')
                     ->where('related_id', $customer->id)
                     ->where('level', $nextLevel)
+                    ->where('status', 'Pending')
+                    ->latest('id')
                     ->first();
 
                 if ($nextLog) {
-                    // --- KASUS A: MASIH ADA LEVEL SELANJUTNYA ---
+                    if (empty($nextLog->token)) {
+                        $nextLog->update(['token' => Str::uuid()->toString()]);
+                        $nextLog->refresh();
+                    }
 
                     $nextApproverUser = User::where('nik', $nextLog->approver_nik)->first();
                     $nextApproverName = $nextApproverUser ? $nextApproverUser->name : $nextLog->approver_nik;
 
-                    // Update Status Customer jadi Processing
                     $customer->update([
                         'status_approval' => 'Processing',
                         'route_to' => $nextApproverName
                     ]);
 
-                    // Kirim Email ke Next Approver
                     if ($nextApproverUser) {
-
-                        // A. Kirim Notifikasi Sistem (Lonceng)
                         try {
                             Notification::send($nextApproverUser, new SystemNotification(
                                 "Butuh Persetujuan (Level {$nextLog->level})",
@@ -930,15 +946,16 @@ class CustomerController extends Controller
                             Log::error("Gagal kirim notif sistem ke next approver: " . $e->getMessage());
                         }
 
-                        // B. Kirim Email (Logika Existing)
                         if ($nextApproverUser->email) {
                             $recipients = [[
                                 'nik' => $nextApproverUser->nik,
                                 'email' => $nextApproverUser->email,
                                 'name' => $nextApproverUser->name,
                                 'level' => $nextLog->level,
-                                'is_first' => false
+                                'is_first' => false,
+                                'is_it' => $nextApproverUser->hasRole('it') 
                             ]];
+                            
                             CustomerJob::dispatch($customer->id, $recipients, $nextLog->token, 'approval');
                         }
                     } else {
@@ -1109,31 +1126,50 @@ class CustomerController extends Controller
                             <i class="ph-bold ph-user me-1"></i> ' . strtoupper($row->route_to ?? '-') . '
                         </span>';
             })
-            ->addColumn('action', function ($row) {
+            ->addColumn('action', function ($row) use ($currentUser) {
                 $token = $row->token;
                 $customerName = e($row->customer_name);
                 $customerId = $row->customer_id;
+                
                 $canAction = true;
-                $waitingMessage = "";
                 if ($row->level > 1) {
                     $prevLog = ApprovalLog::where('category', 'Customer')
                         ->where('related_id', $row->customer_id)
                         ->where('level', $row->level - 1)
+                        ->latest('id')
                         ->first();
 
                     if (!$prevLog || $prevLog->status !== 'Approved') {
                         $canAction = false;
-                        $waitingMessage = "Waiting for Level " . ($row->level - 1);
                     }
                 }
 
                 if (!$canAction) {
-                    return '<button type="button" class="btn btn-sm btn-secondary"
-                            onclick="Swal.fire(\'Locked\', \'Anda harus menunggu '. $waitingMessage .' melakukan approval terlebih dahulu.\', \'warning\')">
-                            <i class="ph-bold ph-lock-key text-white"></i> Locked
-                            </button>';
+                    return '<button type="button" class="btn btn-sm btn-secondary" onclick="Swal.fire(\'Locked\', \'Menunggu approval level sebelumnya.\', \'warning\')">
+                            <i class="ph-bold ph-lock-key text-white"></i> Locked</button>';
                 }
 
+                $btnResend = '';
+                if ($row->status === 'Pending') {
+                    $approverName = $row->approver ? $row->approver->name : $row->approver_nik;
+                    $btnResend = '<button type="button" class="btn btn-sm btn-warning btn-resend-email"
+                                    data-token="'.$token.'"
+                                    data-approver-name="'.e($approverName).'"
+                                    data-bs-toggle="tooltip" title="Resend Email Notification">
+                                    <i class="ph-bold ph-paper-plane-tilt text-white"></i>
+                                </button>';
+                }
+
+                $btnInputCode = '<button type="button" class="btn btn-sm btn-primary action-btn-modal"
+                                data-id="'.$customerId.'"
+                                data-token="'.$token.'"
+                                data-action="review"
+                                data-name="'.$customerName.'"
+                                data-bs-toggle="tooltip" title="Input Customer Code & Join Date">
+                                <i class="ph-bold ph-pencil-simple text-white me-1"></i>
+                            </button>';
+
+                // 4. Tombol Standard (Approve/Review/Reject)
                 $btnApprove = '<button type="button" class="btn btn-sm btn-success action-btn"
                                 data-id="'.$customerId.'"
                                 data-token="'.$token.'"
@@ -1158,15 +1194,21 @@ class CustomerController extends Controller
                                 data-bs-toggle="tooltip" title="Reject">
                                 <i class="ph-bold ph-thumbs-down text-white"></i></button>';
 
-                $btnResend = '';
-                if ($row->status === 'Pending') {
-                    $approverName = $row->approver ? $row->approver->name : $row->approver_nik;
-                    $btnResend = '<button type="button" class="btn btn-sm btn-warning btn-resend-email"
-                                    data-token="'.$token.'"
-                                    data-approver-name="'.e($approverName).'"
-                                    data-bs-toggle="tooltip" title="Resend Email Notification">
-                                    <i class="ph-bold ph-paper-plane-tilt text-white"></i>
-                                </button>';
+                if ($currentUser->hasRole(['it', 'IT'])) {
+                    return "<div class='d-flex gap-1 justify-content-center'>{$btnInputCode}</div>";
+                }
+
+                if ($currentUser->hasRole('super-admin')) {
+                    $targetIsIT = false;
+                    if ($row->approver && $row->approver->hasRole(['it', 'IT'])) {
+                        $targetIsIT = true;
+                    }
+
+                    if ($targetIsIT) {
+                        return "<div class='d-flex gap-1 justify-content-center'>{$btnInputCode} {$btnResend}</div>";
+                    } else {
+                        return "<div class='d-flex gap-1 justify-content-center'>{$btnApprove} {$btnReview} {$btnReject} {$btnResend}</div>";
+                    }
                 }
 
                 return "<div class='d-flex gap-1 justify-content-center'>{$btnApprove} {$btnReview} {$btnReject} {$btnResend}</div>";

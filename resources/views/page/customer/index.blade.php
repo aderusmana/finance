@@ -125,7 +125,7 @@
                 </div>
 
                 <div class="table-responsive">
-                    <table class="w-100 display" id="customerTable">
+                    <table class="w-100 display" id="sampleTable">
                         <thead>
                             <tr>
                                 <th width="5%" class="text-center">No</th>
@@ -268,9 +268,8 @@
                                             </div>
                                         </div>
                                         <div class="col-md-4">
-                                            <label class="form-label">Upload NIB/SIUP <span
-                                                    class="text-danger">*</span></label>
-                                            <input type="file" class="form-control" name="file_nib" required>
+                                            <label class="form-label">Upload NIB/SIUP</label>
+                                            <input type="file" class="form-control" name="file_nib">
                                             <div id="preview_nib" class="mt-2" style="display: none;">
                                                 <a href="#" target="_blank" class="btn btn-sm btn-outline-primary file-link">
                                                     <i class="ph-bold ph-file-text me-1"></i> View Uploaded NIB
@@ -278,9 +277,8 @@
                                             </div>
                                         </div>
                                         <div class="col-md-4">
-                                            <label class="form-label">Upload KTP <span
-                                                    class="text-danger">*</span></label>
-                                            <input type="file" class="form-control" name="file_ktp" required>
+                                            <label class="form-label">Upload KTP</label>
+                                            <input type="file" class="form-control" name="file_ktp">
                                             <div id="preview_ktp" class="mt-2" style="display: none;">
                                                 <a href="#" target="_blank" class="btn btn-sm btn-outline-primary file-link">
                                                     <i class="ph-bold ph-id-card me-1"></i> View Uploaded KTP
@@ -825,7 +823,15 @@
                         <div class="alert alert-warning border-0 rounded-0 mb-0 d-flex align-items-center px-4 py-3" role="alert">
                             <i class="ph-fill ph-info f-s-24 me-3"></i>
                             <div>
-                                <strong>Note:</strong> Proses Recall akan mereset status menjadi <strong>Process</strong> (Approval Level 1). Pastikan revisi sudah sesuai catatan reject.
+                                <strong>Note:</strong> Proses Recall akan mereset status menjadi <strong>Pending</strong> (Level 1).
+                            </div>
+                        </div>
+
+                        <div class="alert alert-danger border-0 rounded-0 mb-0 d-flex align-items-start px-4 py-3" role="alert" id="recall_reject_alert" style="display: none;">
+                            <i class="ph-fill ph-warning-circle f-s-24 me-3 mt-1"></i>
+                            <div>
+                                <strong class="d-block mb-1">Alasan Ditolak (Rejection Note):</strong>
+                                <span id="recall_reject_reason" class="fst-italic"></span>
                             </div>
                         </div>
 
@@ -1194,9 +1200,6 @@
 
                 $(document).on('click', '.btn-recall-customer', function() {
                     let btn = $(this);
-                    
-                    // 1. Ambil DATA JSON LENGKAP dari attribute button
-                    // (Ini kunci agar data tidak hilang/terpotong)
                     let rawData = btn.attr('data-json'); 
                     let data = {};
                     
@@ -1211,6 +1214,13 @@
                     // Reset Form & Table
                     $('#recallCustomerForm')[0].reset();
                     $('#recall_items_body').empty();
+
+                    if (data.reject_note && data.reject_note !== '-' && data.reject_note !== 'Tidak ada catatan rejection.') {
+                        $('#recall_reject_reason').text(data.reject_note);
+                        $('#recall_reject_alert').show(); // Tampilkan alert merah
+                    } else {
+                        $('#recall_reject_alert').hide(); // Sembunyikan jika tidak ada note
+                    }
                     
                     // Set ID & Reset Tabs ke awal
                     $('#recall_customer_id').val(data.id);
@@ -1344,7 +1354,7 @@
                                             showConfirmButton: false
                                         }).then(() => {
                                             $('#recallCustomerModal').modal('hide');
-                                            $('#customerTable').DataTable().ajax.reload();
+                                            $('#sampleTable').DataTable().ajax.reload();
                                         });
                                     } else {
                                         Swal.fire('Gagal!', response.message, 'error');
@@ -1410,7 +1420,7 @@
                                             showConfirmButton: false
                                         }).then(() => {
                                             $('#customerModal').modal('hide');
-                                            $('#customerTable').DataTable().ajax.reload();
+                                            $('#sampleTable').DataTable().ajax.reload();
                                         });
                                     } else {
                                         Swal.fire('Gagal!', response.message || 'Terjadi kesalahan.', 'error');
@@ -1429,14 +1439,14 @@
                     });
                 });
 
+                // --- LOGIC OCR NPWP (FIXED LIMIT 28 CHARS) ---
                 $(document).on('change', 'input[name="file_npwp"]', function(e) {
                     const file = this.files && this.files[0];
                     if (!file) return;
 
                     const originalBtn = $('#btn-save-customer');
                     originalBtn.prop('disabled', true);
-                    const notice = $(
-                        '<div class="mt-2 text-info" id="ocr-status">Running OCR, please wait...</div>');
+                    const notice = $('<div class="mt-2 text-info" id="ocr-status"><i class="ph-bold ph-spinner ph-spin me-1"></i> Running OCR (Limit 28 Chars)...</div>');
                     $(this).closest('.card-body').append(notice);
 
                     const reader = new FileReader();
@@ -1447,104 +1457,97 @@
                                     logger: m => console.log(m)
                                 })
                                 .then(result => {
-                                    const text = result.data && result.data.text ? result.data.text :
-                                    '';
-                                    console.log('OCR text:', text);
-                                    let npwpMatch = text.match(/\d{2}\.\d{3}\.\d{3}\.\d-\d{3}\.\d{3}/);
-                                    if (!npwpMatch) {
-                                        npwpMatch = text.match(/[0-9\.\-\s]{9,25}/);
-                                    }
-                                    const npwp = npwpMatch ? npwpMatch[0].trim() : '';
-
+                                    const text = result.data && result.data.text ? result.data.text : '';
                                     const lines = text.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
-                                    console.log('OCR lines:', lines);
+                                    console.log('OCR text:', text);
+
+                                    // 1. EXTRAKSI NAMA (Existing Logic)
+                                    let nameFromOcr = '';
                                     try {
-                                        let nameFromOcr = '';
+                                        // Coba ambil dari baris 3 & 4 (format umum NPWP baru)
                                         if (lines.length > 3) {
                                             const parts = [];
                                             if (lines[3]) parts.push(lines[3].trim());
                                             if (lines[4]) parts.push(lines[4].trim());
                                             if (parts.length) nameFromOcr = parts.join(' ');
                                         }
+                                        // Fallback: ambil baris ke-2
                                         if (!nameFromOcr && lines.length >= 2 && lines[1]) {
                                             nameFromOcr = lines[1].trim();
                                         }
+                                        
+                                        // [REVISI] Limit Nama Max 28 Karakter
                                         if (nameFromOcr) {
-                                            $('#name').val(nameFromOcr);
-                                            generatePkdNumber(nameFromOcr);
+                                            // Bersihkan karakter aneh dulu jika perlu, lalu potong
+                                            nameFromOcr = nameFromOcr.replace(/[^a-zA-Z0-9\s\.\,]/g, '').trim(); 
+                                            let safeName = nameFromOcr.substring(0, 28); // LIMIT 28 CHARS
+                                            
+                                            $('#name').val(safeName);
+                                            generatePkdNumber(safeName); // Generate PKD pakai nama yang sudah dipotong
                                         }
                                     } catch (e) {
                                         console.error('Failed to set name from OCR', e);
                                     }
-                                    let address = '';
 
+                                    // 2. EXTRAKSI NPWP (Existing Logic)
+                                    let npwpMatch = text.match(/\d{2}\.\d{3}\.\d{3}\.\d-\d{3}\.\d{3}/);
+                                    if (!npwpMatch) {
+                                        npwpMatch = text.match(/[0-9\.\-\s]{9,25}/);
+                                    }
+                                    if (npwpMatch) {
+                                        $('#npwp').val(npwpMatch[0].trim());
+                                    }
+
+                                    // 3. EXTRAKSI ALAMAT (Existing Logic)
+                                    let address = '';
+                                    // ... (Menggunakan logika existing untuk mencari string alamat penuh) ...
                                     const fixedStart = 5;
                                     if (lines.length > fixedStart) {
                                         const candidate = [];
                                         for (let i = fixedStart; i < Math.min(lines.length, fixedStart + 3); i++) {
                                             const ln = lines[i];
                                             if (!ln) continue;
+                                            // Validasi sederhana baris alamat (bukan angka dominan)
                                             if (ln.length < 3) continue;
                                             const digitRatio = (ln.replace(/\D/g, '').length) / Math.max(1, ln.length);
                                             if (digitRatio > 0.8) continue;
                                             candidate.push(ln);
                                         }
-                                        if (candidate.length) {
-                                            address = candidate.join(' ');
-                                            console.log('Collected address from fixed start index 5:', candidate);
-                                        }
+                                        if (candidate.length) address = candidate.join(' ');
                                     }
 
+                                    // Fallback pencarian alamat jika cara diatas gagal
                                     if (!address) {
                                         const npwpPattern = npwpMatch ? npwpMatch[0].trim() : null;
                                         let npwpLineIdx = -1;
                                         if (npwpPattern) {
                                             npwpLineIdx = lines.findIndex(l => l.includes(npwpPattern) || l.replace(/\s+/g, '').includes(npwpPattern.replace(/\s+/g, '')));
                                         }
-
                                         if (npwpLineIdx >= 0) {
                                             const skipLabelRegex = /\b(NPWP|NPPKP|No\.?|Nama|Name|Alamat|Address|Tgl|Tanggal|SIUP|NIB)\b/i;
                                             const collected = [];
-                                            const skipAfterNpwp = 2;
+                                            const skipAfterNpwp = 2; // Biasa nama ada di 2 baris setelah NPWP
                                             for (let i = npwpLineIdx + 1 + skipAfterNpwp; i < lines.length && collected.length < 3; i++) {
                                                 const ln = lines[i];
-                                                if (!ln) continue;
-                                                if (skipLabelRegex.test(ln)) continue;
-                                                if (ln.length < 4) continue;
+                                                if (!ln || skipLabelRegex.test(ln) || ln.length < 4) continue;
                                                 const digitRatio = (ln.replace(/\D/g, '').length) / Math.max(1, ln.length);
                                                 if (digitRatio > 0.6) continue;
                                                 collected.push(ln);
                                             }
-                                            if (collected.length) {
-                                                address = collected.join(' ');
-                                            }
-                                            console.log('npwpLineIdx, collected address lines:', npwpLineIdx, collected);
-                                        }
-
-                                        if (!address) {
-                                            const addrIdx = lines.findIndex(l => /\b(Jl|Jalan|Address|Alamat)\b/i.test(l));
-                                            if (addrIdx >= 0) {
-                                                let foundLine = lines[addrIdx];
-                                                let cleanLine = foundLine.replace(/^(Alamat|Address|Jalan|Jl)\s*[:.]?\s*/i, '').trim();
-                                                if (cleanLine.length < 3) {
-                                                    address = lines.slice(addrIdx + 1, addrIdx + 4).join(' ');
-                                                } else {
-                                                    lines[addrIdx] = cleanLine;
-                                                    address = lines.slice(addrIdx, addrIdx + 3).join(' ');
-                                                }
-                                            } else {
-                                                const filtered = lines.filter(l => !/\b(NPWP|NPPKP|No\.?|Nama|Name|Tgl|Tanggal|SIUP|NIB)\b/i.test(l));
-                                                if (filtered.length) {
-                                                    address = filtered.reduce((a, b) => a.length > b.length ? a : b, '');
-                                                } else if (lines.length) {
-                                                    address = lines.reduce((a, b) => a.length > b.length ? a : b, '');
-                                                }
-                                            }
+                                            if (collected.length) address = collected.join(' ');
                                         }
                                     }
 
-                                    console.log('Extracted address (pre-chunk):', address);
+                                    if (!address) {
+                                        // Fallback terakhir: Cari kata "Jalan" atau "Alamat"
+                                        const addrIdx = lines.findIndex(l => /\b(Jl|Jalan|Address|Alamat)\b/i.test(l));
+                                        if (addrIdx >= 0) {
+                                            address = lines.slice(addrIdx, addrIdx + 3).join(' ').replace(/^(Alamat|Address|Jalan|Jl)\s*[:.]?\s*/i, '');
+                                        }
+                                    }
 
+                                    // [REVISI] ADDRESS CHUNKING (Limit 28 Chars per Line)
+                                    // Fungsi helper untuk memecah kalimat per 28 char tanpa memotong kata di tengah
                                     function splitChunksWordWrap(str, len) {
                                         if (!str) return [];
                                         str = str.replace(/\s+/g, ' ').trim();
@@ -1556,7 +1559,7 @@
                                                 line = (line + ' ' + w).trim();
                                             } else {
                                                 if (line) out.push(line);
-                                                // if single word longer than len, break it
+                                                // Jika satu kata lebih panjang dari limit, potong paksa
                                                 if (w.length > len) {
                                                     for (let i = 0; i < w.length; i += len) {
                                                         out.push(w.substr(i, len));
@@ -1571,8 +1574,14 @@
                                         return out;
                                     }
 
+                                    // Terapkan Limit 28 Karakter
                                     const chunks = splitChunksWordWrap(address || '', 28);
+                                    
                                     try {
+                                        // Reset nilai dulu
+                                        $('#address1, #address2, #address3').val('');
+                                        
+                                        // Isi berurutan, jika penuh pindah ke bawah
                                         if ($('#address1').length) $('#address1').val(chunks[0] || '');
                                         if ($('#address2').length) $('#address2').val(chunks[1] || '');
                                         if ($('#address3').length) $('#address3').val(chunks[2] || '');
@@ -1580,28 +1589,18 @@
                                         console.error('Error setting address fields', e);
                                     }
 
-                                    if (npwp) {
-                                        $('#npwp').val(npwp);
-                                    }
-
                                     $('#ocr-status').remove();
                                     originalBtn.prop('disabled', false);
                                 })
                                 .catch(err => {
                                     console.error('OCR error', err);
-                                    $('#ocr-status').text('OCR failed, please input address manually');
+                                    $('#ocr-status').text('OCR failed, please input manually').addClass('text-danger');
                                     originalBtn.prop('disabled', false);
-                                    setTimeout(() => $('#ocr-status').fadeOut(400, function() {
-                                        $(this).remove();
-                                    }), 3000);
                                 });
                         } catch (outerErr) {
                             console.error('OCR outer error', outerErr);
-                            $('#ocr-status').text('OCR failed, please input address manually');
+                            $('#ocr-status').text('Error processing file').addClass('text-danger');
                             originalBtn.prop('disabled', false);
-                            setTimeout(() => $('#ocr-status').fadeOut(400, function() {
-                                $(this).remove();
-                            }), 3000);
                         }
                     };
                     reader.readAsDataURL(file);
@@ -1659,7 +1658,7 @@
                     }
                 });
 
-                const table = $('#customerTable').DataTable({
+                const table = $('#sampleTable').DataTable({
                     processing: true,
                     serverSide: true,
                     ajax: {
@@ -1816,7 +1815,9 @@
                     $('#no_pkd').val('').prop('readonly', true);
 
                     $('#preview_npwp, #preview_nib, #preview_ktp').hide();
-                    $('input[type="file"]').prop('disabled', false).prop('required', true);
+                    $('input[type="file"]').prop('disabled', false);
+                    $('input[name="file_npwp"]').prop('required', true);
+                    $('input[name="file_nib"], input[name="file_ktp"]').prop('required', false);
                     $('#btn-save-customer').show().prop('disabled', true);
                     $('#user-info-section').hide();
                     $('#main-form-section').hide();

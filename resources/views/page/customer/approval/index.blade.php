@@ -119,7 +119,7 @@
                 </div>
 
                 <div class="table-responsive">
-                    <table class="w-100 display" id="customerTable">
+                    <table class="w-100 display" id="sampleTable">
                         <thead>
                             <tr>
                                 <th width="5%" class="text-center">No</th>
@@ -421,7 +421,7 @@
             });
 
             $(document).ready(function() {
-                const table = $('#customerTable').DataTable({
+                const table = $('#sampleTable').DataTable({
                     processing: true,
                     serverSide: true,
                     ajax: {
@@ -587,13 +587,15 @@
                     fileModal.show();
                 });
 
-                // --- 2. HANDLER TOMBOL REVIEW & REJECT ---
                 $(document).on('click', '.action-btn-modal', function() {
                     const button = $(this);
                     const customerId = button.data('id');
                     const token = button.data('token');
                     const action = button.data('action');
                     const customerName = button.data('name');
+                    
+                    const btnTitle = button.attr('title') || '';
+                    const isITInput = btnTitle.includes('Input Customer Code'); 
 
                     const originalIcon = button.html();
                     button.html('<span class="spinner-border spinner-border-sm"></span>').prop('disabled', true);
@@ -605,34 +607,70 @@
                             populateViewForm(response);
 
                             const isReject = action === 'reject';
-                            const modalTitle = isReject ? 'Reject Customer' : 'Approve with Review';
+                            
+                            let modalTitle = isReject ? 'Reject Customer' : 'Approve with Review';
+                            
+                            if (isITInput) {
+                                modalTitle = 'Input Customer Code & Activate';
+                            }
+
                             const cardBorder = isReject ? 'border-danger' : 'border-primary';
                             const headerBg = isReject ? 'bg-danger text-white' : 'bg-primary text-white';
-                            const btnClass = isReject ? 'btn-danger' : 'btn-primary';
-                            const btnText = isReject ? 'Submit Reject' : 'Submit Approval';
-                            const notesLabel = isReject ? 'Rejection Reason' : 'Review Notes';
-                            const notesPlaceholder = isReject ? 'Please provide a valid reason for rejection...' : 'Please provide notes/corrections...';
+                            const btnClass = isReject ? 'btn-danger' : 'btn-success'; 
+                            
+                            let btnText = isReject ? 'Submit Reject' : 'Submit Approval';
+                            if (isITInput) btnText = 'Save & Activate';
+                            
+                            let notesLabel = isReject ? 'Rejection Reason' : 'Review Notes';
+                            if (isITInput) notesLabel = 'Notes (Optional)';
+
+                            const notesPlaceholder = isReject ? 'Please provide a valid reason...' : 'Optional notes...';
 
                             $('#viewModalLabel').text(`${modalTitle} : ${customerName}`);
 
                             let urlTemplate = "{{ route('customers.approval_action', ':id') }}";
                             let finalUrl = urlTemplate.replace(':id', customerId);
 
+                            let additionalInputs = '';
+                            if (isITInput) {
+                                let today = new Date().toISOString().split('T')[0];
+                                let joinVal = response.join_date ? response.join_date.split(' ')[0] : today;
+                                let codeVal = response.code || '';
+
+                                additionalInputs = `
+                                    <div class="alert alert-info py-2 small mb-3 border-info">
+                                        <i class="ph-bold ph-info me-1"></i> 
+                                        Anda sedang dalam mode <b>IT Approval</b>. Silahkan lengkapi data berikut.
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold text-primary">Customer Code <span class="text-danger">*</span></label>
+                                            <input type="text" class="form-control fw-bold" name="update_code" value="${codeVal}" required placeholder="e.g. ID-001">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold text-primary">Join Date <span class="text-danger">*</span></label>
+                                            <input type="date" class="form-control" name="update_join_date" value="${joinVal}" required>
+                                        </div>
+                                    </div>
+                                `;
+                            }
+
                             const actionFormHtml = `
                                 <div class="card ${cardBorder} shadow-sm">
                                     <div class="card-header ${headerBg}">
-                                        <h6 class="mb-0 fw-bold"><i class="ph-bold ph-gavel me-2"></i>Decision: ${action.toUpperCase()}</h6>
+                                        <h6 class="mb-0 fw-bold"><i class="ph-bold ph-gavel me-2"></i>Decision: ${isITInput ? 'ACTIVATE' : action.toUpperCase()}</h6>
                                     </div>
                                     <div class="card-body p-4 bg-white">
                                         <form id="modalResponseForm" action="${finalUrl}" method="POST">
                                             @csrf
                                             <input type="hidden" name="token" value="${token}">
                                             <input type="hidden" name="action" value="${action}">
+                                            
+                                            ${additionalInputs}
 
                                             <div class="mb-3">
-                                                <label for="modal_notes" class="form-label fw-bold">${notesLabel} <span class="text-danger">*</span></label>
-                                                <textarea class="form-control border-${isReject ? 'danger' : 'primary'}" id="modal_notes" name="notes" rows="4" placeholder="${notesPlaceholder}" required></textarea>
-                                                <div class="form-text text-muted">Please provide clear and descriptive notes.</div>
+                                                <label for="modal_notes" class="form-label fw-bold">${notesLabel} ${isReject ? '<span class="text-danger">*</span>' : ''}</label>
+                                                <textarea class="form-control border-${isReject ? 'danger' : 'primary'}" id="modal_notes" name="notes" rows="3" placeholder="${notesPlaceholder}" ${isReject ? 'required' : ''}></textarea>
                                             </div>
                                         </form>
                                     </div>

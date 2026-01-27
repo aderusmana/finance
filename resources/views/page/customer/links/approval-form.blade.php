@@ -407,6 +407,80 @@
                         </table>
                     </div>
 
+                    <h5 class="section-title"><i class="fas fa-paperclip"></i> Supporting Documents</h5>
+                    <div class="row g-3 mb-4">
+                        @php
+                            // Ambil data file (asumsi relasi 'files' adalah HasMany, ambil yang pertama)
+                            $doc = $customer->files ? $customer->files->first() : null;
+                        @endphp
+
+                        {{-- 1. NPWP FILE --}}
+                        <div class="col-md-4">
+                            <div class="card h-100 border bg-light">
+                                <div class="card-body text-center p-3">
+                                    <div class="mb-2">
+                                        <i class="fas fa-file-invoice text-primary fs-2"></i>
+                                    </div>
+                                    <h6 class="fw-bold small text-muted text-uppercase mb-3">NPWP Document</h6>
+                                    
+                                    @if($doc && $doc->npwp_file)
+                                        <a href="{{ asset('storage/' . $doc->npwp_file) }}" target="_blank" class="btn btn-sm btn-outline-primary w-100">
+                                            <i class="fas fa-eye me-1"></i> Preview
+                                        </a>
+                                    @else
+                                        <button disabled class="btn btn-sm btn-outline-secondary w-100">
+                                            <i class="fas fa-times me-1"></i> Not Uploaded
+                                        </button>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- 2. NIB / SIUP FILE --}}
+                        <div class="col-md-4">
+                            <div class="card h-100 border bg-light">
+                                <div class="card-body text-center p-3">
+                                    <div class="mb-2">
+                                        <i class="fas fa-file-contract text-success fs-2"></i>
+                                    </div>
+                                    <h6 class="fw-bold small text-muted text-uppercase mb-3">NIB / SIUP</h6>
+                                    
+                                    @if($doc && $doc->nib_siup_file)
+                                        <a href="{{ asset('storage/' . $doc->nib_siup_file) }}" target="_blank" class="btn btn-sm btn-outline-success w-100">
+                                            <i class="fas fa-eye me-1"></i> Preview
+                                        </a>
+                                    @else
+                                        <button disabled class="btn btn-sm btn-outline-secondary w-100">
+                                            <i class="fas fa-times me-1"></i> Not Uploaded
+                                        </button>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- 3. KTP FILE --}}
+                        <div class="col-md-4">
+                            <div class="card h-100 border bg-light">
+                                <div class="card-body text-center p-3">
+                                    <div class="mb-2">
+                                        <i class="fas fa-id-card text-info fs-2"></i>
+                                    </div>
+                                    <h6 class="fw-bold small text-muted text-uppercase mb-3">KTP Penanggung Jawab</h6>
+                                    
+                                    @if($doc && $doc->ktp_file)
+                                        <a href="{{ asset('storage/' . $doc->ktp_file) }}" target="_blank" class="btn btn-sm btn-outline-info w-100">
+                                            <i class="fas fa-eye me-1"></i> Preview
+                                        </a>
+                                    @else
+                                        <button disabled class="btn btn-sm btn-outline-secondary w-100">
+                                            <i class="fas fa-times me-1"></i> Not Uploaded
+                                        </button>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </div>
@@ -422,22 +496,35 @@
 
                         <div class="mb-4">
 
-                            {{-- OPSI REVIEW --}}
-                            <div class="form-check p-3 border rounded mb-2 bg-light-info bg-opacity-10">
+                            {{-- OPSI 1: REVIEW / INPUT CUSTOMER CODE --}}
+                            {{-- Logic: Jika IT, label berubah & otomatis checked --}}
+                            <div class="form-check p-3 border rounded mb-2 {{ $isIT ? 'bg-warning bg-opacity-10 border-warning' : 'bg-light-info bg-opacity-10' }}">
                                 <input class="form-check-input" type="radio" name="action" id="action_review" value="review"
-                                    {{ $preSelectedAction == 'review' ? 'checked' : '' }}>
-                                <label class="form-check-label fw-bold text-primary d-block" for="action_review">
-                                    <i class="fas fa-edit me-2"></i> Review with Notes
+                                    {{ $preSelectedAction == 'review' || $isIT ? 'checked' : '' }}>
+                                
+                                <label class="form-check-label fw-bold {{ $isIT ? 'text-dark' : 'text-primary' }} d-block" for="action_review">
+                                    @if($isIT)
+                                        <i class="fas fa-keyboard me-2"></i> Input Customer Code & Approve
+                                    @else
+                                        <i class="fas fa-edit me-2"></i> Review with Notes
+                                    @endif
                                 </label>
+                                
                                 <small class="text-muted ms-4">
-                                    Setujui dengan catatan.
-                                    @if($canAdjust)
-                                        <br><span class="badge bg-primary mt-1"><i class="fas fa-lock-open me-1"></i> Unlocks Data Editing</span>
+                                    @if($isIT)
+                                        Masukkan Kode Customer dan Tanggal Join untuk mengaktifkan customer.
+                                    @else
+                                        Setujui dengan catatan.
+                                        @if($canAdjust)
+                                            <br><span class="badge bg-primary mt-1"><i class="fas fa-lock-open me-1"></i> Unlocks Data Editing</span>
+                                        @endif
                                     @endif
                                 </small>
                             </div>
 
-                            {{-- OPSI REJECT --}}
+                            {{-- OPSI 2: REJECT --}}
+                            {{-- Logic: Disembunyikan jika role IT --}}
+                            @if(!$isIT)
                             <div class="form-check p-3 border rounded mb-4 bg-light-danger bg-opacity-10" style="border-color: #fecaca !important; background-color: #fef2f2;">
                                 <input class="form-check-input" type="radio" name="action" id="action_reject" value="reject"
                                     {{ $preSelectedAction == 'reject' ? 'checked' : '' }}>
@@ -448,12 +535,14 @@
                                     Tolak permintaan customer.
                                 </small>
                             </div>
+                            @endif
                         </div>
 
                         {{-- NOTES CONTAINER --}}
                         <div class="mb-4" id="notes-container">
                             <label for="notes" class="form-label fw-bold small text-uppercase text-muted">Notes / Reason</label>
-                            <textarea class="form-control" name="notes" id="notes" rows="4" placeholder="Enter your notes here..."></textarea>
+                            <textarea class="form-control" name="notes" id="notes" rows="4" 
+                                placeholder="{{ $isIT ? 'Catatan tambahan (Opsional)...' : 'Enter your notes here...' }}"></textarea>
                         </div>
 
                         <div class="d-grid">
@@ -517,44 +606,59 @@
             function updateUI() {
                 const selected = document.querySelector('input[name="action"]:checked')?.value;
 
-                // Reset Button
+                // Reset Button Defaults
                 btnSubmit.className = 'btn btn-lg w-100 btn-submit text-white shadow-sm';
+                btnSubmit.disabled = false;
+                
                 if (notesField) {
                     notesField.required = false;
                     notesField.placeholder = "Notes (Optional)...";
                 }
 
-                // --- LOGIC REVIEW ---
+                // --- LOGIC REVIEW / IT INPUT ---
                 if (selected === 'review') {
-                    // A. JIKA FINANCE/HEAD: Enable Input & Calculator
-                    if (canAdjust) {
+                    
+                    // A. JIKA IT ROLE
+                    if (isITMode) {
+                        btnSubmit.classList.add('btn-success'); // Warna hijau
+                        btnSubmit.innerHTML = '<i class="fas fa-check-circle me-2"></i> Save Code & Activate';
+                        
+                        if(notesField) {
+                            notesField.placeholder = "Catatan tambahan untuk requester (Opsional)...";
+                        }
+                    }
+                    // B. JIKA FINANCE/HEAD: Enable Input & Calculator
+                    else if (canAdjust) {
                         editableFields.forEach(el => {
                             el.disabled = false;
-                            el.classList.add('bg-white'); // Visual: Putih artinya bisa diedit
+                            el.classList.add('bg-white');
                         });
-
-                        // Trigger hitung ulang
                         calculateLimit();
+                        
+                        if (notesField) {
+                            notesField.required = true;
+                            notesField.placeholder = "Tuliskan catatan perbaikan (Wajib)...";
+                        }
+                        btnSubmit.classList.add('btn-info');
+                        btnSubmit.innerHTML = '<i class="fas fa-edit me-2"></i> Submit Review';
                     }
-                    // B. JIKA BUKAN FINANCE: Tetap Disabled (Hanya notes biasa)
+                    // C. JIKA BUKAN FINANCE & BUKAN IT
                     else {
                         editableFields.forEach(el => {
                             el.disabled = true;
                             el.classList.remove('bg-white');
                         });
+                        
+                        if (notesField) {
+                            notesField.required = true;
+                            notesField.placeholder = "Tuliskan catatan (Wajib)...";
+                        }
+                        btnSubmit.classList.add('btn-primary');
+                        btnSubmit.innerHTML = '<i class="fas fa-paper-plane me-2"></i> Submit Review';
                     }
-
-                    // Setup Notes & Button
-                    if (notesField) {
-                        notesField.required = true;
-                        notesField.placeholder = "Tuliskan catatan perbaikan (Wajib)...";
-                    }
-                    btnSubmit.classList.add('btn-info');
-                    btnSubmit.innerHTML = '<i class="fas fa-edit me-2"></i> Submit Review';
 
                 } else {
-                    // --- LOGIC APPROVE / REJECT ---
-                    // Pastikan field mati
+                    // --- LOGIC REJECT (Hanya muncul untuk Non-IT) ---
                     editableFields.forEach(el => {
                         el.disabled = true;
                         el.classList.remove('bg-white');
@@ -568,8 +672,6 @@
                         btnSubmit.classList.remove('btn-submit');
                         btnSubmit.classList.add('btn-danger');
                         btnSubmit.innerHTML = '<i class="fas fa-times-circle me-2"></i> Reject Request';
-                    } else {
-                        btnSubmit.innerHTML = 'Submit Decision';
                     }
                 }
             }

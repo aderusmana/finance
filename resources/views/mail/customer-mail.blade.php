@@ -310,6 +310,7 @@
 
                                 <table align="center" border="0" cellpadding="0" cellspacing="0" style="border-collapse: collapse; mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
                                     <tr>
+                                        @if(empty($is_it))
                                         <td style="padding: 0 5px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
                                             <table border="0" cellpadding="0" cellspacing="0" style="border-collapse: collapse; mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
                                                 <tr>
@@ -321,17 +322,25 @@
                                                 </tr>
                                             </table>
                                         </td>
+                                        @endif
+
                                         <td style="padding: 0 5px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
                                             <table border="0" cellpadding="0" cellspacing="0" style="border-collapse: collapse; mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
                                                 <tr>
                                                     <td align="center" bgcolor="#3b82f6" style="border-radius: 4px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
                                                         <a href="{{ route('customers.view_approval', ['token' => $token, 'pre_action' => 'review']) }}" style="display: inline-block; padding: 10px 18px; font-family: Arial, sans-serif; font-size: 12px; color: #ffffff; text-decoration: none; font-weight: bold; border: 1px solid #3b82f6; border-radius: 4px;">
-                                                            📝 Approve with Review
+                                                            @if(!empty($is_it))
+                                                                ⌨️ Input Customer Code
+                                                            @else
+                                                                📝 Approve with Review
+                                                            @endif
                                                         </a>
                                                     </td>
                                                 </tr>
                                             </table>
                                         </td>
+
+                                        @if(empty($is_it))
                                         <td style="padding: 0 5px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
                                             <table border="0" cellpadding="0" cellspacing="0" style="border-collapse: collapse; mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
                                                 <tr>
@@ -343,6 +352,7 @@
                                                 </tr>
                                             </table>
                                         </td>
+                                        @endif
                                     </tr>
                                 </table>
                             </div>
