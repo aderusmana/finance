@@ -130,7 +130,7 @@ class BankGaransiController extends Controller
     public function show($id)
     {
         if (request()->ajax() || request()->wantsJson()) {
-            $bg = BankGaransi::with(['details', 'customer', 'creator    '])->findOrFail($id);
+            $bg = BankGaransi::with(['details', 'customer', 'creator'])->findOrFail($id);
             return response()->json($bg);
         }
     }

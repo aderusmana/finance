@@ -70,9 +70,9 @@ class MasterManagementSeeder extends Seeder
         // Create account group per region (name matches region)
         foreach ($regions as $reg) {
             $accountGroups[] = [
-            'name_account_group' => $reg['region_name'],
-            'bank_garansi' => (bool) rand(0, 1),
-            'ccar' => rand(0, 1) ? 'smd_idr' : 'smd_usd',
+                'name_account_group' => $reg['region_name'],
+                'bank_garansi' => (bool) rand(0, 1),
+                'ccar' => rand(0, 1) ? 'smd_idr' : 'smd_usd',
             ];
         }
 
@@ -80,11 +80,11 @@ class MasterManagementSeeder extends Seeder
 
         foreach ($accountGroups as $group) {
             AccountGroup::updateOrCreate(
-            ['name_account_group' => $group['name_account_group']],
-            [
-                'bank_garansi' => $group['bank_garansi'],
-                'ccar' => $group['ccar']
-            ]
+                ['name_account_group' => $group['name_account_group']],
+                [
+                    'bank_garansi' => $group['bank_garansi'],
+                    'ccar' => $group['ccar']
+                ]
             );
         }
 
@@ -131,20 +131,37 @@ class MasterManagementSeeder extends Seeder
 
         $targetUsers = User::whereIn('username', ['staff.sales1', 'head.sales'])->get();
 
-        if ($targetUsers->isEmpty()) {
-            $targetUsers = User::limit(2)->get();
-        }
 
-        if ($anyRegion && $anyBranch && $anyAccountGroup) {
-            foreach ($targetUsers as $user) {
-                Sales::updateOrCreate(
-                    ['user_id' => $user->id],
-                    [
-                        'region_id' => $anyRegion->id,
-                        'branch_id' => $anyBranch->id,
-                        'account_group_id' => $anyAccountGroup->id,
-                    ]
-                );
+        // Data pendukung untuk Foreign Keys
+        $jktRegion = Regions::where('region_name', 'COMMERCIAL')->first();
+        $hoBranch = Branch::where('branch_name', 'Head Office - Jakarta')->first();
+        $distAccountGroup = AccountGroup::where('name_account_group', 'COMMERCIAL')->first();
+
+        // Membuat data Sales untuk Staff Sales 1
+        if ($salesUser && $jktRegion && $hoBranch && $distAccountGroup) {
+            Sales::updateOrCreate(
+                ['user_id' => $salesUser->id], // Key unik sekarang adalah user_id
+                [
+                    'region_id' => $jktRegion->id,
+                    'branch_id' => $hoBranch->id,
+                    'account_group_id' => $distAccountGroup->id,
+                ]
+            );
+            if ($targetUsers->isEmpty()) {
+                $targetUsers = User::limit(2)->get();
+            }
+
+            if ($anyRegion && $anyBranch && $anyAccountGroup) {
+                foreach ($targetUsers as $user) {
+                    Sales::updateOrCreate(
+                        ['user_id' => $user->id],
+                        [
+                            'region_id' => $anyRegion->id,
+                            'branch_id' => $anyBranch->id,
+                            'account_group_id' => $anyAccountGroup->id,
+                        ]
+                    );
+                }
             }
         }
     }
