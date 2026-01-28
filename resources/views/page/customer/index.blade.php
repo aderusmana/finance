@@ -7,15 +7,15 @@
 
     <div class="row m-1">
         <div class="col-12">
-            <h4 class="main-title">Approvals Management</h4>
+            <h4 class="main-title">Customers Management</h4>
             <ul class="app-line-breadcrumbs mb-3">
                 <li>
                     <a class="f-s-14 f-w-500" href="#">
-                        <i class="ph-duotone ph-address-book f-s-16"></i> Approvals
+                        <i class="ph-bold f-s-16"></i> Customers
                     </a>
                 </li>
                 <li class="active">
-                    <a class="f-s-14 f-w-500" href="#">Approvals List</a>
+                    <a class="f-s-14 f-w-500" href="#">Customers List</a>
                 </li>
             </ul>
         </div>
@@ -24,14 +24,13 @@
     <div class="row">
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <div class="d-flex align-items-center gap-2">
+                <div class="d-flex align-items-center gap-2 mb-3">
                     <span class="text-muted fw-bold me-1"><i class="ph-bold ph-funnel"></i> Filter:</span>
 
                     <select id="statusFilter" class="form-select select2" style="width: 150px;">
                         <option value="all">All Account</option>
-                        @foreach($accountStatuses as $status)
-                            <option value="{{ $status }}">{{ $status }}</option>
-                        @endforeach
+                        <option value="Active">Active (BG)</option>
+                        <option value="Inactive">Inactive (BG)</option>
                     </select>
 
                     <select id="approvalStatusFilter" class="form-select select2" style="width: 175px;">
@@ -41,7 +40,7 @@
                         @endforeach
                     </select>
 
-                    <button id="resetFilters" class="btn btn-sm btn-secondary border" title="Reset Filters">
+                    <button id="resetFilters" class="btn btn-secondary border" title="Reset Filters">
                         <i class="ph-bold ph-arrow-counter-clockwise"></i>
                     </button>
                 </div>
@@ -798,7 +797,7 @@
     <div class="modal fade" id="recallCustomerModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
         <div class="modal-dialog modal-dialog-centered modal-xl">
             <div class="modal-content border-0 shadow-lg">
-                
+
                 <div class="modal-header bg-gradient bg-warning text-dark border-0 py-3">
                     <div class="d-flex align-items-center">
                         <div class="bg-white bg-opacity-25 rounded-circle p-2 me-3">
@@ -811,7 +810,7 @@
                     </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                
+
                 <form id="recallCustomerForm" enctype="multipart/form-data">
                     @csrf
                     <input type="hidden" id="recall_customer_id" name="id">
@@ -819,7 +818,7 @@
                     <input type="hidden" name="country" id="recall_country" value="Indonesia">
 
                     <div class="modal-body bg-light p-0">
-                        
+
                         <div class="alert alert-warning border-0 rounded-0 mb-0 d-flex align-items-center px-4 py-3" role="alert">
                             <i class="ph-fill ph-info f-s-24 me-3"></i>
                             <div>
@@ -855,7 +854,7 @@
                             </div>
 
                             <div class="tab-content p-4 w-100" id="v-pills-tabContent" style="max-height: 70vh; overflow-y: auto;">
-                                
+
                                 <div class="tab-pane fade show active" id="tab-recall-general" role="tabpanel">
                                     <h6 class="fw-bold text-primary border-bottom pb-2 mb-3">Informasi Utama Customer</h6>
                                     <div class="row g-3">
@@ -1097,7 +1096,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="modal-footer bg-white border-top py-3">
                         <button type="button" class="btn btn-light border text-muted px-4" data-bs-dismiss="modal">Batal</button>
                         <button type="submit" class="btn btn-warning px-4 fw-bold shadow-sm">
@@ -1117,7 +1116,8 @@
             $(document).ready(function() {
                 // 1. Initialize Select2
                 $('.select2').select2({
-                    theme: 'bootstrap-5'
+                    theme: 'bootstrap-5',
+                    minimumResultsForSearch: Infinity
                 });
 
                 $('.select2-recall').select2({
@@ -1143,18 +1143,18 @@
                     const row = `
                         <tr class="recall-item-row">
                             <td class="ps-4">
-                                <input type="text" class="form-control form-control-sm" 
-                                    name="items[${index}][item_name]" 
+                                <input type="text" class="form-control form-control-sm"
+                                    name="items[${index}][item_name]"
                                     value="${name}" placeholder="Contoh: Jasa Web Dev" required>
                             </td>
                             <td>
-                                <input type="number" class="form-control form-control-sm" 
-                                    name="items[${index}][quantity]" 
+                                <input type="number" class="form-control form-control-sm"
+                                    name="items[${index}][quantity]"
                                     value="${qty}" placeholder="0" min="1" required>
                             </td>
                             <td>
-                                <input type="number" class="form-control form-control-sm" 
-                                    name="items[${index}][price]" 
+                                <input type="number" class="form-control form-control-sm"
+                                    name="items[${index}][price]"
                                     value="${price}" placeholder="0" min="0">
                             </td>
                             <td class="text-center">
@@ -1200,9 +1200,9 @@
 
                 $(document).on('click', '.btn-recall-customer', function() {
                     let btn = $(this);
-                    let rawData = btn.attr('data-json'); 
+                    let rawData = btn.attr('data-json');
                     let data = {};
-                    
+
                     try {
                         data = JSON.parse(rawData);
                     } catch(e) {
@@ -1221,19 +1221,19 @@
                     } else {
                         $('#recall_reject_alert').hide(); // Sembunyikan jika tidak ada note
                     }
-                    
+
                     // Set ID & Reset Tabs ke awal
                     $('#recall_customer_id').val(data.id);
-                    $('.nav-pills button:first').tab('show'); 
+                    $('.nav-pills button:first').tab('show');
 
                     // --- 2. POPULATE FIELDS (Mapping JSON ke ID Input) ---
-                    
+
                     // Select2 Fields (Set Value & Trigger Change)
                     $('#recall_user_id').val(data.user_id);
                     $('#recall_account_group').val(data.account_group).trigger('change');
                     $('#recall_customer_class').val(data.customer_class).trigger('change');
                     $('#recall_term_of_payment').val(data.term_of_payment).trigger('change');
-                    
+
                     // Perbaikan Logika BG (Boolean/String conversion)
                     let bgVal = (data.bank_garansi == '1' || data.bank_garansi == 'YA') ? 'YA' : 'TIDAK';
                     $('#recall_bank_garansi').val(bgVal).trigger('change');
@@ -1246,7 +1246,7 @@
                     $('#recall_sort_name').val(data.sort_name);
                     $('#recall_email').val(data.email);
                     $('#recall_no_pkd').val(data.no_pkd);
-                    
+
                     // Address Inputs
                     $('#recall_address1').val(data.address1);
                     $('#recall_address2').val(data.address2);
@@ -1259,7 +1259,7 @@
                     // Management & Shipping (Previously Hidden/Missing)
                     $('#recall_shipping_to_name').val(data.shipping_to_name);
                     $('#recall_shipping_to_address').val(data.shipping_to_address);
-                    
+
                     $('#recall_purchasing_manager_name').val(data.purchasing_manager_name);
                     $('#recall_purchasing_manager_email').val(data.purchasing_manager_email);
                     $('#recall_finance_manager_name').val(data.finance_manager_name);
@@ -1314,10 +1314,10 @@
                 // --- SUBMIT RECALL ---
                 $('#recallCustomerForm').on('submit', function(e) {
                     e.preventDefault();
-                    
+
                     const id = $('#recall_customer_id').val();
                     const formData = new FormData(this);
-                    const url = `/customers/${id}/recall`; 
+                    const url = `/customers/${id}/recall`;
 
                     Swal.fire({
                         title: 'Konfirmasi Recall',
@@ -1475,13 +1475,13 @@
                                         if (!nameFromOcr && lines.length >= 2 && lines[1]) {
                                             nameFromOcr = lines[1].trim();
                                         }
-                                        
+
                                         // [REVISI] Limit Nama Max 28 Karakter
                                         if (nameFromOcr) {
                                             // Bersihkan karakter aneh dulu jika perlu, lalu potong
-                                            nameFromOcr = nameFromOcr.replace(/[^a-zA-Z0-9\s\.\,]/g, '').trim(); 
+                                            nameFromOcr = nameFromOcr.replace(/[^a-zA-Z0-9\s\.\,]/g, '').trim();
                                             let safeName = nameFromOcr.substring(0, 28); // LIMIT 28 CHARS
-                                            
+
                                             $('#name').val(safeName);
                                             generatePkdNumber(safeName); // Generate PKD pakai nama yang sudah dipotong
                                         }
@@ -1500,7 +1500,6 @@
 
                                     // 3. EXTRAKSI ALAMAT (Existing Logic)
                                     let address = '';
-                                    // ... (Menggunakan logika existing untuk mencari string alamat penuh) ...
                                     const fixedStart = 5;
                                     if (lines.length > fixedStart) {
                                         const candidate = [];
@@ -1546,8 +1545,6 @@
                                         }
                                     }
 
-                                    // [REVISI] ADDRESS CHUNKING (Limit 28 Chars per Line)
-                                    // Fungsi helper untuk memecah kalimat per 28 char tanpa memotong kata di tengah
                                     function splitChunksWordWrap(str, len) {
                                         if (!str) return [];
                                         str = str.replace(/\s+/g, ' ').trim();
@@ -1559,7 +1556,6 @@
                                                 line = (line + ' ' + w).trim();
                                             } else {
                                                 if (line) out.push(line);
-                                                // Jika satu kata lebih panjang dari limit, potong paksa
                                                 if (w.length > len) {
                                                     for (let i = 0; i < w.length; i += len) {
                                                         out.push(w.substr(i, len));
@@ -1576,11 +1572,11 @@
 
                                     // Terapkan Limit 28 Karakter
                                     const chunks = splitChunksWordWrap(address || '', 28);
-                                    
+
                                     try {
                                         // Reset nilai dulu
                                         $('#address1, #address2, #address3').val('');
-                                        
+
                                         // Isi berurutan, jika penuh pindah ke bawah
                                         if ($('#address1').length) $('#address1').val(chunks[0] || '');
                                         if ($('#address2').length) $('#address2').val(chunks[1] || '');
@@ -1665,92 +1661,81 @@
                         url: "{{ route('customers.index') }}",
                         data: function(d) {
                             d.status = $('#statusFilter').val();
+                            d.approval_status = $('#approvalStatusFilter').val();
                         }
                     },
+                    order: [[8, 'desc']], 
                     columns: [
-                        // NO
                         {
                             data: 'DT_RowIndex',
                             name: 'DT_RowIndex',
                             orderable: false,
                             searchable: false,
-                            className: 'text-center dt-no-wrap' // Mencegah nomor turun baris
+                            className: 'text-center dt-no-wrap'
                         },
-                        // CODE
                         {
                             data: 'code',
-                            name: 'code',
+                            name: 'customers.code',
                             className: 'dt-no-wrap fw-bold',
                             render: function(data) {
                                 return data && data.trim() !== '' ? `<span class="fw-bold text-dark">${data}</span>` : `<span class="text-muted fst-italic">Auto-generated</span>`;
                             }
                         },
-                        // NAME
                         {
                             data: 'name',
-                            name: 'name',
+                            name: 'customers.name',
                             className: 'dt-no-wrap fw-bold',
                             render: function(data) { return `<span class="fw-bold text-dark">${data}</span>`; }
                         },
-
-                        // CREDIT LIMIT
                         {
-                            data: 'credit_limit_formatted',
-                            name: 'credit_limit',
+                            data: 'credit_limit',
+                            name: 'customers.credit_limit',
                             className: 'dt-wrap'
                         },
-
-                        // TOP & BG STATUS
                         {
                             data: 'financial_info',
-                            name: 'term_of_payment',
-                            className: 'dt-no-wrap text-center' // Jaga tetap satu blok
+                            name: 'customers.term_of_payment',
+                            className: 'dt-no-wrap text-center'
                         },
-
-                        // STATUS APPROVAL
                         {
                             data: 'status_approval',
-                            name: 'status_approval',
-                            className: 'text-center dt-no-wrap' // Badge status jangan wrap
+                            name: 'customers.status_approval',
+                            className: 'text-center dt-no-wrap'
                         },
-
-                        // ROUTE TO (POSISI)
                         {
                             data: 'route_to',
-                            name: 'route_to',
-                            className: 'text-center dt-wrap', // Izinkan nama orang panjang wrap
-                            width: '15%' // Beri lebar spesifik
+                            name: 'customers.route_to',
+                            className: 'text-center dt-wrap',
+                            width: '15%'
                         },
-
-                        // ACTION
                         {
                             data: 'action',
                             name: 'action',
                             orderable: false,
                             searchable: false,
                             className: 'text-center dt-no-wrap'
+                        },
+                        {
+                            data: 'updated_at',
+                            name: 'customers.updated_at',
+                            visible: false,
+                            searchable: false
                         }
                     ],
-                    order: [],
                     autoWidth: false
                 });
 
                 $('#statusFilter, #approvalStatusFilter').on('change', function() {
-                    table.ajax.reload();
+                    table.draw();
                 });
 
                 $('#resetFilters').on('click', function() {
-                    $('#statusFilter').val('all');
-                    $('#approvalStatusFilter').val('all');
-
-                    $('#statusFilter').trigger('change');
-                    $('#approvalStatusFilter').trigger('change');
-
-                    // Reload tabel (opsional, karena trigger change di atas sudah memanggil reload)
-                    // table.ajax.reload();
+                    $('#statusFilter').val('all').trigger('change');
+                    $('#approvalStatusFilter').val('all').trigger('change');
+                    
+                    // table.draw() akan terpanggil otomatis karena trigger('change') di atas
                 });
 
-                // A. Saat User dipilih -> Tampilkan Detail User & Section Klasifikasi
                 $('#user_id').on('change', function() {
                     const selected = $(this).find(':selected');
                     const userId = selected.val();

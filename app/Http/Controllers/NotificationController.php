@@ -75,6 +75,12 @@ class NotificationController extends Controller
         return response()->json(['success' => false, 'message' => 'Notifikasi tidak ditemukan'], 404);
     }
 
+    public function deleteAll()
+    {
+        Auth::user()->notifications()->delete();
+        return response()->json(['success' => true]);
+    }
+
     /**
      * Tandai semua sudah dibaca
      */

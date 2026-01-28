@@ -119,7 +119,22 @@ class CustomerController extends Controller
                     'customer_files.npwp_file as file_npwp',
                     'customer_files.nib_siup_file as file_nib',
                     'customer_files.ktp_file as file_ktp'
-                )->orderBy('customers.created_at', 'desc');
+                );
+
+            if ($request->has('status') && $request->status !== 'all') {
+                if ($request->status === 'Active') {
+                    $query->where('customers.bank_garansi', 'YA');
+                } elseif ($request->status === 'Inactive') {
+                    $query->where(function($q) {
+                        $q->where('customers.bank_garansi', '!=', 'YA')
+                        ->orWhereNull('customers.bank_garansi');
+                    });
+                }
+            }
+
+            if ($request->has('approval_status') && $request->approval_status !== 'all') {
+                $query->where('customers.status_approval', $request->approval_status);
+            }
 
             return DataTables::of($query)
             ->addIndexColumn()
@@ -132,7 +147,7 @@ class CustomerController extends Controller
                     ->where('status', 'Rejected')
                     ->latest('updated_at')
                     ->first();
-                
+
                 $rowData['reject_note'] = $lastRejectLog ? $lastRejectLog->notes : 'Tidak ada catatan rejection.';
 
                 $rowData['tanggal_npwp']  = $row->tanggal_npwp ? Carbon::parse($row->tanggal_npwp)->format('Y-m-d') : null;
@@ -228,12 +243,12 @@ class CustomerController extends Controller
                 $btn .= '</div>';
                 return $btn;
             })
-            ->addColumn('credit_limit_formatted', function ($row) {
+            ->addColumn('credit_limit', function ($row) {
                 return '<div class="badge status-badge-lg bg-warning">
                             IDR ' . number_format($row->credit_limit, 0, ',', '.') . '
                         </div>';
             })
-            ->addColumn('financial_info', function ($row) {
+            ->editColumn('financial_info', function ($row) {
                 if ($row->bank_garansi === 'YA') {
                     $bgBadge = '<span class="srs-badge"><i class="fas fa-file-contract me-1"></i> BG: YES</span>';
                 } else {
@@ -245,10 +260,10 @@ class CustomerController extends Controller
                             <div>' . $bgBadge . '</div>
                         </div>';
             })
-            ->addColumn('status_approval', function ($row) {
+            ->editColumn('status_approval', function ($row) {
                 $baseClass = match($row->status_approval) {
                     'Approved', 'Completed' => 'bg-success',
-                    'Rejected', 'Canceled' => 'bg-danger',
+                    'Rejected' => 'bg-danger',
                     'Processing' => 'bg-primary',
                     'Pending' => 'bg-warning',
                     default => 'bg-secondary'
@@ -256,14 +271,14 @@ class CustomerController extends Controller
 
                 $icon = match($row->status_approval) {
                     'Approved', 'Completed' => '<i class="ph-bold ph-check-circle me-1"></i>',
-                    'Rejected', 'Canceled' => '<i class="ph-bold ph-x-circle me-1"></i>',
+                    'Rejected' => '<i class="ph-bold ph-x-circle me-1"></i>',
                     'Processing' => '<i class="ph-bold ph-arrows-clockwise ph-spin me-1"></i>',
                     default => '<i class="ph-bold ph-clock me-1"></i>'
                 };
 
                 return '<span class="badge status-badge-lg ' . $baseClass . '">' . $icon . strtoupper($row->status_approval) . '</span>';
             })
-            ->addColumn('route_to', function ($row) {
+            ->editColumn('route_to', function ($row) {
                  if($row->status_approval === 'Approved' || $row->status_approval === 'Completed'){
                     return '<span class="badge route-to-badge-lg bg-info text-white"><i class="ph-bold ph-check-circle me-1 text-white"></i>-</span>';
                 }
@@ -272,11 +287,11 @@ class CustomerController extends Controller
                             <i class="ph-bold ph-user me-1"></i> ' . strtoupper($row->route_to ?? '-') . '
                         </span>';
             })
-            ->addColumn('status', function ($row) {
+            ->editColumn('status', function ($row) {
                 $badge = $row->status === 'Active' ? 'bg-success' : 'bg-secondary';
                 return '<span class="badge status-badge-lg ' . $badge . '">' . strtoupper($row->status) . '</span>';
             })
-            ->rawColumns(['credit_limit_formatted', 'financial_info', 'status_approval', 'route_to', 'status', 'action'])
+            ->rawColumns(['credit_limit', 'financial_info', 'status_approval', 'route_to', 'status', 'action'])
             ->make(true);
         }
 
@@ -291,7 +306,7 @@ class CustomerController extends Controller
         $activeCount = Customer::where('bank_garansi', 'YA')->count();
         $inactiveCount = Customer::where(function($q) {
             $q->where('bank_garansi', '!=', 'YA')
-              ->orWhereNull('bank_garansi');
+            ->orWhereNull('bank_garansi');
         })->count();
 
         $approvalStatuses = Customer::whereNotNull('status_approval')->distinct()->pluck('status_approval');
@@ -367,7 +382,7 @@ class CustomerController extends Controller
 
             ApprovalLog::where('related_id', $customer->id)
                 ->where('category', 'Customer')
-                ->update(['status' => 'Canceled']);
+                ->update(['status' => 'Rejected']);
 
             $subCategory = 'CBD';
             $newLogs = $this->generateApprovalLogs($user, $customer->id, 'Customer', $subCategory);
@@ -384,9 +399,10 @@ class CustomerController extends Controller
 
                 if ($firstApprover) {
                     try {
+                        $admins = User::role('super-admin')->get();
                         Notification::send($firstApprover, new SystemNotification(
                             'Butuh Persetujuan (Revisi)',
-                            "Customer <b>{$customer->name}</b> telah direvisi dan diajukan ulang.",
+                            "Customer <b>{$customer->name}</b> telah direvisi dan diajukan ulang oleh user.",
                             route('customers.approval'),
                             'ph-arrow-u-up-left',
                             'warning'
@@ -443,7 +459,20 @@ class CustomerController extends Controller
 
     public function show(Customer $customer)
     {
-        return $customer->load(['sales.user', 'files', 'bankGaransis', 'bgRecommendations', 'creditLimits']);
+        $user = Auth::user();
+        $canAdjustFinance = $user->hasRole('manager-finance') || $user->hasRole('head-finance');
+
+        $baseTotalAmount = 0;
+        foreach ($customer->items as $item) {
+            $baseTotalAmount += ($item->quantity * $item->price);
+        }
+
+        $data = $customer->load(['sales.user', 'files', 'bankGaransis', 'bgRecommendations', 'creditLimits', 'items'])->toArray();
+
+        $data['can_adjust_finance'] = $canAdjustFinance;
+        $data['base_total_amount']  = $baseTotalAmount;
+
+        return response()->json($data);
     }
 
     public function store(CustomerRequest $request)
@@ -754,7 +783,7 @@ class CustomerController extends Controller
         }
 
         // [UPDATE DISINI] Tambahkan 'files' agar data dokumen terpanggil
-        $customer = Customer::with(['user', 'accountGroup', 'customerClass', 'files']) 
+        $customer = Customer::with(['user', 'accountGroup', 'customerClass', 'files'])
                     ->findOrFail($log->related_id);
 
         $preSelectedAction = $request->query('pre_action', 'approve');
@@ -806,7 +835,7 @@ class CustomerController extends Controller
         DB::beginTransaction();
         try {
             $isFinanceAdjuster = $actor && ($actor->hasRole('manager-finance') || $actor->hasRole('head-finance'));
-            if ($action === 'review' && $isFinanceAdjuster) {
+            if (($action === 'review' || $action === 'approve') && $isFinanceAdjuster) {
                 if (request()->has('update_top') || request()->has('update_lead_time')) {
                     $customer->update([
                         'term_of_payment' => request('update_top'),
@@ -864,7 +893,7 @@ class CustomerController extends Controller
 
             if ($action === 'approve') {
                 $dbStatus = 'Approved';
-                $dbNotes = 'Approve tanpa notes'; // Default text
+                $dbNotes = empty($notes) ? 'Approve tanpa notes' : $notes;
             }
             elseif ($action === 'review') {
                 $dbStatus = 'Approved';
@@ -900,8 +929,38 @@ class CustomerController extends Controller
                     'approver_name' => $actor->name ?? 'System'
                 ])
                 ->log($logMessage);
+            
+            $admins = User::role('super-admin')
+                  ->where('id', '!=', $actor->id) 
+                  ->get();
 
-            // --- 2. Update Log (Token Hangus) ---
+            $adminTitle = "Monitoring Approval";
+            $adminMessage = "";
+            $adminIcon = "ph-info";
+            $adminColor = "info";
+
+            if ($action === 'approve' || $action === 'review') {
+                $adminTitle = "Approval Customer";
+                $adminMessage = "Customer <b>{$customer->name}</b> telah disetujui (Level {$currentLog->level}) oleh <b>{$actor->name}</b>. Status: " . ($dbStatus == 'Approved' ? 'Lanjut ke Level Berikutnya/Selesai' : 'Review');
+                $adminIcon = "ph-check-circle";
+                $adminColor = "success";
+            } elseif ($action === 'reject') {
+                $adminTitle = "Rejection Customer";
+                $adminMessage = "Customer <b>{$customer->name}</b> DITOLAK oleh <b>{$actor->name}</b> di Level {$currentLog->level}. Alasan: {$notes}";
+                $adminIcon = "ph-x-circle";
+                $adminColor = "danger";
+            }
+
+            if ($admins->count() > 0) {
+                Notification::send($admins, new SystemNotification(
+                    $adminTitle,
+                    $adminMessage,
+                    route('customers.index'),
+                    $adminIcon,
+                    $adminColor
+                ));
+            }
+
             $currentLog->update([
                 'status' => $dbStatus,
                 'notes' => $dbNotes,
@@ -953,9 +1012,9 @@ class CustomerController extends Controller
                                 'name' => $nextApproverUser->name,
                                 'level' => $nextLog->level,
                                 'is_first' => false,
-                                'is_it' => $nextApproverUser->hasRole('it') 
+                                'is_it' => $nextApproverUser->hasRole('it')
                             ]];
-                            
+
                             CustomerJob::dispatch($customer->id, $recipients, $nextLog->token, 'approval');
                         }
                     } else {
@@ -987,7 +1046,7 @@ class CustomerController extends Controller
                 ApprovalLog::where('category', 'Customer')
                     ->where('related_id', $customer->id)
                     ->where('status', 'Pending')
-                    ->update(['status' => 'Canceled', 'token' => null]);
+                    ->update(['status' => 'Rejected', 'token' => null]);
 
                 $customer->update([
                     'status_approval' => 'Rejected',
@@ -1007,6 +1066,10 @@ class CustomerController extends Controller
 
             DB::commit();
 
+            if(request()->ajax()){
+                return response()->json(['success' => true, 'message' => 'Action processed successfully.']);
+            }
+
             return view('page.customer.links.approval-success', [
                 'action' => $action,
                 'customerName' => $customer->name,
@@ -1017,6 +1080,9 @@ class CustomerController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Approval Process Error: ' . $e->getMessage());
+            if(request()->ajax()){
+                return response()->json(['success' => false, 'message' => 'Error: ' . $e->getMessage()], 500);
+            }
             return abort(500, 'Terjadi kesalahan saat memproses approval.');
         }
     }
@@ -1053,7 +1119,7 @@ class CustomerController extends Controller
         ));
     }
 
-    public function getApprovalData()
+    public function getApprovalData(Request $request)
     {
         $currentUser = Auth::user();
         $query = ApprovalLog::with('approver')
@@ -1069,16 +1135,27 @@ class CustomerController extends Controller
             ->join('customers', 'approval_logs.related_id', '=', 'customers.id')
             ->where('approval_logs.category', 'Customer');
 
-        $query->where('approval_logs.status', 'Pending');
+        if ($request->has('status') && $request->status !== 'all') {
+            if ($request->status === 'Active') {
+                $query->where('customers.bank_garansi', 'YA');
+            } elseif ($request->status === 'Inactive') {
+                $query->where(function($q) {
+                    $q->where('customers.bank_garansi', '!=', 'YA')
+                    ->orWhereNull('customers.bank_garansi');
+                });
+            }
+        }
 
+        if ($request->has('approval_status') && $request->approval_status !== 'all') {
+            $query->where('customers.status_approval', $request->approval_status);
+        }
+        
+        $query->where('approval_logs.status', 'Pending');
         $query->whereIn('customers.status_approval', ['Pending', 'Processing']);
 
         if (!$currentUser->hasRole('super-admin')) {
             $query->where('approval_logs.approver_nik', $currentUser->nik);
         }
-
-        $query->orderBy('customers.created_at', 'desc')
-            ->orderBy('approval_logs.level', 'asc');
 
         return DataTables::of($query)
             ->addIndexColumn()
@@ -1114,7 +1191,7 @@ class CustomerController extends Controller
                 $status = $row->customer_status;
                 $baseClass = match($status) {
                     'Approved', 'Completed' => 'bg-success',
-                    'Rejected', 'Canceled' => 'bg-danger',
+                    'Rejected' => 'bg-danger',
                     'Processing' => 'bg-primary',
                     'Pending' => 'bg-warning',
                     default => 'bg-secondary'
@@ -1130,7 +1207,7 @@ class CustomerController extends Controller
                 $token = $row->token;
                 $customerName = e($row->customer_name);
                 $customerId = $row->customer_id;
-                
+
                 $canAction = true;
                 if ($row->level > 1) {
                     $prevLog = ApprovalLog::where('category', 'Customer')
