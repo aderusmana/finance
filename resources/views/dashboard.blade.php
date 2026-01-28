@@ -473,7 +473,7 @@
                             </div>
                             <div style="margin-left: 15px; flex-grow: 1;">
                                 <div class="d-flex align-items-center justify-content-between mb-1">
-                                    <span class="badge" style="background: #eff6ff; color: #1d4ed8; font-weight: 700; font-size: 0.65rem; padding: 4px 8px;">SALES (FIRAS/TEAM)</span>
+                                    <span class="badge" style="background: #eff6ff; color: #1d4ed8; font-weight: 700; font-size: 0.65rem; padding: 4px 8px;">SALES TEAM</span>
                                     <small class="text-muted" style="font-size: 0.7rem;">Step 1</small>
                                 </div>
                                 <h6 class="fw-bold mb-1" style="font-size: 0.9rem; color: #1f2937;">Input Data</h6>
