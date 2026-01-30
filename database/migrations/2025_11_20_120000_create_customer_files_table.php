@@ -19,6 +19,7 @@ class CreateCustomerFilesTable extends Migration
             $table->string('npwp_file')->nullable();
             $table->string('nib_siup_file')->nullable();
             $table->string('ktp_file')->nullable();
+            $table->string('akte_file')->nullable();
             $table->timestamps();
 
             $table->foreign('customer_id')->references('id')->on('customers')->onDelete('cascade');

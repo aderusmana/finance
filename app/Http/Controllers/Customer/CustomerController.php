@@ -118,7 +118,8 @@ class CustomerController extends Controller
                     'customers.*',
                     'customer_files.npwp_file as file_npwp',
                     'customer_files.nib_siup_file as file_nib',
-                    'customer_files.ktp_file as file_ktp'
+                    'customer_files.ktp_file as file_ktp',
+                    'customer_files.akte_file as file_akte'
                 );
 
             if ($request->has('status') && $request->status !== 'all') {
@@ -156,6 +157,7 @@ class CustomerController extends Controller
                 $rowData['file_npwp_path'] = $row->file_npwp ? asset('storage/' . ltrim($row->file_npwp, '/')) : null;
                 $rowData['file_nib_path']  = $row->file_nib ? asset('storage/' . ltrim($row->file_nib, '/')) : null;
                 $rowData['file_ktp_path']  = $row->file_ktp ? asset('storage/' . ltrim($row->file_ktp, '/')) : null;
+                $rowData['file_akte_path'] = $row->file_akte ? asset('storage/' . ltrim($row->file_akte, '/')) : null;
 
                 $jsonRow = htmlspecialchars(json_encode($rowData), ENT_QUOTES, 'UTF-8');
 
@@ -211,6 +213,7 @@ class CustomerController extends Controller
                 $dataAttrs .= ' data-file_npwp_path="' . $rowData['file_npwp_path'] . '"';
                 $dataAttrs .= ' data-file_nib_path="' . $rowData['file_nib_path'] . '"';
                 $dataAttrs .= ' data-file_ktp_path="' . $rowData['file_ktp_path'] . '"';
+                $dataAttrs .= ' data-file_akte_path="' . $rowData['file_akte_path'] . '"';
 
                 $btn = '<div class="d-flex gap-2">';
 
@@ -295,7 +298,7 @@ class CustomerController extends Controller
             ->make(true);
         }
 
-        $sales = Sales::with(['user.position', 'branch', 'region'])->get();
+        $sales = Sales::with(['user.position', 'branch', 'region', 'accountGroup'])->get();
         $top = TOP::all();
         $accountgroup = AccountGroup::all();
         $customerClass = CustomerClass::all();
@@ -477,7 +480,6 @@ class CustomerController extends Controller
 
     public function store(CustomerRequest $request)
     {
-        // 1. Cek Apakah Approval Path Tersedia
         $category = 'Customer';
         $subCategory = 'CBD';
 
@@ -505,47 +507,55 @@ class CustomerController extends Controller
         $logs = collect();
         $firstLog = null;
 
-        // 2. Mulai Transaksi Database
         DB::transaction(function () use ($request, &$createdCustomer, &$logs, &$firstLog) {
             $user = Auth::user();
+            $customerData = $request->except(['file_npwp', 'file_nib', 'file_ktp', 'file_akte', 'items']);
+            
+            $isBgActive = $request->bank_garansi === 'YA';
 
-            // --- A. Persiapan Data Customer ---
-            $customerData = $request->except(['file_npwp', 'file_nib', 'file_ktp', 'items']);
-            $year = date('Y');
-            $monthRoman = $this->getRomanMonth(date('n'));
-            $initials = $this->generateInitials($request->name);
-            $maxSequence = 0;
+            if ($isBgActive) {
+                $year = date('Y');
+                $monthRoman = $this->getRomanMonth(date('n'));
+                $initials = $this->generateInitials($request->name);
+                $maxSequence = 0;
 
-            // Generate No PKD
-            $existingNumbers = Customer::where('no_pkd', 'LIKE', "%/{$year}")
-                                ->pluck('no_pkd')
-                                ->toArray();
+                $existingNumbers = Customer::where('no_pkd', 'LIKE', "%/{$year}")
+                                    ->pluck('no_pkd')
+                                    ->toArray();
 
-            foreach ($existingNumbers as $no) {
-                $parts = explode('/', $no);
-                if (isset($parts[0]) && is_numeric($parts[0])) {
-                    $seq = intval($parts[0]);
-                    if ($seq > $maxSequence) {
-                        $maxSequence = $seq;
+                foreach ($existingNumbers as $no) {
+                    $parts = explode('/', $no);
+                    if (isset($parts[0]) && is_numeric($parts[0])) {
+                        $seq = intval($parts[0]);
+                        if ($seq > $maxSequence) {
+                            $maxSequence = $seq;
+                        }
                     }
                 }
+
+                $nextSequence = $maxSequence + 1;
+                $pkdNumber = '';
+
+                do {
+                    $sequenceStr = str_pad($nextSequence, 3, '0', STR_PAD_LEFT);
+                    $pkdNumber = sprintf("%s/PKD-%s/%s/%s", $sequenceStr, $initials, $monthRoman, $year);
+                    $exists = Customer::where('no_pkd', $pkdNumber)->exists();
+                    if ($exists) {
+                        $nextSequence++;
+                    }
+                } while ($exists);
+
+                $customerData['no_pkd'] = $pkdNumber;
+                $customerData['credit_limit'] = 0;
+
+            } else {
+
+                $customerData['no_pkd'] = null;
+                $rawLimit = $request->credit_limit;
+                $cleanLimit = str_replace(['.', ','], '', $rawLimit);
+                $customerData['credit_limit'] = (float) $cleanLimit;
             }
 
-            $nextSequence = $maxSequence + 1;
-            $pkdNumber = '';
-
-            do {
-                $sequenceStr = str_pad($nextSequence, 3, '0', STR_PAD_LEFT);
-                $pkdNumber = sprintf("%s/PKD-%s/%s/%s", $sequenceStr, $initials, $monthRoman, $year);
-                $exists = Customer::where('no_pkd', $pkdNumber)->exists();
-                if ($exists) {
-                    $nextSequence++;
-                }
-            } while ($exists);
-
-            $customerData['no_pkd'] = $pkdNumber;
-
-            // Kalkulasi TOP & Lead Time
             if ($request->filled('top_calc')) {
                 $customerData['top_calc'] = $request->top_calc;
             } else {
@@ -557,7 +567,6 @@ class CustomerController extends Controller
                 $customerData['lead_time'] = 0;
             }
 
-            // Hitung Grand Total
             $grandTotal = 0;
             if ($request->has('items') && is_array($request->items)) {
                 foreach ($request->items as $item) {
@@ -566,12 +575,10 @@ class CustomerController extends Controller
                     $grandTotal += ($qty * $price);
                 }
             }
-            $customerData['customer_total'] = $grandTotal;
 
-            // --- B. Create Customer ---
+            $customerData['customer_total'] = $grandTotal;
             $createdCustomer = Customer::create($customerData);
 
-            // --- C. Notifikasi General (Ke Admin/Finance) ---
             try {
                 $recipients = User::role(['super-admin', 'manager-finance', 'head-finance'])->get();
                 Notification::send($recipients, new SystemNotification(
@@ -585,7 +592,6 @@ class CustomerController extends Controller
                 // Ignore error notif general agar tidak rollback transaksi
             }
 
-            // --- D. Simpan Items ---
             if ($request->has('items') && is_array($request->items)) {
                 foreach ($request->items as $item) {
                     if (!empty($item['item_name']) && !empty($item['quantity'])) {
@@ -599,7 +605,6 @@ class CustomerController extends Controller
                 }
             }
 
-            // --- E. Activity Log ---
             activity()
                 ->causedBy($user)
                 ->performedOn($createdCustomer)
@@ -611,13 +616,13 @@ class CustomerController extends Controller
                 ])
                 ->log("Created new customer: {$createdCustomer->name}");
 
-            // --- F. Upload Files ---
             $storageFolder = 'customer_files/' . $createdCustomer->id;
             $fileData = [
                 'customer_id' => $createdCustomer->id,
                 'npwp_file' => null,
                 'nib_siup_file' => null,
-                'ktp_file' => null
+                'ktp_file' => null,
+                'akte_file' => null
             ];
 
             if ($request->hasFile('file_npwp')) {
@@ -629,13 +634,15 @@ class CustomerController extends Controller
             if ($request->hasFile('file_ktp')) {
                 $fileData['ktp_file'] = $request->file('file_ktp')->store($storageFolder, 'public');
             }
+            if ($request->hasFile('file_akte')) {
+                $fileData['akte_file'] = $request->file('file_akte')->store($storageFolder, 'public');
+            }
+
             CustomerFile::create($fileData);
 
-            // --- G. Generate Approval Logs ---
             $subCategory = 'CBD';
             $logs = $this->generateApprovalLogs($user, $createdCustomer->id, 'Customer', $subCategory);
 
-            // --- H. Cari First Approver & Kirim Notifikasi ---
             $firstLog = ApprovalLog::where('category', 'Customer')
                 ->where('related_id', $createdCustomer->id)
                 ->orderBy('level', 'asc')
@@ -645,7 +652,6 @@ class CustomerController extends Controller
                 $firstApprover = User::where('nik', $firstLog->approver_nik)->first();
 
                 if ($firstApprover) {
-                    // 1. Update Route To Customer
                     $createdCustomer->update(['route_to' => $firstApprover->name, 'status_approval' => 'Pending']);
                     try {
                         Notification::send($firstApprover, new SystemNotification(
@@ -685,7 +691,6 @@ class CustomerController extends Controller
             return response()->json(['success' => false, 'message' => 'Failed to create customer'], 500);
         }
 
-        // 3. Dispatch Job Email (Di Luar Transaksi agar tidak block)
         try {
             $firstLogData = $logs->firstWhere('level', 1);
 
@@ -805,7 +810,7 @@ class CustomerController extends Controller
         $request->validate([
             'token' => 'required|string',
             'action' => 'required|in:approve,reject,review',
-            'notes' => 'required|string',
+            'notes' => 'nullable|string',
         ]);
 
         $customer = Customer::findOrFail($customerId);
@@ -831,19 +836,63 @@ class CustomerController extends Controller
         }
 
         $actor = User::where('nik', $currentLog->approver_nik)->first();
+        
+        $isFinanceAdjuster = $actor && ($actor->hasRole('manager-finance') || $actor->hasRole('head-finance'));
+        $cleanNotes = trim($notes);
+
+        if ($isFinanceAdjuster && ($action === 'review' || $action === 'approve')) {
+            $isTopChanged = request()->has('update_top') && request('update_top') != $customer->term_of_payment;
+            
+            if ($isTopChanged) {
+                if (empty($cleanNotes)) {
+                    return back()->withInput()->withErrors(['notes' => 'Notes wajib diisi karena Anda mengubah Term of Payment (TOP).']);
+                }
+            }
+        } 
+        
+        else {
+            if ($action === 'review' || $action === 'reject') {
+                if (empty($cleanNotes)) {
+                    return back()->withInput()->withErrors(['notes' => 'Notes wajib diisi untuk keputusan Review/Reject.']);
+                }
+
+                if (!preg_match('/[a-zA-Z]{2,}/', $cleanNotes)) {
+                    return back()->withInput()->withErrors(['notes' => 'Notes harus berisi kalimat yang jelas (bukan hanya angka, tanda baca, atau 1 huruf).']);
+                }
+            }
+        }
 
         DB::beginTransaction();
         try {
-            $isFinanceAdjuster = $actor && ($actor->hasRole('manager-finance') || $actor->hasRole('head-finance'));
             if (($action === 'review' || $action === 'approve') && $isFinanceAdjuster) {
-                if (request()->has('update_top') || request()->has('update_lead_time')) {
-                    $customer->update([
-                        'term_of_payment' => request('update_top'),
-                        'lead_time'       => request('update_lead_time'),
-                        'credit_limit'    => request('update_credit_limit_value')
-                    ]);
+                $updateData = [];
+                $changesLog = [];
+                
+                if (request()->has('update_top') && request('update_top') != $customer->term_of_payment) {
+                    $updateData['term_of_payment'] = request('update_top');
+                    $changesLog[] = "TOP changed to " . request('update_top');
+                }
 
-                    $notes .= "\n[System]: Terms & Limit adjusted by Finance (" . $actor->name . ")";
+                if (request()->has('update_lead_time') && request('update_lead_time') != $customer->lead_time) {
+                    $updateData['lead_time'] = request('update_lead_time');
+                    $changesLog[] = "Lead Time changed to " . request('update_lead_time');
+                }
+
+                if (request()->has('update_credit_limit_value') && request('update_credit_limit_value') != $customer->credit_limit) {
+                    $updateData['credit_limit'] = request('update_credit_limit_value');
+                }
+
+                if (request()->filled('update_npwp') && request('update_npwp') != $customer->npwp) {
+                    $updateData['npwp'] = request('update_npwp');
+                    $changesLog[] = "NPWP corrected by Finance";
+                }
+
+                if (!empty($updateData)) {
+                    $customer->update($updateData);
+                    if (!empty($changesLog)) {
+                        $prefix = !empty($notes) ? "\n" : "";
+                        $notes .= $prefix . "[System - Adjusted]: " . implode(', ', $changesLog);
+                    }
                 }
             }
             if (($action === 'approve' || $action === 'review') && $actor && $actor->hasRole('it')) {
@@ -929,9 +978,9 @@ class CustomerController extends Controller
                     'approver_name' => $actor->name ?? 'System'
                 ])
                 ->log($logMessage);
-            
+
             $admins = User::role('super-admin')
-                  ->where('id', '!=', $actor->id) 
+                  ->where('id', '!=', $actor->id)
                   ->get();
 
             $adminTitle = "Monitoring Approval";
@@ -1149,7 +1198,7 @@ class CustomerController extends Controller
         if ($request->has('approval_status') && $request->approval_status !== 'all') {
             $query->where('customers.status_approval', $request->approval_status);
         }
-        
+
         $query->where('approval_logs.status', 'Pending');
         $query->whereIn('customers.status_approval', ['Pending', 'Processing']);
 

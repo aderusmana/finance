@@ -29,10 +29,10 @@ class CustomerRequest extends FormRequest
             'customer_class' => 'required|exists:customer_classes,id',
 
             // --- 3. Documents (File Uploads) ---
-            // Validasi file: Wajib, harus file, tipe pdf/jpg/png, max 5MB (5120KB)
             'file_npwp' => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120',
-            'file_nib'  => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
-            'file_ktp'  => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'file_nib'  => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'file_ktp'  => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'file_akte' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
 
             // --- 4. General Info ---
             'name' => 'required|string|max:255',
@@ -73,7 +73,16 @@ class CustomerRequest extends FormRequest
             // --- 7. Financial Terms ---
             'term_of_payment' => 'required|string', // Sesuaikan jika ini relasi ID
             'output_tax' => 'required|in:Terhutang PPN,NON-PPN,PPN', // Sesuaikan opsi
-            'credit_limit' => 'required|numeric|min:0',
+            'credit_limit' => [
+            'required',
+            'numeric',
+            'min:0',
+                function ($attribute, $value, $fail) {
+                    if (request('bank_garansi') === 'TIDAK' && $value <= 0) {
+                        $fail('Jika Bank Garansi NO, Credit Limit harus diisi (lebih dari 0).');
+                    }
+                },
+            ],
             'ccar' => 'required|string',
             'bank_garansi' => 'required|in:YA,TIDAK',
             'lead_time' => 'nullable|numeric|min:0',
@@ -105,6 +114,9 @@ class CustomerRequest extends FormRequest
             // KTP
             'file_ktp.mimes'    => 'Format file KTP harus PDF, JPG, atau PNG.',
             'file_ktp.max'      => 'Ukuran file KTP maksimal 5MB.',
+            // Akte Pendirian
+            'file_akte.mimes'    => 'Format Akte harus PDF, JPG, atau PNG.',
+            'file_akte.max'      => 'Ukuran file Akte maksimal 5MB.',
 
             // --- 4. General Info ---
             'name.required'        => 'Nama Customer wajib diisi.',

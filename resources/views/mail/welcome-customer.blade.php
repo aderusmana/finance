@@ -48,10 +48,10 @@
                                 {{ $customer->city }}{{ $customer->postal_code ? ', ' . $customer->postal_code : '' }}
                             </p>
 
-                            <p style="margin: 20px 0; font-weight: bold; font-family: Arial, sans-serif;">Subject: Welcome to Sinar Meadow!</p>
+                            <p style="margin: 20px 0; font-weight: bold; font-family: Arial, sans-serif;">Subject: Welcome to Sinar Meadow</p>
 
                             <p style="margin: 0 0 15px; font-family: Arial, sans-serif;">Dear Sirs,</p>
-                            <p style="margin: 0 0 15px; font-family: Arial, sans-serif;">On behalf of everyone at PT Sinar Meadow International Indonesia, we want to extend a warm welcome! We are so glad to have you as a new customer and are thrilled you've chosen us for your material needs.</p>
+                            <p style="margin: 0 0 15px; font-family: Arial, sans-serif;">On behalf of everyone at PT Sinar Meadow International Indonesia, we want to extend a warm welcome. We are so glad to have you as a new customer and are thrilled you've chosen us for your material needs.</p>
                             <p style="margin: 0 0 15px; font-family: Arial, sans-serif;">We are committed to providing you with excellent product and services. As a valued customer, your satisfaction is our top priority, and we are here to support you every step of the way.</p>
                             <p style="margin: 0 0 5px; font-family: Arial, sans-serif;">To help you get started, here are some helpful resources:</p>
 
@@ -111,7 +111,7 @@
                                             <tr>
                                                 <td style="width: 130px; padding: 2px 0; color: #333;">Contact No</td>
                                                 <td style="width: 15px; text-align: center; padding: 2px 0; color: #333;">:</td>
-                                                <td style="padding: 2px 0; color: #333;">{{ $salesRep->no_telepon  }}</td>
+                                                <td style="padding: 2px 0; color: #333;">{{ $salesRep->no_telepon ?? '-'  }}</td>
                                             </tr>
                                         </table>
 
@@ -130,7 +130,7 @@
                                             <tr>
                                                 <td style="width: 130px; padding: 2px 0; color: #333;">Contact No</td>
                                                 <td style="width: 15px; text-align: center; padding: 2px 0; color: #333;">:</td>
-                                                 <td style="padding: 2px 0; color: #333;">{{ $managerFinance->no_telepon  }}</td>
+                                                 <td style="padding: 2px 0; color: #333;">{{ $managerFinance->no_telepon ?? '-'  }}</td>
                                             </tr>
                                         </table>
 

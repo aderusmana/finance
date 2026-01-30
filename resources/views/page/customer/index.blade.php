@@ -164,19 +164,21 @@
                             <div class="card-body">
                                 <div class="row">
                                     <div class="col-md-12">
-                                        <label for="user_id" class="form-label">Select User <span
-                                                class="text-danger">*</span></label>
-                                        <select class="form-select select2-styled" id="user_id" name="user_id"
-                                            style="width: 100%;" required>
+                                        <label for="user_id" class="form-label">Select User (Requester) <span class="text-danger">*</span></label>
+                                        <select class="form-select select2-styled" id="user_id" name="user_id" style="width: 100%;" required>
                                             <option></option>
-                                            @foreach ($sales as $user)
-                                                <option value="{{ $user->id }}"
-                                                    data-pos="{{ $user->user->position?->position_name ?? ($user->user->position_name ?? '') }}"
-                                                    data-branch="{{ $user->branch?->branch_name ?? '' }}"
-                                                    data-region="{{ $user->region?->region_name ?? '' }}">
-                                                    {{ $user->user->name }}</option>
+                                            @foreach ($sales as $s)
+                                                <option value="{{ $s->user_id }}"
+                                                    data-pos="{{ $s->user->position?->position_name ?? '' }}"
+                                                    data-branch="{{ $s->branch?->branch_name ?? '' }}"
+                                                    data-region="{{ $s->region?->region_name ?? '' }}"
+                                                    data-account-group-id="{{ $s->account_group_id }}"> 
+                                                    {{ $s->user->name }}
+                                                </option>
                                             @endforeach
                                         </select>
+                                        <input type="hidden" id="current_user_role" value="{{ Auth::user()->getRoleNames()->first() }}">
+                                        <input type="hidden" id="current_user_id" value="{{ Auth::id() }}">
                                     </div>
                                 </div>
                             </div>
@@ -249,40 +251,42 @@
 
                                 <hr>
 
-                                {{-- D. Documents Upload (MOVED UP HERE) --}}
+                                {{-- D. Documents Upload --}}
                                 <div class="card-body bg-opacity-10">
                                     <div class="row g-3 mb-4">
-                                        <h6 class="fw-bold text-secondary"><i class="ph-bold ph-upload-simple"></i>
-                                            Document Uploads (Auto-fill Support)</h6>
-                                        <div class="col-md-4">
-                                            <label class="form-label">Upload NPWP <span
-                                                    class="text-danger">*</span></label>
+                                        <h6 class="fw-bold text-secondary">
+                                            <i class="ph-bold ph-upload-simple"></i> Document Uploads (Auto-fill Support)
+                                        </h6>
+                                        
+                                        {{-- 1. NPWP (REQUIRED) --}}
+                                        <div class="col-md-3">
+                                            <label class="form-label">Upload NPWP <span class="text-danger">*</span></label>
                                             <input type="file" class="form-control" name="file_npwp" required>
-                                            <small class="text-muted f-s-11">Upload NPWP untuk auto-fill nama &
-                                                alamat.</small>
+                                            <small class="text-muted f-s-11">Upload NPWP untuk auto-fill nama & alamat.</small>
                                             <div id="preview_npwp" class="mt-2" style="display: none;">
-                                                <a href="#" target="_blank" class="btn btn-sm btn-outline-primary file-link">
-                                                    <i class="ph-bold ph-file-text me-1"></i> View Uploaded NPWP
-                                                </a>
+                                                {{-- Preview button container --}}
                                             </div>
                                         </div>
-                                        <div class="col-md-4">
-                                            <label class="form-label">Upload NIB/SIUP</label>
-                                            <input type="file" class="form-control" name="file_nib">
-                                            <div id="preview_nib" class="mt-2" style="display: none;">
-                                                <a href="#" target="_blank" class="btn btn-sm btn-outline-primary file-link">
-                                                    <i class="ph-bold ph-file-text me-1"></i> View Uploaded NIB
-                                                </a>
-                                            </div>
+
+                                        {{-- 2. NIB/SIUP (REQUIRED - REVISI: Tambah Bintang & Required) --}}
+                                        <div class="col-md-3">
+                                            <label class="form-label">Upload NIB/SIUP <span class="text-danger">*</span></label>
+                                            <input type="file" class="form-control" name="file_nib" required>
+                                            <div id="preview_nib" class="mt-2" style="display: none;"></div>
                                         </div>
-                                        <div class="col-md-4">
-                                            <label class="form-label">Upload KTP</label>
-                                            <input type="file" class="form-control" name="file_ktp">
-                                            <div id="preview_ktp" class="mt-2" style="display: none;">
-                                                <a href="#" target="_blank" class="btn btn-sm btn-outline-primary file-link">
-                                                    <i class="ph-bold ph-id-card me-1"></i> View Uploaded KTP
-                                                </a>
-                                            </div>
+
+                                        {{-- 3. KTP (REQUIRED - REVISI: Tambah Bintang & Required) --}}
+                                        <div class="col-md-3">
+                                            <label class="form-label">Upload KTP <span class="text-danger">*</span></label>
+                                            <input type="file" class="form-control" name="file_ktp" required>
+                                            <div id="preview_ktp" class="mt-2" style="display: none;"></div>
+                                        </div>
+
+                                        {{-- 4. AKTE (NULLABLE - REVISI: Hapus Bintang & Hapus Required) --}}
+                                        <div class="col-md-3">
+                                            <label class="form-label">Upload Akte Pendirian</label> {{-- Hapus span text-danger --}}
+                                            <input type="file" class="form-control" name="file_akte"> {{-- Hapus required --}}
+                                            <div id="preview_akte" class="mt-2" style="display: none;"></div>
                                         </div>
                                     </div>
                                 </div>
@@ -1282,7 +1286,6 @@
                     // --- 3. POPULATE ITEMS ---
                     if (data.items && data.items.length > 0) {
                         data.items.forEach(item => {
-                            // Panggil function addRecallItemRow yang sudah ada di script Anda
                             addRecallItemRow(item.item_name, item.quantity, item.price);
                         });
                     } else {
@@ -1306,8 +1309,8 @@
                     $('#recall_preview_npwp').html(createPreviewBtn(data.file_npwp_path, 'NPWP'));
                     $('#recall_preview_nib').html(createPreviewBtn(data.file_nib_path, 'NIB'));
                     $('#recall_preview_ktp').html(createPreviewBtn(data.file_ktp_path, 'KTP'));
-
-                    // Show Modal
+                    $('#recall_preview_akte').html(createPreviewBtn(data.file_akte_path, 'Akte Pendirian'));
+                    
                     $('#recallCustomerModal').modal('show');
                 });
 
@@ -1439,115 +1442,95 @@
                     });
                 });
 
-                // --- LOGIC OCR NPWP (FIXED LIMIT 28 CHARS) ---
+                // --- LOGIC OCR NPWP (REVISI: LOOPING ALAMAT SAMPAI FOOTER) ---
                 $(document).on('change', 'input[name="file_npwp"]', function(e) {
                     const file = this.files && this.files[0];
                     if (!file) return;
 
                     const originalBtn = $('#btn-save-customer');
                     originalBtn.prop('disabled', true);
-                    const notice = $('<div class="mt-2 text-info" id="ocr-status"><i class="ph-bold ph-spinner ph-spin me-1"></i> Running OCR (Limit 28 Chars)...</div>');
+                    const notice = $('<div class="mt-2 text-info" id="ocr-status"><i class="ph-bold ph-spinner ph-spin me-1"></i> Reading NPWP (Scanning all lines)...</div>');
                     $(this).closest('.card-body').append(notice);
 
                     const reader = new FileReader();
                     reader.onload = function(evt) {
                         try {
-                            const dataUrl = evt.target.result;
-                            Tesseract.recognize(dataUrl, 'eng', {
-                                    logger: m => console.log(m)
-                                })
+                            Tesseract.recognize(evt.target.result, 'eng', { logger: m => console.log(m) })
                                 .then(result => {
-                                    const text = result.data && result.data.text ? result.data.text : '';
+                                    const text = result.data.text || '';
                                     const lines = text.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
-                                    console.log('OCR text:', text);
+                                    console.log('OCR Lines:', lines);
 
-                                    // 1. EXTRAKSI NAMA (Existing Logic)
-                                    let nameFromOcr = '';
-                                    try {
-                                        // Coba ambil dari baris 3 & 4 (format umum NPWP baru)
-                                        if (lines.length > 3) {
-                                            const parts = [];
-                                            if (lines[3]) parts.push(lines[3].trim());
-                                            if (lines[4]) parts.push(lines[4].trim());
-                                            if (parts.length) nameFromOcr = parts.join(' ');
-                                        }
-                                        // Fallback: ambil baris ke-2
-                                        if (!nameFromOcr && lines.length >= 2 && lines[1]) {
-                                            nameFromOcr = lines[1].trim();
-                                        }
+                                    // 1. CARI POSISI BARIS NPWP
+                                    let npwpLineIdx = -1;
+                                    let npwpValue = '';
+                                    const npwpRegexStrict = /\d{2}\.\d{3}\.\d{3}\.\d-\d{3}\.\d{3}/;
+                                    const npwpRegexLoose = /[0-9\.\-\s]{15,25}/; 
 
-                                        // [REVISI] Limit Nama Max 28 Karakter
-                                        if (nameFromOcr) {
-                                            // Bersihkan karakter aneh dulu jika perlu, lalu potong
-                                            nameFromOcr = nameFromOcr.replace(/[^a-zA-Z0-9\s\.\,]/g, '').trim();
-                                            let safeName = nameFromOcr.substring(0, 28); // LIMIT 28 CHARS
-
-                                            $('#name').val(safeName);
-                                            generatePkdNumber(safeName); // Generate PKD pakai nama yang sudah dipotong
+                                    for (let i = 0; i < lines.length; i++) {
+                                        let match = lines[i].match(npwpRegexStrict);
+                                        if (match) {
+                                            npwpLineIdx = i;
+                                            npwpValue = match[0];
+                                            break;
                                         }
-                                    } catch (e) {
-                                        console.error('Failed to set name from OCR', e);
                                     }
-
-                                    // 2. EXTRAKSI NPWP (Existing Logic)
-                                    let npwpMatch = text.match(/\d{2}\.\d{3}\.\d{3}\.\d-\d{3}\.\d{3}/);
-                                    if (!npwpMatch) {
-                                        npwpMatch = text.match(/[0-9\.\-\s]{9,25}/);
-                                    }
-                                    if (npwpMatch) {
-                                        $('#npwp').val(npwpMatch[0].trim());
-                                    }
-
-                                    // 3. EXTRAKSI ALAMAT (Existing Logic)
-                                    let address = '';
-                                    const fixedStart = 5;
-                                    if (lines.length > fixedStart) {
-                                        const candidate = [];
-                                        for (let i = fixedStart; i < Math.min(lines.length, fixedStart + 3); i++) {
-                                            const ln = lines[i];
-                                            if (!ln) continue;
-                                            // Validasi sederhana baris alamat (bukan angka dominan)
-                                            if (ln.length < 3) continue;
-                                            const digitRatio = (ln.replace(/\D/g, '').length) / Math.max(1, ln.length);
-                                            if (digitRatio > 0.8) continue;
-                                            candidate.push(ln);
-                                        }
-                                        if (candidate.length) address = candidate.join(' ');
-                                    }
-
-                                    // Fallback pencarian alamat jika cara diatas gagal
-                                    if (!address) {
-                                        const npwpPattern = npwpMatch ? npwpMatch[0].trim() : null;
-                                        let npwpLineIdx = -1;
-                                        if (npwpPattern) {
-                                            npwpLineIdx = lines.findIndex(l => l.includes(npwpPattern) || l.replace(/\s+/g, '').includes(npwpPattern.replace(/\s+/g, '')));
-                                        }
-                                        if (npwpLineIdx >= 0) {
-                                            const skipLabelRegex = /\b(NPWP|NPPKP|No\.?|Nama|Name|Alamat|Address|Tgl|Tanggal|SIUP|NIB)\b/i;
-                                            const collected = [];
-                                            const skipAfterNpwp = 2; // Biasa nama ada di 2 baris setelah NPWP
-                                            for (let i = npwpLineIdx + 1 + skipAfterNpwp; i < lines.length && collected.length < 3; i++) {
-                                                const ln = lines[i];
-                                                if (!ln || skipLabelRegex.test(ln) || ln.length < 4) continue;
-                                                const digitRatio = (ln.replace(/\D/g, '').length) / Math.max(1, ln.length);
-                                                if (digitRatio > 0.6) continue;
-                                                collected.push(ln);
+                                    // Fallback search
+                                    if (npwpLineIdx === -1) {
+                                        for (let i = 0; i < lines.length; i++) {
+                                            if (npwpRegexLoose.test(lines[i]) && lines[i].replace(/\D/g, '').length >= 15) {
+                                                npwpLineIdx = i;
+                                                npwpValue = lines[i].match(npwpRegexLoose)[0];
+                                                break; 
                                             }
-                                            if (collected.length) address = collected.join(' ');
                                         }
                                     }
 
-                                    if (!address) {
-                                        // Fallback terakhir: Cari kata "Jalan" atau "Alamat"
-                                        const addrIdx = lines.findIndex(l => /\b(Jl|Jalan|Address|Alamat)\b/i.test(l));
-                                        if (addrIdx >= 0) {
-                                            address = lines.slice(addrIdx, addrIdx + 3).join(' ').replace(/^(Alamat|Address|Jalan|Jl)\s*[:.]?\s*/i, '');
-                                        }
+                                    if (npwpValue) {
+                                        $('#npwp').val(npwpValue.trim());
                                     }
 
+                                    // 2. AMBIL NAMA (1 BARIS SETELAH NPWP)
+                                    if (npwpLineIdx !== -1 && lines.length > npwpLineIdx + 1) {
+                                        let rawName = lines[npwpLineIdx + 1];
+                                        rawName = rawName.replace(/^(Nama|Name)\s*[:.]?\s*/i, '').trim();
+                                        let safeName = rawName.replace(/[^a-zA-Z0-9\s\.\,\(\)\-\&]/g, '').trim(); 
+                                        $('#name').val(safeName);
+                                        generatePkdNumber(safeName); 
+                                    }
+
+                                    // 3. AMBIL ALAMAT (LOOPING SAMPAI KETEMU "FOOTER")
+                                    let rawAddress = '';
+                                    if (npwpLineIdx !== -1) {
+                                        let addressLines = [];
+                                        let startIndex = npwpLineIdx + 2;
+
+                                        // Loop dari baris alamat pertama sampai habis array
+                                        for (let i = startIndex; i < lines.length; i++) {
+                                            let currentLine = lines[i];
+
+                                            // Jika ketemu kata "Penerbit", "Terdaftar", "KPP", stop pengambilan alamat
+                                            if (currentLine.match(/(Penerbit|Terdaftar|KPP|Pratama|Kanwil|Direktorat)/i)) {
+                                                break; 
+                                            }
+
+                                            // Abaikan jika baris terlalu pendek (misal sampah OCR: ".")
+                                            if (currentLine.length > 2) {
+                                                addressLines.push(currentLine);
+                                            }
+                                        }
+
+                                        // Gabungkan semua baris alamat yang ditemukan jadi satu string panjang
+                                        rawAddress = addressLines.join(' '); 
+                                        
+                                        // Bersihkan label "Alamat :" atau "Jalan" di awal (jika ada)
+                                        rawAddress = rawAddress.replace(/^(Alamat|Address|Jalan|Jl)\s*[:.]?\s*/i, '').trim();
+                                    }
+
+                                    // Fungsi Chunking (Max 36 Karakter per Input)
                                     function splitChunksWordWrap(str, len) {
                                         if (!str) return [];
-                                        str = str.replace(/\s+/g, ' ').trim();
+                                        str = str.replace(/\s+/g, ' ').trim(); // Normalisasi spasi
                                         const words = str.split(' ');
                                         const out = [];
                                         let line = '';
@@ -1556,7 +1539,8 @@
                                                 line = (line + ' ' + w).trim();
                                             } else {
                                                 if (line) out.push(line);
-                                                if (w.length > len) {
+                                                // Handle kata yang lebih panjang dari limit (36)
+                                                if (w.length > len) { 
                                                     for (let i = 0; i < w.length; i += len) {
                                                         out.push(w.substr(i, len));
                                                     }
@@ -1570,17 +1554,16 @@
                                         return out;
                                     }
 
-                                    // Terapkan Limit 28 Karakter
-                                    const chunks = splitChunksWordWrap(address || '', 28);
+                                    // Distribusi ke Input Address 1, 2, 3
+                                    const chunks = splitChunksWordWrap(rawAddress || '', 36);
 
                                     try {
-                                        // Reset nilai dulu
+                                        // Reset field
                                         $('#address1, #address2, #address3').val('');
-
-                                        // Isi berurutan, jika penuh pindah ke bawah
+                                        
                                         if ($('#address1').length) $('#address1').val(chunks[0] || '');
-                                        if ($('#address2').length) $('#address2').val(chunks[1] || '');
-                                        if ($('#address3').length) $('#address3').val(chunks[2] || '');
+                                        if ($('#address2').length) $('#address2').val(chunks[1] || ''); 
+                                        if ($('#address3').length) $('#address3').val(chunks[2] || ''); 
                                     } catch (e) {
                                         console.error('Error setting address fields', e);
                                     }
@@ -1590,22 +1573,15 @@
                                 })
                                 .catch(err => {
                                     console.error('OCR error', err);
-                                    $('#ocr-status').text('OCR failed, please input manually').addClass('text-danger');
+                                    $('#ocr-status').text('OCR failed (Manual Input Required)').addClass('text-danger');
                                     originalBtn.prop('disabled', false);
                                 });
-                        } catch (outerErr) {
-                            console.error('OCR outer error', outerErr);
+                        } catch (e) {
                             $('#ocr-status').text('Error processing file').addClass('text-danger');
                             originalBtn.prop('disabled', false);
                         }
                     };
                     reader.readAsDataURL(file);
-                });
-
-                $('#user_id').select2({
-                    dropdownParent: $('#customerModal'),
-                    theme: 'bootstrap-5',
-                    placeholder: 'Search & Select User'
                 });
 
                 $('#account_group, #customer_class, #term_of_payment').select2({
@@ -1646,13 +1622,6 @@
                         }
                     });
                 }
-
-                $('#name').on('blur', function() {
-                    let val = $(this).val();
-                    if(val.length > 3) {
-                        generatePkdNumber(val);
-                    }
-                });
 
                 const table = $('#sampleTable').DataTable({
                     processing: true,
@@ -1741,16 +1710,24 @@
                     const userId = selected.val();
 
                     if (userId) {
-                        // Pull values from option data attributes
+                        // Isi Info Posisi/Branch (Existing)
                         $('#user_position').val(selected.data('pos') || '-');
                         $('#user_branch').val(selected.data('branch') || '-');
                         $('#user_region').val(selected.data('region') || '-');
 
+                        // ==========================================
+                        // LOGIKA BARU: AUTO SELECT ACCOUNT GROUP
+                        // ==========================================
+                        const linkedAgId = selected.data('account-group-id');
+                        if (linkedAgId) {
+                            $('#account_group').val(linkedAgId).trigger('change');
+                            // Jika ingin Account Group tidak bisa diganti oleh Sales, uncomment baris bawah:
+                            // $('#account_group').select2({ disabled: true, theme: 'bootstrap-5' }); 
+                        }
+
                         $('#user-info-section').slideDown();
-                        // Show main form section (account group & class are now inside main form)
                         $('#main-form-section').slideDown();
-                        // keep save disabled until account_group + customer_class chosen
-                        $('#btn-save-customer').prop('disabled', true);
+                        $('#btn-save-customer').prop('disabled', true); // Tetap disable sampai AG & Class terisi
                     } else {
                         $('#user-info-section').slideUp();
                         $('#main-form-section').slideUp();
@@ -1758,6 +1735,7 @@
                     }
                 });
 
+                // --- 3. EVENT SAAT ACCOUNT GROUP BERUBAH (MODIFIKASI: SET BG OTOMATIS) ---
                 $('#account_group, #customer_class').on('change', function() {
                     const ag = $('#account_group').val();
                     const cc = $('#customer_class').val();
@@ -1767,18 +1745,16 @@
                         let rawBg = selectedAg.data('bank_garansi');
                         let rawCcar = selectedAg.data('ccar');
 
-                        let bgValue = '';
-                        if (rawBg == 1 || rawBg === true || rawBg === '1') {
-                            bgValue = 'YA';
-                        } else {
-                            bgValue = 'TIDAK';
-                        }
+                        // Konversi nilai DB ke 'YA' / 'TIDAK'
+                        let bgValue = (rawBg == 1 || rawBg === true || rawBg === '1' || rawBg === 'YA') ? 'YA' : 'TIDAK';
 
-                        // 2. SET VALUE & TRIGGER CHANGE: Penting untuk Select2
-                        // Kita set valuenya ke 'YA'/'TIDAK' lalu panggil trigger('change')
+                        // ==========================================
+                        // LOGIKA BARU: TRIGGER CHANGE UNTUK PROSES LANJUTAN
+                        // ==========================================
+                        // Set nilai dropdown Bank Garansi
                         $('#bank_garansi').val(bgValue).trigger('change');
 
-                        // Untuk CCAR biasanya teksnya sama (smd_idr/smd_usd), tapi tetap perlu trigger
+                        // Set nilai CCAR
                         $('#ccar').val(rawCcar).trigger('change');
                     }
 
@@ -1790,22 +1766,166 @@
                     }
                 });
 
+                $('#bank_garansi').on('change', function() {
+                    const val = $(this).val(); // 'YA' atau 'TIDAK'
+                    const clInput = $('#credit_limit');
+                    
+                    // Bersihkan notes lama jika ada
+                    clInput.parent().find('.cl-status-note').remove();
+
+                    if (val === 'TIDAK') {
+                        // ======================
+                        // KASUS: BG = NO (TIDAK) -> Wajib Hitung
+                        // ======================
+                        
+                        // 1. No PKD: Hide/Empty
+                        $('#no_pkd').val('').attr('placeholder', 'Tidak perlu No PKD (Non-BG)').prop('readonly', true);
+                        
+                        // 2. Credit Limit: WAJIB ISI (Enable Click untuk Modal)
+                        // Set readonly agar user tidak ketik manual, tapi visualnya putih (aktif)
+                        clInput.val('').prop('readonly', true)
+                            .removeClass('bg-light').addClass('bg-white cursor-pointer') // Visual Aktif
+                            .addClass('border-danger') // Merah tanda wajib
+                            .attr('placeholder', 'Klik disini untuk menghitung (Wajib)');
+
+                        // Notes Merah di bawah input
+                        clInput.after('<small class="cl-status-note text-danger fw-bold mt-1 d-block"><i class="ph-bold ph-calculator me-1"></i> Wajib: Klik kolom ini untuk hitung limit (tanpa BG).</small>');
+
+                    } else {
+                        // ======================
+                        // KASUS: BG = YES (YA) -> Disable Calculator
+                        // ======================
+                        
+                        // 1. No PKD: Auto Generate
+                        $('#no_pkd').attr('placeholder', 'Akan digenerate otomatis...').prop('readonly', true);
+                        let currentName = $('#name').val();
+                        if(currentName.length > 3) {
+                            generatePkdNumber(currentName); 
+                        }
+
+                        // 2. Credit Limit: OTOMATIS 0 & DISABLED
+                        clInput.val(0).prop('readonly', true);
+                        
+                        // Styling Disabled (bg-light) & Hapus border merah
+                        clInput.removeClass('bg-white cursor-pointer border-danger').addClass('bg-light')
+                            .attr('placeholder', '0');
+                        
+                        // Notes Biru
+                        clInput.after('<small class="cl-status-note text-info fw-bold mt-1 d-block"><i class="ph-bold ph-info me-1"></i> Credit Limit otomatis 0 (BG Aktif).</small>');
+                    }
+                });
+
+                // --- 5. TRIGGER GENERATE PKD SAAT KETIK NAMA ---
+                $('#name').on('blur', function() {
+                    let val = $(this).val();
+                    let bgStatus = $('#bank_garansi').val();
+                    
+                    if(val.length > 3 && (bgStatus === 'YA' || bgStatus === '1')) {
+                        generatePkdNumber(val);
+                    } else if (bgStatus === 'TIDAK') {
+                        $('#no_pkd').val(''); 
+                    }
+                });
+
+                // --- EVENT CLICK CREDIT LIMIT (MODAL TRIGGER) ---
+                $(document).on('click focus', '#credit_limit', function(e) {
+                    e.preventDefault();
+
+                    // [PERBAIKAN DISINI]: Cek Status Bank Garansi
+                    // Jika Bank Garansi = YA, hentikan proses (jangan buka modal)
+                    const bgStatus = $('#bank_garansi').val();
+                    if (bgStatus === 'YA' || bgStatus === '1') {
+                        return; 
+                    }
+
+                    const termString = $('#term_of_payment').val();
+
+                    if (!termString) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'TOP belum dipilih',
+                            text: 'Harap pilih Term of Payment terlebih dahulu sebelum menghitung limit.'
+                        });
+                        $('#term_of_payment').select2('open');
+                        return;
+                    }
+
+                    $('#calc_products').empty();
+                    addCalcRow();
+
+                    let topVal = 0;
+                    const numberMatch = termString.match(/(\d+)/);
+
+                    if (numberMatch && numberMatch[0]) {
+                        topVal = parseInt(numberMatch[0]);
+                    }
+
+                    $('#calc_top').val(topVal);
+
+                    let ltVal = parseFloat($('#lead_time').val()) || 0;
+                    $('#calc_lt').val(ltVal);
+                    $('#calc_preview_formatted').val('0');
+
+                    const initialR = computeCreditValues();
+                    $('#calc_preview_formatted').val(fmt(Math.round(initialR.val30 || 0)));
+
+                    // Tampilkan Modal
+                    new bootstrap.Modal(document.getElementById('creditCalcModal')).show();
+                });
+
                 // 4. Modal Handler - CREATE
                 $('#btn-create-customer').on('click', function() {
+                    // Reset Form Standar
                     $('#customerForm')[0].reset();
                     $('.select2-styled').val(null).trigger('change');
                     $('#customerForm').find('input, textarea, select').prop('disabled', false);
+                    
+                    // Default Readonly Fields
                     $('#user_position, #user_branch, #user_region').prop('readonly', true);
                     $('#credit_limit').prop('readonly', true);
                     $('#no_pkd').val('').prop('readonly', true);
 
-                    $('#preview_npwp, #preview_nib, #preview_ktp').hide();
-                    $('input[type="file"]').prop('disabled', false);
+                    // Reset Upload Fields
+                    $('#preview_npwp, #preview_nib, #preview_ktp, #preview_akte').hide();
+                    $('input[type="file"]').val('').prop('disabled', false);
                     $('input[name="file_npwp"]').prop('required', true);
-                    $('input[name="file_nib"], input[name="file_ktp"]').prop('required', false);
+                    $('input[name="file_nib"]').prop('required', true);
+                    $('input[name="file_ktp"]').prop('required', true);
+                    $('input[name="file_akte"]').prop('required', false);
+                    
                     $('#btn-save-customer').show().prop('disabled', true);
                     $('#user-info-section').hide();
                     $('#main-form-section').hide();
+
+                    // ==========================================
+                    // LOGIKA BARU: CEK ROLE USER (SALES / BUKAN)
+                    // ==========================================
+                    const currentUserRole = $('#current_user_role').val().toLowerCase(); 
+                    const currentUserId = $('#current_user_id').val();
+
+                    // Pastikan input hidden user_id lama dihapus dulu agar tidak duplikat
+                    $('#user_id_hidden').remove();
+
+                    if (currentUserRole.includes('sales')) {
+                        // JIKA SALES: Auto-select diri sendiri & Disable Select2
+                        $('#user_id').val(currentUserId).trigger('change');
+                        $('#user_id').select2({ disabled: true, theme: 'bootstrap-5' });
+                        
+                        // Buat input hidden agar value tetap terkirim saat submit (karena disabled field tidak terkirim)
+                        $('<input>').attr({
+                            type:'hidden', 
+                            id:'user_id_hidden', 
+                            name:'user_id', 
+                            value: currentUserId
+                        }).appendTo('#customerForm');
+                    } else {
+                        // JIKA BUKAN SALES (Admin/Mgr): Enable Select2 normal
+                        $('#user_id').prop('disabled', false).select2({ 
+                            disabled: false, 
+                            theme: 'bootstrap-5', 
+                            placeholder: 'Search & Select User' 
+                        });
+                    }
 
                     $('#customerModalLabel').text('Create New Customer');
                     $('#customerModal').modal('show');
@@ -1878,7 +1998,8 @@
                     const docs = [
                         { name: 'NPWP Document', path: btn.data('file_npwp_path'), icon: 'ph-file-text' },
                         { name: 'NIB / SIUP', path: btn.data('file_nib_path'), icon: 'ph-file-code' },
-                        { name: 'KTP Penanggung Jawab', path: btn.data('file_ktp_path'), icon: 'ph-cardholder' }
+                        { name: 'KTP Penanggung Jawab', path: btn.data('file_ktp_path'), icon: 'ph-cardholder' },
+                        { name: 'Akte Pendirian', path: btn.data('file_akte_path'), icon: 'ph-scroll' }
                     ];
 
                     let docHtml = '';
@@ -1917,45 +2038,6 @@
 
                     // Show Modal
                     $('#customerDetailModal').modal('show');
-                });
-
-                $(document).on('click focus', '#credit_limit', function(e) {
-                    e.preventDefault();
-                    const termString = $('#term_of_payment').val();
-
-                    if (!termString) {
-                        Swal.fire({
-                            icon: 'warning',
-                            title: 'TOP belum dipilih',
-                            text: 'Harap pilih Term of Payment terlebih dahulu sebelum menghitung limit.'
-                        });
-                        $('#term_of_payment').select2('open');
-                        return;
-                    }
-
-                    $('#calc_products').empty();
-                    addCalcRow();
-
-                    let topVal = 0;
-                    const numberMatch = termString.match(/(\d+)/);
-
-                    if (numberMatch && numberMatch[0]) {
-                        topVal = parseInt(numberMatch[0]);
-                    }
-
-                    $('#calc_top').val(topVal);
-
-                    // $('#calc_top').prop('readonly', true);
-
-                    let ltVal = parseFloat($('#lead_time').val()) || 0;
-                    $('#calc_lt').val(ltVal);
-                    $('#calc_preview_formatted').val('0');
-
-                    const initialR = computeCreditValues();
-                    $('#calc_preview_formatted').val(fmt(Math.round(initialR.val30 || 0)));
-
-                    // 7. Tampilkan Modal
-                    new bootstrap.Modal(document.getElementById('creditCalcModal')).show();
                 });
 
                 function fmt(n) {

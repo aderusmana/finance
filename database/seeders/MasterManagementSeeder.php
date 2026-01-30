@@ -136,6 +136,7 @@ class MasterManagementSeeder extends Seeder
         $jktRegion = Regions::where('region_name', 'COMMERCIAL')->first();
         $hoBranch = Branch::where('branch_name', 'Head Office - Jakarta')->first();
         $distAccountGroup = AccountGroup::where('name_account_group', 'COMMERCIAL')->first();
+        $salesUser = User::where('username', 'staff.sales1')->first();
 
         // Membuat data Sales untuk Staff Sales 1
         if ($salesUser && $jktRegion && $hoBranch && $distAccountGroup) {
