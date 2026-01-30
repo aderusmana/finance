@@ -3,7 +3,7 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Welcome to Sinar Meadow</title>
+    <title>Welcome to Sinar Meadow {{ $customer->name }}</title>
     <style type="text/css">
         /* RESET STYLES - Biarkan di head untuk klien yang support */
         body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
@@ -48,7 +48,7 @@
                                 {{ $customer->city }}{{ $customer->postal_code ? ', ' . $customer->postal_code : '' }}
                             </p>
 
-                            <p style="margin: 20px 0; font-weight: bold; font-family: Arial, sans-serif;">Subject: Welcome to Sinar Meadow</p>
+                            <p style="margin: 20px 0; font-weight: bold; font-family: Arial, sans-serif;">Subject: Welcome to Sinar Meadow {{ $customer->name }}</p>
 
                             <p style="margin: 0 0 15px; font-family: Arial, sans-serif;">Dear Sirs,</p>
                             <p style="margin: 0 0 15px; font-family: Arial, sans-serif;">On behalf of everyone at PT Sinar Meadow International Indonesia, we want to extend a warm welcome. We are so glad to have you as a new customer and are thrilled you've chosen us for your material needs.</p>

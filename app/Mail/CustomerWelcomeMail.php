@@ -31,7 +31,7 @@ class CustomerWelcomeMail extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Welcome to Sinar Meadow!',
+            subject: 'Welcome to Sinar Meadow ' . $this->customer->name . '!',
         );
     }
 
