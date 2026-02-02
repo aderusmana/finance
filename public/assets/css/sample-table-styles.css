@@ -1013,6 +1013,33 @@ STYLES MOVED FROM index.blade.php
 */
 .modal-xl { max-width: 80vw !important; }
 .modal-body { max-height: calc(100vh - 210px); overflow-y: auto; }
+
+/* Make modals full-screen on small devices */
+@media (max-width: 767.98px) {
+    .modal-dialog {
+        margin: 0 !important;
+        max-width: 100% !important;
+        width: 100% !important;
+        height: 100% !important;
+    }
+
+    .modal-content {
+        height: 100vh !important;
+        max-height: 100vh !important;
+        border-radius: 0 !important;
+        overflow: hidden;
+    }
+
+    .modal-body {
+        max-height: calc(100vh - 56px) !important; /* keep room for header/footer */
+        overflow-y: auto !important;
+    }
+
+    .modal.fade .modal-dialog,
+    .modal.show .modal-dialog {
+        transform: none !important;
+    }
+}
 .view-modal-card { border: none; border-radius: .75rem; box-shadow: 0 4px 12px rgba(0,0,0, .08); margin-bottom: 1.5rem !important; }
 .view-modal-card-header { background-color: transparent; border-bottom: 1px solid #e9ecef; padding: 1rem 1.25rem; }
 .view-modal-card-header h5 { color: #1e40af; font-weight: 600; margin-bottom: 0; }

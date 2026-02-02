@@ -17,7 +17,7 @@
         <div class="col-12">
             <h4 class="main-title">Approvals Management</h4>
             <ul class="app-line-breadcrumbs mb-3">
-                <li><a class="f-s-14 f-w-500" href="#"><i class="ph-duotone ph-address-book f-s-16"></i> Approvals</a></li>
+                <li><a class="f-s-14 f-w-500" href="/"><i class="ph-duotone ph-address-book f-s-16"></i> Home</a></li>
                 <li class="active"><a class="f-s-14 f-w-500" href="#">Approvals List</a></li>
             </ul>
         </div>
@@ -27,7 +27,7 @@
     <div class="row">
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <div class="d-flex align-items-center gap-2">
+                <div class="d-none d-md-flex align-items-center gap-2 mb-3">
                     <span class="text-muted fw-bold me-1"><i class="ph-bold ph-funnel"></i> Filter:</span>
                     
                     <select id="statusFilter" class="form-select select2" style="width: 150px;">

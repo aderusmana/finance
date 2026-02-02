@@ -10,8 +10,8 @@
             <h4 class="main-title">Customers Management</h4>
             <ul class="app-line-breadcrumbs mb-3">
                 <li>
-                    <a class="f-s-14 f-w-500" href="#">
-                        <i class="ph-bold f-s-16"></i> Customers
+                    <a class="f-s-14 f-w-500" href="/">
+                        <i class="ph-bold f-s-16"></i> Home
                     </a>
                 </li>
                 <li class="active">
@@ -24,7 +24,7 @@
     <div class="row">
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <div class="d-flex align-items-center gap-2 mb-3">
+                <div class="d-none d-md-flex align-items-center gap-2 mb-3">
                     <span class="text-muted fw-bold me-1"><i class="ph-bold ph-funnel"></i> Filter:</span>
 
                     <select id="statusFilter" class="form-select select2" style="width: 150px;">
@@ -1828,7 +1828,7 @@
                 });
 
                 // --- EVENT CLICK CREDIT LIMIT (MODAL TRIGGER) ---
-                $(document).on('click focus', '#credit_limit', function(e) {
+                $(document).on('click', '#credit_limit', function(e) {
                     e.preventDefault();
 
                     // [PERBAIKAN DISINI]: Cek Status Bank Garansi
