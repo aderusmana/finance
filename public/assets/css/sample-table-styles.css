@@ -41,9 +41,11 @@
 
 /* [BARU] Tambahkan style untuk tombol Close */
 .btn-light-secondary {
-    background-color: #f0f2f5; /* Warna abu-abu muda */
+    background-color: #f0f2f5;
+    /* Warna abu-abu muda */
     border: 1px solid #dcdcdc;
-    color: #495057; /* Warna teks abu-abu tua */
+    color: #495057;
+    /* Warna teks abu-abu tua */
     font-weight: 600;
     padding: 10px 24px;
     border-radius: 10px;
@@ -51,7 +53,8 @@
 }
 
 .btn-light-secondary:hover {
-    background-color: #e9ecef; /* Sedikit lebih gelap saat hover */
+    background-color: #e9ecef;
+    /* Sedikit lebih gelap saat hover */
     border-color: #c8c8c8;
     color: #212529;
     transform: translateY(-1px);
@@ -69,7 +72,8 @@
 }
 
 /* Form Focus States */
-.form-control:focus, .form-select:focus {
+.form-control:focus,
+.form-select:focus {
     border-color: #1e40af !important;
     box-shadow: 0 0 0 0.25rem rgba(#2563eb) !important;
 }
@@ -408,6 +412,7 @@
         opacity: 0;
         transform: translateY(20px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -419,6 +424,7 @@
         opacity: 0;
         transform: translateX(-20px);
     }
+
     to {
         opacity: 1;
         transform: translateX(0);
@@ -430,6 +436,7 @@
         opacity: 0;
         transform: translateY(-20px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -499,13 +506,28 @@ body {
         animation: fadeInUp 0.6s ease-out forwards;
     }
 
-    .detail-section:nth-child(2) { animation-delay: 0.1s; opacity: 0; animation-fill-mode: forwards; }
-    .detail-section:nth-child(3) { animation-delay: 0.2s; opacity: 0; animation-fill-mode: forwards; }
-    .detail-section:nth-child(4) { animation-delay: 0.3s; opacity: 0; animation-fill-mode: forwards; }
+    .detail-section:nth-child(2) {
+        animation-delay: 0.1s;
+        opacity: 0;
+        animation-fill-mode: forwards;
+    }
+
+    .detail-section:nth-child(3) {
+        animation-delay: 0.2s;
+        opacity: 0;
+        animation-fill-mode: forwards;
+    }
+
+    .detail-section:nth-child(4) {
+        animation-delay: 0.3s;
+        opacity: 0;
+        animation-fill-mode: forwards;
+    }
 }
 
 /* Reduced Motion Support */
 @media (prefers-reduced-motion: reduce) {
+
     *,
     *::before,
     *::after {
@@ -531,9 +553,11 @@ body {
     0% {
         opacity: 0.6;
     }
+
     50% {
         opacity: 1;
     }
+
     100% {
         opacity: 0.6;
     }
@@ -683,14 +707,16 @@ body {
 #sampleTable thead th {
     background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%) !important;
     color: white !important;
-    padding: 16px 15px !important; /* Adjusted padding */
+    padding: 16px 15px !important;
+    /* Adjusted padding */
     font-weight: 700 !important;
     font-size: 0.9em !important;
     text-transform: uppercase !important;
     letter-spacing: 0.5px !important;
     border: none !important;
     position: relative !important;
-    text-align: left; /* Ensure text alignment */
+    text-align: left;
+    /* Ensure text alignment */
 }
 
 #sampleTable thead th::after {
@@ -708,12 +734,16 @@ body {
 }
 
 #sampleTable tbody td {
-    padding: 18px 15px !important; /* Padding disesuaikan */
+    padding: 18px 15px !important;
+    /* Padding disesuaikan */
     border-bottom: 1px solid rgba(#2563eb) !important;
-    border-right: none !important; /* Garis vertikal dihilangkan untuk tampilan lebih bersih */
+    border-right: none !important;
+    /* Garis vertikal dihilangkan untuk tampilan lebih bersih */
     vertical-align: middle !important;
-    font-size: 15px !important;      /* UKURAN FONT DIPERBESAR */
-    font-weight: 500 !important;     /* FONT DITEBALKAN (500 adalah medium) */
+    font-size: 15px !important;
+    /* UKURAN FONT DIPERBESAR */
+    font-weight: 500 !important;
+    /* FONT DITEBALKAN (500 adalah medium) */
     color: #495057;
     transition: all 0.2s ease !important;
 }
@@ -1011,8 +1041,14 @@ body {
 STYLES MOVED FROM index.blade.php
 ==========================================================
 */
-.modal-xl { max-width: 80vw !important; }
-.modal-body { max-height: calc(100vh - 210px); overflow-y: auto; }
+.modal-xl {
+    max-width: 80vw !important;
+}
+
+.modal-body {
+    max-height: calc(100vh - 210px);
+    overflow-y: auto;
+}
 
 /* Make modals full-screen on small devices */
 @media (max-width: 767.98px) {
@@ -1045,38 +1081,142 @@ STYLES MOVED FROM index.blade.php
         transform: none !important;
     }
 }
-.view-modal-card { border: none; border-radius: .75rem; box-shadow: 0 4px 12px rgba(0,0,0, .08); margin-bottom: 1.5rem !important; }
-.view-modal-card-header { background-color: transparent; border-bottom: 1px solid #e9ecef; padding: 1rem 1.25rem; }
-.view-modal-card-header h5 { color: #1e40af; font-weight: 600; margin-bottom: 0; }
-.view-label { color: #6c757d; font-size: 0.85rem; margin-bottom: .25rem; display: block; }
-.view-data { font-weight: 600; color: #212529; margin-bottom: 0; }
+
+.view-modal-card {
+    border: none;
+    border-radius: .75rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, .08);
+    margin-bottom: 1.5rem !important;
+}
+
+.view-modal-card-header {
+    background-color: transparent;
+    border-bottom: 1px solid #e9ecef;
+    padding: 1rem 1.25rem;
+}
+
+.view-modal-card-header h5 {
+    color: #1e40af;
+    font-weight: 600;
+    margin-bottom: 0;
+}
+
+.view-label {
+    color: #6c757d;
+    font-size: 0.85rem;
+    margin-bottom: .25rem;
+    display: block;
+}
+
+.view-data {
+    font-weight: 600;
+    color: #212529;
+    margin-bottom: 0;
+}
 
 /* Clickable badge style */
 #view_status_badge a.badge:hover {
     transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(0,0,0, .2);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .2);
     transition: all .2s ease;
 }
 
 /* Tracker Styles */
-.tracker-container { display: flex; justify-content: space-between; position: relative; padding: 10px 0; }
-.tracker-line { position: absolute; top: 16px; left: 5%; right: 5%; height: 3px; background-color: #e9ecef; z-index: 1; }
-.tracker-line-progress { position: absolute; top: 0; left: 0; height: 100%; background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%); z-index: 2; width: 0%; transition: width 0.5s ease-in-out; }
-.tracker-step { position: relative; z-index: 3; text-align: center; width: 16%; }
-.tracker-icon { width: 30px; height: 30px; border-radius: 50%; background-color: #ced4da; color: #fff; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px; border: 2px solid #ced4da; transition: all 0.3s ease; }
-.tracker-step.completed .tracker-icon { background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%); border-color: #2563eb; }
-.tracker-step.active .tracker-icon { background-color: #ffc107; border-color: #ffc107; }
-.tracker-step.rejected .tracker-icon { background-color: #dc3545; border-color: #dc3545; }
-.tracker-label { font-size: 0.8rem; font-weight: 600; color: #6c757d; }
-.tracker-step.completed .tracker-label, .tracker-step.active .tracker-label { color: #212529; }
-.tracker-details { font-size: 0.75rem; margin-top: 5px; min-height: 30px; }
-.tracker-user { font-weight: 500; color: #495057; }
-.tracker-date { color: #6c757d; }
+.tracker-container {
+    display: flex;
+    justify-content: space-between;
+    position: relative;
+    padding: 10px 0;
+}
+
+.tracker-line {
+    position: absolute;
+    top: 16px;
+    left: 5%;
+    right: 5%;
+    height: 3px;
+    background-color: #e9ecef;
+    z-index: 1;
+}
+
+.tracker-line-progress {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+    z-index: 2;
+    width: 0%;
+    transition: width 0.5s ease-in-out;
+}
+
+.tracker-step {
+    position: relative;
+    z-index: 3;
+    text-align: center;
+    width: 16%;
+}
+
+.tracker-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background-color: #ced4da;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 8px;
+    border: 2px solid #ced4da;
+    transition: all 0.3s ease;
+}
+
+.tracker-step.completed .tracker-icon {
+    background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+    border-color: #2563eb;
+}
+
+.tracker-step.active .tracker-icon {
+    background-color: #ffc107;
+    border-color: #ffc107;
+}
+
+.tracker-step.rejected .tracker-icon {
+    background-color: #dc3545;
+    border-color: #dc3545;
+}
+
+.tracker-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #6c757d;
+}
+
+.tracker-step.completed .tracker-label,
+.tracker-step.active .tracker-label {
+    color: #212529;
+}
+
+.tracker-details {
+    font-size: 0.75rem;
+    margin-top: 5px;
+    min-height: 30px;
+}
+
+.tracker-user {
+    font-weight: 500;
+    color: #495057;
+}
+
+.tracker-date {
+    color: #6c757d;
+}
 
 /* Loading Overlay for Modals */
 .modal-content {
     position: relative;
 }
+
 .loading-overlay {
     position: absolute;
     top: 0;
@@ -1099,6 +1239,7 @@ STYLES MOVED FROM index.blade.php
     padding: 16px 8px;
     border-bottom: 1px solid #f0f0f0;
 }
+
 .history-item:last-child {
     border-bottom: none;
 }
@@ -1119,21 +1260,37 @@ STYLES MOVED FROM index.blade.php
 
 .history-avatar.has-image {
     padding: 0;
-    background-color: #e9ecef; /* Warna fallback jika gambar gagal dimuat */
+    background-color: #e9ecef;
+    /* Warna fallback jika gambar gagal dimuat */
 }
 
 .history-avatar img {
     width: 100%;
     height: 100%;
-    object-fit: cover; /* Memastikan gambar mengisi lingkaran tanpa distorsi */
+    object-fit: cover;
+    /* Memastikan gambar mengisi lingkaran tanpa distorsi */
     border-radius: 50%;
 }
 
-.avatar-created { background-color: #0d6efd; }
-.avatar-approved { background-color: #198754; }
-.avatar-review { background-color: #ffc107; }
-.avatar-rejected { background-color: #dc3545; }
-.avatar-process { background-color: #0dcaf0; }
+.avatar-created {
+    background-color: #0d6efd;
+}
+
+.avatar-approved {
+    background-color: #198754;
+}
+
+.avatar-review {
+    background-color: #ffc107;
+}
+
+.avatar-rejected {
+    background-color: #dc3545;
+}
+
+.avatar-process {
+    background-color: #0dcaf0;
+}
 
 .history-content {
     flex-grow: 1;
@@ -1173,27 +1330,63 @@ STYLES MOVED FROM index.blade.php
 }
 
 /* Varian warna untuk badge */
-.badge-created { background-color: #e7f1ff; color: #0d6efd; border-color: #b3d1ff; }
-.badge-approved { background-color: #e8f3ee; color: #198754; border-color: #b3ffcf; }
-.badge-review { background-color: #fff9e7; color: #b98b00; border-color: #ffe6b3; }
-.badge-rejected, .badge-cancelled { background-color: #fdeded; color: #dc3545; border-color: #ffb3b3; }
-.badge-process { background-color: #e7f9fc; color: #0ca5c3; border-color: #b3f0ff; }
+.badge-created {
+    background-color: #e7f1ff;
+    color: #0d6efd;
+    border-color: #b3d1ff;
+}
+
+.badge-approved {
+    background-color: #e8f3ee;
+    color: #198754;
+    border-color: #b3ffcf;
+}
+
+.badge-review {
+    background-color: #fff9e7;
+    color: #b98b00;
+    border-color: #ffe6b3;
+}
+
+.badge-rejected,
+.badge-cancelled {
+    background-color: #fdeded;
+    color: #dc3545;
+    border-color: #ffb3b3;
+}
+
+.badge-process {
+    background-color: #e7f9fc;
+    color: #0ca5c3;
+    border-color: #b3f0ff;
+}
 
 .action-icon-container {
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 1.8em; /* Ukuran ikon diperbesar */
+    font-size: 1.8em;
+    /* Ukuran ikon diperbesar */
 }
-.action-icon-success { color: #28a745; }
-.action-icon-danger { color: #dc3545; }
-.action-icon-secondary { color: #6c757d; }
+
+.action-icon-success {
+    color: #28a745;
+}
+
+.action-icon-danger {
+    color: #dc3545;
+}
+
+.action-icon-secondary {
+    color: #6c757d;
+}
 
 .srs-badge {
     display: inline-block;
     padding: 4px 8px;
     font-weight: 700;
-    color: #ffffff; /* Warna teks lebih gelap */
+    color: #ffffff;
+    /* Warna teks lebih gelap */
     background: linear-gradient(135deg, #54a9ff 0%, #1f47cc 100%) !important;
     border-radius: 10px;
     font-size: 0.8em;
@@ -1210,7 +1403,8 @@ STYLES MOVED FROM index.blade.php
 
 .causer-info i {
     font-size: 1.4em;
-    color: #2563eb; /* Warna gold agar serasi */
+    color: #2563eb;
+    /* Warna gold agar serasi */
 }
 
 .filter-container {
@@ -1219,7 +1413,7 @@ STYLES MOVED FROM index.blade.php
     border-radius: 0.75rem;
     margin-bottom: 1.5rem;
     border: 1px solid #dee2e6;
-    box-shadow: 0 4px 12px rgba(0,0,0, .05);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, .05);
 }
 
 /* [MODIFIKASI] Menghapus max-width agar lebih fleksibel */
@@ -1228,7 +1422,8 @@ STYLES MOVED FROM index.blade.php
     padding: 8px 12px;
     border: 1px solid #ced4da;
     border-radius: 8px;
-    width:75%; /* Lebar penuh sesuai kolomnya */
+    width: 75%;
+    /* Lebar penuh sesuai kolomnya */
     display: inline-block;
     background-color: white;
 }
@@ -1236,6 +1431,7 @@ STYLES MOVED FROM index.blade.php
 .selected-row {
     background-color: rgba(0, 123, 255, 0.1) !important;
 }
+
 #print-selected-btn:disabled {
     opacity: 0.6;
     cursor: not-allowed;
@@ -1255,7 +1451,7 @@ STYLES MOVED FROM index.blade.php
     background-color: #157347;
     border-color: #146c43;
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0,0,0, .1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, .1);
 }
 
 #print-selected-btn:disabled {
@@ -1275,23 +1471,31 @@ STYLES MOVED FROM index.blade.php
 /* Mencegah wrapping pada kolom yang tidak diinginkan */
 .dt-no-wrap {
     white-space: nowrap;
-    vertical-align: middle; /* Jaga agar tetap di tengah secara vertikal */
+    vertical-align: middle;
+    /* Jaga agar tetap di tengah secara vertikal */
 }
 
 /* Mengizinkan wrapping pada kolom yang diinginkan (Customer & Route To) */
 .dt-wrap {
-    white-space: normal !important; /* Paksa wrapping */
-    word-wrap: break-word;         /* Pecah kata jika terlalu panjang */
-    vertical-align: middle;        /* Jaga agar tetap di tengah */
-    min-width: 150px;              /* Beri lebar minimum agar tidak terlalu sempit */
+    white-space: normal !important;
+    /* Paksa wrapping */
+    word-wrap: break-word;
+    /* Pecah kata jika terlalu panjang */
+    vertical-align: middle;
+    /* Jaga agar tetap di tengah */
+    min-width: 150px;
+    /* Beri lebar minimum agar tidak terlalu sempit */
 }
 
 /* [PENTING] Pastikan badge di dalam kolom "Route To" juga bisa wrap */
 .dt-wrap .route-to-badge-lg {
-    white-space: normal; /* Izinkan teks di dalam badge untuk wrap */
-    height: auto;        /* Izinkan tinggi badge bertambah sesuai konten */
+    white-space: normal;
+    /* Izinkan teks di dalam badge untuk wrap */
+    height: auto;
+    /* Izinkan tinggi badge bertambah sesuai konten */
     display: inline-block;
-    line-height: 1.4;    /* Atur jarak baris agar mudah dibaca */
+    line-height: 1.4;
+    /* Atur jarak baris agar mudah dibaca */
 }
 
 
@@ -1308,14 +1512,16 @@ STYLES MOVED FROM index.blade.php
 #historyTable thead th {
     background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%) !important;
     color: white !important;
-    padding: 16px 15px !important; /* Adjusted padding */
+    padding: 16px 15px !important;
+    /* Adjusted padding */
     font-weight: 700 !important;
     font-size: 0.9em !important;
     text-transform: uppercase !important;
     letter-spacing: 0.5px !important;
     border: none !important;
     position: relative !important;
-    text-align: left; /* Ensure text alignment */
+    text-align: left;
+    /* Ensure text alignment */
 }
 
 #historyTable thead th::after {
@@ -1333,12 +1539,16 @@ STYLES MOVED FROM index.blade.php
 }
 
 #historyTable tbody td {
-    padding: 18px 15px !important; /* Padding disesuaikan */
+    padding: 18px 15px !important;
+    /* Padding disesuaikan */
     border-bottom: 1px solid rgba(#2563eb) !important;
-    border-right: none !important; /* Garis vertikal dihilangkan untuk tampilan lebih bersih */
+    border-right: none !important;
+    /* Garis vertikal dihilangkan untuk tampilan lebih bersih */
     vertical-align: middle !important;
-    font-size: 15px !important;      /* UKURAN FONT DIPERBESAR */
-    font-weight: 500 !important;     /* FONT DITEBALKAN (500 adalah medium) */
+    font-size: 15px !important;
+    /* UKURAN FONT DIPERBESAR */
+    font-weight: 500 !important;
+    /* FONT DITEBALKAN (500 adalah medium) */
     color: #495057;
     transition: all 0.2s ease !important;
 }
@@ -1380,24 +1590,33 @@ STYLES MOVED FROM index.blade.php
     z-index: 9999 !important;
     border: none;
     border-radius: 12px;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
     padding: 8px;
     min-width: 200px;
     animation: fadeInSimple 0.2s ease-out;
 }
 
 @keyframes fadeInSimple {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
 /* 2. CHECKBOX STYLING */
 .form-check-input {
-    width: 1.2em; height: 1.2em; cursor: pointer;
+    width: 1.2em;
+    height: 1.2em;
+    cursor: pointer;
     border: 2px solid #cbd5e1;
 }
+
 .form-check-input:checked {
-    background-color: #2563eb; border-color: #2563eb;
+    background-color: #2563eb;
+    border-color: #2563eb;
 }
 
 /* 3. FLOATING ACTION BAR MODERN (UPDATED) */
@@ -1405,26 +1624,34 @@ STYLES MOVED FROM index.blade.php
     position: fixed;
     bottom: 30px;
     left: 50%;
-    transform: translateX(-50%) translateY(150%); /* Hidden state */
-    background: rgba(15, 23, 42, 0.95); /* Dark Slate / Glass-ish */
+    transform: translateX(-50%) translateY(150%);
+    /* Hidden state */
+    background: rgba(15, 23, 42, 0.95);
+    /* Dark Slate / Glass-ish */
     backdrop-filter: blur(10px);
     color: white;
-    padding: 12px 30px; /* Padding atas-bawah dikecilkan sedikit agar slim */
+    padding: 12px 30px;
+    /* Padding atas-bawah dikecilkan sedikit agar slim */
     border-radius: 100px;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
     display: flex;
     align-items: center;
     gap: 20px;
     z-index: 9999;
     transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    border: 1px solid rgba(255,255,255,0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
 
     /* --- PERUBAHAN UTAMA DISINI --- */
-    width: auto;          /* Lebar otomatis mengikuti konten */
-    min-width: 750px;     /* Minimal lebar diperpanjang agar lega */
-    max-width: 95vw;      /* Maksimal 95% lebar layar */
-    white-space: nowrap;  /* PENTING: Mencegah teks turun baris (wrap) */
-    flex-wrap: nowrap;    /* Mencegah elemen turun baris */
+    width: auto;
+    /* Lebar otomatis mengikuti konten */
+    min-width: 750px;
+    /* Minimal lebar diperpanjang agar lega */
+    max-width: 95vw;
+    /* Maksimal 95% lebar layar */
+    white-space: nowrap;
+    /* PENTING: Mencegah teks turun baris (wrap) */
+    flex-wrap: nowrap;
+    /* Mencegah elemen turun baris */
 }
 
 /* Pastikan semua anak elemen juga tidak wrapping */
@@ -1437,25 +1664,33 @@ STYLES MOVED FROM index.blade.php
 }
 
 .bulk-action-bar.active {
-    transform: translateX(-50%) translateY(0); /* Active state */
+    transform: translateX(-50%) translateY(0);
+    /* Active state */
 }
 
 .bulk-separator {
-    width: 1px; height: 30px; background: rgba(255,255,255,0.2);
+    width: 1px;
+    height: 30px;
+    background: rgba(255, 255, 255, 0.2);
 }
 
 .selected-badge {
-    background: #3b82f6; color: white; padding: 5px 12px;
-    border-radius: 20px; font-weight: 700; font-size: 0.9rem;
+    background: #3b82f6;
+    color: white;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 0.9rem;
 }
 
 /* RADIO BUTTON GROUP FOR OUTPUT MODE */
 .output-mode-group {
-    background: rgba(255,255,255,0.1);
+    background: rgba(255, 255, 255, 0.1);
     padding: 4px;
     border-radius: 20px;
     display: flex;
 }
+
 .output-mode-label {
     padding: 6px 16px;
     border-radius: 16px;
@@ -1463,18 +1698,23 @@ STYLES MOVED FROM index.blade.php
     cursor: pointer;
     transition: all 0.2s;
     margin-bottom: 0;
-    color: rgba(255,255,255,0.7);
+    color: rgba(255, 255, 255, 0.7);
 }
-.output-mode-input:checked + .output-mode-label {
+
+.output-mode-input:checked+.output-mode-label {
     background: white;
     color: #0f172a;
     font-weight: 700;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
-.output-mode-input { display: none; }
+
+.output-mode-input {
+    display: none;
+}
 
 #transTable thead th {
-    background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%) !important; /* Emerald Gradient */
+    background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%) !important;
+    /* Emerald Gradient */
     color: white !important;
     padding: 16px 15px !important;
     font-weight: 700 !important;
@@ -1486,7 +1726,8 @@ STYLES MOVED FROM index.blade.php
 
 /* 2. Letters Table (Royal Blue Theme - Kesan 'Official/Info') */
 #lettersTable thead th {
-    background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%) !important; /* Blue Gradient */
+    background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%) !important;
+    /* Blue Gradient */
     color: white !important;
     padding: 16px 15px !important;
     font-weight: 700 !important;
@@ -1509,16 +1750,37 @@ STYLES MOVED FROM index.blade.php
 }
 
 /* Rounded Corners untuk Header */
-#transTable thead th:first-child, #lettersTable thead th:first-child { border-top-left-radius: 12px; }
-#transTable thead th:last-child, #lettersTable thead th:last-child { border-top-right-radius: 12px; }
+#transTable thead th:first-child,
+#lettersTable thead th:first-child {
+    border-top-left-radius: 12px;
+}
+
+#transTable thead th:last-child,
+#lettersTable thead th:last-child {
+    border-top-right-radius: 12px;
+}
 
 /* Hover Effect pada Baris Isi */
-#transTable tbody tr:hover { background-color: #f0fdf4 !important; transition: 0.2s; }
-#lettersTable tbody tr:hover { background-color: #eff6ff !important; transition: 0.2s; }
+#transTable tbody tr:hover {
+    background-color: #f0fdf4 !important;
+    transition: 0.2s;
+}
+
+#lettersTable tbody tr:hover {
+    background-color: #eff6ff !important;
+    transition: 0.2s;
+}
 
 /* Checkbox Styling yang cocok dengan Header */
-.checkbox-trans:checked { background-color: #059669; border-color: #059669; }
-.checkbox-letter:checked { background-color: #2563eb; border-color: #2563eb; }
+.checkbox-trans:checked {
+    background-color: #059669;
+    border-color: #059669;
+}
+
+.checkbox-letter:checked {
+    background-color: #2563eb;
+    border-color: #2563eb;
+}
 
 /* =========================================
    4. MODERN NAV PILLS (TAB BESAR)
@@ -1526,16 +1788,19 @@ STYLES MOVED FROM index.blade.php
 
 .nav-pills-custom .nav-link {
     background: #fff;
-    color: #64748b; /* Slate 500 */
+    color: #64748b;
+    /* Slate 500 */
     border: 1px solid #e2e8f0;
-    border-radius: 16px; /* Sudut membulat modern */
+    border-radius: 16px;
+    /* Sudut membulat modern */
     padding: 20px;
     text-align: left;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     overflow: hidden;
-    height: 100%; /* Agar tinggi sama jika dalam grid */
-    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    height: 100%;
+    /* Agar tinggi sama jika dalam grid */
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 /* Hover State */
@@ -1548,10 +1813,12 @@ STYLES MOVED FROM index.blade.php
 
 /* Active State (Gradient Blue) */
 .nav-pills-custom .nav-link.active {
-    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); /* Royal Blue Gradient */
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    /* Royal Blue Gradient */
     color: #fff;
     border-color: transparent;
-    box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.4); /* Blue Glow */
+    box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.4);
+    /* Blue Glow */
 }
 
 /* Active State Text Colors Override */
@@ -1572,62 +1839,82 @@ STYLES MOVED FROM index.blade.php
     width: 54px;
     height: 54px;
     border-radius: 12px;
-    background: #eff6ff; /* Light Blue bg */
-    color: #2563eb; /* Primary Blue text */
+    background: #eff6ff;
+    /* Light Blue bg */
+    color: #2563eb;
+    /* Primary Blue text */
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 1.6rem;
-    flex-shrink: 0; /* Mencegah icon mengecil */
+    flex-shrink: 0;
+    /* Mencegah icon mengecil */
     transition: all 0.3s ease;
 }
 
 /* Icon Wrapper Active State */
 .nav-pills-custom .nav-link.active .icon-wrapper {
-    background: rgba(255, 255, 255, 0.2); /* Glass effect */
+    background: rgba(255, 255, 255, 0.2);
+    /* Glass effect */
     color: #fff;
     backdrop-filter: blur(5px);
 }
 
 .form-control.bg-light:focus {
     background-color: #fff !important;
-    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1); /* Glow biru halus */
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+    /* Glow biru halus */
     border: 1px solid #cbd5e1 !important;
 }
 
-#searchTrans, #searchLetters {
-    background-color: #f1f5f9 !important; /* Abu-abu slate (lebih gelap dari putih) */
-    border: 1px solid #cbd5e1 !important; /* Border abu-abu tegas */
-    color: #0f172a !important; /* Warna teks gelap */
-    font-weight: 500; /* Font agak tebal */
+#searchTrans,
+#searchLetters {
+    background-color: #f1f5f9 !important;
+    /* Abu-abu slate (lebih gelap dari putih) */
+    border: 1px solid #cbd5e1 !important;
+    /* Border abu-abu tegas */
+    color: #0f172a !important;
+    /* Warna teks gelap */
+    font-weight: 500;
+    /* Font agak tebal */
     transition: all 0.3s ease;
 }
 
 /* Saat Input Diklik/Fokus */
-#searchTrans:focus, #searchLetters:focus {
-    background-color: #ffffff !important; /* Kembali putih saat ngetik */
-    border-color: #2563eb !important; /* Border jadi biru */
-    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15) !important; /* Glow biru */
+#searchTrans:focus,
+#searchLetters:focus {
+    background-color: #ffffff !important;
+    /* Kembali putih saat ngetik */
+    border-color: #2563eb !important;
+    /* Border jadi biru */
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15) !important;
+    /* Glow biru */
 }
 
 /* Warna Teks Placeholder (Tulisan 'Cari...') */
-#searchTrans::placeholder, #searchLetters::placeholder {
-    color: #64748b !important; /* Slate grey yang mudah dibaca */
+#searchTrans::placeholder,
+#searchLetters::placeholder {
+    color: #64748b !important;
+    /* Slate grey yang mudah dibaca */
     opacity: 1;
 }
 
 /* Ikon Kaca Pembesar */
 .ph-magnifying-glass {
-    color: #475569 !important; /* Ikon lebih gelap */
+    color: #475569 !important;
+    /* Ikon lebih gelap */
 }
 
 
 /* Style untuk Tombol Action Modern */
 .btn-action-modern {
-    background-color: #e0e7ff; /* Indigo Muda */
-    color: #4338ca;            /* Indigo Tua */
+    background-color: #e0e7ff;
+    /* Indigo Muda */
+    color: #4338ca;
+    /* Indigo Tua */
     border: 1px solid transparent;
-    border-radius: 50px;       /* Bentuk Pill/Lonjong */
+    border-radius: 50px;
+    /* Bentuk Pill/Lonjong */
     padding: 6px 16px;
     font-weight: 600;
     font-size: 0.85rem;
@@ -1636,10 +1923,13 @@ STYLES MOVED FROM index.blade.php
 }
 
 .btn-action-modern:hover {
-    background-color: #4f46e5; /* Indigo Solid saat Hover */
+    background-color: #4f46e5;
+    /* Indigo Solid saat Hover */
     color: #ffffff;
-    transform: translateY(-2px); /* Efek naik sedikit */
-    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3); /* Shadow Glow */
+    transform: translateY(-2px);
+    /* Efek naik sedikit */
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+    /* Shadow Glow */
 }
 
 .btn-action-modern i {
