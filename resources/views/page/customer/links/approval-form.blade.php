@@ -57,7 +57,6 @@
             max-height: 80vh;
             box-shadow: 0 0 20px rgba(0,0,0,0.5);
         }
-
         /* Responsive */
         @media (max-width: 992px) { .main-container { grid-template-columns: 1fr; } .action-card { position: static; } }
     </style>
@@ -320,6 +319,152 @@
                                 <span id="calc-badge" class="badge bg-warning text-dark mt-1 d-none" style="font-size: 0.6rem;">
                                     <i class="fas fa-calculator me-1"></i> Auto-Updated
                                 </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- 4.5. FINANCE PAYMENT & FAKTUR DETAILS (New Section) --}}
+                    <div class="row g-4 mb-4">
+                        <div class="col-12">
+                            <div class="card border">
+                                <div class="card-header bg-light py-2 d-flex align-items-center">
+                                    <i class="fas fa-wallet me-2 text-secondary"></i>
+                                    <span class="fw-bold small text-uppercase">Payment & Faktur Schedule (Finance Only)</span>
+                                </div>
+                                <div class="card-body">
+                                    {{-- Virtual Account --}}
+                                    <div class="mb-4">
+                                        <label class="info-label mb-2">Virtual Account</label>
+                                        @if($canAdjust)
+                                            <input type="text" class="form-control editable-field" 
+                                                name="update_va" value="{{ $customer->virtual_account }}" 
+                                                form="approvalForm" placeholder="Masukkan Nomor VA" disabled>
+                                        @else
+                                            <div class="info-value fw-bold">{{ $customer->virtual_account ?? '-' }}</div>
+                                        @endif
+                                    </div>
+
+                                    <div class="row g-4">
+                                        {{-- LEFT: PAYMENT --}}
+                                        <div class="col-md-6 border-end">
+                                            <h6 class="text-primary fw-bold mb-3 border-bottom pb-2">Payment Schedule</h6>
+                                            
+                                            {{-- Payment Days --}}
+                                            <div class="mb-3">
+                                                <label class="info-label mb-2 d-block">Payment Days</label>
+                                                @if($canAdjust)
+                                                    <div class="schedule-selector" id="payment_days_container">
+                                                        {{-- Hidden Input untuk kirim array ke backend --}}
+                                                        <div id="payment_days_inputs"></div> 
+                                                        
+                                                        <button type="button" class="btn btn-sm btn-outline-dark me-2 mb-1 btn-day" data-val="All" onclick="toggleSchedule(this, 'payment_days')">All Days</button>
+                                                        @foreach(['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'] as $day)
+                                                            <button type="button" class="btn btn-sm btn-outline-primary mb-1 btn-day" data-val="{{ $day }}" onclick="toggleSchedule(this, 'payment_days')">{{ $day }}</button>
+                                                        @endforeach
+                                                    </div>
+                                                @else
+                                                    {{-- Read Only View --}}
+                                                    <div>
+                                                        @if(is_array($customer->payment_days) && in_array('All', $customer->payment_days))
+                                                            <span class="badge bg-dark">All Days</span>
+                                                        @elseif(!empty($customer->payment_days))
+                                                            @foreach($customer->payment_days as $d) <span class="badge bg-primary">{{ $d }}</span> @endforeach
+                                                        @else <span class="text-muted">-</span> @endif
+                                                    </div>
+                                                @endif
+                                            </div>
+
+                                            {{-- Payment Date --}}
+                                            <div>
+                                                <label class="info-label mb-2 d-block">Payment Date</label>
+                                                @if($canAdjust)
+                                                    <div class="schedule-selector" id="payment_date_container">
+                                                        <div id="payment_date_inputs"></div>
+                                                        <button type="button" class="btn btn-sm btn-outline-dark me-2 mb-1 w-100" data-val="All" onclick="toggleSchedule(this, 'payment_date')">All Dates (1-31)</button>
+                                                        <div class="d-flex flex-wrap gap-1 mt-2">
+                                                            @for($i=1; $i<=31; $i++)
+                                                                <button type="button" class="btn btn-xs btn-outline-secondary btn-date" style="width: 32px;" data-val="{{ $i }}" onclick="toggleSchedule(this, 'payment_date')">{{ $i }}</button>
+                                                            @endfor
+                                                        </div>
+                                                    </div>
+                                                @else
+                                                    <div>
+                                                        @if(is_array($customer->payment_date) && in_array('All', $customer->payment_date))
+                                                            <span class="badge bg-dark">All Dates</span>
+                                                        @elseif(!empty($customer->payment_date))
+                                                            @foreach($customer->payment_date as $d) <span class="badge bg-info text-dark">{{ $d }}</span> @endforeach
+                                                        @else <span class="text-muted">-</span> @endif
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        </div>
+
+                                        {{-- RIGHT: FAKTUR --}}
+                                        <div class="col-md-6">
+                                            <h6 class="text-success fw-bold mb-3 border-bottom pb-2">Faktur Schedule</h6>
+
+                                            {{-- Faktur Days --}}
+                                            <div class="mb-3">
+                                                <label class="info-label mb-2 d-block">Payment Date</label>
+                                                @if($canAdjust)
+                                                    <div class="schedule-selector" id="payment_date_container">
+                                                        <div id="payment_date_inputs"></div>
+                                                        <button type="button" class="btn btn-sm btn-outline-dark me-2 mb-1 w-100" data-val="All" onclick="toggleSchedule(this, 'payment_date')">All Dates (1-31)</button>
+                                                        <div class="d-flex flex-wrap gap-1 mt-2">
+                                                            @for($i=1; $i<=31; $i++)
+                                                                <button type="button" 
+                                                                    class="btn btn-xs btn-outline-secondary btn-date" 
+                                                                    style="width: 38px !important; height: 38px !important; padding: 0 !important; display: inline-flex !important; align-items: center; justify-content: center; font-size: 0.85rem !important; font-weight: 600; line-height: 1 !important; white-space: nowrap !important;"
+                                                                    data-val="{{ $i }}" 
+                                                                    onclick="toggleSchedule(this, 'payment_date')">
+                                                                    {{ $i }}
+                                                                </button>
+                                                            @endfor
+                                                        </div>
+                                                    </div>
+                                                @else
+                                                    <div>
+                                                        @if(is_array($customer->faktur_days) && in_array('All', $customer->faktur_days))
+                                                            <span class="badge bg-dark">All Days</span>
+                                                        @elseif(!empty($customer->faktur_days))
+                                                            @foreach($customer->faktur_days as $d) <span class="badge bg-success">{{ $d }}</span> @endforeach
+                                                        @else <span class="text-muted">-</span> @endif
+                                                    </div>
+                                                @endif
+                                            </div>
+
+                                            {{-- Faktur Date --}}
+                                            <div>
+                                                <label class="info-label mb-2 d-block">Faktur Date</label>
+                                                @if($canAdjust)
+                                                    <div class="schedule-selector" id="faktur_date_container">
+                                                        <div id="faktur_date_inputs"></div>
+                                                        <button type="button" class="btn btn-sm btn-outline-dark me-2 mb-1 w-100" data-val="All" onclick="toggleSchedule(this, 'faktur_date')">All Dates (1-31)</button>
+                                                        <div class="d-flex flex-wrap gap-1 mt-2">
+                                                            @for($i=1; $i<=31; $i++)
+                                                                <button type="button" 
+                                                                    class="btn btn-xs btn-outline-secondary btn-date" 
+                                                                    style="width: 38px !important; height: 38px !important; padding: 0 !important; display: inline-flex !important; align-items: center; justify-content: center; font-size: 0.85rem !important; font-weight: 600; line-height: 1 !important; white-space: nowrap !important;"
+                                                                    data-val="{{ $i }}" 
+                                                                    onclick="toggleSchedule(this, 'faktur_date')">
+                                                                    {{ $i }}
+                                                                </button>
+                                                            @endfor
+                                                        </div>
+                                                    </div>
+                                                @else
+                                                    <div>
+                                                        @if(is_array($customer->faktur_date) && in_array('All', $customer->faktur_date))
+                                                            <span class="badge bg-dark">All Dates</span>
+                                                        @elseif(!empty($customer->faktur_date))
+                                                            @foreach($customer->faktur_date as $d) <span class="badge bg-info text-dark">{{ $d }}</span> @endforeach
+                                                        @else <span class="text-muted">-</span> @endif
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -645,7 +790,9 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            // --- VARIABLES ---
+            // ==========================================
+            // 1. VARIABLES & SETUP
+            // ==========================================
             const form = document.getElementById('approvalForm');
             const btnSubmit = document.getElementById('btn-submit');
             const notesField = document.getElementById('notes');
@@ -654,6 +801,14 @@
             
             const canAdjust = @json($canAdjust);
             const isITMode = document.getElementById('it_code') !== null;
+
+            // --- NEW: Saved Data for Finance Schedule ---
+            const savedData = {
+                payment_days: @json($customer->payment_days ?? []),
+                payment_date: @json($customer->payment_date ?? []),
+                faktur_days: @json($customer->faktur_days ?? []),
+                faktur_date: @json($customer->faktur_date ?? [])
+            };
 
             // Finance Fields
             const inputTop = document.getElementById('left_top');
@@ -679,11 +834,160 @@
             const initialTop = "{{ $customer->term_of_payment }}";
             const baseAmount = parseFloat(document.getElementById('base-total-amount')?.value || 0);
 
-            // Regex untuk kata yang jelas (Minimal 2 huruf)
-            // Mencegah: "123", "-", ".", "?", "y", "ok" (ok diterima jika 2 huruf)
             const meaningfulRegex = /[a-zA-Z]{2,}/;
 
-            // --- VALIDATION RULE UPDATE ---
+            // ==========================================
+            // 2. NEW LOGIC: PAYMENT & FAKTUR SCHEDULE
+            // ==========================================
+            
+            // Fungsi ini harus ditempel ke window agar bisa dipanggil via onclick di HTML
+            window.toggleSchedule = function(btn, type) {
+                const container = document.getElementById(type + '_container');
+                const value = btn.getAttribute('data-val');
+                const isAll = value === 'All';
+
+                // Tentukan Warna berdasarkan Tipe
+                const colorClass = type.includes('faktur') ? 'btn-success' : 'btn-primary'; // Hari (Payment/Faktur)
+                const dateColor = 'btn-info'; // Tanggal
+
+                if (isAll) {
+                    // === LOGIC TOMBOL ALL ===
+                    const isActive = btn.classList.contains('active'); // Status sebelum diklik
+
+                    if (!isActive) {
+                        // AKTIFKAN ALL: Maka aktifkan juga semua anak-anaknya secara visual
+                        btn.classList.add('active', 'btn-dark'); // Tombol All jadi hitam
+
+                        // Loop semua tombol lain (selain tombol All)
+                        container.querySelectorAll('button:not([data-val="All"])').forEach(b => {
+                            b.classList.add('active', 'text-white'); // Tambah flag active
+                            b.classList.remove('btn-outline-secondary', 'btn-outline-primary', 'btn-outline-success'); // Hapus outline
+
+                            // Tambahkan warna solid
+                            if (b.classList.contains('btn-date')) {
+                                b.classList.add(dateColor);
+                            } else {
+                                b.classList.add(colorClass);
+                            }
+                        });
+                    } else {
+                        // MATIKAN ALL: Reset semua
+                        container.querySelectorAll('button').forEach(b => {
+                            b.classList.remove('active', 'btn-dark', colorClass, dateColor, 'text-white');
+                            if (b.classList.contains('btn-date')) {
+                                b.classList.add('btn-outline-secondary');
+                            } else if (b.getAttribute('data-val') !== 'All') {
+                                // Kembalikan outline sesuai tipe
+                                b.classList.add(type.includes('faktur') ? 'btn-outline-success' : 'btn-outline-primary');
+                            }
+                        });
+                        // Tambahkan outline lagi ke tombol All
+                        btn.classList.add('btn-outline-dark');
+                    }
+
+                } else {
+                    // === LOGIC TOMBOL SPESIFIK (Senin, 1, 2, dll) ===
+                    
+                    // 1. Matikan tombol 'All' dulu (karena kita mode manual selection)
+                    const allBtn = container.querySelector('button[data-val="All"]');
+                    if(allBtn) {
+                        allBtn.classList.remove('active', 'btn-dark');
+                        allBtn.classList.add('btn-outline-dark');
+                    }
+
+                    // 2. Toggle tombol yang diklik
+                    btn.classList.toggle('active');
+                    
+                    if (btn.classList.contains('active')) {
+                        // STATE AKTIF (SOLID COLOR)
+                        btn.classList.add('text-white');
+                        if (btn.classList.contains('btn-date')) {
+                            btn.classList.add(dateColor);
+                            btn.classList.remove('btn-outline-secondary');
+                        } else {
+                            btn.classList.add(colorClass);
+                            btn.classList.remove(type.includes('faktur') ? 'btn-outline-success' : 'btn-outline-primary');
+                        }
+                    } else {
+                        // STATE NON-AKTIF (OUTLINE)
+                        btn.classList.remove('text-white', colorClass, dateColor);
+                        if (btn.classList.contains('btn-date')) {
+                            btn.classList.add('btn-outline-secondary');
+                        } else {
+                            btn.classList.add(type.includes('faktur') ? 'btn-outline-success' : 'btn-outline-primary');
+                        }
+                    }
+                }
+                
+                updateHiddenInputs(type);
+            };
+
+            function updateHiddenInputs(type) {
+                const container = document.getElementById(type + '_container');
+                const inputContainer = document.getElementById(type + '_inputs');
+                inputContainer.innerHTML = ''; 
+
+                // Cek apakah tombol "All" aktif?
+                const allBtn = container.querySelector('button[data-val="All"]');
+                
+                if (allBtn && allBtn.classList.contains('active')) {
+                    // Jika All aktif, kirim value "All" saja ke backend
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = `update_${type}[]`; 
+                    input.value = 'All';
+                    input.setAttribute('form', 'approvalForm');
+                    inputContainer.appendChild(input);
+                } else {
+                    // Jika All tidak aktif, kirim item yang aktif satu per satu
+                    const activeBtns = container.querySelectorAll('button.active:not([data-val="All"])');
+                    activeBtns.forEach(btn => {
+                        const val = btn.getAttribute('data-val');
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = `update_${type}[]`; 
+                        input.value = val;
+                        input.setAttribute('form', 'approvalForm');
+                        inputContainer.appendChild(input);
+                    });
+                }
+            }
+
+            function loadSavedSchedule() {
+                if (!canAdjust) return; 
+
+                ['payment_days', 'payment_date', 'faktur_days', 'faktur_date'].forEach(type => {
+                    const data = savedData[type];
+                    if (Array.isArray(data)) {
+                        data.forEach(val => {
+                            const btn = document.querySelector(`#${type}_container button[data-val="${val}"]`);
+                            if (btn) {
+                                // Trigger logic visual secara manual
+                                if (val === 'All') {
+                                    btn.classList.add('active', 'btn-dark');
+                                } else {
+                                    const colorClass = type.includes('faktur') ? 'btn-success' : 'btn-primary';
+                                    const dateColor = 'btn-info';
+                                    
+                                    btn.classList.add('active');
+                                    if (btn.classList.contains('btn-date')) {
+                                        btn.classList.add(dateColor, 'text-white');
+                                        btn.classList.remove('btn-outline-secondary');
+                                    } else {
+                                        btn.classList.add(colorClass, 'text-white');
+                                    }
+                                }
+                            }
+                        });
+                        updateHiddenInputs(type); // Generate inputs awal
+                    }
+                });
+            }
+
+            // ==========================================
+            // 3. EXISTING LOGIC (VALIDATION & UI)
+            // ==========================================
+
             function updateValidationRules() {
                 const actionReview = document.getElementById('action_review').checked;
                 const actionReject = document.getElementById('action_reject') ? document.getElementById('action_reject').checked : false;
@@ -692,36 +996,32 @@
                 notesField.required = false;
                 noteAsterisk.classList.add('d-none');
                 noteHelper.innerText = "";
-                noteHelper.className = "text-muted f-s-12"; // Reset class
+                noteHelper.className = "text-muted f-s-12"; 
                 if(topMsg) topMsg.classList.add('d-none');
 
-                // 1. LOGIC REJECT (Semua Role)
+                // 1. REJECT
                 if (actionReject) {
                     notesField.required = true;
                     noteAsterisk.classList.remove('d-none');
                     noteHelper.innerText = "Alasan penolakan wajib diisi dengan kalimat yang jelas.";
                     noteHelper.classList.add('text-danger');
                 } 
-                // 2. LOGIC REVIEW/APPROVE (Finance)
+                // 2. REVIEW/APPROVE (Finance)
                 else if (actionReview && canAdjust) {
                     const currentTop = inputTop.value;
-                    
                     if (currentTop !== initialTop) {
-                        // TOP Berubah => Notes Wajib
                         notesField.required = true;
                         noteAsterisk.classList.remove('d-none');
                         noteHelper.innerText = "Reason is required because Term of Payment is changed.";
                         noteHelper.classList.add('text-danger');
                         if(topMsg) topMsg.classList.remove('d-none');
                     } else {
-                        // TOP Tidak Berubah (Meskipun Lead Time/NPWP berubah) => Notes Optional
-                        noteHelper.innerText = "Notes opsional untuk perubahan Lead Time / NPWP.";
+                        noteHelper.innerText = "Notes opsional untuk perubahan Lead Time / NPWP / Schedule.";
                         noteHelper.classList.add('text-success');
                     }
                 }
-                // 3. LOGIC REVIEW (Non-Finance / General User - KECUALI IT yang input kode)
+                // 3. REVIEW (General/Non-IT)
                 else if (actionReview && !canAdjust && !isITMode) {
-                    // Review with Notes => Wajib isi dan validasi kata
                     notesField.required = true;
                     noteAsterisk.classList.remove('d-none');
                     noteHelper.innerText = "Notes wajib diisi dengan kalimat yang jelas.";
@@ -729,10 +1029,11 @@
                 }
             }
 
-            // --- UI STATE UPDATE ---
             function updateUI() {
                 const selected = document.querySelector('input[name="action"]:checked')?.value;
+                const isReject = selected === 'reject';
 
+                // --- Logic Existing: Fields ---
                 if (selected === 'review') {
                     if (canAdjust) {
                         editableFields.forEach(el => el.disabled = false);
@@ -745,7 +1046,7 @@
                         btnSubmit.classList.add('btn-success');
                         btnSubmit.innerHTML = '<i class="fas fa-check-circle me-2"></i> Save Code & Activate';
                     }
-                } else if (selected === 'reject') {
+                } else if (isReject) {
                     editableFields.forEach(el => el.disabled = true);
                     if(btnVerifyNpwp) btnVerifyNpwp.disabled = true;
 
@@ -753,10 +1054,22 @@
                     btnSubmit.classList.add('btn-danger');
                     btnSubmit.innerHTML = '<i class="fas fa-times-circle me-2"></i> Reject Request';
                 }
+
+                // --- NEW: Disable Schedule Buttons if Reject ---
+                const scheduleButtons = document.querySelectorAll('.schedule-selector button');
+                scheduleButtons.forEach(btn => {
+                    btn.disabled = isReject;
+                    btn.style.pointerEvents = isReject ? 'none' : 'auto';
+                    btn.style.opacity = isReject ? '0.6' : '1';
+                });
+
                 updateValidationRules();
             }
 
-            // --- EVENT LISTENERS ---
+            // ==========================================
+            // 4. EVENT LISTENERS
+            // ==========================================
+
             document.querySelectorAll('input[name="action"]').forEach(el => el.addEventListener('change', updateUI));
 
             if (canAdjust) {
@@ -764,7 +1077,7 @@
                 if(inputLead) inputLead.addEventListener('input', updateValidationRules); 
             }
 
-            // --- DOCUMENT PREVIEW LOGIC ---
+            // Document Preview
             document.querySelectorAll('.btn-preview-doc').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const url = this.getAttribute('data-file-url');
@@ -790,7 +1103,7 @@
                 });
             });
 
-            // --- MODAL NPWP VERIFY ---
+            // NPWP Verify
             if (btnVerifyNpwp) {
                 btnVerifyNpwp.addEventListener('click', function() {
                     modalNpwpInput.value = inputNpwpMain.value; 
@@ -806,21 +1119,34 @@
                 });
             }
 
-            // --- CALCULATOR ---
+            // Calculator
             function calculateLimit() {
                 if (!inputTop || !inputLead) return;
-                const topStr = inputTop.value;
+                const topStr = inputTop.value; // Bisa string "7", "14", "CBD"
                 const lt = parseFloat(inputLead.value) || 0;
                 
-                let topDays = 0;
-                let divider = 30;
+                // Jika CBD, set 0
+                if (topStr === 'CBD') {
+                    document.getElementById('display_credit_limit').innerText = 'IDR 0';
+                    document.getElementById('final_credit_limit_input').value = 0;
+                    document.getElementById('calc-badge').classList.remove('d-none');
+                    return;
+                }
 
-                if (topStr.includes('7')) { topDays = 7; divider = 7.5; }
-                else if (topStr.includes('14')) { topDays = 14; divider = 15; }
-                else if (topStr.includes('30')) { topDays = 30; divider = 30; }
-                else if (topStr.includes('45')) { topDays = 45; divider = 45; }
-                else { topDays = parseInt(topStr) || 0; divider = topDays > 0 ? topDays : 30; }
+                let topDays = parseInt(topStr) || 0;
+                let divider = topDays; // Default pembagi = TOP
 
+                // Logic Pembagi Khusus
+                if (topDays === 7) { 
+                    divider = 7.5; 
+                } else if (topDays === 14) { 
+                    divider = 15; 
+                }
+                
+                // Safety check
+                if (divider === 0) divider = 30; // Default fallback
+
+                // Hitung Limit: (TOP + LT) * BaseAmount / Divider
                 const result = ((topDays + lt) * baseAmount) / divider;
                 
                 document.getElementById('display_credit_limit').innerText = 'IDR ' + new Intl.NumberFormat('id-ID').format(Math.round(result));
@@ -828,7 +1154,7 @@
                 document.getElementById('calc-badge').classList.remove('d-none');
             }
 
-            // --- SUBMIT HANDLER (VALIDATION) ---
+            // Submit Handler
             form.addEventListener('submit', function (e) {
                 e.preventDefault();
                 const selected = document.querySelector('input[name="action"]:checked').value;
@@ -836,33 +1162,27 @@
                 let isValid = true;
                 let errorMsg = '';
 
-                // A. REJECT (Anyone)
                 if (selected === 'reject') {
                     if (!notesValue) {
                         isValid = false; errorMsg = 'Alasan penolakan wajib diisi.';
                     } else if (!meaningfulRegex.test(notesValue)) {
-                        isValid = false; errorMsg = 'Alasan penolakan harus jelas (minimal 2 huruf, bukan simbol/angka saja).';
+                        isValid = false; errorMsg = 'Alasan penolakan harus jelas (minimal 2 huruf).';
                     }
                 }
-                // B. REVIEW (Approve with Note)
                 else if (selected === 'review') {
                     if (canAdjust) {
-                        // Finance Logic
                         if (inputTop.value !== initialTop) {
-                            // TOP Changed -> Mandatory & Meaningful
                             if (!notesValue) {
                                 isValid = false; errorMsg = 'Notes wajib diisi karena Term of Payment berubah.';
                             } else if (!meaningfulRegex.test(notesValue)) {
                                 isValid = false; errorMsg = 'Notes harus jelas (minimal 2 huruf).';
                             }
                         } else {
-                            // Optional, tapi jika diisi harus jelas
                             if (notesValue.length > 0 && !meaningfulRegex.test(notesValue)) {
                                 isValid = false; errorMsg = 'Jika mengisi notes, mohon gunakan kalimat yang jelas.';
                             }
                         }
                     } else if (!isITMode) {
-                        // Non-Finance & Non-IT (General User) -> Mandatory & Meaningful
                         if (!notesValue) {
                             isValid = false; errorMsg = 'Notes wajib diisi untuk Review.';
                         } else if (!meaningfulRegex.test(notesValue)) {
@@ -876,7 +1196,6 @@
                     return;
                 }
                 
-                // Pastikan field terkirim saat disubmit
                 if (selected === 'review' && canAdjust) {
                     editableFields.forEach(el => el.disabled = false);
                     inputNpwpMain.disabled = false; 
@@ -897,8 +1216,11 @@
                 });
             });
 
-            // Init
-            updateUI();
+            // ==========================================
+            // 5. INITIALIZATION
+            // ==========================================
+            loadSavedSchedule(); // Load data schedule dari DB
+            updateUI(); // Set UI state awal
         });
     </script>
 </body>

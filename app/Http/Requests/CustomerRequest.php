@@ -66,8 +66,8 @@ class CustomerRequest extends FormRequest
 
             'npwp' => 'required|string|max:50',
             'tanggal_npwp' => 'required|date',
-            'nppkp' => 'required|string|max:50',
-            'tanggal_nppkp' => 'required|date',
+            'nppkp' => 'nullable|string|max:50',
+            'tanggal_nppkp' => 'nullable|date',
             'no_pengukuhan_kaber' => 'nullable|string|max:255',
 
             // --- 7. Financial Terms ---
@@ -152,8 +152,6 @@ class CustomerRequest extends FormRequest
 
             'npwp.required'          => 'Nomor NPWP wajib diisi.',
             'tanggal_npwp.required'  => 'Tanggal NPWP wajib diisi.',
-            'nppkp.required'         => 'Nomor NPPKP wajib diisi.',
-            'tanggal_nppkp.required' => 'Tanggal NPPKP wajib diisi.',
 
             // --- 7. Financial Terms ---
             'term_of_payment.required' => 'Term of Payment (TOP) wajib dipilih.',

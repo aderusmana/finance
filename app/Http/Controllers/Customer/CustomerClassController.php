@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Customer;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Customer\CustomerClass;
+use Yajra\DataTables\Facades\DataTables;
 
 class CustomerClassController extends Controller
 {
@@ -13,7 +14,7 @@ class CustomerClassController extends Controller
         if ($request->ajax()) {
             $customerClasses = CustomerClass::query();
 
-            return \Yajra\DataTables\Facades\DataTables::of($customerClasses)
+            return DataTables::of($customerClasses)
                 ->addIndexColumn()
                 ->addColumn('action', function ($customerClass) {
                     return '
@@ -21,15 +22,15 @@ class CustomerClassController extends Controller
                             <button type="button" class="btn btn-warning btn-edit-customer-class"
                                 data-id="' . $customerClass->id . '"
                                 data-name_class="' . e($customerClass->name_class) . '"
-                            >
+                                title="Edit">
                                 <i class="fa-solid fa-pencil text-white"></i>
                             </button>
-                            <form action="' . route('customer-classes.destroy', $customerClass->id) . '" method="POST" class="delete-form delete-customer-class-btn" style="display:inline;">
-                                ' . csrf_field() . method_field('DELETE') . '
-                                <button type="submit" class="btn btn-danger">
-                                    <i class="fas fa-trash-alt text-white"></i>
-                                </button>
-                            </form>
+                            
+                            <button type="button" class="btn btn-danger btn-delete-customer-class"
+                                data-url="' . route('customer-classes.destroy', $customerClass->id) . '"
+                                title="Delete">
+                                <i class="fas fa-trash-alt text-white"></i>
+                            </button>
                         </div>
                     ';
                 })
