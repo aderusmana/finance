@@ -3,7 +3,6 @@
         Customer Class
     @endsection
 
-    <!-- Breadcrumb -->
     <div class="row m-1">
         <div class="col-12 ">
             <h4 class="main-title">Customer Class</h4>
@@ -20,7 +19,6 @@
         </div>
     </div>
 
-    <!-- Table Customer Class -->
     <div class="row">
         <div class="col-12">
             <div class="d-flex justify-content-end mb-3">
@@ -46,7 +44,6 @@
         </div>
     </div>
 
-    <!-- Modal Add/Edit Customer Class -->
     <div class="modal fade" id="customerClassModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -78,6 +75,7 @@
 
     @push('scripts')
         <script>
+            // --- Helper Functions ---
             function successMessage(message, title = 'Success', timer = 1500) {
                 Swal.fire({
                     icon: 'success',
@@ -87,6 +85,7 @@
                     showConfirmButton: false
                 });
             }
+
             function errorMessage(message, title = 'Error') {
                 Swal.fire({
                     icon: 'error',
@@ -94,39 +93,11 @@
                     text: message
                 });
             }
-            function warningMessage(message, title = 'Warning') {
-                Swal.fire({
-                    icon: 'warning',
-                    title: title,
-                    text: message
-                });
-            }
-            function confirmDialog({
-                title = 'Are you sure?',
-                text = 'This action cannot be undone!',
-                confirmButtonText = 'Yes',
-                cancelButtonText = 'Cancel',
-                confirmButtonColor = '#3085d6',
-                cancelButtonColor = '#d33',
-                icon = 'warning',
-                reverseButtons = true
-            } = {}) {
-                return Swal.fire({
-                    title,
-                    text,
-                    icon,
-                    showCancelButton: true,
-                    confirmButtonColor,
-                    cancelButtonColor,
-                    confirmButtonText,
-                    cancelButtonText,
-                    reverseButtons
-                });
-            }
 
+            // --- Main Script ---
             $(document).ready(function() {
-                // === DataTable ===
-                $('#customer-classes-table').DataTable({
+                // 1. Inisialisasi DataTable
+                var table = $('#customer-classes-table').DataTable({
                     processing: true,
                     serverSide: true,
                     ajax: {
@@ -138,88 +109,113 @@
                     ]
                 });
 
-                // === Modal Create ===
+                // 2. Logic Tombol Create (Reset Modal)
                 $('#btn-create-class').on('click', function() {
                     $('#customerClassModalLabel').text('Create Customer Class');
                     $('#customerClassForm')[0].reset();
                     $('#customerClassForm').attr('data-mode', 'create').removeAttr('data-id');
-                    $('#customerClassForm .is-invalid').removeClass('is-invalid');
-                    $('#customerClassForm .invalid-feedback').remove();
                 });
 
-                // === Modal Edit ===
-                $(document).on('click', '.btn-edit-class', function() {
+                // 3. Logic Tombol Edit (Tarik Data ke Modal)
+                // PERBAIKAN: Selector disesuaikan dengan Controller (.btn-edit-customer-class)
+                $(document).on('click', '.btn-edit-customer-class', function() {
                     const btn = $(this);
+                    const id = btn.data('id');
+                    const name = btn.data('name_class');
+
                     $('#customerClassModalLabel').text('Edit Customer Class');
-                    $('#name_class').val(btn.data('name_class'));
-                    $('#customerClassForm').attr('data-mode', 'edit').attr('data-id', btn.data('id'));
+                    $('#name_class').val(name); // Isi input
+                    
+                    // Set mode edit dan ID
+                    $('#customerClassForm').attr('data-mode', 'edit').attr('data-id', id);
+                    
+                    // Tampilkan modal
                     new bootstrap.Modal(document.getElementById('customerClassModal')).show();
                 });
 
-                // === Submit Form ===
+                // 4. Logic Submit Form (Create / Edit)
                 $('#customerClassForm').on('submit', function(e) {
                     e.preventDefault();
+                    
                     let mode = $(this).attr('data-mode');
                     let classId = $(this).attr('data-id');
                     let url, method;
+
                     if (mode === 'create') {
                         url = "{{ route('customer-classes.store') }}";
                         method = "POST";
                     } else {
+                        // Pastikan URL update sesuai route resource
                         url = "{{ url('master/customer-classes') }}/" + classId;
-                        method = "POST";
+                        method = "POST"; // Laravel spoofing nanti via _method=PUT
                     }
+
                     let formData = $(this).serialize();
                     if (mode === 'edit') {
                         formData += '&_method=PUT';
                     }
+
                     $.ajax({
                         url: url,
                         method: method,
                         data: formData,
                         success: function(res) {
                             $('#customerClassModal').modal('hide');
-                            $('#customer-classes-table').DataTable().ajax.reload(null, false);
-                            successMessage((mode === 'create') ? 'Customer Class created successfully' : 'Customer Class updated successfully');
+                            table.ajax.reload(null, false); // Reload DataTable
+                            successMessage(res.message);
                         },
                         error: function(xhr) {
-                            errorMessage(xhr.responseJSON?.message || 'Something went wrong');
+                            let msg = xhr.responseJSON?.message || 'Something went wrong';
+                            if(xhr.status === 422) {
+                                // Tampilkan error validasi pertama jika ada
+                                let errors = xhr.responseJSON.errors;
+                                let firstKey = Object.keys(errors)[0];
+                                msg = errors[firstKey][0];
+                            }
+                            errorMessage(msg);
                         }
                     });
                 });
 
-                // === SweetAlert Delete ===
-                $(document).on('click', '.delete-class-btn', function(e) {
+                // 5. Logic Tombol Delete (Validasi & AJAX)
+                // PERBAIKAN: Selector disesuaikan (.btn-delete-customer-class)
+                $(document).on('click', '.btn-delete-customer-class', function(e) {
                     e.preventDefault();
-                    const btn = $(this);
-                    confirmDialog({
+                    const url = $(this).data('url');
+
+                    Swal.fire({
                         title: 'Are you sure?',
-                        text: 'This action cannot be undone!',
-                        confirmButtonText: 'Yes, delete it!',
-                        cancelButtonText: 'Cancel',
-                        confirmButtonColor: '#d33',
-                        cancelButtonColor: '#6c757d',
+                        text: "Data yang dihapus tidak dapat dikembalikan!",
                         icon: 'warning',
-                        reverseButtons: true
+                        showCancelButton: true,
+                        confirmButtonColor: '#d33',
+                        cancelButtonColor: '#3085d6',
+                        confirmButtonText: 'Yes, delete it!'
                     }).then((result) => {
                         if (result.isConfirmed) {
+                            // Loading state (opsional)
+                            Swal.fire({
+                                title: 'Deleting...',
+                                allowOutsideClick: false,
+                                didOpen: () => { Swal.showLoading(); }
+                            });
+
                             $.ajax({
-                                url: btn.closest('form').attr('action'),
+                                url: url,
                                 method: 'POST',
                                 data: {
                                     _method: 'DELETE',
                                     _token: '{{ csrf_token() }}'
                                 },
                                 success: function(res) {
-                                    $('#customer-classes-table').DataTable().ajax.reload(null, false);
-                                    successMessage(res.message || 'Customer Class deleted successfully!');
+                                    table.ajax.reload(null, false);
+                                    successMessage(res.message || 'Deleted successfully');
                                 },
                                 error: function(xhr) {
-                                    errorMessage(xhr.responseJSON?.message || 'Failed to delete Customer Class');
+                                    Swal.close();
+                                    errorMessage(xhr.responseJSON?.message || 'Failed to delete data');
                                 }
                             });
-                        } else {
-                            warningMessage('Customer Class deletion canceled');
                         }
                     });
                 });

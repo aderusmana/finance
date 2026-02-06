@@ -172,7 +172,7 @@
                                                     data-pos="{{ $s->user->position?->position_name ?? '' }}"
                                                     data-branch="{{ $s->branch?->branch_name ?? '' }}"
                                                     data-region="{{ $s->region?->region_name ?? '' }}"
-                                                    data-account-group-id="{{ $s->account_group_id }}"> 
+                                                    data-account-group-id="{{ $s->account_group_id }}">
                                                     {{ $s->user->name }}
                                                 </option>
                                             @endforeach
@@ -257,7 +257,7 @@
                                         <h6 class="fw-bold text-secondary">
                                             <i class="ph-bold ph-upload-simple"></i> Document Uploads (Auto-fill Support)
                                         </h6>
-                                        
+
                                         {{-- 1. NPWP (REQUIRED) --}}
                                         <div class="col-md-3">
                                             <label class="form-label">Upload NPWP <span class="text-danger">*</span></label>
@@ -462,16 +462,14 @@
                                                 id="tanggal_npwp" required>
                                         </div>
                                         <div class="col-md-3">
-                                            <label class="form-label">No. NPPKP <span
-                                                    class="text-danger">*</span></label>
+                                            <label class="form-label">No. NPPKP</label>
                                             <input type="text" class="form-control" name="nppkp" id="nppkp"
-                                                placeholder="NPPKP Number" required>
+                                                placeholder="NPPKP Number">
                                         </div>
                                         <div class="col-md-3">
-                                            <label class="form-label">Tanggal NPPKP <span
-                                                    class="text-danger">*</span></label>
+                                            <label class="form-label">Tanggal NPPKP</label>
                                             <input type="date" class="form-control" name="tanggal_nppkp"
-                                                id="tanggal_nppkp" required>
+                                                id="tanggal_nppkp">
                                         </div>
                                         <div class="col-md-3">
                                             <label class="form-label">No Pengukuhan Kaber</label>
@@ -531,6 +529,103 @@
                                                 <option value="YA">Yes</option>
                                                 <option value="TIDAK">No</option>
                                             </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <hr>
+
+                                {{-- F. Financial Schedule (Optional) --}}
+                                <div class="card-body">
+                                    <div class="row g-3 mb-4">
+                                        <h6 class="fw-bold text-secondary d-flex align-items-center">
+                                            <i class="ph-bold ph-calendar-check me-2"></i> Financial Schedule (Optional)
+                                        </h6>
+                                        <div class="alert alert-light border border-dashed p-2 mb-3 f-s-12 text-muted">
+                                            <i class="ph-bold ph-info me-1"></i> Kolom ini bersifat opsional. Jika dipilih "All", maka berlaku untuk semua hari/tanggal.
+                                        </div>
+
+                                        {{-- CONTAINER INPUT SCHEDULE --}}
+                                        <div id="create_schedule_section">
+                                            <div class="row g-4">
+
+                                                {{-- LEFT: PAYMENT --}}
+                                                <div class="col-md-6 border-end">
+                                                    <h6 class="text-primary fw-bold small text-uppercase mb-2">Payment Schedule</h6>
+
+                                                    {{-- Payment Days --}}
+                                                    <div class="mb-3">
+                                                        <label class="form-label small fw-bold">Payment Days</label>
+                                                        <div class="schedule-selector" id="create_payment_days_container">
+                                                            <div id="create_payment_days_inputs"></div>
+
+                                                            <button type="button" class="btn btn-sm btn-outline-dark me-1 mb-1 btn-schedule" data-type="payment_days" data-val="All">All Days</button>
+                                                            @foreach(['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'] as $day)
+                                                                <button type="button" class="btn btn-sm btn-outline-primary mb-1 btn-schedule" data-type="payment_days" data-val="{{ $day }}">{{ $day }}</button>
+                                                            @endforeach
+                                                        </div>
+                                                    </div>
+
+                                                    {{-- Payment Date --}}
+                                                    <div>
+                                                        <label class="form-label small fw-bold">Payment Date</label>
+                                                        <div class="schedule-selector" id="create_payment_date_container">
+                                                            <div id="create_payment_date_inputs"></div>
+
+                                                            <button type="button" class="btn btn-sm btn-outline-dark me-1 mb-2 w-100 btn-schedule" data-type="payment_date" data-val="All">All Dates (1-31)</button>
+                                                            <div class="d-flex flex-wrap gap-1">
+                                                                @for($i=1; $i<=31; $i++)
+                                                                    <button type="button"
+                                                                        class="btn btn-xs btn-outline-secondary btn-schedule btn-date-box"
+                                                                        style="width: 38px !important; height: 38px !important; padding: 0 !important; display: inline-flex !important; align-items: center; justify-content: center; font-size: 0.85rem !important; font-weight: 600; line-height: 1 !important; white-space: nowrap !important;"
+                                                                        data-type="payment_date"
+                                                                        data-val="{{ $i }}">
+                                                                        {{ $i }}
+                                                                    </button>
+                                                                @endfor
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {{-- RIGHT: FAKTUR --}}
+                                                <div class="col-md-6">
+                                                    <h6 class="text-success fw-bold small text-uppercase mb-2">Faktur Schedule</h6>
+
+                                                    {{-- Faktur Days --}}
+                                                    <div class="mb-3">
+                                                        <label class="form-label small fw-bold">Faktur Days</label>
+                                                        <div class="schedule-selector" id="create_faktur_days_container">
+                                                            <div id="create_faktur_days_inputs"></div>
+
+                                                            <button type="button" class="btn btn-sm btn-outline-dark me-1 mb-1 btn-schedule" data-type="faktur_days" data-val="All">All Days</button>
+                                                            @foreach(['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'] as $day)
+                                                                <button type="button" class="btn btn-sm btn-outline-success mb-1 btn-schedule" data-type="faktur_days" data-val="{{ $day }}">{{ $day }}</button>
+                                                            @endforeach
+                                                        </div>
+                                                    </div>
+
+                                                    {{-- Faktur Date --}}
+                                                    <div>
+                                                        <label class="form-label small fw-bold">Faktur Date</label>
+                                                        <div class="schedule-selector" id="create_faktur_date_container">
+                                                            <div id="create_faktur_date_inputs"></div>
+
+                                                            <button type="button" class="btn btn-sm btn-outline-dark me-1 mb-2 w-100 btn-schedule" data-type="faktur_date" data-val="All">All Dates (1-31)</button>
+                                                            <div class="d-flex flex-wrap gap-1">
+                                                                @for($i=1; $i<=31; $i++)
+                                                                    <button type="button"
+                                                                        class="btn btn-xs btn-outline-secondary btn-schedule btn-date-box"
+                                                                        style="width: 38px !important; height: 38px !important; padding: 0 !important; display: inline-flex !important; align-items: center; justify-content: center; font-size: 0.85rem !important; font-weight: 600; line-height: 1 !important; white-space: nowrap !important;"
+                                                                        data-type="faktur_date"
+                                                                        data-val="{{ $i }}">
+                                                                        {{ $i }}
+                                                                    </button>
+                                                                @endfor
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -1310,7 +1405,7 @@
                     $('#recall_preview_nib').html(createPreviewBtn(data.file_nib_path, 'NIB'));
                     $('#recall_preview_ktp').html(createPreviewBtn(data.file_ktp_path, 'KTP'));
                     $('#recall_preview_akte').html(createPreviewBtn(data.file_akte_path, 'Akte Pendirian'));
-                    
+
                     $('#recallCustomerModal').modal('show');
                 });
 
@@ -1384,25 +1479,32 @@
                     }
 
                     const formData = new FormData(this);
+
+                    // BERSIHKAN FORMAT RUPIAH SEBELUM KIRIM
+                    // Agar tidak error "credit_limit must be a number"
+                    let rawCreditLimit = formData.get('credit_limit');
+                    if (rawCreditLimit) {
+                        let cleanCreditLimit = rawCreditLimit.toString().replace(/[^0-9]/g, '');
+                        formData.set('credit_limit', cleanCreditLimit);
+                    }
+
                     const url = "{{ route('customers.store') }}";
+
                     Swal.fire({
                         title: 'Konfirmasi Penyimpanan',
-                        text: "Pastikan seluruh data yang diinput sudah benar. Lanjutkan penyimpanan?",
+                        text: "Pastikan seluruh data yang diinput sudah benar.",
                         icon: 'question',
                         showCancelButton: true,
                         confirmButtonColor: '#3085d6',
                         cancelButtonColor: '#d33',
-                        confirmButtonText: 'Ya, Simpan!',
-                        cancelButtonText: 'Batal'
+                        confirmButtonText: 'Ya, Simpan!'
                     }).then((result) => {
                         if (result.isConfirmed) {
                             Swal.fire({
                                 title: 'Menyimpan Data...',
                                 html: 'Mohon tunggu sebentar.',
                                 allowOutsideClick: false,
-                                didOpen: () => {
-                                    Swal.showLoading();
-                                }
+                                didOpen: () => { Swal.showLoading(); }
                             });
 
                             $.ajax({
@@ -1413,7 +1515,6 @@
                                 contentType: false,
                                 success: function(response) {
                                     Swal.close();
-
                                     if(response.success) {
                                         Swal.fire({
                                             icon: 'success',
@@ -1426,23 +1527,20 @@
                                             $('#sampleTable').DataTable().ajax.reload();
                                         });
                                     } else {
-                                        Swal.fire('Gagal!', response.message || 'Terjadi kesalahan.', 'error');
+                                        Swal.fire('Gagal!', response.message, 'error');
                                     }
                                 },
                                 error: function(xhr) {
                                     Swal.close();
-                                    let errorMessage = 'Terjadi kesalahan pada server.';
-                                    if (xhr.responseJSON && xhr.responseJSON.message) {
-                                        errorMessage = xhr.responseJSON.message;
-                                    }
-                                    Swal.fire('Error!', errorMessage, 'error');
+                                    let msg = 'Terjadi kesalahan server.';
+                                    if(xhr.responseJSON && xhr.responseJSON.message) msg = xhr.responseJSON.message;
+                                    Swal.fire('Error!', msg, 'error');
                                 }
                             });
                         }
                     });
                 });
 
-                // --- LOGIC OCR NPWP (REVISI: LOOPING ALAMAT SAMPAI FOOTER) ---
                 $(document).on('change', 'input[name="file_npwp"]', function(e) {
                     const file = this.files && this.files[0];
                     if (!file) return;
@@ -1464,7 +1562,7 @@
                                     let npwpLineIdx = -1;
                                     let npwpValue = '';
                                     const npwpRegexStrict = /\d{2}\.\d{3}\.\d{3}\.\d-\d{3}\.\d{3}/;
-                                    const npwpRegexLoose = /[0-9\.\-\s]{15,25}/; 
+                                    const npwpRegexLoose = /[0-9\.\-\s]{15,25}/;
 
                                     for (let i = 0; i < lines.length; i++) {
                                         let match = lines[i].match(npwpRegexStrict);
@@ -1480,7 +1578,7 @@
                                             if (npwpRegexLoose.test(lines[i]) && lines[i].replace(/\D/g, '').length >= 15) {
                                                 npwpLineIdx = i;
                                                 npwpValue = lines[i].match(npwpRegexLoose)[0];
-                                                break; 
+                                                break;
                                             }
                                         }
                                     }
@@ -1489,11 +1587,11 @@
                                         $('#npwp').val(npwpValue.trim());
                                     }
 
-                                    // 2. AMBIL NAMA (1 BARIS SETELAH NPWP)
                                     if (npwpLineIdx !== -1 && lines.length > npwpLineIdx + 1) {
                                         let rawName = lines[npwpLineIdx + 1];
                                         rawName = rawName.replace(/^(Nama|Name)\s*[:.]?\s*/i, '').trim();
-                                        let safeName = rawName.replace(/[^a-zA-Z0-9\s\.\,\(\)\-\&]/g, '').trim(); 
+                                        let safeName = rawName.replace(/[^a-zA-Z0-9\s\.\,\(\)\-\&]/g, '').trim();
+
                                         $('#name').val(safeName);
                                         // Only auto-generate No PKD when Bank Garansi is YES
                                         const bgStatusAfterOcr = $('#bank_garansi').val();
@@ -1502,6 +1600,13 @@
                                         } else {
                                             // If Bank Garansi is NO or unset, ensure PKD is empty and hint
                                             $('#no_pkd').val('').attr('placeholder', 'Tidak perlu No PKD (Non-BG)').prop('readonly', true);
+                                        let bgStatus = $('#bank_garansi').val();
+
+                                        if (bgStatus === 'YA' || bgStatus === '1') {
+                                            generatePkdNumber(safeName);
+                                        } else {
+                                            $('#no_pkd').val('');
+                                            console.log('Skip generate PKD karena Bank Garansi = NO');
                                         }
                                     }
 
@@ -1517,7 +1622,7 @@
 
                                             // Jika ketemu kata "Penerbit", "Terdaftar", "KPP", stop pengambilan alamat
                                             if (currentLine.match(/(Penerbit|Terdaftar|KPP|Pratama|Kanwil|Direktorat)/i)) {
-                                                break; 
+                                                break;
                                             }
 
                                             // Abaikan jika baris terlalu pendek (misal sampah OCR: ".")
@@ -1527,8 +1632,8 @@
                                         }
 
                                         // Gabungkan semua baris alamat yang ditemukan jadi satu string panjang
-                                        rawAddress = addressLines.join(' '); 
-                                        
+                                        rawAddress = addressLines.join(' ');
+
                                         // Bersihkan label "Alamat :" atau "Jalan" di awal (jika ada)
                                         rawAddress = rawAddress.replace(/^(Alamat|Address|Jalan|Jl)\s*[:.]?\s*/i, '').trim();
                                     }
@@ -1546,7 +1651,7 @@
                                             } else {
                                                 if (line) out.push(line);
                                                 // Handle kata yang lebih panjang dari limit (36)
-                                                if (w.length > len) { 
+                                                if (w.length > len) {
                                                     for (let i = 0; i < w.length; i += len) {
                                                         out.push(w.substr(i, len));
                                                     }
@@ -1566,10 +1671,10 @@
                                     try {
                                         // Reset field
                                         $('#address1, #address2, #address3').val('');
-                                        
+
                                         if ($('#address1').length) $('#address1').val(chunks[0] || '');
-                                        if ($('#address2').length) $('#address2').val(chunks[1] || ''); 
-                                        if ($('#address3').length) $('#address3').val(chunks[2] || ''); 
+                                        if ($('#address2').length) $('#address2').val(chunks[1] || '');
+                                        if ($('#address3').length) $('#address3').val(chunks[2] || '');
                                     } catch (e) {
                                         console.error('Error setting address fields', e);
                                     }
@@ -1639,7 +1744,7 @@
                             d.approval_status = $('#approvalStatusFilter').val();
                         }
                     },
-                    order: [[8, 'desc']], 
+                    order: [[8, 'desc']],
                     columns: [
                         {
                             data: 'DT_RowIndex',
@@ -1707,7 +1812,7 @@
                 $('#resetFilters').on('click', function() {
                     $('#statusFilter').val('all').trigger('change');
                     $('#approvalStatusFilter').val('all').trigger('change');
-                    
+
                     // table.draw() akan terpanggil otomatis karena trigger('change') di atas
                 });
 
@@ -1728,7 +1833,7 @@
                         if (linkedAgId) {
                             $('#account_group').val(linkedAgId).trigger('change');
                             // Jika ingin Account Group tidak bisa diganti oleh Sales, uncomment baris bawah:
-                            // $('#account_group').select2({ disabled: true, theme: 'bootstrap-5' }); 
+                            // $('#account_group').select2({ disabled: true, theme: 'bootstrap-5' });
                         }
 
                         $('#user-info-section').slideDown();
@@ -1751,16 +1856,10 @@
                         let rawBg = selectedAg.data('bank_garansi');
                         let rawCcar = selectedAg.data('ccar');
 
-                        // Konversi nilai DB ke 'YA' / 'TIDAK'
                         let bgValue = (rawBg == 1 || rawBg === true || rawBg === '1' || rawBg === 'YA') ? 'YA' : 'TIDAK';
 
-                        // ==========================================
-                        // LOGIKA BARU: TRIGGER CHANGE UNTUK PROSES LANJUTAN
-                        // ==========================================
-                        // Set nilai dropdown Bank Garansi
                         $('#bank_garansi').val(bgValue).trigger('change');
 
-                        // Set nilai CCAR
                         $('#ccar').val(rawCcar).trigger('change');
                     }
 
@@ -1772,80 +1871,83 @@
                     }
                 });
 
-                $('#bank_garansi').on('change', function() {
-                    const val = $(this).val(); // 'YA' atau 'TIDAK'
+                function checkCreditLimitAccess() {
+                    const bgVal = $('#bank_garansi').val(); // YA / TIDAK
+                    const topVal = $('#term_of_payment').val(); // 7, 14, 30, CBD, dll
                     const clInput = $('#credit_limit');
-                    
-                    // Bersihkan notes lama jika ada
+                    const pkdInput = $('#no_pkd');
+
                     clInput.parent().find('.cl-status-note').remove();
 
-                    if (val === 'TIDAK') {
-                        // ======================
-                        // KASUS: BG = NO (TIDAK) -> Wajib Hitung
-                        // ======================
-                        
-                        // 1. No PKD: Hide/Empty
-                        $('#no_pkd').val('').attr('placeholder', 'Tidak perlu No PKD (Non-BG)').prop('readonly', true);
-                        
-                        // 2. Credit Limit: WAJIB ISI (Enable Click untuk Modal)
-                        // Set readonly agar user tidak ketik manual, tapi visualnya putih (aktif)
-                        clInput.val('').prop('readonly', true)
-                            .removeClass('bg-light').addClass('bg-white cursor-pointer') // Visual Aktif
-                            .addClass('border-danger') // Merah tanda wajib
+                    if (bgVal === 'YA' || topVal === 'CBD') {
+
+                        clInput.val(0).prop('readonly', true)
+                            .removeClass('bg-white cursor-pointer border-danger').addClass('bg-light')
+                            .attr('placeholder', '0');
+
+                        let msg = '';
+                        if (bgVal === 'YA') msg = 'Credit Limit otomatis 0 (BG Aktif).';
+                        else if (topVal === 'CBD') msg = 'Credit Limit otomatis 0 (Cash Before Delivery).';
+
+                        clInput.after(`<small class="cl-status-note text-info fw-bold mt-1 d-block"><i class="ph-bold ph-info me-1"></i> ${msg}</small>`);
+
+                    }
+                    else {
+                        clInput.prop('readonly', true)
+                            .removeClass('bg-light').addClass('bg-white cursor-pointer border-danger')
                             .attr('placeholder', 'Klik disini untuk menghitung (Wajib)');
 
-                        // Notes Merah di bawah input
-                        clInput.after('<small class="cl-status-note text-danger fw-bold mt-1 d-block"><i class="ph-bold ph-calculator me-1"></i> Wajib: Klik kolom ini untuk hitung limit (tanpa BG).</small>');
-
-                    } else {
-                        // ======================
-                        // KASUS: BG = YES (YA) -> Disable Calculator
-                        // ======================
-                        
-                        // 1. No PKD: Auto Generate
-                        $('#no_pkd').attr('placeholder', 'Akan digenerate otomatis...').prop('readonly', true);
-                        let currentName = $('#name').val();
-                        if(currentName.length > 3) {
-                            generatePkdNumber(currentName); 
-                        }
-
-                        // 2. Credit Limit: OTOMATIS 0 & DISABLED
-                        clInput.val(0).prop('readonly', true);
-                        
-                        // Styling Disabled (bg-light) & Hapus border merah
-                        clInput.removeClass('bg-white cursor-pointer border-danger').addClass('bg-light')
-                            .attr('placeholder', '0');
-                        
-                        // Notes Biru
-                        clInput.after('<small class="cl-status-note text-info fw-bold mt-1 d-block"><i class="ph-bold ph-info me-1"></i> Credit Limit otomatis 0 (BG Aktif).</small>');
+                        clInput.after('<small class="cl-status-note text-danger fw-bold mt-1 d-block"><i class="ph-bold ph-calculator me-1"></i> Wajib: Klik kolom ini untuk hitung limit.</small>');
                     }
+                }
+
+                // Event Listener saat TOP Berubah
+                $('#term_of_payment').on('change', function() {
+                    checkCreditLimitAccess();
                 });
 
-                // --- 5. TRIGGER GENERATE PKD SAAT KETIK NAMA ---
+                $('#bank_garansi').on('change', function() {
+                    const val = $(this).val();
+                    const pkdInput = $('#no_pkd');
+                    const customerName = $('#name').val();
+
+                    pkdInput.parent().find('.pkd-status-note').remove();
+
+                    if (val === 'TIDAK') {
+                        pkdInput.val('').prop('readonly', true).removeClass('fw-bold');
+                        pkdInput.after('<small class="pkd-status-note text-danger fw-bold mt-1 d-block"><i class="ph-bold ph-info me-1"></i> Customer ini tidak menggunakan Bank Garansi.</small>');
+                    } else {
+                        pkdInput.prop('readonly', true).addClass('fw-bold');
+                        if (customerName && customerName.length > 3) {
+                            generatePkdNumber(customerName);
+                        } else {
+                            pkdInput.val('').attr('placeholder', 'Isi Nama Customer untuk Generate PKD...');
+                        }
+                    }
+
+                    checkCreditLimitAccess();
+                });
+
                 $('#name').on('blur', function() {
                     let val = $(this).val();
                     let bgStatus = $('#bank_garansi').val();
-                    
+
                     if(val.length > 3 && (bgStatus === 'YA' || bgStatus === '1')) {
                         generatePkdNumber(val);
-                    } else if (bgStatus === 'TIDAK') {
-                        $('#no_pkd').val(''); 
                     }
                 });
 
-                // --- EVENT CLICK CREDIT LIMIT (MODAL TRIGGER) ---
-                $(document).on('click', '#credit_limit', function(e) {
+                $(document).on('click focus', '#credit_limit', function(e) {
                     e.preventDefault();
 
-                    // [PERBAIKAN DISINI]: Cek Status Bank Garansi
-                    // Jika Bank Garansi = YA, hentikan proses (jangan buka modal)
                     const bgStatus = $('#bank_garansi').val();
-                    if (bgStatus === 'YA' || bgStatus === '1') {
-                        return; 
+                    const topVal = $('#term_of_payment').val();
+
+                    if (bgStatus === 'YA' || topVal === 'CBD') {
+                        return;
                     }
 
                     const termString = $('#term_of_payment').val();
-
                     if (!termString) {
                         Swal.fire({
                             icon: 'warning',
@@ -1857,82 +1959,74 @@
                     }
 
                     $('#calc_products').empty();
-                    addCalcRow();
 
-                    let topVal = 0;
-                    const numberMatch = termString.match(/(\d+)/);
+                    let existingItems = {};
+                    let hasItems = false;
 
-                    if (numberMatch && numberMatch[0]) {
-                        topVal = parseInt(numberMatch[0]);
+                    $('#customerForm').find('.hidden-item-input').each(function() {
+                        let nameAttr = $(this).attr('name');
+                        let matches = nameAttr.match(/items\[(\d+)\]\[(\w+)\]/);
+
+                        if(matches) {
+                            hasItems = true;
+                            let index = matches[1];
+                            let field = matches[2];
+
+                            if(!existingItems[index]) existingItems[index] = {};
+                            existingItems[index][field] = $(this).val();
+                        }
+                    });
+
+                    if (hasItems) {
+                        Object.keys(existingItems).forEach(function(key) {
+                            let item = existingItems[key];
+                            addCalcRow(item.item_name, item.quantity, item.price);
+                        });
+                    } else {
+                        addCalcRow();
                     }
 
-                    $('#calc_top').val(topVal);
+                    let topDays = 0;
+                    const numberMatch = termString.match(/(\d+)/);
+                    if (numberMatch && numberMatch[0]) {
+                        topDays = parseInt(numberMatch[0]);
+                    }
+                    $('#calc_top').val(topDays);
 
                     let ltVal = parseFloat($('#lead_time').val()) || 0;
                     $('#calc_lt').val(ltVal);
-                    $('#calc_preview_formatted').val('0');
 
+                    // Hitung ulang preview saat modal dibuka
                     const initialR = computeCreditValues();
-                    $('#calc_preview_formatted').val(fmt(Math.round(initialR.val30 || 0)));
+                    $('#calc_preview_formatted').val(formatRupiah(Math.round(initialR.valFinal || 0)));
 
-                    // Tampilkan Modal
                     new bootstrap.Modal(document.getElementById('creditCalcModal')).show();
                 });
 
-                // 4. Modal Handler - CREATE
                 $('#btn-create-customer').on('click', function() {
-                    // Reset Form Standar
+                    // 1. Reset Form Biasa
                     $('#customerForm')[0].reset();
                     $('.select2-styled').val(null).trigger('change');
+
+                    // 2. Reset Readonly & Disabled States
                     $('#customerForm').find('input, textarea, select').prop('disabled', false);
-                    
-                    // Default Readonly Fields
-                    $('#user_position, #user_branch, #user_region').prop('readonly', true);
                     $('#credit_limit').prop('readonly', true);
                     $('#no_pkd').val('').prop('readonly', true);
 
-                    // Reset Upload Fields
-                    $('#preview_npwp, #preview_nib, #preview_ktp, #preview_akte').hide();
-                    $('input[type="file"]').val('').prop('disabled', false);
-                    $('input[name="file_npwp"]').prop('required', true);
-                    $('input[name="file_nib"]').prop('required', true);
-                    $('input[name="file_ktp"]').prop('required', true);
-                    $('input[name="file_akte"]').prop('required', false);
-                    
-                    $('#btn-save-customer').show().prop('disabled', true);
-                    $('#user-info-section').hide();
-                    $('#main-form-section').hide();
+                    // 3. Reset Schedule Buttons (PENTING!)
+                    $('.btn-schedule').removeClass('active btn-dark btn-primary btn-success btn-info text-white');
 
-                    // ==========================================
-                    // LOGIKA BARU: CEK ROLE USER (SALES / BUKAN)
-                    // ==========================================
-                    const currentUserRole = $('#current_user_role').val().toLowerCase(); 
-                    const currentUserId = $('#current_user_id').val();
+                    // Kembalikan ke Outline Default
+                    $('.btn-schedule[data-val="All"]').addClass('btn-outline-dark');
+                    $('.btn-date-box').addClass('btn-outline-secondary').removeClass('btn-info');
 
-                    // Pastikan input hidden user_id lama dihapus dulu agar tidak duplikat
-                    $('#user_id_hidden').remove();
+                    $('[data-type="payment_days"]').not('[data-val="All"]').addClass('btn-outline-primary');
+                    $('[data-type="faktur_days"]').not('[data-val="All"]').addClass('btn-outline-success');
 
-                    if (currentUserRole.includes('sales')) {
-                        // JIKA SALES: Auto-select diri sendiri & Disable Select2
-                        $('#user_id').val(currentUserId).trigger('change');
-                        $('#user_id').select2({ disabled: true, theme: 'bootstrap-5' });
-                        
-                        // Buat input hidden agar value tetap terkirim saat submit (karena disabled field tidak terkirim)
-                        $('<input>').attr({
-                            type:'hidden', 
-                            id:'user_id_hidden', 
-                            name:'user_id', 
-                            value: currentUserId
-                        }).appendTo('#customerForm');
-                    } else {
-                        // JIKA BUKAN SALES (Admin/Mgr): Enable Select2 normal
-                        $('#user_id').prop('disabled', false).select2({ 
-                            disabled: false, 
-                            theme: 'bootstrap-5', 
-                            placeholder: 'Search & Select User' 
-                        });
-                    }
+                    // Kosongkan Hidden Inputs
+                    $('#create_payment_days_inputs, #create_payment_date_inputs, #create_faktur_days_inputs, #create_faktur_date_inputs').empty();
 
+                    // 4. Setup Tampilan Awal
                     $('#customerModalLabel').text('Create New Customer');
                     $('#customerModal').modal('show');
                 });
@@ -1940,11 +2034,9 @@
                 $(document).on('click', '.btn-show-customer', function() {
                     const btn = $(this);
 
-                    // 1. HEADER & STATUS
                     $('#view_header_name').text(btn.data('name'));
                     $('#view_header_code').text(btn.data('code') || 'New');
 
-                    // Status Badges
                     const status = btn.data('status');
                     $('#view_status_badge').text(status)
                         .removeClass('bg-success bg-secondary')
@@ -1960,7 +2052,6 @@
                     // (Opsional) Tambahkan created_at/updated_at jika ada datanya di controller
                     // $('#view_updated_at').text(btn.data('updated_at') || '-');
 
-                    // 2. GENERAL INFO
                     $('#view_name').text(btn.data('name'));
                     $('#view_sort_name').text(btn.data('sort_name') || '-');
                     $('#view_email').text(btn.data('email'));
@@ -2054,50 +2145,73 @@
                     });
                 }
 
+                $(document).on('keyup', '.calc-price', function() {
+                    let val = $(this).val();
+                    $(this).val(formatRupiah(val));
+                    $('#calc_products').trigger('input');
+                });
+
                 function computeCreditValues() {
                     let totalValue = 0;
                     $('#calc_products .calc-row').each(function() {
                         const q = parseFloat($(this).find('.calc-qty').val()) || 0;
-                        const p = parseFloat($(this).find('.calc-price').val()) || 0;
+                        const pStr = $(this).find('.calc-price').val();
+                        const p = parseFloat(pStr.replace(/[^0-9]/g, '')) || 0; // Clean Rupiah manual
                         totalValue += (q * p);
                     });
 
                     const top = parseFloat($('#calc_top').val()) || 0;
                     const lt = parseFloat($('#calc_lt').val()) || 0;
-
                     const base = (top + lt) * totalValue;
 
-                    const val45 = base / 45;
-                    const val30 = base / 30;
-                    const val7 = base / (30 / 4);
-                    const val14 = base / (30 / 2);
+                    let divider = top;
+                    if (top === 7) divider = 7.5;
+                    else if (top === 14) divider = 15;
+                    if (divider === 0) divider = 1;
 
-                    return {
-                        base,
-                        totalValue,
-                        val45,
-                        val30,
-                        val7,
-                        val14
-                    };
+                    return { base, totalValue, valFinal: base / divider };
+                }
+
+                function formatRupiah(angka, prefix) {
+                    if (!angka) return '';
+                    var number_string = angka.toString().replace(/[^,\d]/g, '').toString(),
+                        split = number_string.split(','),
+                        sisa = split[0].length % 3,
+                        rupiah = split[0].substr(0, sisa),
+                        ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+
+                    if (ribuan) {
+                        separator = sisa ? '.' : '';
+                        rupiah += separator + ribuan.join('.');
+                    }
+
+                    rupiah = split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
+                    return prefix == undefined ? rupiah : (rupiah ? 'Rp. ' + rupiah : '');
+                }
+
+                function cleanRupiah(angka) {
+                    if (!angka) return 0;
+                    return parseFloat(angka.toString().replace(/\./g, '').replace(/,/g, '.')) || 0;
                 }
 
                 function addCalcRow(name = '', qty = '', price = '') {
+                    let displayPrice = price ? formatRupiah(price) : '';
                     const row = $('<div class="calc-row d-flex gap-2 mb-2">' +
                         '<input type="text" class="form-control calc-product-name" placeholder="Product name" />' +
                         '<input type="number" step="1" min="0" class="form-control calc-qty" placeholder="Qty" />' +
-                        '<input type="number" step="0.01" min="0" class="form-control calc-price" placeholder="Price" />' +
+                        '<input type="text" class="form-control calc-price text-end" placeholder="Price (Rp)" />' +
                         '<button type="button" class="btn btn-outline-danger btn-remove-row" title="Remove">&minus;</button>' +
                         '</div>');
+
                     row.find('.calc-product-name').val(name);
                     row.find('.calc-qty').val(qty);
-                    row.find('.calc-price').val(price);
+                    row.find('.calc-price').val(displayPrice);
                     $('#calc_products').append(row);
                 }
 
                 $(document).on('input', '#calc_products .calc-qty, #calc_products .calc-price, #calc_top, #calc_lt', function() {
                     const r = computeCreditValues();
-                    $('#calc_preview_formatted').val(fmt(Math.round(r.val30 || 0)));
+                    $('#calc_preview_formatted').val(formatRupiah(Math.round(r.valFinal || 0)));
                 });
 
                 $(document).on('click', '#addCalcRow', function() {
@@ -2195,15 +2309,112 @@
                             $('body').addClass('modal-open');
                         }
                     });
-
                 });
+
+                $(document).on('click', '.btn-schedule', function() {
+                    const btn = $(this);
+                    const type = btn.data('type');
+                    const value = btn.data('val');
+                    const container = $(`#create_${type}_container`);
+                    const isAll = value === 'All';
+
+                    // Definisi Warna Solid vs Outline
+                    const colorClass = type.includes('faktur') ? 'btn-success' : 'btn-primary';
+                    const outlineClass = type.includes('faktur') ? 'btn-outline-success' : 'btn-outline-primary';
+                    const dateSolid = 'btn-info';
+                    const dateOutline = 'btn-outline-secondary';
+
+                    if (isAll) {
+                        // --- LOGIC TOMBOL "ALL" ---
+                        const isActive = btn.hasClass('active');
+
+                        if (!isActive) {
+                            // AKTIFKAN ALL: Nyalakan semua tombol anak
+                            btn.addClass('active btn-dark').removeClass('btn-outline-dark');
+
+                            container.find('.btn-schedule').not('[data-val="All"]').each(function() {
+                                $(this).addClass('active text-white');
+                                // Hapus outline, tambah solid
+                                if ($(this).hasClass('btn-date-box')) {
+                                    $(this).removeClass(dateOutline).addClass(dateSolid);
+                                } else {
+                                    $(this).removeClass(outlineClass).addClass(colorClass);
+                                }
+                            });
+                        } else {
+                            // MATIKAN ALL: Reset semua ke putih
+                            btn.removeClass('active btn-dark').addClass('btn-outline-dark');
+
+                            container.find('.btn-schedule').not('[data-val="All"]').each(function() {
+                                $(this).removeClass('active text-white btn-dark ' + colorClass + ' ' + dateSolid);
+                                if ($(this).hasClass('btn-date-box')) {
+                                    $(this).addClass(dateOutline);
+                                } else {
+                                    $(this).addClass(outlineClass);
+                                }
+                            });
+                        }
+
+                    } else {
+                        // --- LOGIC TOMBOL SPESIFIK ---
+
+                        // 1. Jika tombol 'All' sedang nyala, matikan dulu
+                        const allBtn = container.find('[data-val="All"]');
+                        if(allBtn.hasClass('active')) {
+                            allBtn.removeClass('active btn-dark').addClass('btn-outline-dark');
+                        }
+
+                        // 2. Toggle Status Active (Fix Masalah Warna Nyangkut)
+                        if (btn.hasClass('active')) {
+                            // KONDISI: Sedang Aktif -> KLIK -> MATIKAN (Jadi Putih Langsung)
+                            btn.removeClass('active text-white');
+
+                            if (btn.hasClass('btn-date-box')) {
+                                btn.removeClass(dateSolid).addClass(dateOutline);
+                            } else {
+                                btn.removeClass(colorClass).addClass(outlineClass);
+                            }
+                        } else {
+                            // KONDISI: Sedang Mati -> KLIK -> NYALAKAN
+                            btn.addClass('active text-white');
+
+                            if (btn.hasClass('btn-date-box')) {
+                                btn.removeClass(dateOutline).addClass(dateSolid);
+                            } else {
+                                btn.removeClass(outlineClass).addClass(colorClass);
+                            }
+                        }
+                    }
+
+                    // PENTING: Hilangkan fokus browser agar warna hover tidak tertinggal
+                    btn.blur();
+
+                    // Update Input Hidden untuk dikirim ke Controller
+                    updateCreateHiddenInputs(type);
+                });
+
+                function updateCreateHiddenInputs(type) {
+                    const container = $(`#create_${type}_container`);
+                    const inputContainer = $(`#create_${type}_inputs`);
+                    inputContainer.empty();
+
+                    const allBtn = container.find('[data-val="All"]');
+
+                    if (allBtn.hasClass('active')) {
+                        $('<input>').attr({type: 'hidden', name: `${type}[]`, value: 'All'}).appendTo(inputContainer);
+                    } else {
+                        container.find('.btn-schedule.active').not('[data-val="All"]').each(function() {
+                            $('<input>').attr({type: 'hidden', name: `${type}[]`, value: $(this).data('val')}).appendTo(inputContainer);
+                        });
+                    }
+                }
 
                 $('#creditCalcForm').on('submit', function(e) {
                     e.preventDefault();
                     const r = computeCreditValues();
-                    const chosen = r.val30 || 0;
+                    const chosen = Math.round(r.valFinal || 0);
 
-                    $('#credit_limit').val(Math.round(chosen));
+                    $('#credit_limit').val(formatRupiah(chosen));
 
                     const ltVal = $('#calc_lt').val() || 0;
                     const topVal = $('#calc_top').val() || 0;
@@ -2214,11 +2425,14 @@
                         $('<input>').attr({type: 'hidden', id: 'top_calc_hidden', name: 'top_calc'}).appendTo('#customerForm');
                     }
                     $('#top_calc_hidden').val(topVal);
+
                     $('#customerForm').find('.hidden-item-input').remove();
+
                     $('#calc_products .calc-row').each(function(index) {
                         const name = $(this).find('.calc-product-name').val();
                         const qty = $(this).find('.calc-qty').val();
                         const price = $(this).find('.calc-price').val();
+                        const cleanPrice = cleanRupiah(price);
 
                         if(name && qty) {
                             const container = $('#customerForm');
@@ -2241,7 +2455,7 @@
                                 type: 'hidden',
                                 class: 'hidden-item-input',
                                 name: `items[${index}][price]`,
-                                value: price
+                                value: cleanPrice
                             }).appendTo(container);
                         }
                     });

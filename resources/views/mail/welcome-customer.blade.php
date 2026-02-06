@@ -21,12 +21,14 @@
 
                 <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; background-color: #ffffff; border: 1px solid #dddddd;" class="email-container">
 
+                    {{-- HEADER: Warna diubah menjadi #a68831 --}}
                     <tr>
-                        <td bgcolor="#1e3a8a" style="padding: 15px 20px;">
+                        <td bgcolor="#a68831" style="padding: 15px 20px;">
                             <table border="0" cellpadding="0" cellspacing="0" width="100%">
                                 <tr>
                                     <td width="60" style="vertical-align: middle;">
-                                        <img src="https://via.placeholder.com/50x50/ffffff/1e3a8a?text=LOGO" alt="Logo" width="50" style="display: block;" />
+                                        {{-- Logo Placeholder disesuaikan warnanya --}}
+                                        <img src="https://via.placeholder.com/50x50/ffffff/a68831?text=LOGO" alt="Logo" width="50" style="display: block;" />
                                     </td>
                                     <td style="vertical-align: middle; padding-left: 15px; color: #ffffff; font-family: Arial, sans-serif;">
                                         <h1 style="margin: 0; font-size: 20px; font-weight: bold; letter-spacing: 1px;">PT. SINAR MEADOW</h1>
@@ -48,7 +50,7 @@
                                 {{ $customer->city }}{{ $customer->postal_code ? ', ' . $customer->postal_code : '' }}
                             </p>
 
-                            <p style="margin: 20px 0; font-weight: bold; font-family: Arial, sans-serif;">Subject: Welcome to Sinar Meadow {{ $customer->name }}</p>
+                            <p style="margin: 20px 0; font-weight: bold; font-family: Arial, sans-serif;">Welcome to Sinar Meadow {{ $customer->name }}</p>
 
                             <p style="margin: 0 0 15px; font-family: Arial, sans-serif;">Dear Sirs,</p>
                             <p style="margin: 0 0 15px; font-family: Arial, sans-serif;">On behalf of everyone at PT Sinar Meadow International Indonesia, we want to extend a warm welcome. We are so glad to have you as a new customer and are thrilled you've chosen us for your material needs.</p>
@@ -140,7 +142,8 @@
                                 <li style="margin-bottom: 15px; font-size: 14px;">
                                     <strong>Learn more</strong>
                                     <div style="margin-left: 25px; margin-top: 5px;">
-                                        Explore our <a href="https://www.sinarmeadow.com" style="color: #0369a1; text-decoration: underline;">[website/blog]</a> to learn more about another product
+                                        {{-- Link Color diubah menjadi #a68831 --}}
+                                        Explore our <a href="https://www.sinarmeadow.com" style="color: #a68831; text-decoration: underline;">[website/blog]</a> to learn more about another product
                                     </div>
                                 </li>
                             </ul>

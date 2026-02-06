@@ -15,28 +15,52 @@ class CustomerApprovalSeeder extends Seeder
      */
     public function run()
     {
-        $rolesToCheck = [
-            'atasan',      // 1. Atasan
-            'manager-finance', // 2. Manager Finance
-            'head-snm',        // 3. Head SNM
-            'head-finance',    // 4. Head Finance
-            'it'               // 5. IT
+        // A. Urutan untuk CBD
+        $rolesCBD = [
+            'atasan',
+            'manager-finance',
+            'head-snm',
+            'head-finance',
+            'it'
         ];
 
-        foreach ($rolesToCheck as $roleName) {
+        // B. Urutan untuk General / Non-Category
+        $rolesGeneral = [
+            'atasan',
+            'manager-finance',
+            'head-finance',
+            'it'
+        ];
+        
+        $allRoles = array_unique(array_merge($rolesCBD, $rolesGeneral));
+
+        foreach ($allRoles as $roleName) {
             if (!Role::where('name', $roleName)->exists()) {
                 Role::create(['name' => $roleName, 'guard_name' => 'web']);
             }
         }
 
+        // A. Simpan Path CBD
         ApprovalPath::updateOrCreate(
             [
                 'category'     => 'Customer',
                 'sub_category' => 'CBD',
             ],
             [
-                'sequence_approvers' => $rolesToCheck,
+                'sequence_approvers' => $rolesCBD,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]
+        );
 
+        // B. Simpan Path General / Non-Category
+        ApprovalPath::updateOrCreate(
+            [
+                'category'     => 'Customer',
+                'sub_category' => null, 
+            ],
+            [
+                'sequence_approvers' => $rolesGeneral,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]

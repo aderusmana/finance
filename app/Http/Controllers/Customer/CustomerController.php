@@ -27,53 +27,15 @@ use App\Models\Customer\CustomerItem;
 use App\Mail\CustomerWelcomeMail;
 use Illuminate\Support\Str;
 use Spatie\Activitylog\Models\Activity;
-use App\Traits\ApprovalTrait;
+use App\Services\CustomerService;
 
 class CustomerController extends Controller
 {
-    use ApprovalTrait;
+    protected $customerService;
 
-    private function generateInitials($string)
+    public function __construct(CustomerService $customerService)
     {
-        $string = strtoupper($string);
-        $string = str_replace(['.', ',', '/', '-', '(', ')'], ' ', $string);
-        $string = preg_replace('/[^A-Z0-9\s]/', '', $string);
-
-        $words = preg_split('/\s+/', $string, -1, PREG_SPLIT_NO_EMPTY);
-        $acronym = "";
-
-        $entities = ['PT', 'CV', 'UD', 'TB', 'PD'];
-
-        foreach ($words as $index => $w) {
-            if ($index === 0 && (in_array($w, $entities) || strlen($w) <= 3)) {
-                $acronym .= $w;
-            } else {
-                $acronym .= mb_substr($w, 0, 1);
-            }
-        }
-
-        if (empty($acronym)) return 'GEN';
-
-        return substr($acronym, 0, 7);
-    }
-
-    private function getRomanMonth($month)
-    {
-        $map = [
-            1 => 'I',
-            2 => 'II',
-            3 => 'III',
-            4 => 'IV',
-            5 => 'V',
-            6 => 'VI',
-            7 => 'VII',
-            8 => 'VIII',
-            9 => 'IX',
-            10 => 'X',
-            11 => 'XI',
-            12 => 'XII'
-        ];
-        return $map[intval($month)] ?? 'I';
+        $this->customerService = $customerService;
     }
 
     public function generatePkdPreview(Request $request)
@@ -502,249 +464,85 @@ class CustomerController extends Controller
     public function store(CustomerRequest $request)
     {
         $category = 'Customer';
-        $subCategory = 'CBD';
+        $subCategory = ($request->term_of_payment === 'CBD') ? 'CBD' : null;
 
         $pathExists = ApprovalPath::where('category', $category)
             ->where(function ($q) use ($subCategory) {
                 if (!empty($subCategory)) {
-                    $q->where('sub_category', $subCategory)
-                        ->orWhereNull('sub_category')
-                        ->orWhere('sub_category', '');
+                    $q->where('sub_category', $subCategory);
                 } else {
-                    $q->whereNull('sub_category')
-                        ->orWhere('sub_category', '');
+                    $q->whereNull('sub_category')->orWhere('sub_category', '');
                 }
-            })
-            ->exists();
+            })->exists();
 
         if (!$pathExists) {
+            $pathName = $subCategory ? "Customer - $subCategory" : "Customer - General (Non-CBD)";
             return response()->json([
                 'success' => false,
-                'message' => 'GAGAL: Proses alur Approval tidak ditemukan. Mohon hubungi Administrator untuk membuat alur persetujuan terlebih dahulu.'
+                'message' => "GAGAL: Alur Approval untuk '$pathName' tidak ditemukan. Hubungi IT/Admin."
             ], 422);
         }
 
-        $createdCustomer = null;
-        $logs = collect();
-        $firstLog = null;
-
-        DB::transaction(function () use ($request, &$createdCustomer, &$logs, &$firstLog) {
-            $user = Auth::user();
-            $customerData = $request->except(['file_npwp', 'file_nib', 'file_ktp', 'file_akte', 'items']);
-
-            $isBgActive = $request->bank_garansi === 'YA';
-
-            if ($isBgActive) {
-                $year = date('Y');
-                $monthRoman = $this->getRomanMonth(date('n'));
-                $initials = $this->generateInitials($request->name);
-                $maxSequence = 0;
-
-                $existingNumbers = Customer::where('no_pkd', 'LIKE', "%/{$year}")
-                    ->pluck('no_pkd')
-                    ->toArray();
-
-                foreach ($existingNumbers as $no) {
-                    $parts = explode('/', $no);
-                    if (isset($parts[0]) && is_numeric($parts[0])) {
-                        $seq = intval($parts[0]);
-                        if ($seq > $maxSequence) {
-                            $maxSequence = $seq;
-                        }
-                    }
-                }
-
-                $nextSequence = $maxSequence + 1;
-                $pkdNumber = '';
-
-                do {
-                    $sequenceStr = str_pad($nextSequence, 3, '0', STR_PAD_LEFT);
-                    $pkdNumber = sprintf("%s/PKD-%s/%s/%s", $sequenceStr, $initials, $monthRoman, $year);
-                    $exists = Customer::where('no_pkd', $pkdNumber)->exists();
-                    if ($exists) {
-                        $nextSequence++;
-                    }
-                } while ($exists);
-
-                $customerData['no_pkd'] = $pkdNumber;
-                $customerData['credit_limit'] = 0;
-            } else {
-
-                $customerData['no_pkd'] = null;
-                $rawLimit = $request->credit_limit;
-                $cleanLimit = str_replace(['.', ','], '', $rawLimit);
-                $customerData['credit_limit'] = (float) $cleanLimit;
-            }
-
-            if ($request->filled('top_calc')) {
-                $customerData['top_calc'] = $request->top_calc;
-            } else {
-                $termVal = $request->term_of_payment;
-                $customerData['top_calc'] = ($termVal === 'CBD') ? 0 : (int) $termVal;
-            }
-
-            if (empty($customerData['lead_time'])) {
-                $customerData['lead_time'] = 0;
-            }
-
-            $grandTotal = 0;
-            if ($request->has('items') && is_array($request->items)) {
-                foreach ($request->items as $item) {
-                    $qty = (float) ($item['quantity'] ?? 0);
-                    $price = (float) ($item['price'] ?? 0);
-                    $grandTotal += ($qty * $price);
-                }
-            }
-
-            $customerData['customer_total'] = $grandTotal;
-            $createdCustomer = Customer::create($customerData);
-
+        try {
+            $customer = $this->customerService->createCustomer($request->all(), $request);
+            $this->dispatchEmailJob($customer);
             try {
-                $recipients = User::role(['super-admin', 'manager-finance', 'head-finance'])->get();
-                Notification::send($recipients, new SystemNotification(
-                    'New Customer',
-                    "Customer baru <b>{$createdCustomer->name}</b> telah ditambahkan.",
-                    route('customers.index'),
-                    'ph-users',
-                    'success'
-                ));
-            } catch (\Exception $e) {
-                // Ignore error notif general agar tidak rollback transaksi
-            }
-
-            if ($request->has('items') && is_array($request->items)) {
-                foreach ($request->items as $item) {
-                    if (!empty($item['item_name']) && !empty($item['quantity'])) {
-                        CustomerItem::create([
-                            'customer_id' => $createdCustomer->id,
-                            'item_name' => $item['item_name'],
-                            'quantity' => $item['quantity'],
-                            'price' => $item['price'] ?? 0,
-                        ]);
-                    }
+                $admins = User::role('super-admin')->get();
+                if ($admins->count() > 0) {
+                    Notification::send($admins, new SystemNotification(
+                        'New Customer Created',
+                        "Customer <b>{$customer->name}</b> telah dibuat (Monitoring).",
+                        route('customers.index'),
+                        'ph-eye',
+                        'info'
+                    ));
                 }
+            } catch (\Exception $e) {
+                Log::error("Gagal kirim notif sistem pembuatan customer: " . $e->getMessage());
             }
 
-            activity()
-                ->causedBy($user)
-                ->performedOn($createdCustomer)
-                ->useLog('customer')
-                ->event('create')
-                ->withProperties([
-                    'name' => $createdCustomer->name,
-                    'created_by' => $user->name
-                ])
-                ->log("Created new customer: {$createdCustomer->name}");
+            return response()->json([
+                'success' => true,
+                'message' => 'Customer created successfully!',
+                'data' => $customer
+            ], 201);
 
-            $storageFolder = 'customer_files/' . $createdCustomer->id;
-            $fileData = [
-                'customer_id' => $createdCustomer->id,
-                'npwp_file' => null,
-                'nib_siup_file' => null,
-                'ktp_file' => null,
-                'akte_file' => null
-            ];
+        } catch (\Exception $e) {
+            Log::error("Error create customer: " . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan sistem: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 
-            if ($request->hasFile('file_npwp')) {
-                $fileData['npwp_file'] = $request->file('file_npwp')->store($storageFolder, 'public');
-            }
-            if ($request->hasFile('file_nib')) {
-                $fileData['nib_siup_file'] = $request->file('file_nib')->store($storageFolder, 'public');
-            }
-            if ($request->hasFile('file_ktp')) {
-                $fileData['ktp_file'] = $request->file('file_ktp')->store($storageFolder, 'public');
-            }
-            if ($request->hasFile('file_akte')) {
-                $fileData['akte_file'] = $request->file('file_akte')->store($storageFolder, 'public');
-            }
-
-            CustomerFile::create($fileData);
-
-            $subCategory = 'CBD';
-            $logs = $this->generateApprovalLogs($user, $createdCustomer->id, 'Customer', $subCategory);
-
+    private function dispatchEmailJob($customer)
+    {
+        try {
             $firstLog = ApprovalLog::where('category', 'Customer')
-                ->where('related_id', $createdCustomer->id)
-                ->orderBy('level', 'asc')
+                ->where('related_id', $customer->id)
+                ->where('level', 1)
                 ->first();
 
             if ($firstLog) {
-                $firstApprover = User::where('nik', $firstLog->approver_nik)->first();
-
-                if ($firstApprover) {
-                    $createdCustomer->update(['route_to' => $firstApprover->name, 'status_approval' => 'Pending']);
-                    try {
-                        Notification::send($firstApprover, new SystemNotification(
-                            'Butuh Persetujuan', // Judul
-                            "Customer Baru <b>{$createdCustomer->name}</b> menunggu persetujuan Anda.", // Pesan
-                            route('customers.approval'), // Link
-                            'ph-signature', // Icon
-                            'warning' // Warna
-                        ));
-                    } catch (\Exception $e) {
-                        Log::error("Gagal kirim notif sistem ke approver level 1: " . $e->getMessage());
-                    }
-                } else {
-                    $createdCustomer->update(['status_approval' => 'Error', 'route_to' => 'Error: First Approver Not Found']);
-                    Log::error("Approver pertama dengan NIK {$firstLog->approver_nik} tidak ditemukan.");
-                }
-            } else {
-                $createdCustomer->update(['status_approval' => 'Completed', 'route_to' => 'Finished (No Path)']);
-            }
-
-            try {
-                $approvers = User::role(['manager-finance', 'head-finance'])->get();
-                Notification::send($approvers, new SystemNotification(
-                    'Approval Customer Baru',
-                    "Customer Baru <b>{$createdCustomer->name}</b> telah dibuat & menunggu approval berjenjang.",
-                    route('customers.approval'),
-                    'ph-user-plus',
-                    'info'
-                ));
-            } catch (\Exception $e) {
-                \Log::error("Gagal notif customer baru: " . $e->getMessage());
-            }
-        });
-
-        if (! $createdCustomer) {
-            return response()->json(['success' => false, 'message' => 'Failed to create customer'], 500);
-        }
-
-        try {
-            $firstLogData = $logs->firstWhere('level', 1);
-
-            if ($firstLogData) {
-                $approverNik = $firstLogData['approver_nik'];
-                $approverUser = User::where('nik', $approverNik)->first();
-
+                $approverUser = User::where('nik', $firstLog->approver_nik)->first();
                 if ($approverUser && $approverUser->email) {
-                    $recipients = [
-                        [
-                            'nik' => $approverUser->nik,
-                            'email' => $approverUser->email,
-                            'name' => $approverUser->name,
-                            'level' => $firstLogData['level'],
-                            'is_first' => true,
-                            'is_it' => $approverUser->hasRole('it')
-                        ]
-                    ];
+                    $recipients = [[
+                        'nik' => $approverUser->nik,
+                        'email' => $approverUser->email,
+                        'name' => $approverUser->name,
+                        'level' => 1,
+                        'is_first' => true,
+                        'is_it' => $approverUser->hasRole('it')
+                    ]];
 
-                    $token = $firstLogData['token'];
-                    CustomerJob::dispatch($createdCustomer->id, $recipients, $token, 'approval');
-                    Log::info("Email approval level 1 dikirim ke: " . $approverUser->email);
-                } else {
-                    Log::warning("User Level 1 tidak punya email atau NIK tidak ditemukan: " . $approverNik);
+                    CustomerJob::dispatch($customer->id, $recipients, $firstLog->token, 'approval');
+                    Log::info("Job Email Approval dikirim ke antrian untuk: " . $approverUser->email);
                 }
             }
         } catch (\Exception $e) {
-            Log::error('Error dispatching CustomerJob', [
-                'customer_id' => $createdCustomer->id ?? null,
-                'error' => $e->getMessage(),
-                'line' => $e->getLine()
-            ]);
+            Log::error('Gagal dispatch email job: ' . $e->getMessage());
         }
-
-        return response()->json(['success' => true, 'message' => 'Customer created successfully!', 'data' => $createdCustomer], 201);
     }
 
     public function update(Request $request, Customer $customer)
@@ -806,7 +604,6 @@ class CustomerController extends Controller
             return view('page.customer.links.approval-invalid');
         }
 
-        // [UPDATE DISINI] Tambahkan 'files' agar data dokumen terpanggil
         $customer = Customer::with(['user', 'accountGroup', 'customerClass', 'files'])
             ->findOrFail($log->related_id);
 
@@ -856,18 +653,22 @@ class CustomerController extends Controller
 
         $actor = User::where('nik', $currentLog->approver_nik)->first();
 
+
         $isFinanceAdjuster = $actor && ($actor->hasRole('manager-finance') || $actor->hasRole('head-finance'));
         $cleanNotes = trim($notes);
 
         if ($isFinanceAdjuster && ($action === 'review' || $action === 'approve')) {
             $isTopChanged = request()->has('update_top') && request('update_top') != $customer->term_of_payment;
 
+
             if ($isTopChanged) {
                 if (empty($cleanNotes)) {
                     return back()->withInput()->withErrors(['notes' => 'Notes wajib diisi karena Anda mengubah Term of Payment (TOP).']);
                 }
             }
-        } else {
+        }
+
+        else {
             if ($action === 'review' || $action === 'reject') {
                 if (empty($cleanNotes)) {
                     return back()->withInput()->withErrors(['notes' => 'Notes wajib diisi untuk keputusan Review/Reject.']);
@@ -884,6 +685,7 @@ class CustomerController extends Controller
             if (($action === 'review' || $action === 'approve') && $isFinanceAdjuster) {
                 $updateData = [];
                 $changesLog = [];
+
 
                 if (request()->has('update_top') && request('update_top') != $customer->term_of_payment) {
                     $updateData['term_of_payment'] = request('update_top');
@@ -904,11 +706,34 @@ class CustomerController extends Controller
                     $changesLog[] = "NPWP corrected by Finance";
                 }
 
+                if (request()->has('update_va')) {
+                    $updateData['virtual_account'] = request('update_va');
+                }
+
+                if (request()->has('update_payment_days')) {
+                    $updateData['payment_days'] = request('update_payment_days');
+                }
+
+                if (request()->has('update_payment_date')) {
+                    $updateData['payment_date'] = request('update_payment_date');
+                }
+
+                if (request()->has('update_faktur_days')) {
+                    $updateData['faktur_days'] = request('update_faktur_days');
+                }
+
+                if (request()->has('update_faktur_date')) {
+                    $updateData['faktur_date'] = request('update_faktur_date');
+                }
+
                 if (!empty($updateData)) {
                     $customer->update($updateData);
+                    if (isset($updateData['virtual_account'])) $changesLog[] = "VA Updated";
+                    if (isset($updateData['payment_days'])) $changesLog[] = "Payment Days Updated";
+
                     if (!empty($changesLog)) {
                         $prefix = !empty($notes) ? "\n" : "";
-                        $notes .= $prefix . "[System - Adjusted]: " . implode(', ', $changesLog);
+                        $notes .= $prefix . "[System - Finance]: Data Finance (VA/Payment/Faktur) diperbarui.";
                     }
                 }
             }

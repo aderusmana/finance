@@ -62,12 +62,9 @@ class MasterManagementSeeder extends Seeder
 
         // ==========================================
         // 3. Seed Account Groups
-        //    - create groups from region names (name_account_group == region_name)
-        //    - add some extra random groups (including Trading / Distributor)
         // ==========================================
         $accountGroups = [];
 
-        // Create account group per region (name matches region)
         foreach ($regions as $reg) {
             $accountGroups[] = [
                 'name_account_group' => $reg['region_name'],
@@ -75,8 +72,6 @@ class MasterManagementSeeder extends Seeder
                 'ccar' => rand(0, 1) ? 'smd_idr' : 'smd_usd',
             ];
         }
-
-        // No additional random account groups; use region names only
 
         foreach ($accountGroups as $group) {
             AccountGroup::updateOrCreate(
@@ -130,18 +125,14 @@ class MasterManagementSeeder extends Seeder
         $anyAccountGroup = AccountGroup::inRandomOrder()->first();
 
         $targetUsers = User::whereIn('username', ['staff.sales1', 'head.sales'])->get();
-
-
-        // Data pendukung untuk Foreign Keys
         $jktRegion = Regions::where('region_name', 'COMMERCIAL')->first();
         $hoBranch = Branch::where('branch_name', 'Head Office - Jakarta')->first();
         $distAccountGroup = AccountGroup::where('name_account_group', 'COMMERCIAL')->first();
         $salesUser = User::where('username', 'staff.sales1')->first();
 
-        // Membuat data Sales untuk Staff Sales 1
         if ($salesUser && $jktRegion && $hoBranch && $distAccountGroup) {
             Sales::updateOrCreate(
-                ['user_id' => $salesUser->id], // Key unik sekarang adalah user_id
+                ['user_id' => $salesUser->id],
                 [
                     'region_id' => $jktRegion->id,
                     'branch_id' => $hoBranch->id,
