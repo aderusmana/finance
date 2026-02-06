@@ -24,14 +24,24 @@ class Customer extends Model
         'penagihan_nama_kontak', 'penagihan_telepon', 'penagihan_address','surat_menyurat_address', 'email', 'tax_contact_name', 'tax_contact_email', 'tax_contact_phone',
         'npwp', 'tanggal_npwp', 'nppkp', 'tanggal_nppkp','no_pengukuhan_kaber', 'output_tax',
         'term_of_payment', 'lead_time', 'credit_limit', 'ccar', 'bank_garansi',
-        'area', 'join_date', 'status', 'status_approval', 'route_to', 'pembagian', 'customer_total', 'created_by'
+        'area', 'join_date', 'status', 'status_approval', 'route_to', 'pembagian', 'customer_total', 
+        'virtual_account', 
+        'payment_days', 
+        'payment_date', 
+        'faktur_days', 
+        'faktur_date',
+        'created_by'
     ];
 
     protected $casts = [
-        'tanggal_npwp' => 'date',
+       'tanggal_npwp' => 'date',
         'tanggal_nppkp' => 'date',
         'join_date' => 'date',
         'credit_limit' => 'decimal:2',
+        'payment_days' => 'array',
+        'payment_date' => 'array',
+        'faktur_days' => 'array',
+        'faktur_date' => 'array',
     ];
 
     protected $table = 'customers';

@@ -50,6 +50,7 @@ class CustomerJob implements ShouldQueue
                         'mail_type' => $this->mailType,
                         'token' => $this->token,
                         'approver_name' => $r['name'] ?? 'User',
+                        'is_it'         => $r['is_it'] ?? false,
                     ];
 
                     Log::info("QUEUE WORKER: Mengirim email tipe '{$this->mailType}' untuk Customer #{$this->customerId} ke: {$email}");

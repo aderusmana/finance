@@ -12,7 +12,7 @@ class CustomerFile extends Model
     protected $table = 'customer_files';
 
     protected $fillable = [
-        'customer_id', 'npwp_file', 'nib_siup_file', 'ktp_file'
+        'customer_id', 'npwp_file', 'nib_siup_file', 'ktp_file', 'akte_file'
     ];
 
     public function customer()

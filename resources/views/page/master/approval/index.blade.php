@@ -220,16 +220,18 @@
                     if (isEditMode) return;
 
                     // Reset dropdown sub-category & approvers
-                    subCategorySelect.empty().trigger('change'); 
-                    approversSelect.val(null).trigger('change').prop('disabled', true);
+                    subCategorySelect.empty().trigger('change');
+                    approversSelect.val(null).trigger('change').prop('disabled', false);
 
                     // Cek apakah kategori ini punya sub-categories di mapping
-                    if (selectedCategory && categoryMapping[selectedCategory] && categoryMapping[selectedCategory].length > 0) {
-                        
+                    if (selectedCategory && categoryMapping[selectedCategory] && categoryMapping[
+                            selectedCategory].length > 0) {
+
                         // Aktifkan Sub Category
                         subCategorySelect.prop('disabled', false);
-                        subCategorySelect.append(new Option('Select a sub-category', '', true, true)); // Placeholder
-                        
+                        subCategorySelect.append(new Option('Select a sub-category', '', true,
+                            true)); // Placeholder
+
                         // Loop data sub-category (misal: 'Lampiran D' untuk BG, atau 'CBD' untuk Customer)
                         categoryMapping[selectedCategory].forEach(subVal => {
                             // Cek apakah path ini sudah ada di database (biar user ga bikin double)
@@ -238,7 +240,7 @@
                             );
 
                             let newOption = new Option(subVal, subVal, false, false);
-                            if(pathExists) {
+                            if (pathExists) {
                                 $(newOption).prop('disabled', true); // Disable jika sudah ada
                             }
                             subCategorySelect.append(newOption);
@@ -255,19 +257,8 @@
                 });
 
                 $('#sub_category_id').on('change', function() {
-                    let selectedSubCategory = $(this).val();
-                    let approversSelect = $('#approvers');
-
-                    // Jika ada sub-category yang dipilih, aktifkan approver input
-                    if (selectedSubCategory) {
-                        approversSelect.prop('disabled', false);
-                    } else {
-                        // Jika sub-category wajib tapi belum dipilih, disable approver
-                        let currentCategory = $('#category_id').val();
-                        if (categoryMapping[currentCategory] && categoryMapping[currentCategory].length > 0) {
-                            approversSelect.prop('disabled', true);
-                        }
-                    }
+                    // sub category nullable → tidak mempengaruhi approver
+                    $('#approvers').prop('disabled', false);
                 });
 
                 function loadDropdownData() {
@@ -278,11 +269,12 @@
                         dataType: 'json',
                         success: function(data) {
                             let categorySelect = $('#category_id');
-                            
+
                             categoryMapping = data.subCategories || {};
                             existingPaths = data.existingPaths || [];
-                            categorySelect.empty().append('<option selected disabled value="">Choose a category...</option>');
-                            
+                            categorySelect.empty().append(
+                                '<option selected disabled value="">Choose a category...</option>');
+
                             if (data.categories) {
                                 data.categories.forEach(cat => {
                                     categorySelect.append(new Option(cat, cat));
@@ -405,7 +397,7 @@
                     $('#approvers').prop('disabled', true);
 
                     $('#ApproverModalLabel').html(
-                    '<i class="ph-duotone ph-user-plus"></i> Create New Approver');
+                        '<i class="ph-duotone ph-user-plus"></i> Create New Approver');
                     $('#ApproverModal').modal('show');
                 });
 
@@ -438,7 +430,7 @@
 
                                 $('#ApproverModalLabel').html(
                                     '<i class="ph-duotone ph-user-gear"></i> Edit Approver Sequence'
-                                    );
+                                );
                                 $('#ApproverModal').modal('show');
                             },
                             error: function(xhr) {

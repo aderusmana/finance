@@ -52,6 +52,7 @@ class CustomerMail extends Mailable implements ShouldQueue
                 'approver_name' => $this->data['approver_name'] ?? 'User',
                 'token' => $this->data['token'] ?? null,
                 'mail_type' => $this->data['mail_type'] ?? 'approval',
+                'is_it' => $this->data['is_it'] ?? false,
             ]
         );
     }

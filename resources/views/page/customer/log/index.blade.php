@@ -10,8 +10,8 @@
             <h4 class="main-title">Activity Log Monitoring</h4>
             <ul class="app-line-breadcrumbs mb-3">
                 <li>
-                    <a class="f-s-14 f-w-500" href="#">
-                        <i class="ph-duotone ph-monitor f-s-16"></i> Monitoring
+                    <a class="f-s-14 f-w-500" href="/">
+                        <i class="ph-duotone ph-monitor f-s-16"></i> Home
                     </a>
                 </li>
                 <li class="active">

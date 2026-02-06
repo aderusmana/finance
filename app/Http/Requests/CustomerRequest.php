@@ -29,10 +29,10 @@ class CustomerRequest extends FormRequest
             'customer_class' => 'required|exists:customer_classes,id',
 
             // --- 3. Documents (File Uploads) ---
-            // Validasi file: Wajib, harus file, tipe pdf/jpg/png, max 5MB (5120KB)
             'file_npwp' => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120',
             'file_nib'  => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120',
             'file_ktp'  => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'file_akte' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
 
             // --- 4. General Info ---
             'name' => 'required|string|max:255',
@@ -66,14 +66,23 @@ class CustomerRequest extends FormRequest
 
             'npwp' => 'required|string|max:50',
             'tanggal_npwp' => 'required|date',
-            'nppkp' => 'required|string|max:50',
-            'tanggal_nppkp' => 'required|date',
+            'nppkp' => 'nullable|string|max:50',
+            'tanggal_nppkp' => 'nullable|date',
             'no_pengukuhan_kaber' => 'nullable|string|max:255',
 
             // --- 7. Financial Terms ---
             'term_of_payment' => 'required|string', // Sesuaikan jika ini relasi ID
             'output_tax' => 'required|in:Terhutang PPN,NON-PPN,PPN', // Sesuaikan opsi
-            'credit_limit' => 'required|numeric|min:0',
+            'credit_limit' => [
+            'required',
+            'numeric',
+            'min:0',
+                function ($attribute, $value, $fail) {
+                    if (request('bank_garansi') === 'TIDAK' && $value <= 0) {
+                        $fail('Jika Bank Garansi NO, Credit Limit harus diisi (lebih dari 0).');
+                    }
+                },
+            ],
             'ccar' => 'required|string',
             'bank_garansi' => 'required|in:YA,TIDAK',
             'lead_time' => 'nullable|numeric|min:0',
@@ -100,13 +109,14 @@ class CustomerRequest extends FormRequest
             'file_npwp.mimes'    => 'Format file NPWP harus PDF, JPG, atau PNG.',
             'file_npwp.max'      => 'Ukuran file NPWP maksimal 5MB.',
             // NIB/SIUP
-            'file_nib.required' => 'Dokumen NIB/SIUP wajib diupload.',
             'file_nib.mimes'    => 'Format file NIB/SIUP harus PDF, JPG, atau PNG.',
             'file_nib.max'      => 'Ukuran file NIB/SIUP maksimal 5MB.',
             // KTP
-            'file_ktp.required' => 'Dokumen KTP wajib diupload.',
             'file_ktp.mimes'    => 'Format file KTP harus PDF, JPG, atau PNG.',
             'file_ktp.max'      => 'Ukuran file KTP maksimal 5MB.',
+            // Akte Pendirian
+            'file_akte.mimes'    => 'Format Akte harus PDF, JPG, atau PNG.',
+            'file_akte.max'      => 'Ukuran file Akte maksimal 5MB.',
 
             // --- 4. General Info ---
             'name.required'        => 'Nama Customer wajib diisi.',
@@ -142,8 +152,6 @@ class CustomerRequest extends FormRequest
 
             'npwp.required'          => 'Nomor NPWP wajib diisi.',
             'tanggal_npwp.required'  => 'Tanggal NPWP wajib diisi.',
-            'nppkp.required'         => 'Nomor NPPKP wajib diisi.',
-            'tanggal_nppkp.required' => 'Tanggal NPPKP wajib diisi.',
 
             // --- 7. Financial Terms ---
             'term_of_payment.required' => 'Term of Payment (TOP) wajib dipilih.',

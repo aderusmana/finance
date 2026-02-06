@@ -5,7 +5,8 @@
                 <ul class="footer-text">
                     <li>
                         &copy;
-                        <span id="currentYear"></span> Bank Garansi | Customer Create | SINARMEADOW | MIS. All Rights Reserved.
+                        <span id="currentYear"></span> Bank Garansi | Create Customer | SINARMEADOW | MIS. All Rights
+                        Reserved.
                     </li>
                 </ul>
                 <script>

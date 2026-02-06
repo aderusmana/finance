@@ -208,7 +208,7 @@
                         url = "{{ route('account-groups.store') }}";
                         method = "POST";
                     } else {
-                        url = "{{ url('master/account-group') }}/" + agId;
+                        url = "{{ url('account-groups') }}/" + agId;
                         method = "POST";
                     }
                     let formData = $(this).serialize();

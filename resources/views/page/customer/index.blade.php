@@ -7,15 +7,15 @@
 
     <div class="row m-1">
         <div class="col-12">
-            <h4 class="main-title">Approvals Management</h4>
+            <h4 class="main-title">Customers Management</h4>
             <ul class="app-line-breadcrumbs mb-3">
                 <li>
-                    <a class="f-s-14 f-w-500" href="#">
-                        <i class="ph-duotone ph-address-book f-s-16"></i> Approvals
+                    <a class="f-s-14 f-w-500" href="/">
+                        <i class="ph-bold f-s-16"></i> Home
                     </a>
                 </li>
                 <li class="active">
-                    <a class="f-s-14 f-w-500" href="#">Approvals List</a>
+                    <a class="f-s-14 f-w-500" href="#">Customers List</a>
                 </li>
             </ul>
         </div>
@@ -24,14 +24,13 @@
     <div class="row">
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <div class="d-flex align-items-center gap-2">
+                <div class="d-none d-md-flex align-items-center gap-2 mb-3">
                     <span class="text-muted fw-bold me-1"><i class="ph-bold ph-funnel"></i> Filter:</span>
 
                     <select id="statusFilter" class="form-select select2" style="width: 150px;">
                         <option value="all">All Account</option>
-                        @foreach($accountStatuses as $status)
-                            <option value="{{ $status }}">{{ $status }}</option>
-                        @endforeach
+                        <option value="Active">Active (BG)</option>
+                        <option value="Inactive">Inactive (BG)</option>
                     </select>
 
                     <select id="approvalStatusFilter" class="form-select select2" style="width: 175px;">
@@ -41,7 +40,7 @@
                         @endforeach
                     </select>
 
-                    <button id="resetFilters" class="btn btn-sm btn-secondary border" title="Reset Filters">
+                    <button id="resetFilters" class="btn btn-secondary border" title="Reset Filters">
                         <i class="ph-bold ph-arrow-counter-clockwise"></i>
                     </button>
                 </div>
@@ -125,7 +124,7 @@
                 </div>
 
                 <div class="table-responsive">
-                    <table class="w-100 display" id="customerTable">
+                    <table class="w-100 display" id="sampleTable">
                         <thead>
                             <tr>
                                 <th width="5%" class="text-center">No</th>
@@ -165,19 +164,21 @@
                             <div class="card-body">
                                 <div class="row">
                                     <div class="col-md-12">
-                                        <label for="user_id" class="form-label">Select User <span
-                                                class="text-danger">*</span></label>
-                                        <select class="form-select select2-styled" id="user_id" name="user_id"
-                                            style="width: 100%;" required>
+                                        <label for="user_id" class="form-label">Select User (Requester) <span class="text-danger">*</span></label>
+                                        <select class="form-select select2-styled" id="user_id" name="user_id" style="width: 100%;" required>
                                             <option></option>
-                                            @foreach ($sales as $user)
-                                                <option value="{{ $user->id }}"
-                                                    data-pos="{{ $user->user->position?->position_name ?? ($user->user->position_name ?? '') }}"
-                                                    data-branch="{{ $user->branch?->branch_name ?? '' }}"
-                                                    data-region="{{ $user->region?->region_name ?? '' }}">
-                                                    {{ $user->user->name }}</option>
+                                            @foreach ($sales as $s)
+                                                <option value="{{ $s->user_id }}"
+                                                    data-pos="{{ $s->user->position?->position_name ?? '' }}"
+                                                    data-branch="{{ $s->branch?->branch_name ?? '' }}"
+                                                    data-region="{{ $s->region?->region_name ?? '' }}"
+                                                    data-account-group-id="{{ $s->account_group_id }}">
+                                                    {{ $s->user->name }}
+                                                </option>
                                             @endforeach
                                         </select>
+                                        <input type="hidden" id="current_user_role" value="{{ Auth::user()->getRoleNames()->first() }}">
+                                        <input type="hidden" id="current_user_id" value="{{ Auth::id() }}">
                                     </div>
                                 </div>
                             </div>
@@ -250,42 +251,42 @@
 
                                 <hr>
 
-                                {{-- D. Documents Upload (MOVED UP HERE) --}}
+                                {{-- D. Documents Upload --}}
                                 <div class="card-body bg-opacity-10">
                                     <div class="row g-3 mb-4">
-                                        <h6 class="fw-bold text-secondary"><i class="ph-bold ph-upload-simple"></i>
-                                            Document Uploads (Auto-fill Support)</h6>
-                                        <div class="col-md-4">
-                                            <label class="form-label">Upload NPWP <span
-                                                    class="text-danger">*</span></label>
+                                        <h6 class="fw-bold text-secondary">
+                                            <i class="ph-bold ph-upload-simple"></i> Document Uploads (Auto-fill Support)
+                                        </h6>
+
+                                        {{-- 1. NPWP (REQUIRED) --}}
+                                        <div class="col-md-3">
+                                            <label class="form-label">Upload NPWP <span class="text-danger">*</span></label>
                                             <input type="file" class="form-control" name="file_npwp" required>
-                                            <small class="text-muted f-s-11">Upload NPWP untuk auto-fill nama &
-                                                alamat.</small>
+                                            <small class="text-muted f-s-11">Upload NPWP untuk auto-fill nama & alamat.</small>
                                             <div id="preview_npwp" class="mt-2" style="display: none;">
-                                                <a href="#" target="_blank" class="btn btn-sm btn-outline-primary file-link">
-                                                    <i class="ph-bold ph-file-text me-1"></i> View Uploaded NPWP
-                                                </a>
+                                                {{-- Preview button container --}}
                                             </div>
                                         </div>
-                                        <div class="col-md-4">
-                                            <label class="form-label">Upload NIB/SIUP <span
-                                                    class="text-danger">*</span></label>
+
+                                        {{-- 2. NIB/SIUP (REQUIRED - REVISI: Tambah Bintang & Required) --}}
+                                        <div class="col-md-3">
+                                            <label class="form-label">Upload NIB/SIUP <span class="text-danger">*</span></label>
                                             <input type="file" class="form-control" name="file_nib" required>
-                                            <div id="preview_nib" class="mt-2" style="display: none;">
-                                                <a href="#" target="_blank" class="btn btn-sm btn-outline-primary file-link">
-                                                    <i class="ph-bold ph-file-text me-1"></i> View Uploaded NIB
-                                                </a>
-                                            </div>
+                                            <div id="preview_nib" class="mt-2" style="display: none;"></div>
                                         </div>
-                                        <div class="col-md-4">
-                                            <label class="form-label">Upload KTP <span
-                                                    class="text-danger">*</span></label>
+
+                                        {{-- 3. KTP (REQUIRED - REVISI: Tambah Bintang & Required) --}}
+                                        <div class="col-md-3">
+                                            <label class="form-label">Upload KTP <span class="text-danger">*</span></label>
                                             <input type="file" class="form-control" name="file_ktp" required>
-                                            <div id="preview_ktp" class="mt-2" style="display: none;">
-                                                <a href="#" target="_blank" class="btn btn-sm btn-outline-primary file-link">
-                                                    <i class="ph-bold ph-id-card me-1"></i> View Uploaded KTP
-                                                </a>
-                                            </div>
+                                            <div id="preview_ktp" class="mt-2" style="display: none;"></div>
+                                        </div>
+
+                                        {{-- 4. AKTE (NULLABLE - REVISI: Hapus Bintang & Hapus Required) --}}
+                                        <div class="col-md-3">
+                                            <label class="form-label">Upload Akte Pendirian</label> {{-- Hapus span text-danger --}}
+                                            <input type="file" class="form-control" name="file_akte"> {{-- Hapus required --}}
+                                            <div id="preview_akte" class="mt-2" style="display: none;"></div>
                                         </div>
                                     </div>
                                 </div>
@@ -461,16 +462,14 @@
                                                 id="tanggal_npwp" required>
                                         </div>
                                         <div class="col-md-3">
-                                            <label class="form-label">No. NPPKP <span
-                                                    class="text-danger">*</span></label>
+                                            <label class="form-label">No. NPPKP</label>
                                             <input type="text" class="form-control" name="nppkp" id="nppkp"
-                                                placeholder="NPPKP Number" required>
+                                                placeholder="NPPKP Number">
                                         </div>
                                         <div class="col-md-3">
-                                            <label class="form-label">Tanggal NPPKP <span
-                                                    class="text-danger">*</span></label>
+                                            <label class="form-label">Tanggal NPPKP</label>
                                             <input type="date" class="form-control" name="tanggal_nppkp"
-                                                id="tanggal_nppkp" required>
+                                                id="tanggal_nppkp">
                                         </div>
                                         <div class="col-md-3">
                                             <label class="form-label">No Pengukuhan Kaber</label>
@@ -530,6 +529,103 @@
                                                 <option value="YA">Yes</option>
                                                 <option value="TIDAK">No</option>
                                             </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <hr>
+
+                                {{-- F. Financial Schedule (Optional) --}}
+                                <div class="card-body">
+                                    <div class="row g-3 mb-4">
+                                        <h6 class="fw-bold text-secondary d-flex align-items-center">
+                                            <i class="ph-bold ph-calendar-check me-2"></i> Financial Schedule (Optional)
+                                        </h6>
+                                        <div class="alert alert-light border border-dashed p-2 mb-3 f-s-12 text-muted">
+                                            <i class="ph-bold ph-info me-1"></i> Kolom ini bersifat opsional. Jika dipilih "All", maka berlaku untuk semua hari/tanggal.
+                                        </div>
+
+                                        {{-- CONTAINER INPUT SCHEDULE --}}
+                                        <div id="create_schedule_section">
+                                            <div class="row g-4">
+
+                                                {{-- LEFT: PAYMENT --}}
+                                                <div class="col-md-6 border-end">
+                                                    <h6 class="text-primary fw-bold small text-uppercase mb-2">Payment Schedule</h6>
+
+                                                    {{-- Payment Days --}}
+                                                    <div class="mb-3">
+                                                        <label class="form-label small fw-bold">Payment Days</label>
+                                                        <div class="schedule-selector" id="create_payment_days_container">
+                                                            <div id="create_payment_days_inputs"></div>
+
+                                                            <button type="button" class="btn btn-sm btn-outline-dark me-1 mb-1 btn-schedule" data-type="payment_days" data-val="All">All Days</button>
+                                                            @foreach(['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'] as $day)
+                                                                <button type="button" class="btn btn-sm btn-outline-primary mb-1 btn-schedule" data-type="payment_days" data-val="{{ $day }}">{{ $day }}</button>
+                                                            @endforeach
+                                                        </div>
+                                                    </div>
+
+                                                    {{-- Payment Date --}}
+                                                    <div>
+                                                        <label class="form-label small fw-bold">Payment Date</label>
+                                                        <div class="schedule-selector" id="create_payment_date_container">
+                                                            <div id="create_payment_date_inputs"></div>
+
+                                                            <button type="button" class="btn btn-sm btn-outline-dark me-1 mb-2 w-100 btn-schedule" data-type="payment_date" data-val="All">All Dates (1-31)</button>
+                                                            <div class="d-flex flex-wrap gap-1">
+                                                                @for($i=1; $i<=31; $i++)
+                                                                    <button type="button"
+                                                                        class="btn btn-xs btn-outline-secondary btn-schedule btn-date-box"
+                                                                        style="width: 38px !important; height: 38px !important; padding: 0 !important; display: inline-flex !important; align-items: center; justify-content: center; font-size: 0.85rem !important; font-weight: 600; line-height: 1 !important; white-space: nowrap !important;"
+                                                                        data-type="payment_date"
+                                                                        data-val="{{ $i }}">
+                                                                        {{ $i }}
+                                                                    </button>
+                                                                @endfor
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {{-- RIGHT: FAKTUR --}}
+                                                <div class="col-md-6">
+                                                    <h6 class="text-success fw-bold small text-uppercase mb-2">Faktur Schedule</h6>
+
+                                                    {{-- Faktur Days --}}
+                                                    <div class="mb-3">
+                                                        <label class="form-label small fw-bold">Faktur Days</label>
+                                                        <div class="schedule-selector" id="create_faktur_days_container">
+                                                            <div id="create_faktur_days_inputs"></div>
+
+                                                            <button type="button" class="btn btn-sm btn-outline-dark me-1 mb-1 btn-schedule" data-type="faktur_days" data-val="All">All Days</button>
+                                                            @foreach(['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'] as $day)
+                                                                <button type="button" class="btn btn-sm btn-outline-success mb-1 btn-schedule" data-type="faktur_days" data-val="{{ $day }}">{{ $day }}</button>
+                                                            @endforeach
+                                                        </div>
+                                                    </div>
+
+                                                    {{-- Faktur Date --}}
+                                                    <div>
+                                                        <label class="form-label small fw-bold">Faktur Date</label>
+                                                        <div class="schedule-selector" id="create_faktur_date_container">
+                                                            <div id="create_faktur_date_inputs"></div>
+
+                                                            <button type="button" class="btn btn-sm btn-outline-dark me-1 mb-2 w-100 btn-schedule" data-type="faktur_date" data-val="All">All Dates (1-31)</button>
+                                                            <div class="d-flex flex-wrap gap-1">
+                                                                @for($i=1; $i<=31; $i++)
+                                                                    <button type="button"
+                                                                        class="btn btn-xs btn-outline-secondary btn-schedule btn-date-box"
+                                                                        style="width: 38px !important; height: 38px !important; padding: 0 !important; display: inline-flex !important; align-items: center; justify-content: center; font-size: 0.85rem !important; font-weight: 600; line-height: 1 !important; white-space: nowrap !important;"
+                                                                        data-type="faktur_date"
+                                                                        data-val="{{ $i }}">
+                                                                        {{ $i }}
+                                                                    </button>
+                                                                @endfor
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -800,7 +896,7 @@
     <div class="modal fade" id="recallCustomerModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
         <div class="modal-dialog modal-dialog-centered modal-xl">
             <div class="modal-content border-0 shadow-lg">
-                
+
                 <div class="modal-header bg-gradient bg-warning text-dark border-0 py-3">
                     <div class="d-flex align-items-center">
                         <div class="bg-white bg-opacity-25 rounded-circle p-2 me-3">
@@ -813,7 +909,7 @@
                     </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                
+
                 <form id="recallCustomerForm" enctype="multipart/form-data">
                     @csrf
                     <input type="hidden" id="recall_customer_id" name="id">
@@ -821,11 +917,19 @@
                     <input type="hidden" name="country" id="recall_country" value="Indonesia">
 
                     <div class="modal-body bg-light p-0">
-                        
+
                         <div class="alert alert-warning border-0 rounded-0 mb-0 d-flex align-items-center px-4 py-3" role="alert">
                             <i class="ph-fill ph-info f-s-24 me-3"></i>
                             <div>
-                                <strong>Note:</strong> Proses Recall akan mereset status menjadi <strong>Process</strong> (Approval Level 1). Pastikan revisi sudah sesuai catatan reject.
+                                <strong>Note:</strong> Proses Recall akan mereset status menjadi <strong>Pending</strong> (Level 1).
+                            </div>
+                        </div>
+
+                        <div class="alert alert-danger border-0 rounded-0 mb-0 d-flex align-items-start px-4 py-3" role="alert" id="recall_reject_alert" style="display: none;">
+                            <i class="ph-fill ph-warning-circle f-s-24 me-3 mt-1"></i>
+                            <div>
+                                <strong class="d-block mb-1">Alasan Ditolak (Rejection Note):</strong>
+                                <span id="recall_reject_reason" class="fst-italic"></span>
                             </div>
                         </div>
 
@@ -849,7 +953,7 @@
                             </div>
 
                             <div class="tab-content p-4 w-100" id="v-pills-tabContent" style="max-height: 70vh; overflow-y: auto;">
-                                
+
                                 <div class="tab-pane fade show active" id="tab-recall-general" role="tabpanel">
                                     <h6 class="fw-bold text-primary border-bottom pb-2 mb-3">Informasi Utama Customer</h6>
                                     <div class="row g-3">
@@ -1091,7 +1195,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="modal-footer bg-white border-top py-3">
                         <button type="button" class="btn btn-light border text-muted px-4" data-bs-dismiss="modal">Batal</button>
                         <button type="submit" class="btn btn-warning px-4 fw-bold shadow-sm">
@@ -1111,7 +1215,8 @@
             $(document).ready(function() {
                 // 1. Initialize Select2
                 $('.select2').select2({
-                    theme: 'bootstrap-5'
+                    theme: 'bootstrap-5',
+                    minimumResultsForSearch: Infinity
                 });
 
                 $('.select2-recall').select2({
@@ -1137,18 +1242,18 @@
                     const row = `
                         <tr class="recall-item-row">
                             <td class="ps-4">
-                                <input type="text" class="form-control form-control-sm" 
-                                    name="items[${index}][item_name]" 
+                                <input type="text" class="form-control form-control-sm"
+                                    name="items[${index}][item_name]"
                                     value="${name}" placeholder="Contoh: Jasa Web Dev" required>
                             </td>
                             <td>
-                                <input type="number" class="form-control form-control-sm" 
-                                    name="items[${index}][quantity]" 
+                                <input type="number" class="form-control form-control-sm"
+                                    name="items[${index}][quantity]"
                                     value="${qty}" placeholder="0" min="1" required>
                             </td>
                             <td>
-                                <input type="number" class="form-control form-control-sm" 
-                                    name="items[${index}][price]" 
+                                <input type="number" class="form-control form-control-sm"
+                                    name="items[${index}][price]"
                                     value="${price}" placeholder="0" min="0">
                             </td>
                             <td class="text-center">
@@ -1194,12 +1299,9 @@
 
                 $(document).on('click', '.btn-recall-customer', function() {
                     let btn = $(this);
-                    
-                    // 1. Ambil DATA JSON LENGKAP dari attribute button
-                    // (Ini kunci agar data tidak hilang/terpotong)
-                    let rawData = btn.attr('data-json'); 
+                    let rawData = btn.attr('data-json');
                     let data = {};
-                    
+
                     try {
                         data = JSON.parse(rawData);
                     } catch(e) {
@@ -1211,19 +1313,26 @@
                     // Reset Form & Table
                     $('#recallCustomerForm')[0].reset();
                     $('#recall_items_body').empty();
-                    
+
+                    if (data.reject_note && data.reject_note !== '-' && data.reject_note !== 'Tidak ada catatan rejection.') {
+                        $('#recall_reject_reason').text(data.reject_note);
+                        $('#recall_reject_alert').show(); // Tampilkan alert merah
+                    } else {
+                        $('#recall_reject_alert').hide(); // Sembunyikan jika tidak ada note
+                    }
+
                     // Set ID & Reset Tabs ke awal
                     $('#recall_customer_id').val(data.id);
-                    $('.nav-pills button:first').tab('show'); 
+                    $('.nav-pills button:first').tab('show');
 
                     // --- 2. POPULATE FIELDS (Mapping JSON ke ID Input) ---
-                    
+
                     // Select2 Fields (Set Value & Trigger Change)
                     $('#recall_user_id').val(data.user_id);
                     $('#recall_account_group').val(data.account_group).trigger('change');
                     $('#recall_customer_class').val(data.customer_class).trigger('change');
                     $('#recall_term_of_payment').val(data.term_of_payment).trigger('change');
-                    
+
                     // Perbaikan Logika BG (Boolean/String conversion)
                     let bgVal = (data.bank_garansi == '1' || data.bank_garansi == 'YA') ? 'YA' : 'TIDAK';
                     $('#recall_bank_garansi').val(bgVal).trigger('change');
@@ -1236,7 +1345,7 @@
                     $('#recall_sort_name').val(data.sort_name);
                     $('#recall_email').val(data.email);
                     $('#recall_no_pkd').val(data.no_pkd);
-                    
+
                     // Address Inputs
                     $('#recall_address1').val(data.address1);
                     $('#recall_address2').val(data.address2);
@@ -1249,7 +1358,7 @@
                     // Management & Shipping (Previously Hidden/Missing)
                     $('#recall_shipping_to_name').val(data.shipping_to_name);
                     $('#recall_shipping_to_address').val(data.shipping_to_address);
-                    
+
                     $('#recall_purchasing_manager_name').val(data.purchasing_manager_name);
                     $('#recall_purchasing_manager_email').val(data.purchasing_manager_email);
                     $('#recall_finance_manager_name').val(data.finance_manager_name);
@@ -1272,7 +1381,6 @@
                     // --- 3. POPULATE ITEMS ---
                     if (data.items && data.items.length > 0) {
                         data.items.forEach(item => {
-                            // Panggil function addRecallItemRow yang sudah ada di script Anda
                             addRecallItemRow(item.item_name, item.quantity, item.price);
                         });
                     } else {
@@ -1296,18 +1404,18 @@
                     $('#recall_preview_npwp').html(createPreviewBtn(data.file_npwp_path, 'NPWP'));
                     $('#recall_preview_nib').html(createPreviewBtn(data.file_nib_path, 'NIB'));
                     $('#recall_preview_ktp').html(createPreviewBtn(data.file_ktp_path, 'KTP'));
+                    $('#recall_preview_akte').html(createPreviewBtn(data.file_akte_path, 'Akte Pendirian'));
 
-                    // Show Modal
                     $('#recallCustomerModal').modal('show');
                 });
 
                 // --- SUBMIT RECALL ---
                 $('#recallCustomerForm').on('submit', function(e) {
                     e.preventDefault();
-                    
+
                     const id = $('#recall_customer_id').val();
                     const formData = new FormData(this);
-                    const url = `/customers/${id}/recall`; 
+                    const url = `/customers/${id}/recall`;
 
                     Swal.fire({
                         title: 'Konfirmasi Recall',
@@ -1344,7 +1452,7 @@
                                             showConfirmButton: false
                                         }).then(() => {
                                             $('#recallCustomerModal').modal('hide');
-                                            $('#customerTable').DataTable().ajax.reload();
+                                            $('#sampleTable').DataTable().ajax.reload();
                                         });
                                     } else {
                                         Swal.fire('Gagal!', response.message, 'error');
@@ -1371,25 +1479,32 @@
                     }
 
                     const formData = new FormData(this);
+
+                    // BERSIHKAN FORMAT RUPIAH SEBELUM KIRIM
+                    // Agar tidak error "credit_limit must be a number"
+                    let rawCreditLimit = formData.get('credit_limit');
+                    if (rawCreditLimit) {
+                        let cleanCreditLimit = rawCreditLimit.toString().replace(/[^0-9]/g, '');
+                        formData.set('credit_limit', cleanCreditLimit);
+                    }
+
                     const url = "{{ route('customers.store') }}";
+
                     Swal.fire({
                         title: 'Konfirmasi Penyimpanan',
-                        text: "Pastikan seluruh data yang diinput sudah benar. Lanjutkan penyimpanan?",
+                        text: "Pastikan seluruh data yang diinput sudah benar.",
                         icon: 'question',
                         showCancelButton: true,
                         confirmButtonColor: '#3085d6',
                         cancelButtonColor: '#d33',
-                        confirmButtonText: 'Ya, Simpan!',
-                        cancelButtonText: 'Batal'
+                        confirmButtonText: 'Ya, Simpan!'
                     }).then((result) => {
                         if (result.isConfirmed) {
                             Swal.fire({
                                 title: 'Menyimpan Data...',
                                 html: 'Mohon tunggu sebentar.',
                                 allowOutsideClick: false,
-                                didOpen: () => {
-                                    Swal.showLoading();
-                                }
+                                didOpen: () => { Swal.showLoading(); }
                             });
 
                             $.ajax({
@@ -1400,7 +1515,6 @@
                                 contentType: false,
                                 success: function(response) {
                                     Swal.close();
-
                                     if(response.success) {
                                         Swal.fire({
                                             icon: 'success',
@@ -1410,19 +1524,17 @@
                                             showConfirmButton: false
                                         }).then(() => {
                                             $('#customerModal').modal('hide');
-                                            $('#customerTable').DataTable().ajax.reload();
+                                            $('#sampleTable').DataTable().ajax.reload();
                                         });
                                     } else {
-                                        Swal.fire('Gagal!', response.message || 'Terjadi kesalahan.', 'error');
+                                        Swal.fire('Gagal!', response.message, 'error');
                                     }
                                 },
                                 error: function(xhr) {
                                     Swal.close();
-                                    let errorMessage = 'Terjadi kesalahan pada server.';
-                                    if (xhr.responseJSON && xhr.responseJSON.message) {
-                                        errorMessage = xhr.responseJSON.message;
-                                    }
-                                    Swal.fire('Error!', errorMessage, 'error');
+                                    let msg = 'Terjadi kesalahan server.';
+                                    if(xhr.responseJSON && xhr.responseJSON.message) msg = xhr.responseJSON.message;
+                                    Swal.fire('Error!', msg, 'error');
                                 }
                             });
                         }
@@ -1435,119 +1547,101 @@
 
                     const originalBtn = $('#btn-save-customer');
                     originalBtn.prop('disabled', true);
-                    const notice = $(
-                        '<div class="mt-2 text-info" id="ocr-status">Running OCR, please wait...</div>');
+                    const notice = $('<div class="mt-2 text-info" id="ocr-status"><i class="ph-bold ph-spinner ph-spin me-1"></i> Reading NPWP (Scanning all lines)...</div>');
                     $(this).closest('.card-body').append(notice);
 
                     const reader = new FileReader();
                     reader.onload = function(evt) {
                         try {
-                            const dataUrl = evt.target.result;
-                            Tesseract.recognize(dataUrl, 'eng', {
-                                    logger: m => console.log(m)
-                                })
+                            Tesseract.recognize(evt.target.result, 'eng', { logger: m => console.log(m) })
                                 .then(result => {
-                                    const text = result.data && result.data.text ? result.data.text :
-                                    '';
-                                    console.log('OCR text:', text);
-                                    let npwpMatch = text.match(/\d{2}\.\d{3}\.\d{3}\.\d-\d{3}\.\d{3}/);
-                                    if (!npwpMatch) {
-                                        npwpMatch = text.match(/[0-9\.\-\s]{9,25}/);
-                                    }
-                                    const npwp = npwpMatch ? npwpMatch[0].trim() : '';
-
+                                    const text = result.data.text || '';
                                     const lines = text.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
-                                    console.log('OCR lines:', lines);
-                                    try {
-                                        let nameFromOcr = '';
-                                        if (lines.length > 3) {
-                                            const parts = [];
-                                            if (lines[3]) parts.push(lines[3].trim());
-                                            if (lines[4]) parts.push(lines[4].trim());
-                                            if (parts.length) nameFromOcr = parts.join(' ');
-                                        }
-                                        if (!nameFromOcr && lines.length >= 2 && lines[1]) {
-                                            nameFromOcr = lines[1].trim();
-                                        }
-                                        if (nameFromOcr) {
-                                            $('#name').val(nameFromOcr);
-                                            generatePkdNumber(nameFromOcr);
-                                        }
-                                    } catch (e) {
-                                        console.error('Failed to set name from OCR', e);
-                                    }
-                                    let address = '';
 
-                                    const fixedStart = 5;
-                                    if (lines.length > fixedStart) {
-                                        const candidate = [];
-                                        for (let i = fixedStart; i < Math.min(lines.length, fixedStart + 3); i++) {
-                                            const ln = lines[i];
-                                            if (!ln) continue;
-                                            if (ln.length < 3) continue;
-                                            const digitRatio = (ln.replace(/\D/g, '').length) / Math.max(1, ln.length);
-                                            if (digitRatio > 0.8) continue;
-                                            candidate.push(ln);
-                                        }
-                                        if (candidate.length) {
-                                            address = candidate.join(' ');
-                                            console.log('Collected address from fixed start index 5:', candidate);
+                                    // 1. CARI POSISI BARIS NPWP
+                                    let npwpLineIdx = -1;
+                                    let npwpValue = '';
+                                    const npwpRegexStrict = /\d{2}\.\d{3}\.\d{3}\.\d-\d{3}\.\d{3}/;
+                                    const npwpRegexLoose = /[0-9\.\-\s]{15,25}/;
+
+                                    for (let i = 0; i < lines.length; i++) {
+                                        let match = lines[i].match(npwpRegexStrict);
+                                        if (match) {
+                                            npwpLineIdx = i;
+                                            npwpValue = match[0];
+                                            break;
                                         }
                                     }
-
-                                    if (!address) {
-                                        const npwpPattern = npwpMatch ? npwpMatch[0].trim() : null;
-                                        let npwpLineIdx = -1;
-                                        if (npwpPattern) {
-                                            npwpLineIdx = lines.findIndex(l => l.includes(npwpPattern) || l.replace(/\s+/g, '').includes(npwpPattern.replace(/\s+/g, '')));
-                                        }
-
-                                        if (npwpLineIdx >= 0) {
-                                            const skipLabelRegex = /\b(NPWP|NPPKP|No\.?|Nama|Name|Alamat|Address|Tgl|Tanggal|SIUP|NIB)\b/i;
-                                            const collected = [];
-                                            const skipAfterNpwp = 2;
-                                            for (let i = npwpLineIdx + 1 + skipAfterNpwp; i < lines.length && collected.length < 3; i++) {
-                                                const ln = lines[i];
-                                                if (!ln) continue;
-                                                if (skipLabelRegex.test(ln)) continue;
-                                                if (ln.length < 4) continue;
-                                                const digitRatio = (ln.replace(/\D/g, '').length) / Math.max(1, ln.length);
-                                                if (digitRatio > 0.6) continue;
-                                                collected.push(ln);
-                                            }
-                                            if (collected.length) {
-                                                address = collected.join(' ');
-                                            }
-                                            console.log('npwpLineIdx, collected address lines:', npwpLineIdx, collected);
-                                        }
-
-                                        if (!address) {
-                                            const addrIdx = lines.findIndex(l => /\b(Jl|Jalan|Address|Alamat)\b/i.test(l));
-                                            if (addrIdx >= 0) {
-                                                let foundLine = lines[addrIdx];
-                                                let cleanLine = foundLine.replace(/^(Alamat|Address|Jalan|Jl)\s*[:.]?\s*/i, '').trim();
-                                                if (cleanLine.length < 3) {
-                                                    address = lines.slice(addrIdx + 1, addrIdx + 4).join(' ');
-                                                } else {
-                                                    lines[addrIdx] = cleanLine;
-                                                    address = lines.slice(addrIdx, addrIdx + 3).join(' ');
-                                                }
-                                            } else {
-                                                const filtered = lines.filter(l => !/\b(NPWP|NPPKP|No\.?|Nama|Name|Tgl|Tanggal|SIUP|NIB)\b/i.test(l));
-                                                if (filtered.length) {
-                                                    address = filtered.reduce((a, b) => a.length > b.length ? a : b, '');
-                                                } else if (lines.length) {
-                                                    address = lines.reduce((a, b) => a.length > b.length ? a : b, '');
-                                                }
+                                    // Fallback search
+                                    if (npwpLineIdx === -1) {
+                                        for (let i = 0; i < lines.length; i++) {
+                                            if (npwpRegexLoose.test(lines[i]) && lines[i].replace(/\D/g, '').length >= 15) {
+                                                npwpLineIdx = i;
+                                                npwpValue = lines[i].match(npwpRegexLoose)[0];
+                                                break;
                                             }
                                         }
                                     }
 
-                                    console.log('Extracted address (pre-chunk):', address);
+                                    if (npwpValue) {
+                                        $('#npwp').val(npwpValue.trim());
+                                    }
 
+                                    if (npwpLineIdx !== -1 && lines.length > npwpLineIdx + 1) {
+                                        let rawName = lines[npwpLineIdx + 1];
+                                        rawName = rawName.replace(/^(Nama|Name)\s*[:.]?\s*/i, '').trim();
+                                        let safeName = rawName.replace(/[^a-zA-Z0-9\s\.\,\(\)\-\&]/g, '').trim();
+
+                                        $('#name').val(safeName);
+                                        // Only auto-generate No PKD when Bank Garansi is YES
+                                        const bgStatusAfterOcr = $('#bank_garansi').val();
+                                        if (bgStatusAfterOcr === 'YA' || bgStatusAfterOcr === '1') {
+                                            generatePkdNumber(safeName);
+                                        } else {
+                                            // If Bank Garansi is NO or unset, ensure PKD is empty and hint
+                                            $('#no_pkd').val('').attr('placeholder', 'Tidak perlu No PKD (Non-BG)').prop('readonly', true);
+                                        let bgStatus = $('#bank_garansi').val();
+
+                                        if (bgStatus === 'YA' || bgStatus === '1') {
+                                            generatePkdNumber(safeName);
+                                        } else {
+                                            $('#no_pkd').val('');
+                                            console.log('Skip generate PKD karena Bank Garansi = NO');
+                                        }
+                                    }
+
+                                    // 3. AMBIL ALAMAT (LOOPING SAMPAI KETEMU "FOOTER")
+                                    let rawAddress = '';
+                                    if (npwpLineIdx !== -1) {
+                                        let addressLines = [];
+                                        let startIndex = npwpLineIdx + 2;
+
+                                        // Loop dari baris alamat pertama sampai habis array
+                                        for (let i = startIndex; i < lines.length; i++) {
+                                            let currentLine = lines[i];
+
+                                            // Jika ketemu kata "Penerbit", "Terdaftar", "KPP", stop pengambilan alamat
+                                            if (currentLine.match(/(Penerbit|Terdaftar|KPP|Pratama|Kanwil|Direktorat)/i)) {
+                                                break;
+                                            }
+
+                                            // Abaikan jika baris terlalu pendek (misal sampah OCR: ".")
+                                            if (currentLine.length > 2) {
+                                                addressLines.push(currentLine);
+                                            }
+                                        }
+
+                                        // Gabungkan semua baris alamat yang ditemukan jadi satu string panjang
+                                        rawAddress = addressLines.join(' ');
+
+                                        // Bersihkan label "Alamat :" atau "Jalan" di awal (jika ada)
+                                        rawAddress = rawAddress.replace(/^(Alamat|Address|Jalan|Jl)\s*[:.]?\s*/i, '').trim();
+                                    }
+
+                                    // Fungsi Chunking (Max 36 Karakter per Input)
                                     function splitChunksWordWrap(str, len) {
                                         if (!str) return [];
-                                        str = str.replace(/\s+/g, ' ').trim();
+                                        str = str.replace(/\s+/g, ' ').trim(); // Normalisasi spasi
                                         const words = str.split(' ');
                                         const out = [];
                                         let line = '';
@@ -1556,7 +1650,7 @@
                                                 line = (line + ' ' + w).trim();
                                             } else {
                                                 if (line) out.push(line);
-                                                // if single word longer than len, break it
+                                                // Handle kata yang lebih panjang dari limit (36)
                                                 if (w.length > len) {
                                                     for (let i = 0; i < w.length; i += len) {
                                                         out.push(w.substr(i, len));
@@ -1571,8 +1665,13 @@
                                         return out;
                                     }
 
-                                    const chunks = splitChunksWordWrap(address || '', 28);
+                                    // Distribusi ke Input Address 1, 2, 3
+                                    const chunks = splitChunksWordWrap(rawAddress || '', 36);
+
                                     try {
+                                        // Reset field
+                                        $('#address1, #address2, #address3').val('');
+
                                         if ($('#address1').length) $('#address1').val(chunks[0] || '');
                                         if ($('#address2').length) $('#address2').val(chunks[1] || '');
                                         if ($('#address3').length) $('#address3').val(chunks[2] || '');
@@ -1580,37 +1679,20 @@
                                         console.error('Error setting address fields', e);
                                     }
 
-                                    if (npwp) {
-                                        $('#npwp').val(npwp);
-                                    }
-
                                     $('#ocr-status').remove();
                                     originalBtn.prop('disabled', false);
                                 })
                                 .catch(err => {
                                     console.error('OCR error', err);
-                                    $('#ocr-status').text('OCR failed, please input address manually');
+                                    $('#ocr-status').text('OCR failed (Manual Input Required)').addClass('text-danger');
                                     originalBtn.prop('disabled', false);
-                                    setTimeout(() => $('#ocr-status').fadeOut(400, function() {
-                                        $(this).remove();
-                                    }), 3000);
                                 });
-                        } catch (outerErr) {
-                            console.error('OCR outer error', outerErr);
-                            $('#ocr-status').text('OCR failed, please input address manually');
+                        } catch (e) {
+                            $('#ocr-status').text('Error processing file').addClass('text-danger');
                             originalBtn.prop('disabled', false);
-                            setTimeout(() => $('#ocr-status').fadeOut(400, function() {
-                                $(this).remove();
-                            }), 3000);
                         }
                     };
                     reader.readAsDataURL(file);
-                });
-
-                $('#user_id').select2({
-                    dropdownParent: $('#customerModal'),
-                    theme: 'bootstrap-5',
-                    placeholder: 'Search & Select User'
                 });
 
                 $('#account_group, #customer_class, #term_of_payment').select2({
@@ -1652,121 +1734,111 @@
                     });
                 }
 
-                $('#name').on('blur', function() {
-                    let val = $(this).val();
-                    if(val.length > 3) {
-                        generatePkdNumber(val);
-                    }
-                });
-
-                const table = $('#customerTable').DataTable({
+                const table = $('#sampleTable').DataTable({
                     processing: true,
                     serverSide: true,
                     ajax: {
                         url: "{{ route('customers.index') }}",
                         data: function(d) {
                             d.status = $('#statusFilter').val();
+                            d.approval_status = $('#approvalStatusFilter').val();
                         }
                     },
+                    order: [[8, 'desc']],
                     columns: [
-                        // NO
                         {
                             data: 'DT_RowIndex',
                             name: 'DT_RowIndex',
                             orderable: false,
                             searchable: false,
-                            className: 'text-center dt-no-wrap' // Mencegah nomor turun baris
+                            className: 'text-center dt-no-wrap'
                         },
-                        // CODE
                         {
                             data: 'code',
-                            name: 'code',
+                            name: 'customers.code',
                             className: 'dt-no-wrap fw-bold',
                             render: function(data) {
                                 return data && data.trim() !== '' ? `<span class="fw-bold text-dark">${data}</span>` : `<span class="text-muted fst-italic">Auto-generated</span>`;
                             }
                         },
-                        // NAME
                         {
                             data: 'name',
-                            name: 'name',
+                            name: 'customers.name',
                             className: 'dt-no-wrap fw-bold',
                             render: function(data) { return `<span class="fw-bold text-dark">${data}</span>`; }
                         },
-
-                        // CREDIT LIMIT
                         {
-                            data: 'credit_limit_formatted',
-                            name: 'credit_limit',
+                            data: 'credit_limit',
+                            name: 'customers.credit_limit',
                             className: 'dt-wrap'
                         },
-
-                        // TOP & BG STATUS
                         {
                             data: 'financial_info',
-                            name: 'term_of_payment',
-                            className: 'dt-no-wrap text-center' // Jaga tetap satu blok
+                            name: 'customers.term_of_payment',
+                            className: 'dt-no-wrap text-center'
                         },
-
-                        // STATUS APPROVAL
                         {
                             data: 'status_approval',
-                            name: 'status_approval',
-                            className: 'text-center dt-no-wrap' // Badge status jangan wrap
+                            name: 'customers.status_approval',
+                            className: 'text-center dt-no-wrap'
                         },
-
-                        // ROUTE TO (POSISI)
                         {
                             data: 'route_to',
-                            name: 'route_to',
-                            className: 'text-center dt-wrap', // Izinkan nama orang panjang wrap
-                            width: '15%' // Beri lebar spesifik
+                            name: 'customers.route_to',
+                            className: 'text-center dt-wrap',
+                            width: '15%'
                         },
-
-                        // ACTION
                         {
                             data: 'action',
                             name: 'action',
                             orderable: false,
                             searchable: false,
                             className: 'text-center dt-no-wrap'
+                        },
+                        {
+                            data: 'updated_at',
+                            name: 'customers.updated_at',
+                            visible: false,
+                            searchable: false
                         }
                     ],
-                    order: [],
                     autoWidth: false
                 });
 
                 $('#statusFilter, #approvalStatusFilter').on('change', function() {
-                    table.ajax.reload();
+                    table.draw();
                 });
 
                 $('#resetFilters').on('click', function() {
-                    $('#statusFilter').val('all');
-                    $('#approvalStatusFilter').val('all');
+                    $('#statusFilter').val('all').trigger('change');
+                    $('#approvalStatusFilter').val('all').trigger('change');
 
-                    $('#statusFilter').trigger('change');
-                    $('#approvalStatusFilter').trigger('change');
-
-                    // Reload tabel (opsional, karena trigger change di atas sudah memanggil reload)
-                    // table.ajax.reload();
+                    // table.draw() akan terpanggil otomatis karena trigger('change') di atas
                 });
 
-                // A. Saat User dipilih -> Tampilkan Detail User & Section Klasifikasi
                 $('#user_id').on('change', function() {
                     const selected = $(this).find(':selected');
                     const userId = selected.val();
 
                     if (userId) {
-                        // Pull values from option data attributes
+                        // Isi Info Posisi/Branch (Existing)
                         $('#user_position').val(selected.data('pos') || '-');
                         $('#user_branch').val(selected.data('branch') || '-');
                         $('#user_region').val(selected.data('region') || '-');
 
+                        // ==========================================
+                        // LOGIKA BARU: AUTO SELECT ACCOUNT GROUP
+                        // ==========================================
+                        const linkedAgId = selected.data('account-group-id');
+                        if (linkedAgId) {
+                            $('#account_group').val(linkedAgId).trigger('change');
+                            // Jika ingin Account Group tidak bisa diganti oleh Sales, uncomment baris bawah:
+                            // $('#account_group').select2({ disabled: true, theme: 'bootstrap-5' });
+                        }
+
                         $('#user-info-section').slideDown();
-                        // Show main form section (account group & class are now inside main form)
                         $('#main-form-section').slideDown();
-                        // keep save disabled until account_group + customer_class chosen
-                        $('#btn-save-customer').prop('disabled', true);
+                        $('#btn-save-customer').prop('disabled', true); // Tetap disable sampai AG & Class terisi
                     } else {
                         $('#user-info-section').slideUp();
                         $('#main-form-section').slideUp();
@@ -1774,6 +1846,7 @@
                     }
                 });
 
+                // --- 3. EVENT SAAT ACCOUNT GROUP BERUBAH (MODIFIKASI: SET BG OTOMATIS) ---
                 $('#account_group, #customer_class').on('change', function() {
                     const ag = $('#account_group').val();
                     const cc = $('#customer_class').val();
@@ -1783,18 +1856,10 @@
                         let rawBg = selectedAg.data('bank_garansi');
                         let rawCcar = selectedAg.data('ccar');
 
-                        let bgValue = '';
-                        if (rawBg == 1 || rawBg === true || rawBg === '1') {
-                            bgValue = 'YA';
-                        } else {
-                            bgValue = 'TIDAK';
-                        }
+                        let bgValue = (rawBg == 1 || rawBg === true || rawBg === '1' || rawBg === 'YA') ? 'YA' : 'TIDAK';
 
-                        // 2. SET VALUE & TRIGGER CHANGE: Penting untuk Select2
-                        // Kita set valuenya ke 'YA'/'TIDAK' lalu panggil trigger('change')
                         $('#bank_garansi').val(bgValue).trigger('change');
 
-                        // Untuk CCAR biasanya teksnya sama (smd_idr/smd_usd), tapi tetap perlu trigger
                         $('#ccar').val(rawCcar).trigger('change');
                     }
 
@@ -1806,21 +1871,162 @@
                     }
                 });
 
-                // 4. Modal Handler - CREATE
+                function checkCreditLimitAccess() {
+                    const bgVal = $('#bank_garansi').val(); // YA / TIDAK
+                    const topVal = $('#term_of_payment').val(); // 7, 14, 30, CBD, dll
+                    const clInput = $('#credit_limit');
+                    const pkdInput = $('#no_pkd');
+
+                    clInput.parent().find('.cl-status-note').remove();
+
+                    if (bgVal === 'YA' || topVal === 'CBD') {
+
+                        clInput.val(0).prop('readonly', true)
+                            .removeClass('bg-white cursor-pointer border-danger').addClass('bg-light')
+                            .attr('placeholder', '0');
+
+                        let msg = '';
+                        if (bgVal === 'YA') msg = 'Credit Limit otomatis 0 (BG Aktif).';
+                        else if (topVal === 'CBD') msg = 'Credit Limit otomatis 0 (Cash Before Delivery).';
+
+                        clInput.after(`<small class="cl-status-note text-info fw-bold mt-1 d-block"><i class="ph-bold ph-info me-1"></i> ${msg}</small>`);
+
+                    }
+                    else {
+                        clInput.prop('readonly', true)
+                            .removeClass('bg-light').addClass('bg-white cursor-pointer border-danger')
+                            .attr('placeholder', 'Klik disini untuk menghitung (Wajib)');
+
+                        clInput.after('<small class="cl-status-note text-danger fw-bold mt-1 d-block"><i class="ph-bold ph-calculator me-1"></i> Wajib: Klik kolom ini untuk hitung limit.</small>');
+                    }
+                }
+
+                // Event Listener saat TOP Berubah
+                $('#term_of_payment').on('change', function() {
+                    checkCreditLimitAccess();
+                });
+
+                $('#bank_garansi').on('change', function() {
+                    const val = $(this).val();
+                    const pkdInput = $('#no_pkd');
+                    const customerName = $('#name').val();
+
+                    pkdInput.parent().find('.pkd-status-note').remove();
+
+                    if (val === 'TIDAK') {
+                        pkdInput.val('').prop('readonly', true).removeClass('fw-bold');
+                        pkdInput.after('<small class="pkd-status-note text-danger fw-bold mt-1 d-block"><i class="ph-bold ph-info me-1"></i> Customer ini tidak menggunakan Bank Garansi.</small>');
+                    } else {
+                        pkdInput.prop('readonly', true).addClass('fw-bold');
+                        if (customerName && customerName.length > 3) {
+                            generatePkdNumber(customerName);
+                        } else {
+                            pkdInput.val('').attr('placeholder', 'Isi Nama Customer untuk Generate PKD...');
+                        }
+                    }
+
+                    checkCreditLimitAccess();
+                });
+
+                $('#name').on('blur', function() {
+                    let val = $(this).val();
+                    let bgStatus = $('#bank_garansi').val();
+
+                    if(val.length > 3 && (bgStatus === 'YA' || bgStatus === '1')) {
+                        generatePkdNumber(val);
+                    }
+                });
+
+                $(document).on('click focus', '#credit_limit', function(e) {
+                    e.preventDefault();
+
+                    const bgStatus = $('#bank_garansi').val();
+                    const topVal = $('#term_of_payment').val();
+
+                    if (bgStatus === 'YA' || topVal === 'CBD') {
+                        return;
+                    }
+
+                    const termString = $('#term_of_payment').val();
+                    if (!termString) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'TOP belum dipilih',
+                            text: 'Harap pilih Term of Payment terlebih dahulu sebelum menghitung limit.'
+                        });
+                        $('#term_of_payment').select2('open');
+                        return;
+                    }
+
+                    $('#calc_products').empty();
+
+                    let existingItems = {};
+                    let hasItems = false;
+
+                    $('#customerForm').find('.hidden-item-input').each(function() {
+                        let nameAttr = $(this).attr('name');
+                        let matches = nameAttr.match(/items\[(\d+)\]\[(\w+)\]/);
+
+                        if(matches) {
+                            hasItems = true;
+                            let index = matches[1];
+                            let field = matches[2];
+
+                            if(!existingItems[index]) existingItems[index] = {};
+                            existingItems[index][field] = $(this).val();
+                        }
+                    });
+
+                    if (hasItems) {
+                        Object.keys(existingItems).forEach(function(key) {
+                            let item = existingItems[key];
+                            addCalcRow(item.item_name, item.quantity, item.price);
+                        });
+                    } else {
+                        addCalcRow();
+                    }
+
+                    let topDays = 0;
+                    const numberMatch = termString.match(/(\d+)/);
+                    if (numberMatch && numberMatch[0]) {
+                        topDays = parseInt(numberMatch[0]);
+                    }
+                    $('#calc_top').val(topDays);
+
+                    let ltVal = parseFloat($('#lead_time').val()) || 0;
+                    $('#calc_lt').val(ltVal);
+
+                    // Hitung ulang preview saat modal dibuka
+                    const initialR = computeCreditValues();
+                    $('#calc_preview_formatted').val(formatRupiah(Math.round(initialR.valFinal || 0)));
+
+                    new bootstrap.Modal(document.getElementById('creditCalcModal')).show();
+                });
+
                 $('#btn-create-customer').on('click', function() {
+                    // 1. Reset Form Biasa
                     $('#customerForm')[0].reset();
                     $('.select2-styled').val(null).trigger('change');
+
+                    // 2. Reset Readonly & Disabled States
                     $('#customerForm').find('input, textarea, select').prop('disabled', false);
-                    $('#user_position, #user_branch, #user_region').prop('readonly', true);
                     $('#credit_limit').prop('readonly', true);
                     $('#no_pkd').val('').prop('readonly', true);
 
-                    $('#preview_npwp, #preview_nib, #preview_ktp').hide();
-                    $('input[type="file"]').prop('disabled', false).prop('required', true);
-                    $('#btn-save-customer').show().prop('disabled', true);
-                    $('#user-info-section').hide();
-                    $('#main-form-section').hide();
+                    // 3. Reset Schedule Buttons (PENTING!)
+                    $('.btn-schedule').removeClass('active btn-dark btn-primary btn-success btn-info text-white');
 
+                    // Kembalikan ke Outline Default
+                    $('.btn-schedule[data-val="All"]').addClass('btn-outline-dark');
+                    $('.btn-date-box').addClass('btn-outline-secondary').removeClass('btn-info');
+
+                    $('[data-type="payment_days"]').not('[data-val="All"]').addClass('btn-outline-primary');
+                    $('[data-type="faktur_days"]').not('[data-val="All"]').addClass('btn-outline-success');
+
+                    // Kosongkan Hidden Inputs
+                    $('#create_payment_days_inputs, #create_payment_date_inputs, #create_faktur_days_inputs, #create_faktur_date_inputs').empty();
+
+                    // 4. Setup Tampilan Awal
                     $('#customerModalLabel').text('Create New Customer');
                     $('#customerModal').modal('show');
                 });
@@ -1828,11 +2034,9 @@
                 $(document).on('click', '.btn-show-customer', function() {
                     const btn = $(this);
 
-                    // 1. HEADER & STATUS
                     $('#view_header_name').text(btn.data('name'));
                     $('#view_header_code').text(btn.data('code') || 'New');
 
-                    // Status Badges
                     const status = btn.data('status');
                     $('#view_status_badge').text(status)
                         .removeClass('bg-success bg-secondary')
@@ -1848,7 +2052,6 @@
                     // (Opsional) Tambahkan created_at/updated_at jika ada datanya di controller
                     // $('#view_updated_at').text(btn.data('updated_at') || '-');
 
-                    // 2. GENERAL INFO
                     $('#view_name').text(btn.data('name'));
                     $('#view_sort_name').text(btn.data('sort_name') || '-');
                     $('#view_email').text(btn.data('email'));
@@ -1892,7 +2095,8 @@
                     const docs = [
                         { name: 'NPWP Document', path: btn.data('file_npwp_path'), icon: 'ph-file-text' },
                         { name: 'NIB / SIUP', path: btn.data('file_nib_path'), icon: 'ph-file-code' },
-                        { name: 'KTP Penanggung Jawab', path: btn.data('file_ktp_path'), icon: 'ph-cardholder' }
+                        { name: 'KTP Penanggung Jawab', path: btn.data('file_ktp_path'), icon: 'ph-cardholder' },
+                        { name: 'Akte Pendirian', path: btn.data('file_akte_path'), icon: 'ph-scroll' }
                     ];
 
                     let docHtml = '';
@@ -1933,45 +2137,6 @@
                     $('#customerDetailModal').modal('show');
                 });
 
-                $(document).on('click focus', '#credit_limit', function(e) {
-                    e.preventDefault();
-                    const termString = $('#term_of_payment').val();
-
-                    if (!termString) {
-                        Swal.fire({
-                            icon: 'warning',
-                            title: 'TOP belum dipilih',
-                            text: 'Harap pilih Term of Payment terlebih dahulu sebelum menghitung limit.'
-                        });
-                        $('#term_of_payment').select2('open');
-                        return;
-                    }
-
-                    $('#calc_products').empty();
-                    addCalcRow();
-
-                    let topVal = 0;
-                    const numberMatch = termString.match(/(\d+)/);
-
-                    if (numberMatch && numberMatch[0]) {
-                        topVal = parseInt(numberMatch[0]);
-                    }
-
-                    $('#calc_top').val(topVal);
-
-                    // $('#calc_top').prop('readonly', true);
-
-                    let ltVal = parseFloat($('#lead_time').val()) || 0;
-                    $('#calc_lt').val(ltVal);
-                    $('#calc_preview_formatted').val('0');
-
-                    const initialR = computeCreditValues();
-                    $('#calc_preview_formatted').val(fmt(Math.round(initialR.val30 || 0)));
-
-                    // 7. Tampilkan Modal
-                    new bootstrap.Modal(document.getElementById('creditCalcModal')).show();
-                });
-
                 function fmt(n) {
                     if (isNaN(n)) return '0';
                     return Number(n).toLocaleString(undefined, {
@@ -1980,50 +2145,73 @@
                     });
                 }
 
+                $(document).on('keyup', '.calc-price', function() {
+                    let val = $(this).val();
+                    $(this).val(formatRupiah(val));
+                    $('#calc_products').trigger('input');
+                });
+
                 function computeCreditValues() {
                     let totalValue = 0;
                     $('#calc_products .calc-row').each(function() {
                         const q = parseFloat($(this).find('.calc-qty').val()) || 0;
-                        const p = parseFloat($(this).find('.calc-price').val()) || 0;
+                        const pStr = $(this).find('.calc-price').val();
+                        const p = parseFloat(pStr.replace(/[^0-9]/g, '')) || 0; // Clean Rupiah manual
                         totalValue += (q * p);
                     });
 
                     const top = parseFloat($('#calc_top').val()) || 0;
                     const lt = parseFloat($('#calc_lt').val()) || 0;
-
                     const base = (top + lt) * totalValue;
 
-                    const val45 = base / 45;
-                    const val30 = base / 30;
-                    const val7 = base / (30 / 4);
-                    const val14 = base / (30 / 2);
+                    let divider = top;
+                    if (top === 7) divider = 7.5;
+                    else if (top === 14) divider = 15;
+                    if (divider === 0) divider = 1;
 
-                    return {
-                        base,
-                        totalValue,
-                        val45,
-                        val30,
-                        val7,
-                        val14
-                    };
+                    return { base, totalValue, valFinal: base / divider };
+                }
+
+                function formatRupiah(angka, prefix) {
+                    if (!angka) return '';
+                    var number_string = angka.toString().replace(/[^,\d]/g, '').toString(),
+                        split = number_string.split(','),
+                        sisa = split[0].length % 3,
+                        rupiah = split[0].substr(0, sisa),
+                        ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+
+                    if (ribuan) {
+                        separator = sisa ? '.' : '';
+                        rupiah += separator + ribuan.join('.');
+                    }
+
+                    rupiah = split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
+                    return prefix == undefined ? rupiah : (rupiah ? 'Rp. ' + rupiah : '');
+                }
+
+                function cleanRupiah(angka) {
+                    if (!angka) return 0;
+                    return parseFloat(angka.toString().replace(/\./g, '').replace(/,/g, '.')) || 0;
                 }
 
                 function addCalcRow(name = '', qty = '', price = '') {
+                    let displayPrice = price ? formatRupiah(price) : '';
                     const row = $('<div class="calc-row d-flex gap-2 mb-2">' +
                         '<input type="text" class="form-control calc-product-name" placeholder="Product name" />' +
                         '<input type="number" step="1" min="0" class="form-control calc-qty" placeholder="Qty" />' +
-                        '<input type="number" step="0.01" min="0" class="form-control calc-price" placeholder="Price" />' +
+                        '<input type="text" class="form-control calc-price text-end" placeholder="Price (Rp)" />' +
                         '<button type="button" class="btn btn-outline-danger btn-remove-row" title="Remove">&minus;</button>' +
                         '</div>');
+
                     row.find('.calc-product-name').val(name);
                     row.find('.calc-qty').val(qty);
-                    row.find('.calc-price').val(price);
+                    row.find('.calc-price').val(displayPrice);
                     $('#calc_products').append(row);
                 }
 
                 $(document).on('input', '#calc_products .calc-qty, #calc_products .calc-price, #calc_top, #calc_lt', function() {
                     const r = computeCreditValues();
-                    $('#calc_preview_formatted').val(fmt(Math.round(r.val30 || 0)));
+                    $('#calc_preview_formatted').val(formatRupiah(Math.round(r.valFinal || 0)));
                 });
 
                 $(document).on('click', '#addCalcRow', function() {
@@ -2121,15 +2309,112 @@
                             $('body').addClass('modal-open');
                         }
                     });
-
                 });
+
+                $(document).on('click', '.btn-schedule', function() {
+                    const btn = $(this);
+                    const type = btn.data('type');
+                    const value = btn.data('val');
+                    const container = $(`#create_${type}_container`);
+                    const isAll = value === 'All';
+
+                    // Definisi Warna Solid vs Outline
+                    const colorClass = type.includes('faktur') ? 'btn-success' : 'btn-primary';
+                    const outlineClass = type.includes('faktur') ? 'btn-outline-success' : 'btn-outline-primary';
+                    const dateSolid = 'btn-info';
+                    const dateOutline = 'btn-outline-secondary';
+
+                    if (isAll) {
+                        // --- LOGIC TOMBOL "ALL" ---
+                        const isActive = btn.hasClass('active');
+
+                        if (!isActive) {
+                            // AKTIFKAN ALL: Nyalakan semua tombol anak
+                            btn.addClass('active btn-dark').removeClass('btn-outline-dark');
+
+                            container.find('.btn-schedule').not('[data-val="All"]').each(function() {
+                                $(this).addClass('active text-white');
+                                // Hapus outline, tambah solid
+                                if ($(this).hasClass('btn-date-box')) {
+                                    $(this).removeClass(dateOutline).addClass(dateSolid);
+                                } else {
+                                    $(this).removeClass(outlineClass).addClass(colorClass);
+                                }
+                            });
+                        } else {
+                            // MATIKAN ALL: Reset semua ke putih
+                            btn.removeClass('active btn-dark').addClass('btn-outline-dark');
+
+                            container.find('.btn-schedule').not('[data-val="All"]').each(function() {
+                                $(this).removeClass('active text-white btn-dark ' + colorClass + ' ' + dateSolid);
+                                if ($(this).hasClass('btn-date-box')) {
+                                    $(this).addClass(dateOutline);
+                                } else {
+                                    $(this).addClass(outlineClass);
+                                }
+                            });
+                        }
+
+                    } else {
+                        // --- LOGIC TOMBOL SPESIFIK ---
+
+                        // 1. Jika tombol 'All' sedang nyala, matikan dulu
+                        const allBtn = container.find('[data-val="All"]');
+                        if(allBtn.hasClass('active')) {
+                            allBtn.removeClass('active btn-dark').addClass('btn-outline-dark');
+                        }
+
+                        // 2. Toggle Status Active (Fix Masalah Warna Nyangkut)
+                        if (btn.hasClass('active')) {
+                            // KONDISI: Sedang Aktif -> KLIK -> MATIKAN (Jadi Putih Langsung)
+                            btn.removeClass('active text-white');
+
+                            if (btn.hasClass('btn-date-box')) {
+                                btn.removeClass(dateSolid).addClass(dateOutline);
+                            } else {
+                                btn.removeClass(colorClass).addClass(outlineClass);
+                            }
+                        } else {
+                            // KONDISI: Sedang Mati -> KLIK -> NYALAKAN
+                            btn.addClass('active text-white');
+
+                            if (btn.hasClass('btn-date-box')) {
+                                btn.removeClass(dateOutline).addClass(dateSolid);
+                            } else {
+                                btn.removeClass(outlineClass).addClass(colorClass);
+                            }
+                        }
+                    }
+
+                    // PENTING: Hilangkan fokus browser agar warna hover tidak tertinggal
+                    btn.blur();
+
+                    // Update Input Hidden untuk dikirim ke Controller
+                    updateCreateHiddenInputs(type);
+                });
+
+                function updateCreateHiddenInputs(type) {
+                    const container = $(`#create_${type}_container`);
+                    const inputContainer = $(`#create_${type}_inputs`);
+                    inputContainer.empty();
+
+                    const allBtn = container.find('[data-val="All"]');
+
+                    if (allBtn.hasClass('active')) {
+                        $('<input>').attr({type: 'hidden', name: `${type}[]`, value: 'All'}).appendTo(inputContainer);
+                    } else {
+                        container.find('.btn-schedule.active').not('[data-val="All"]').each(function() {
+                            $('<input>').attr({type: 'hidden', name: `${type}[]`, value: $(this).data('val')}).appendTo(inputContainer);
+                        });
+                    }
+                }
 
                 $('#creditCalcForm').on('submit', function(e) {
                     e.preventDefault();
                     const r = computeCreditValues();
-                    const chosen = r.val30 || 0;
+                    const chosen = Math.round(r.valFinal || 0);
 
-                    $('#credit_limit').val(Math.round(chosen));
+                    $('#credit_limit').val(formatRupiah(chosen));
 
                     const ltVal = $('#calc_lt').val() || 0;
                     const topVal = $('#calc_top').val() || 0;
@@ -2140,11 +2425,14 @@
                         $('<input>').attr({type: 'hidden', id: 'top_calc_hidden', name: 'top_calc'}).appendTo('#customerForm');
                     }
                     $('#top_calc_hidden').val(topVal);
+
                     $('#customerForm').find('.hidden-item-input').remove();
+
                     $('#calc_products .calc-row').each(function(index) {
                         const name = $(this).find('.calc-product-name').val();
                         const qty = $(this).find('.calc-qty').val();
                         const price = $(this).find('.calc-price').val();
+                        const cleanPrice = cleanRupiah(price);
 
                         if(name && qty) {
                             const container = $('#customerForm');
@@ -2167,7 +2455,7 @@
                                 type: 'hidden',
                                 class: 'hidden-item-input',
                                 name: `items[${index}][price]`,
-                                value: price
+                                value: cleanPrice
                             }).appendTo(container);
                         }
                     });
