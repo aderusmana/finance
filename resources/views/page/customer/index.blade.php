@@ -1593,13 +1593,6 @@
                                         let safeName = rawName.replace(/[^a-zA-Z0-9\s\.\,\(\)\-\&]/g, '').trim();
 
                                         $('#name').val(safeName);
-                                        // Only auto-generate No PKD when Bank Garansi is YES
-                                        const bgStatusAfterOcr = $('#bank_garansi').val();
-                                        if (bgStatusAfterOcr === 'YA' || bgStatusAfterOcr === '1') {
-                                            generatePkdNumber(safeName);
-                                        } else {
-                                            // If Bank Garansi is NO or unset, ensure PKD is empty and hint
-                                            $('#no_pkd').val('').attr('placeholder', 'Tidak perlu No PKD (Non-BG)').prop('readonly', true);
                                         let bgStatus = $('#bank_garansi').val();
 
                                         if (bgStatus === 'YA' || bgStatus === '1') {
