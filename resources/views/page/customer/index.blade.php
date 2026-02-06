@@ -10,8 +10,8 @@
             <h4 class="main-title">Customers Management</h4>
             <ul class="app-line-breadcrumbs mb-3">
                 <li>
-                    <a class="f-s-14 f-w-500" href="#">
-                        <i class="ph-bold f-s-16"></i> Customers
+                    <a class="f-s-14 f-w-500" href="/">
+                        <i class="ph-bold f-s-16"></i> Home
                     </a>
                 </li>
                 <li class="active">
@@ -24,7 +24,7 @@
     <div class="row">
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <div class="d-flex align-items-center gap-2 mb-3">
+                <div class="d-none d-md-flex align-items-center gap-2 mb-3">
                     <span class="text-muted fw-bold me-1"><i class="ph-bold ph-funnel"></i> Filter:</span>
 
                     <select id="statusFilter" class="form-select select2" style="width: 150px;">
@@ -547,17 +547,17 @@
                                         {{-- CONTAINER INPUT SCHEDULE --}}
                                         <div id="create_schedule_section">
                                             <div class="row g-4">
-                                                
+
                                                 {{-- LEFT: PAYMENT --}}
                                                 <div class="col-md-6 border-end">
                                                     <h6 class="text-primary fw-bold small text-uppercase mb-2">Payment Schedule</h6>
-                                                    
+
                                                     {{-- Payment Days --}}
                                                     <div class="mb-3">
                                                         <label class="form-label small fw-bold">Payment Days</label>
                                                         <div class="schedule-selector" id="create_payment_days_container">
                                                             <div id="create_payment_days_inputs"></div>
-                                                            
+
                                                             <button type="button" class="btn btn-sm btn-outline-dark me-1 mb-1 btn-schedule" data-type="payment_days" data-val="All">All Days</button>
                                                             @foreach(['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'] as $day)
                                                                 <button type="button" class="btn btn-sm btn-outline-primary mb-1 btn-schedule" data-type="payment_days" data-val="{{ $day }}">{{ $day }}</button>
@@ -570,14 +570,14 @@
                                                         <label class="form-label small fw-bold">Payment Date</label>
                                                         <div class="schedule-selector" id="create_payment_date_container">
                                                             <div id="create_payment_date_inputs"></div>
-                                                            
+
                                                             <button type="button" class="btn btn-sm btn-outline-dark me-1 mb-2 w-100 btn-schedule" data-type="payment_date" data-val="All">All Dates (1-31)</button>
                                                             <div class="d-flex flex-wrap gap-1">
                                                                 @for($i=1; $i<=31; $i++)
-                                                                    <button type="button" 
-                                                                        class="btn btn-xs btn-outline-secondary btn-schedule btn-date-box" 
+                                                                    <button type="button"
+                                                                        class="btn btn-xs btn-outline-secondary btn-schedule btn-date-box"
                                                                         style="width: 38px !important; height: 38px !important; padding: 0 !important; display: inline-flex !important; align-items: center; justify-content: center; font-size: 0.85rem !important; font-weight: 600; line-height: 1 !important; white-space: nowrap !important;"
-                                                                        data-type="payment_date" 
+                                                                        data-type="payment_date"
                                                                         data-val="{{ $i }}">
                                                                         {{ $i }}
                                                                     </button>
@@ -596,7 +596,7 @@
                                                         <label class="form-label small fw-bold">Faktur Days</label>
                                                         <div class="schedule-selector" id="create_faktur_days_container">
                                                             <div id="create_faktur_days_inputs"></div>
-                                                            
+
                                                             <button type="button" class="btn btn-sm btn-outline-dark me-1 mb-1 btn-schedule" data-type="faktur_days" data-val="All">All Days</button>
                                                             @foreach(['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'] as $day)
                                                                 <button type="button" class="btn btn-sm btn-outline-success mb-1 btn-schedule" data-type="faktur_days" data-val="{{ $day }}">{{ $day }}</button>
@@ -609,14 +609,14 @@
                                                         <label class="form-label small fw-bold">Faktur Date</label>
                                                         <div class="schedule-selector" id="create_faktur_date_container">
                                                             <div id="create_faktur_date_inputs"></div>
-                                                            
+
                                                             <button type="button" class="btn btn-sm btn-outline-dark me-1 mb-2 w-100 btn-schedule" data-type="faktur_date" data-val="All">All Dates (1-31)</button>
                                                             <div class="d-flex flex-wrap gap-1">
                                                                 @for($i=1; $i<=31; $i++)
-                                                                    <button type="button" 
-                                                                        class="btn btn-xs btn-outline-secondary btn-schedule btn-date-box" 
+                                                                    <button type="button"
+                                                                        class="btn btn-xs btn-outline-secondary btn-schedule btn-date-box"
                                                                         style="width: 38px !important; height: 38px !important; padding: 0 !important; display: inline-flex !important; align-items: center; justify-content: center; font-size: 0.85rem !important; font-weight: 600; line-height: 1 !important; white-space: nowrap !important;"
-                                                                        data-type="faktur_date" 
+                                                                        data-type="faktur_date"
                                                                         data-val="{{ $i }}">
                                                                         {{ $i }}
                                                                     </button>
@@ -1489,7 +1489,7 @@
                     }
 
                     const url = "{{ route('customers.store') }}";
-                    
+
                     Swal.fire({
                         title: 'Konfirmasi Penyimpanan',
                         text: "Pastikan seluruh data yang diinput sudah benar.",
@@ -1592,14 +1592,14 @@
                                         let rawName = lines[npwpLineIdx + 1];
                                         rawName = rawName.replace(/^(Nama|Name)\s*[:.]?\s*/i, '').trim();
                                         let safeName = rawName.replace(/[^a-zA-Z0-9\s\.\,\(\)\-\&]/g, '').trim();
-                                        
+
                                         $('#name').val(safeName);
                                         let bgStatus = $('#bank_garansi').val();
-                                        
+
                                         if (bgStatus === 'YA' || bgStatus === '1') {
                                             generatePkdNumber(safeName);
                                         } else {
-                                            $('#no_pkd').val(''); 
+                                            $('#no_pkd').val('');
                                             console.log('Skip generate PKD karena Bank Garansi = NO');
                                         }
                                     }
@@ -1874,7 +1874,7 @@
                     clInput.parent().find('.cl-status-note').remove();
 
                     if (bgVal === 'YA' || topVal === 'CBD') {
-                        
+
                         clInput.val(0).prop('readonly', true)
                             .removeClass('bg-white cursor-pointer border-danger').addClass('bg-light')
                             .attr('placeholder', '0');
@@ -1884,10 +1884,10 @@
                         else if (topVal === 'CBD') msg = 'Credit Limit otomatis 0 (Cash Before Delivery).';
 
                         clInput.after(`<small class="cl-status-note text-info fw-bold mt-1 d-block"><i class="ph-bold ph-info me-1"></i> ${msg}</small>`);
-                        
+
                     }
                     else {
-                        clInput.prop('readonly', true) 
+                        clInput.prop('readonly', true)
                             .removeClass('bg-light').addClass('bg-white cursor-pointer border-danger')
                             .attr('placeholder', 'Klik disini untuk menghitung (Wajib)');
 
@@ -1906,7 +1906,7 @@
                     const customerName = $('#name').val();
 
                     pkdInput.parent().find('.pkd-status-note').remove();
-                    
+
                     if (val === 'TIDAK') {
                         pkdInput.val('').prop('readonly', true).removeClass('fw-bold');
                         pkdInput.after('<small class="pkd-status-note text-danger fw-bold mt-1 d-block"><i class="ph-bold ph-info me-1"></i> Customer ini tidak menggunakan Bank Garansi.</small>');
@@ -1960,12 +1960,12 @@
                     $('#customerForm').find('.hidden-item-input').each(function() {
                         let nameAttr = $(this).attr('name');
                         let matches = nameAttr.match(/items\[(\d+)\]\[(\w+)\]/);
-                        
+
                         if(matches) {
                             hasItems = true;
                             let index = matches[1];
                             let field = matches[2];
-                            
+
                             if(!existingItems[index]) existingItems[index] = {};
                             existingItems[index][field] = $(this).val();
                         }
@@ -2001,19 +2001,19 @@
                     // 1. Reset Form Biasa
                     $('#customerForm')[0].reset();
                     $('.select2-styled').val(null).trigger('change');
-                    
+
                     // 2. Reset Readonly & Disabled States
                     $('#customerForm').find('input, textarea, select').prop('disabled', false);
                     $('#credit_limit').prop('readonly', true);
                     $('#no_pkd').val('').prop('readonly', true);
-                    
+
                     // 3. Reset Schedule Buttons (PENTING!)
                     $('.btn-schedule').removeClass('active btn-dark btn-primary btn-success btn-info text-white');
-                    
+
                     // Kembalikan ke Outline Default
                     $('.btn-schedule[data-val="All"]').addClass('btn-outline-dark');
                     $('.btn-date-box').addClass('btn-outline-secondary').removeClass('btn-info');
-                    
+
                     $('[data-type="payment_days"]').not('[data-val="All"]').addClass('btn-outline-primary');
                     $('[data-type="faktur_days"]').not('[data-val="All"]').addClass('btn-outline-success');
 
@@ -2142,7 +2142,7 @@
                 $(document).on('keyup', '.calc-price', function() {
                     let val = $(this).val();
                     $(this).val(formatRupiah(val));
-                    $('#calc_products').trigger('input'); 
+                    $('#calc_products').trigger('input');
                 });
 
                 function computeCreditValues() {
@@ -2158,7 +2158,7 @@
                     const lt = parseFloat($('#calc_lt').val()) || 0;
                     const base = (top + lt) * totalValue;
 
-                    let divider = top; 
+                    let divider = top;
                     if (top === 7) divider = 7.5;
                     else if (top === 14) divider = 15;
                     if (divider === 0) divider = 1;
@@ -2307,8 +2307,8 @@
 
                 $(document).on('click', '.btn-schedule', function() {
                     const btn = $(this);
-                    const type = btn.data('type'); 
-                    const value = btn.data('val'); 
+                    const type = btn.data('type');
+                    const value = btn.data('val');
                     const container = $(`#create_${type}_container`);
                     const isAll = value === 'All';
 
@@ -2325,7 +2325,7 @@
                         if (!isActive) {
                             // AKTIFKAN ALL: Nyalakan semua tombol anak
                             btn.addClass('active btn-dark').removeClass('btn-outline-dark');
-                            
+
                             container.find('.btn-schedule').not('[data-val="All"]').each(function() {
                                 $(this).addClass('active text-white');
                                 // Hapus outline, tambah solid
@@ -2351,7 +2351,7 @@
 
                     } else {
                         // --- LOGIC TOMBOL SPESIFIK ---
-                        
+
                         // 1. Jika tombol 'All' sedang nyala, matikan dulu
                         const allBtn = container.find('[data-val="All"]');
                         if(allBtn.hasClass('active')) {
@@ -2362,7 +2362,7 @@
                         if (btn.hasClass('active')) {
                             // KONDISI: Sedang Aktif -> KLIK -> MATIKAN (Jadi Putih Langsung)
                             btn.removeClass('active text-white');
-                            
+
                             if (btn.hasClass('btn-date-box')) {
                                 btn.removeClass(dateSolid).addClass(dateOutline);
                             } else {
@@ -2371,7 +2371,7 @@
                         } else {
                             // KONDISI: Sedang Mati -> KLIK -> NYALAKAN
                             btn.addClass('active text-white');
-                            
+
                             if (btn.hasClass('btn-date-box')) {
                                 btn.removeClass(dateOutline).addClass(dateSolid);
                             } else {
@@ -2381,7 +2381,7 @@
                     }
 
                     // PENTING: Hilangkan fokus browser agar warna hover tidak tertinggal
-                    btn.blur(); 
+                    btn.blur();
 
                     // Update Input Hidden untuk dikirim ke Controller
                     updateCreateHiddenInputs(type);
@@ -2393,7 +2393,7 @@
                     inputContainer.empty();
 
                     const allBtn = container.find('[data-val="All"]');
-                    
+
                     if (allBtn.hasClass('active')) {
                         $('<input>').attr({type: 'hidden', name: `${type}[]`, value: 'All'}).appendTo(inputContainer);
                     } else {
@@ -2419,14 +2419,14 @@
                         $('<input>').attr({type: 'hidden', id: 'top_calc_hidden', name: 'top_calc'}).appendTo('#customerForm');
                     }
                     $('#top_calc_hidden').val(topVal);
-                    
+
                     $('#customerForm').find('.hidden-item-input').remove();
-                    
+
                     $('#calc_products .calc-row').each(function(index) {
                         const name = $(this).find('.calc-product-name').val();
                         const qty = $(this).find('.calc-qty').val();
-                        const price = $(this).find('.calc-price').val(); 
-                        const cleanPrice = cleanRupiah(price); 
+                        const price = $(this).find('.calc-price').val();
+                        const cleanPrice = cleanRupiah(price);
 
                         if(name && qty) {
                             const container = $('#customerForm');

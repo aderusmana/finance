@@ -52,8 +52,8 @@ class CustomerController extends Controller
 
         $maxSequence = 0;
         $existingNumbers = Customer::where('no_pkd', 'LIKE', "%/{$year}")
-                            ->pluck('no_pkd')
-                            ->toArray();
+            ->pluck('no_pkd')
+            ->toArray();
 
         foreach ($existingNumbers as $no) {
             $parts = explode('/', $no);
@@ -100,9 +100,9 @@ class CustomerController extends Controller
                 if ($request->status === 'Active') {
                     $query->where('customers.bank_garansi', 'YA');
                 } elseif ($request->status === 'Inactive') {
-                    $query->where(function($q) {
+                    $query->where(function ($q) {
                         $q->where('customers.bank_garansi', '!=', 'YA')
-                        ->orWhereNull('customers.bank_garansi');
+                            ->orWhereNull('customers.bank_garansi');
                     });
                 }
             }
@@ -112,164 +112,164 @@ class CustomerController extends Controller
             }
 
             return DataTables::of($query)
-            ->addIndexColumn()
-            ->addColumn('action', function ($row) {
-                $row->load('items');
-                $rowData = $row->toArray();
+                ->addIndexColumn()
+                ->addColumn('action', function ($row) {
+                    $row->load('items');
+                    $rowData = $row->toArray();
 
-                $lastRejectLog = ApprovalLog::where('category', 'Customer')
-                    ->where('related_id', $row->id)
-                    ->where('status', 'Rejected')
-                    ->latest('updated_at')
-                    ->first();
+                    $lastRejectLog = ApprovalLog::where('category', 'Customer')
+                        ->where('related_id', $row->id)
+                        ->where('status', 'Rejected')
+                        ->latest('updated_at')
+                        ->first();
 
-                $rowData['reject_note'] = $lastRejectLog ? $lastRejectLog->notes : 'Tidak ada catatan rejection.';
+                    $rowData['reject_note'] = $lastRejectLog ? $lastRejectLog->notes : 'Tidak ada catatan rejection.';
 
-                $rowData['tanggal_npwp']  = $row->tanggal_npwp ? Carbon::parse($row->tanggal_npwp)->format('Y-m-d') : null;
-                $rowData['tanggal_nppkp'] = $row->tanggal_nppkp ? Carbon::parse($row->tanggal_nppkp)->format('Y-m-d') : null;
+                    $rowData['tanggal_npwp']  = $row->tanggal_npwp ? Carbon::parse($row->tanggal_npwp)->format('Y-m-d') : null;
+                    $rowData['tanggal_nppkp'] = $row->tanggal_nppkp ? Carbon::parse($row->tanggal_nppkp)->format('Y-m-d') : null;
 
-                $rowData['file_npwp_path'] = $row->file_npwp ? asset('storage/' . ltrim($row->file_npwp, '/')) : null;
-                $rowData['file_nib_path']  = $row->file_nib ? asset('storage/' . ltrim($row->file_nib, '/')) : null;
-                $rowData['file_ktp_path']  = $row->file_ktp ? asset('storage/' . ltrim($row->file_ktp, '/')) : null;
-                $rowData['file_akte_path'] = $row->file_akte ? asset('storage/' . ltrim($row->file_akte, '/')) : null;
+                    $rowData['file_npwp_path'] = $row->file_npwp ? asset('storage/' . ltrim($row->file_npwp, '/')) : null;
+                    $rowData['file_nib_path']  = $row->file_nib ? asset('storage/' . ltrim($row->file_nib, '/')) : null;
+                    $rowData['file_ktp_path']  = $row->file_ktp ? asset('storage/' . ltrim($row->file_ktp, '/')) : null;
+                    $rowData['file_akte_path'] = $row->file_akte ? asset('storage/' . ltrim($row->file_akte, '/')) : null;
 
-                $jsonRow = htmlspecialchars(json_encode($rowData), ENT_QUOTES, 'UTF-8');
+                    $jsonRow = htmlspecialchars(json_encode($rowData), ENT_QUOTES, 'UTF-8');
 
-                $tglNpwp = $row->tanggal_npwp ? Carbon::parse($row->tanggal_npwp)->format('Y-m-d') : '';
-                $tglNppkp = $row->tanggal_nppkp ? Carbon::parse($row->tanggal_nppkp)->format('Y-m-d') : '';
+                    $tglNpwp = $row->tanggal_npwp ? Carbon::parse($row->tanggal_npwp)->format('Y-m-d') : '';
+                    $tglNppkp = $row->tanggal_nppkp ? Carbon::parse($row->tanggal_nppkp)->format('Y-m-d') : '';
 
-                $dataAttrs = '';
-                $dataAttrs .= ' data-id="' . $row->id . '"';
-                $dataAttrs .= ' data-user_id="' . e($row->user_id) . '"';
-                $dataAttrs .= ' data-code="' . e($row->code) . '"';
-                $dataAttrs .= ' data-no_pkd="' . e($row->no_pkd) . '"';
-                $dataAttrs .= ' data-name="' . e($row->name) . '"';
-                $dataAttrs .= ' data-sort_name="' . e($row->sort_name) . '"';
-                $dataAttrs .= ' data-customer_class="' . e($row->customer_class) . '"';
-                $dataAttrs .= ' data-account_group="' . e($row->account_group) . '"';
-                $dataAttrs .= ' data-address1="' . e($row->address1) . '"';
-                $dataAttrs .= ' data-address2="' . e($row->address2) . '"';
-                $dataAttrs .= ' data-address3="' . e($row->address3) . '"';
-                $dataAttrs .= ' data-surat_menyurat_address="' . e($row->surat_menyurat_address) . '"';
-                $dataAttrs .= ' data-city="' . e($row->city) . '"';
-                $dataAttrs .= ' data-postal_code="' . e($row->postal_code) . '"';
-                $dataAttrs .= ' data-country="' . e($row->country) . '"';
-                $dataAttrs .= ' data-shipping_to_name="' . e($row->shipping_to_name) . '"';
-                $dataAttrs .= ' data-shipping_to_address="' . e($row->shipping_to_address) . '"';
-                $dataAttrs .= ' data-purchasing_manager_name="' . e($row->purchasing_manager_name) . '"';
-                $dataAttrs .= ' data-purchasing_manager_email="' . e($row->purchasing_manager_email) . '"';
-                $dataAttrs .= ' data-finance_manager_name="' . e($row->finance_manager_name) . '"';
-                $dataAttrs .= ' data-finance_manager_email="' . e($row->finance_manager_email) . '"';
-                $dataAttrs .= ' data-penagihan_nama_kontak="' . e($row->penagihan_nama_kontak) . '"';
-                $dataAttrs .= ' data-penagihan_telepon="' . e($row->penagihan_telepon) . '"';
-                $dataAttrs .= ' data-penagihan_address="' . e($row->penagihan_address) . '"';
-                $dataAttrs .= ' data-email="' . e($row->email) . '"';
-                $dataAttrs .= ' data-tax_contact_name="' . e($row->tax_contact_name) . '"';
-                $dataAttrs .= ' data-tax_contact_email="' . e($row->tax_contact_email) . '"';
-                $dataAttrs .= ' data-tax_contact_phone="' . e($row->tax_contact_phone) . '"';
-                $dataAttrs .= ' data-npwp="' . e($row->npwp) . '"';
-                $dataAttrs .= ' data-tanggal_npwp="' . $tglNpwp . '"';
-                $dataAttrs .= ' data-nppkp="' . e($row->nppkp) . '"';
-                $dataAttrs .= ' data-tanggal_nppkp="' . $tglNppkp . '"';
-                $dataAttrs .= ' data-output_tax="' . e($row->output_tax) . '"';
-                $dataAttrs .= ' data-no_pengukuhan_kaber="' . e($row->no_pengukuhan_kaber ?? '-') . '"';
-                $dataAttrs .= ' data-term_of_payment="' . e($row->term_of_payment) . '"';
-                $dataAttrs .= ' data-lead_time="' . e($row->lead_time) . '"';
-                $dataAttrs .= ' data-credit_limit="' . e($row->credit_limit) . '"';
-                $dataAttrs .= ' data-ccar="' . e($row->ccar) . '"';
-                $dataAttrs .= ' data-bank_garansi="' . e($row->bank_garansi) . '"';
-                $dataAttrs .= ' data-area="' . e($row->area) . '"';
-                $dataAttrs .= ' data-join_date="' . e($row->join_date) . '"';
-                $dataAttrs .= ' data-status="' . e($row->status) . '"';
-                $dataAttrs .= ' data-route_to="' . e($row->route_to) . '"';
-                $dataAttrs .= ' data-status_approval="' . e($row->status_approval) . '"';
-                $dataAttrs .= ' data-created_by="' . e($row->created_by) . '"';
-                $dataAttrs .= ' data-file_npwp_path="' . $rowData['file_npwp_path'] . '"';
-                $dataAttrs .= ' data-file_nib_path="' . $rowData['file_nib_path'] . '"';
-                $dataAttrs .= ' data-file_ktp_path="' . $rowData['file_ktp_path'] . '"';
-                $dataAttrs .= ' data-file_akte_path="' . $rowData['file_akte_path'] . '"';
+                    $dataAttrs = '';
+                    $dataAttrs .= ' data-id="' . $row->id . '"';
+                    $dataAttrs .= ' data-user_id="' . e($row->user_id) . '"';
+                    $dataAttrs .= ' data-code="' . e($row->code) . '"';
+                    $dataAttrs .= ' data-no_pkd="' . e($row->no_pkd) . '"';
+                    $dataAttrs .= ' data-name="' . e($row->name) . '"';
+                    $dataAttrs .= ' data-sort_name="' . e($row->sort_name) . '"';
+                    $dataAttrs .= ' data-customer_class="' . e($row->customer_class) . '"';
+                    $dataAttrs .= ' data-account_group="' . e($row->account_group) . '"';
+                    $dataAttrs .= ' data-address1="' . e($row->address1) . '"';
+                    $dataAttrs .= ' data-address2="' . e($row->address2) . '"';
+                    $dataAttrs .= ' data-address3="' . e($row->address3) . '"';
+                    $dataAttrs .= ' data-surat_menyurat_address="' . e($row->surat_menyurat_address) . '"';
+                    $dataAttrs .= ' data-city="' . e($row->city) . '"';
+                    $dataAttrs .= ' data-postal_code="' . e($row->postal_code) . '"';
+                    $dataAttrs .= ' data-country="' . e($row->country) . '"';
+                    $dataAttrs .= ' data-shipping_to_name="' . e($row->shipping_to_name) . '"';
+                    $dataAttrs .= ' data-shipping_to_address="' . e($row->shipping_to_address) . '"';
+                    $dataAttrs .= ' data-purchasing_manager_name="' . e($row->purchasing_manager_name) . '"';
+                    $dataAttrs .= ' data-purchasing_manager_email="' . e($row->purchasing_manager_email) . '"';
+                    $dataAttrs .= ' data-finance_manager_name="' . e($row->finance_manager_name) . '"';
+                    $dataAttrs .= ' data-finance_manager_email="' . e($row->finance_manager_email) . '"';
+                    $dataAttrs .= ' data-penagihan_nama_kontak="' . e($row->penagihan_nama_kontak) . '"';
+                    $dataAttrs .= ' data-penagihan_telepon="' . e($row->penagihan_telepon) . '"';
+                    $dataAttrs .= ' data-penagihan_address="' . e($row->penagihan_address) . '"';
+                    $dataAttrs .= ' data-email="' . e($row->email) . '"';
+                    $dataAttrs .= ' data-tax_contact_name="' . e($row->tax_contact_name) . '"';
+                    $dataAttrs .= ' data-tax_contact_email="' . e($row->tax_contact_email) . '"';
+                    $dataAttrs .= ' data-tax_contact_phone="' . e($row->tax_contact_phone) . '"';
+                    $dataAttrs .= ' data-npwp="' . e($row->npwp) . '"';
+                    $dataAttrs .= ' data-tanggal_npwp="' . $tglNpwp . '"';
+                    $dataAttrs .= ' data-nppkp="' . e($row->nppkp) . '"';
+                    $dataAttrs .= ' data-tanggal_nppkp="' . $tglNppkp . '"';
+                    $dataAttrs .= ' data-output_tax="' . e($row->output_tax) . '"';
+                    $dataAttrs .= ' data-no_pengukuhan_kaber="' . e($row->no_pengukuhan_kaber ?? '-') . '"';
+                    $dataAttrs .= ' data-term_of_payment="' . e($row->term_of_payment) . '"';
+                    $dataAttrs .= ' data-lead_time="' . e($row->lead_time) . '"';
+                    $dataAttrs .= ' data-credit_limit="' . e($row->credit_limit) . '"';
+                    $dataAttrs .= ' data-ccar="' . e($row->ccar) . '"';
+                    $dataAttrs .= ' data-bank_garansi="' . e($row->bank_garansi) . '"';
+                    $dataAttrs .= ' data-area="' . e($row->area) . '"';
+                    $dataAttrs .= ' data-join_date="' . e($row->join_date) . '"';
+                    $dataAttrs .= ' data-status="' . e($row->status) . '"';
+                    $dataAttrs .= ' data-route_to="' . e($row->route_to) . '"';
+                    $dataAttrs .= ' data-status_approval="' . e($row->status_approval) . '"';
+                    $dataAttrs .= ' data-created_by="' . e($row->created_by) . '"';
+                    $dataAttrs .= ' data-file_npwp_path="' . $rowData['file_npwp_path'] . '"';
+                    $dataAttrs .= ' data-file_nib_path="' . $rowData['file_nib_path'] . '"';
+                    $dataAttrs .= ' data-file_ktp_path="' . $rowData['file_ktp_path'] . '"';
+                    $dataAttrs .= ' data-file_akte_path="' . $rowData['file_akte_path'] . '"';
 
-                $btn = '<div class="d-flex gap-2">';
+                    $btn = '<div class="d-flex gap-2">';
 
-                if ($row->status_approval === 'Rejected') {
-                    $btn .= '<button type="button" class="btn btn-warning btn-recall-customer shadow-sm"
+                    if ($row->status_approval === 'Rejected') {
+                        $btn .= '<button type="button" class="btn btn-warning btn-recall-customer shadow-sm"
                                 data-json="' . $jsonRow . '"
                                 data-bs-toggle="tooltip"
                                 title="Recall / Revisi Pengajuan">
                                 <i class="ph-bold ph-arrow-u-up-left text-white"></i>
                              </button>';
-                }
+                    }
 
-                $btn .= '<button type="button" class="btn btn-info btn-show-customer" ' . $dataAttrs . ' title="Lihat Detail">
+                    $btn .= '<button type="button" class="btn btn-info btn-show-customer" ' . $dataAttrs . ' title="Lihat Detail">
                             <i class="fa-solid fa-eye text-white"></i>
                         </button>';
 
-                if ($row->status_approval === 'Pending' || $row->status_approval === 'Rejected') {
-                    $btn .= '<form action="' . route('customers.destroy', $row->id) . '" method="POST" class="delete-form delete-customer-btn" style="display:inline;">
+                    if ($row->status_approval === 'Pending' || $row->status_approval === 'Rejected') {
+                        $btn .= '<form action="' . route('customers.destroy', $row->id) . '" method="POST" class="delete-form delete-customer-btn" style="display:inline;">
                                 ' . csrf_field() . method_field('DELETE') . '
                                 <button type="submit" class="btn btn-danger" title="Hapus Data">
                                 <i class="fas fa-trash-alt text-white"></i>
                                 </button>
                             </form>';
-                } else {
-                    $btn .= '<button type="button" class="btn btn-secondary" title="Tidak bisa dihapus (Approval sedang berjalan/selesai)" onclick="Swal.fire(\'Action Locked\', \'Data tidak dapat dihapus karena proses approval sudah berjalan (Status: ' . $row->status_approval . ').\', \'info\')">
+                    } else {
+                        $btn .= '<button type="button" class="btn btn-secondary" title="Tidak bisa dihapus (Approval sedang berjalan/selesai)" onclick="Swal.fire(\'Action Locked\', \'Data tidak dapat dihapus karena proses approval sudah berjalan (Status: ' . $row->status_approval . ').\', \'info\')">
                                 <i class="fas fa-lock text-white"></i>
                              </button>';
-                }
+                    }
 
-                $btn .= '</div>';
-                return $btn;
-            })
-            ->addColumn('credit_limit', function ($row) {
-                return '<div class="badge status-badge-lg bg-warning">
+                    $btn .= '</div>';
+                    return $btn;
+                })
+                ->addColumn('credit_limit', function ($row) {
+                    return '<div class="badge status-badge-lg bg-warning">
                             IDR ' . number_format($row->credit_limit, 0, ',', '.') . '
                         </div>';
-            })
-            ->editColumn('financial_info', function ($row) {
-                if ($row->bank_garansi === 'YA') {
-                    $bgBadge = '<span class="srs-badge"><i class="fas fa-file-contract me-1"></i> BG: YES</span>';
-                } else {
-                    $bgBadge = '<span class="badge bg-secondary opacity-50" style="font-size: 0.75em;">BG: NO</span>';
-                }
+                })
+                ->editColumn('financial_info', function ($row) {
+                    if ($row->bank_garansi === 'YA') {
+                        $bgBadge = '<span class="srs-badge"><i class="fas fa-file-contract me-1"></i> BG: YES</span>';
+                    } else {
+                        $bgBadge = '<span class="badge bg-secondary opacity-50" style="font-size: 0.75em;">BG: NO</span>';
+                    }
 
-                return '<div class="d-flex flex-column">
-                            <span class="fw-bold text-primary mb-1" style="font-size: 0.95em;">'. $row->term_of_payment .'</span>
+                    return '<div class="d-flex flex-column">
+                            <span class="fw-bold text-primary mb-1" style="font-size: 0.95em;">' . $row->term_of_payment . '</span>
                             <div>' . $bgBadge . '</div>
                         </div>';
-            })
-            ->editColumn('status_approval', function ($row) {
-                $baseClass = match($row->status_approval) {
-                    'Approved', 'Completed' => 'bg-success',
-                    'Rejected' => 'bg-danger',
-                    'Processing' => 'bg-primary',
-                    'Pending' => 'bg-warning',
-                    default => 'bg-secondary'
-                };
+                })
+                ->editColumn('status_approval', function ($row) {
+                    $baseClass = match ($row->status_approval) {
+                        'Approved', 'Completed' => 'bg-success',
+                        'Rejected' => 'bg-danger',
+                        'Processing' => 'bg-primary',
+                        'Pending' => 'bg-warning',
+                        default => 'bg-secondary'
+                    };
 
-                $icon = match($row->status_approval) {
-                    'Approved', 'Completed' => '<i class="ph-bold ph-check-circle me-1"></i>',
-                    'Rejected' => '<i class="ph-bold ph-x-circle me-1"></i>',
-                    'Processing' => '<i class="ph-bold ph-arrows-clockwise ph-spin me-1"></i>',
-                    default => '<i class="ph-bold ph-clock me-1"></i>'
-                };
+                    $icon = match ($row->status_approval) {
+                        'Approved', 'Completed' => '<i class="ph-bold ph-check-circle me-1"></i>',
+                        'Rejected' => '<i class="ph-bold ph-x-circle me-1"></i>',
+                        'Processing' => '<i class="ph-bold ph-arrows-clockwise ph-spin me-1"></i>',
+                        default => '<i class="ph-bold ph-clock me-1"></i>'
+                    };
 
-                return '<span class="badge status-badge-lg ' . $baseClass . '">' . $icon . strtoupper($row->status_approval) . '</span>';
-            })
-            ->editColumn('route_to', function ($row) {
-                 if($row->status_approval === 'Approved' || $row->status_approval === 'Completed'){
-                    return '<span class="badge route-to-badge-lg bg-info text-white"><i class="ph-bold ph-check-circle me-1 text-white"></i>-</span>';
-                }
+                    return '<span class="badge status-badge-lg ' . $baseClass . '">' . $icon . strtoupper($row->status_approval) . '</span>';
+                })
+                ->editColumn('route_to', function ($row) {
+                    if ($row->status_approval === 'Approved' || $row->status_approval === 'Completed') {
+                        return '<span class="badge route-to-badge-lg bg-info text-white"><i class="ph-bold ph-check-circle me-1 text-white"></i>-</span>';
+                    }
 
-                return '<span class="badge route-to-badge-lg bg-info text-white">
+                    return '<span class="badge route-to-badge-lg bg-info text-white">
                             <i class="ph-bold ph-user me-1"></i> ' . strtoupper($row->route_to ?? '-') . '
                         </span>';
-            })
-            ->editColumn('status', function ($row) {
-                $badge = $row->status === 'Active' ? 'bg-success' : 'bg-secondary';
-                return '<span class="badge status-badge-lg ' . $badge . '">' . strtoupper($row->status) . '</span>';
-            })
-            ->rawColumns(['credit_limit', 'financial_info', 'status_approval', 'route_to', 'status', 'action'])
-            ->make(true);
+                })
+                ->editColumn('status', function ($row) {
+                    $badge = $row->status === 'Active' ? 'bg-success' : 'bg-secondary';
+                    return '<span class="badge status-badge-lg ' . $badge . '">' . strtoupper($row->status) . '</span>';
+                })
+                ->rawColumns(['credit_limit', 'financial_info', 'status_approval', 'route_to', 'status', 'action'])
+                ->make(true);
         }
 
         $sales = Sales::with(['user.position', 'branch', 'region', 'accountGroup'])->get();
@@ -281,17 +281,26 @@ class CustomerController extends Controller
         $processingCount = Customer::where('status_approval', 'Processing')->count();
         $approvedCount = Customer::whereIn('status_approval', ['Approved', 'Completed'])->count();
         $activeCount = Customer::where('bank_garansi', 'YA')->count();
-        $inactiveCount = Customer::where(function($q) {
+        $inactiveCount = Customer::where(function ($q) {
             $q->where('bank_garansi', '!=', 'YA')
-            ->orWhereNull('bank_garansi');
+                ->orWhereNull('bank_garansi');
         })->count();
 
         $approvalStatuses = Customer::whereNotNull('status_approval')->distinct()->pluck('status_approval');
         $accountStatuses = Customer::whereNotNull('status')->distinct()->pluck('status');
 
         return view('page.customer.index', compact(
-            'sales', 'top', 'accountgroup','customerClass', 'pendingCount',
-            'processingCount', 'approvedCount', 'activeCount', 'inactiveCount', 'approvalStatuses', 'accountStatuses'
+            'sales',
+            'top',
+            'accountgroup',
+            'customerClass',
+            'pendingCount',
+            'processingCount',
+            'approvedCount',
+            'activeCount',
+            'inactiveCount',
+            'approvalStatuses',
+            'accountStatuses'
         ));
     }
 
@@ -540,29 +549,29 @@ class CustomerController extends Controller
     {
         $customer->update($request->all());
         activity()
-        ->causedBy(Auth::user())
-        ->performedOn($customer)
-        ->useLog('customer')
-        ->event('update')
-        ->withProperties([
-            'attributes' => $request->all(),
-            // 'old' => $oldData // Jika ingin mencatat data lama
-        ])
-        ->log("Updated customer data: {$customer->name}");
+            ->causedBy(Auth::user())
+            ->performedOn($customer)
+            ->useLog('customer')
+            ->event('update')
+            ->withProperties([
+                'attributes' => $request->all(),
+                // 'old' => $oldData // Jika ingin mencatat data lama
+            ])
+            ->log("Updated customer data: {$customer->name}");
         return response()->json(['success' => true, 'message' => 'Customer updated successfully!', 'data' => $customer]);
     }
 
     public function destroy(Customer $customer)
     {
         activity()
-        ->causedBy(Auth::user())
-        ->performedOn($customer)
-        ->useLog('customer')
-        ->event('delete')
-        ->withProperties([
-            'name' => $customer->name
-        ])
-        ->log("Deleted customer: {$customer->name}");
+            ->causedBy(Auth::user())
+            ->performedOn($customer)
+            ->useLog('customer')
+            ->event('delete')
+            ->withProperties([
+                'name' => $customer->name
+            ])
+            ->log("Deleted customer: {$customer->name}");
         $customer->delete();
         return response()->json(['success' => true, 'message' => 'Customer deleted successfully!']);
     }
@@ -596,7 +605,7 @@ class CustomerController extends Controller
         }
 
         $customer = Customer::with(['user', 'accountGroup', 'customerClass', 'files'])
-                    ->findOrFail($log->related_id);
+            ->findOrFail($log->related_id);
 
         $preSelectedAction = $request->query('pre_action', 'approve');
 
@@ -644,11 +653,13 @@ class CustomerController extends Controller
 
         $actor = User::where('nik', $currentLog->approver_nik)->first();
 
+
         $isFinanceAdjuster = $actor && ($actor->hasRole('manager-finance') || $actor->hasRole('head-finance'));
         $cleanNotes = trim($notes);
 
         if ($isFinanceAdjuster && ($action === 'review' || $action === 'approve')) {
             $isTopChanged = request()->has('update_top') && request('update_top') != $customer->term_of_payment;
+
 
             if ($isTopChanged) {
                 if (empty($cleanNotes)) {
@@ -674,6 +685,7 @@ class CustomerController extends Controller
             if (($action === 'review' || $action === 'approve') && $isFinanceAdjuster) {
                 $updateData = [];
                 $changesLog = [];
+
 
                 if (request()->has('update_top') && request('update_top') != $customer->term_of_payment) {
                     $updateData['term_of_payment'] = request('update_top');
@@ -773,12 +785,10 @@ class CustomerController extends Controller
             if ($action === 'approve') {
                 $dbStatus = 'Approved';
                 $dbNotes = empty($notes) ? 'Approve tanpa notes' : $notes;
-            }
-            elseif ($action === 'review') {
+            } elseif ($action === 'review') {
                 $dbStatus = 'Approved';
                 $dbNotes = $notes; // Gunakan notes dari inputan
-            }
-            elseif ($action === 'reject') {
+            } elseif ($action === 'reject') {
                 $dbStatus = 'Rejected';
                 $dbNotes = $notes;
             }
@@ -810,8 +820,8 @@ class CustomerController extends Controller
                 ->log($logMessage);
 
             $admins = User::role('super-admin')
-                  ->where('id', '!=', $actor->id)
-                  ->get();
+                ->where('id', '!=', $actor->id)
+                ->get();
 
             $adminTitle = "Monitoring Approval";
             $adminMessage = "";
@@ -899,7 +909,6 @@ class CustomerController extends Controller
                     } else {
                         Log::warning("User/Email tidak ditemukan untuk NIK: {$nextLog->approver_nik}");
                     }
-
                 } else {
                     $customer->update([
                         'status_approval' => 'Approved',
@@ -920,7 +929,6 @@ class CustomerController extends Controller
                         Log::info("APPROVAL FLOW: Customer #{$customer->id} COMPLETED (Approved). Email notifikasi dikirim ke Requester: {$requester->email}");
                     }
                 }
-
             } elseif ($dbStatus === 'Rejected') {
                 ApprovalLog::where('category', 'Customer')
                     ->where('related_id', $customer->id)
@@ -934,7 +942,7 @@ class CustomerController extends Controller
 
                 $requester = $customer->user;
                 if ($requester && $requester->email) {
-                     $recipients = [[
+                    $recipients = [[
                         'email' => $requester->email,
                         'name' => $requester->name,
                     ]];
@@ -945,7 +953,7 @@ class CustomerController extends Controller
 
             DB::commit();
 
-            if(request()->ajax()){
+            if (request()->ajax()) {
                 return response()->json(['success' => true, 'message' => 'Action processed successfully.']);
             }
 
@@ -955,11 +963,10 @@ class CustomerController extends Controller
                 'routeTo' => $customer->route_to,
                 'statusApproval' => $customer->status_approval
             ]);
-
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Approval Process Error: ' . $e->getMessage());
-            if(request()->ajax()){
+            if (request()->ajax()) {
                 return response()->json(['success' => false, 'message' => 'Error: ' . $e->getMessage()], 500);
             }
             return abort(500, 'Terjadi kesalahan saat memproses approval.');
@@ -991,10 +998,16 @@ class CustomerController extends Controller
         $customerClass = CustomerClass::all();
 
         return view('page.customer.approval.index', compact(
-            'sales', 'top', 'accountgroup', 'customerClass',
-            'pendingCount', 'approvedCount',
-            'activeCount', 'inactiveCount',
-            'approvalStatuses', 'accountStatuses'
+            'sales',
+            'top',
+            'accountgroup',
+            'customerClass',
+            'pendingCount',
+            'approvedCount',
+            'activeCount',
+            'inactiveCount',
+            'approvalStatuses',
+            'accountStatuses'
         ));
     }
 
@@ -1018,9 +1031,9 @@ class CustomerController extends Controller
             if ($request->status === 'Active') {
                 $query->where('customers.bank_garansi', 'YA');
             } elseif ($request->status === 'Inactive') {
-                $query->where(function($q) {
+                $query->where(function ($q) {
                     $q->where('customers.bank_garansi', '!=', 'YA')
-                    ->orWhereNull('customers.bank_garansi');
+                        ->orWhereNull('customers.bank_garansi');
                 });
             }
         }
@@ -1068,7 +1081,7 @@ class CustomerController extends Controller
             })
             ->addColumn('status_approval', function ($row) {
                 $status = $row->customer_status;
-                $baseClass = match($status) {
+                $baseClass = match ($status) {
                     'Approved', 'Completed' => 'bg-success',
                     'Rejected' => 'bg-danger',
                     'Processing' => 'bg-primary',
@@ -1109,44 +1122,44 @@ class CustomerController extends Controller
                 if ($row->status === 'Pending') {
                     $approverName = $row->approver ? $row->approver->name : $row->approver_nik;
                     $btnResend = '<button type="button" class="btn btn-sm btn-warning btn-resend-email"
-                                    data-token="'.$token.'"
-                                    data-approver-name="'.e($approverName).'"
+                                    data-token="' . $token . '"
+                                    data-approver-name="' . e($approverName) . '"
                                     data-bs-toggle="tooltip" title="Resend Email Notification">
                                     <i class="ph-bold ph-paper-plane-tilt text-white"></i>
                                 </button>';
                 }
 
                 $btnInputCode = '<button type="button" class="btn btn-sm btn-primary action-btn-modal"
-                                data-id="'.$customerId.'"
-                                data-token="'.$token.'"
+                                data-id="' . $customerId . '"
+                                data-token="' . $token . '"
                                 data-action="review"
-                                data-name="'.$customerName.'"
+                                data-name="' . $customerName . '"
                                 data-bs-toggle="tooltip" title="Input Customer Code & Join Date">
                                 <i class="ph-bold ph-pencil-simple text-white me-1"></i>
                             </button>';
 
                 // 4. Tombol Standard (Approve/Review/Reject)
                 $btnApprove = '<button type="button" class="btn btn-sm btn-success action-btn"
-                                data-id="'.$customerId.'"
-                                data-token="'.$token.'"
+                                data-id="' . $customerId . '"
+                                data-token="' . $token . '"
                                 data-action="approve"
-                                data-name="'.$customerName.'"
+                                data-name="' . $customerName . '"
                                 data-bs-toggle="tooltip" title="Quick Approve">
                                 <i class="ph-bold ph-thumbs-up text-white"></i></button>';
 
                 $btnReview = '<button type="button" class="btn btn-sm btn-primary action-btn-modal"
-                                data-id="'.$customerId.'"
-                                data-token="'.$token.'"
+                                data-id="' . $customerId . '"
+                                data-token="' . $token . '"
                                 data-action="review"
-                                data-name="'.$customerName.'"
+                                data-name="' . $customerName . '"
                                 data-bs-toggle="tooltip" title="Review with Notes">
                                 <i class="ph-bold ph-note-pencil text-white"></i></button>';
 
                 $btnReject = '<button type="button" class="btn btn-sm btn-danger action-btn-modal"
-                                data-id="'.$customerId.'"
-                                data-token="'.$token.'"
+                                data-id="' . $customerId . '"
+                                data-token="' . $token . '"
                                 data-action="reject"
-                                data-name="'.$customerName.'"
+                                data-name="' . $customerName . '"
                                 data-bs-toggle="tooltip" title="Reject">
                                 <i class="ph-bold ph-thumbs-down text-white"></i></button>';
 
@@ -1215,7 +1228,6 @@ class CustomerController extends Controller
                 ->log("Resent approval email to {$approver->name} (Level {$approvalLog->level})");
 
             return response()->json(['success' => true, 'message' => 'Approval email has been successfully resent to ' . $approver->name . '.']);
-
         } catch (\Exception $e) {
             Log::error('Failed to resend email: ' . $e->getMessage());
             return response()->json(['success' => false, 'message' => 'Failed to resend email.'], 500);
@@ -1232,8 +1244,8 @@ class CustomerController extends Controller
         $query = Activity::with('causer')
             ->where(function ($q) {
                 $q->where('log_name', 'like', '%customer%')
-                  ->orWhere('log_name', 'like', 'sample%')
-                  ->orWhere('log_name', 'path%'); // Menangkap 'path - customer' dll
+                    ->orWhere('log_name', 'like', 'sample%')
+                    ->orWhere('log_name', 'path%'); // Menangkap 'path - customer' dll
             })
             ->orderBy('created_at', 'desc');
 
@@ -1273,16 +1285,16 @@ class CustomerController extends Controller
                     $label = ucfirst(str_replace(['_', '-'], ' ', $key));
 
                     if ($key === 'attributes') {
-                        $json = json_encode($value, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES);
+                        $json = json_encode($value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
                         $escaped = e($json);
-                        $output .= '<div class="mb-1"><span class="text-muted">'.e($label).':</span> '
-                                 . '<button class="btn btn-xs btn-outline-secondary btn-view-json ms-2" data-json="'. $escaped .'">View details</button></div>';
+                        $output .= '<div class="mb-1"><span class="text-muted">' . e($label) . ':</span> '
+                            . '<button class="btn btn-xs btn-outline-secondary btn-view-json ms-2" data-json="' . $escaped . '">View details</button></div>';
                         continue;
                     }
 
                     if (is_array($value) || $value instanceof \Illuminate\Support\Collection) {
                         if (str_contains(strtolower($key), 'approver') || str_contains(strtolower($key), 'approvers')) {
-                            $output .= '<div class="mb-1"><span class=" text-muted text-dark">'.e($label).':</span>';
+                            $output .= '<div class="mb-1"><span class=" text-muted text-dark">' . e($label) . ':</span>';
                             $output .= '<ul class="m-0 ps-3" style="font-size:0.9rem;">';
                             foreach ((array) $value as $v) {
                                 if (is_array($v)) {
@@ -1290,18 +1302,18 @@ class CustomerController extends Controller
                                 } else {
                                     $name = $v;
                                 }
-                                $output .= '<li class="text-dark">'.e($name).'</li>';
+                                $output .= '<li class="text-dark">' . e($name) . '</li>';
                             }
                             $output .= '</ul></div>';
                             continue;
                         }
 
                         $preview = implode(', ', array_map(function ($i) {
-                            if (is_array($i)) return json_encode($i, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES);
+                            if (is_array($i)) return json_encode($i, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
                             return (string) $i;
                         }, (array) $value));
 
-                        $output .= '<div class="mb-1"><span class="">'.e($label).':</span> <span class="fw-bold text-dark">'.e(Str::limit($preview, 80)).'</span></div>';
+                        $output .= '<div class="mb-1"><span class="">' . e($label) . ':</span> <span class="fw-bold text-dark">' . e(Str::limit($preview, 80)) . '</span></div>';
                         continue;
                     }
 
@@ -1309,7 +1321,7 @@ class CustomerController extends Controller
                         $decoded = json_decode($value, true);
                         if (json_last_error() === JSON_ERROR_NONE && (is_array($decoded) || is_object($decoded))) {
                             if (str_contains(strtolower($key), 'approver') || str_contains(strtolower($key), 'approvers')) {
-                                $output .= '<div class="mb-1"><span class="fw-bold text-dark">'.e($label).':</span>';
+                                $output .= '<div class="mb-1"><span class="fw-bold text-dark">' . e($label) . ':</span>';
                                 $output .= '<ul class="m-0 ps-3" style="font-size:0.9rem;">';
                                 foreach ((array) $decoded as $v) {
                                     if (is_array($v)) {
@@ -1317,7 +1329,7 @@ class CustomerController extends Controller
                                     } else {
                                         $name = $v;
                                     }
-                                    $output .= '<li class="text-dark">'.e($name).'</li>';
+                                    $output .= '<li class="text-dark">' . e($name) . '</li>';
                                 }
                                 $output .= '</ul></div>';
                                 continue;
@@ -1325,15 +1337,15 @@ class CustomerController extends Controller
 
                             $preview = is_array($decoded) ? implode(', ', array_map(function ($i) {
                                 return is_array($i) ? json_encode($i) : (string) $i;
-                            }, $decoded)) : json_encode($decoded, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES);
+                            }, $decoded)) : json_encode($decoded, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
-                            $output .= '<div class="mb-1"><span class="">'.e($label).':</span> <span class="fw-bold text-dark">'.e(Str::limit($preview, 80)).'</span></div>';
+                            $output .= '<div class="mb-1"><span class="">' . e($label) . ':</span> <span class="fw-bold text-dark">' . e(Str::limit($preview, 80)) . '</span></div>';
                             continue;
                         }
                     }
 
                     $display = is_null($value) ? '-' : (string) $value;
-                    $output .= '<div class="mb-1"><span class="text-muted">'.e($label).':</span> <span class="fw-bold text-dark">'.e(Str::limit($display, 80)).'</span></div>';
+                    $output .= '<div class="mb-1"><span class="text-muted">' . e($label) . ':</span> <span class="fw-bold text-dark">' . e(Str::limit($display, 80)) . '</span></div>';
                 }
 
                 $output .= '</div>';
@@ -1388,13 +1400,34 @@ class CustomerController extends Controller
                 $icon = 'ph-info';
 
                 switch ($event) {
-                    case 'create': $badgeClass = 'bg-success'; $icon = 'ph-plus-circle'; break;
-                    case 'update': $badgeClass = 'bg-warning text-dark'; $icon = 'ph-pencil-simple'; break;
-                    case 'delete': $badgeClass = 'bg-danger'; $icon = 'ph-trash'; break;
-                    case 'approve': $badgeClass = 'bg-success'; $icon = 'ph-check-circle'; break;
-                    case 'reject': $badgeClass = 'bg-danger'; $icon = 'ph-x-circle'; break;
-                    case 'review': $badgeClass = 'bg-info'; $icon = 'ph-eye'; break;
-                    case 'resend': $badgeClass = 'bg-primary'; $icon = 'ph-paper-plane-tilt'; break;
+                    case 'create':
+                        $badgeClass = 'bg-success';
+                        $icon = 'ph-plus-circle';
+                        break;
+                    case 'update':
+                        $badgeClass = 'bg-warning text-dark';
+                        $icon = 'ph-pencil-simple';
+                        break;
+                    case 'delete':
+                        $badgeClass = 'bg-danger';
+                        $icon = 'ph-trash';
+                        break;
+                    case 'approve':
+                        $badgeClass = 'bg-success';
+                        $icon = 'ph-check-circle';
+                        break;
+                    case 'reject':
+                        $badgeClass = 'bg-danger';
+                        $icon = 'ph-x-circle';
+                        break;
+                    case 'review':
+                        $badgeClass = 'bg-info';
+                        $icon = 'ph-eye';
+                        break;
+                    case 'resend':
+                        $badgeClass = 'bg-primary';
+                        $icon = 'ph-paper-plane-tilt';
+                        break;
                 }
                 return '<span class="badge ' . $badgeClass . '"><i class="ph-bold ' . $icon . ' me-1"></i>' . ucfirst($event) . '</span>';
             })

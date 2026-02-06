@@ -88,6 +88,8 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/customers/log', [CustomerController::class, 'logPage'])->name('customers.log');
     Route::get('/customers-log/data', [CustomerController::class, 'getLogData'])->name('customers.log.data');
+    
+    Route::resource('customers', CustomerController::class);
 
     Route::resource('revision', RevisionController::class);
     Route::resource('account-groups', AccountGroupController::class);
@@ -144,7 +146,6 @@ Route::group(['middleware' => ['role:super-admin|admin']], function () {
     Route::resource('users', UserController::class);
     Route::get('/users-data', [UserController::class, 'getData'])->name('users.data');
     Route::resource('departments', DepartmentController::class);
-    Route::resource('customers', CustomerController::class);
     Route::resource('permissions', PermissionController::class);
     Route::resource('roles', RoleController::class);
     Route::resource('positions', PositionController::class);
