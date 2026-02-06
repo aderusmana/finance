@@ -8,7 +8,10 @@
     </div>
     <div class="app-nav" id="app-simple-bar">
         <ul class="main-nav p-0 mt-2">
-            <li class="menu-title"><span>Master Data</span></li>
+            @can('view master data menu')
+                
+            
+            <li class="menu-title text-white"><span>Master Data</span></li>
             <li>
                 <a aria-expanded="false" data-bs-toggle="collapse" href="#master-data">
                     <i class="iconoir-database"></i> Master Data
@@ -22,7 +25,11 @@
                 </ul>
             </li>
 
-            <li class="menu-title"><span>Master Management</span></li>
+            @endcan
+
+            @can('view master management menu')
+
+            <li class="menu-title text-white"><span>Master Management</span></li>
             <li>
                 <a aria-expanded="false" data-bs-toggle="collapse" href="#master-management">
                     <i class="iconoir-settings"></i> Master Management
@@ -42,7 +49,10 @@
                 </ul>
             </li>
 
-            <li class="menu-title"><span>Customers</span></li>
+            @endcan
+
+            @can('view customers menu')
+            <li class="menu-title text-white"><span>Customers</span></li>
             <li>
                 <a aria-expanded="false" data-bs-toggle="collapse" href="#customers-menu">
                     <i class="iconoir-community"></i> Customers
@@ -53,8 +63,10 @@
                     <li><a href="{{ route('customers.log') }}">Customer Logs</a></li>
                 </ul>
             </li>
+            @endcan
 
-            <li class="menu-title"><span>Bank Garansi (BG)</span></li>
+            @can('view bank garansi menu')
+            <li class="menu-title text-white"><span>Bank Garansi (BG)</span></li>
             <li>
                 <a aria-expanded="false" data-bs-toggle="collapse" href="#bg-menu">
                     <i class="iconoir-bank"></i> Bank Garansi
@@ -71,6 +83,7 @@
                     <li><a href="{{ route('bg-reports.index') }}">Reports</a></li>
                 </ul>
             </li>
+            @endcan
         </ul>
     </div>
 

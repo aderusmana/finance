@@ -451,12 +451,12 @@
                                 <div class="d-flex align-items-center justify-content-between mb-1">
                                     <span class="badge"
                                         style="background: #eff6ff; color: #1d4ed8; font-weight: 700; font-size: 0.65rem; padding: 4px 8px;">SALES
-                                        (FIRAS)</span>
+                                        </span>
                                     <small class="text-muted" style="font-size: 0.7rem;">Step 2</small>
                                 </div>
                                 <h6 class="fw-bold mb-1" style="font-size: 0.9rem; color: #1f2937;">Draft Rekomendasi
                                 </h6>
-                                <p class="text-muted mb-0 small" style="line-height: 1.3;">Sales (Firas) membuat draft
+                                <p class="text-muted mb-0 small" style="line-height: 1.3;">Sales  membuat draft
                                     rekomendasi (+11%) dan mengirim link.</p>
                             </div>
                         </div>
@@ -490,12 +490,12 @@
                                 <div class="d-flex align-items-center justify-content-between mb-1">
                                     <span class="badge"
                                         style="background: #fefce8; color: #854d0e; font-weight: 700; font-size: 0.65rem; padding: 4px 8px;">SALES
-                                        (FIRAS)</span>
+                                        </span>
                                     <small class="text-muted" style="font-size: 0.7rem;">Step 4</small>
                                 </div>
                                 <h6 class="fw-bold mb-1" style="font-size: 0.9rem; color: #1f2937;">Review Dokumen
                                 </h6>
-                                <p class="text-muted mb-0 small" style="line-height: 1.3;">Firas mengecek kelengkapan.
+                                <p class="text-muted mb-0 small" style="line-height: 1.3;">Sales mengecek kelengkapan.
                                     Jika OK lanjut Finance, jika tidak Return.</p>
                             </div>
                         </div>

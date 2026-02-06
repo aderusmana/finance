@@ -1459,7 +1459,6 @@
                                 .then(result => {
                                     const text = result.data.text || '';
                                     const lines = text.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
-                                    console.log('OCR Lines:', lines);
 
                                     // 1. CARI POSISI BARIS NPWP
                                     let npwpLineIdx = -1;
@@ -1496,7 +1495,14 @@
                                         rawName = rawName.replace(/^(Nama|Name)\s*[:.]?\s*/i, '').trim();
                                         let safeName = rawName.replace(/[^a-zA-Z0-9\s\.\,\(\)\-\&]/g, '').trim(); 
                                         $('#name').val(safeName);
-                                        generatePkdNumber(safeName); 
+                                        // Only auto-generate No PKD when Bank Garansi is YES
+                                        const bgStatusAfterOcr = $('#bank_garansi').val();
+                                        if (bgStatusAfterOcr === 'YA' || bgStatusAfterOcr === '1') {
+                                            generatePkdNumber(safeName);
+                                        } else {
+                                            // If Bank Garansi is NO or unset, ensure PKD is empty and hint
+                                            $('#no_pkd').val('').attr('placeholder', 'Tidak perlu No PKD (Non-BG)').prop('readonly', true);
+                                        }
                                     }
 
                                     // 3. AMBIL ALAMAT (LOOPING SAMPAI KETEMU "FOOTER")
