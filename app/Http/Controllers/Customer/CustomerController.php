@@ -37,6 +37,11 @@ class CustomerController extends Controller
     public function __construct(CustomerService $customerService)
     {
         $this->customerService = $customerService;
+        $this->middleware('permission:view customer', ['only' => ['index', 'show', 'logPage', 'getLogData']]);
+        $this->middleware('permission:create customer', ['only' => ['store', 'storeFile']]);
+        $this->middleware('permission:update customer', ['only' => ['update', 'updateFile', 'recall']]);
+        $this->middleware('permission:delete customer', ['only' => ['destroy', 'destroyFile']]);
+        $this->middleware('permission:view approval', ['only' => ['approvalPage', 'getApprovalData', 'viewApprovalPage']]);
     }
 
     public function generatePkdPreview(Request $request)
@@ -192,7 +197,7 @@ class CustomerController extends Controller
 
                     $btn = '<div class="d-flex gap-2">';
 
-                    if ($row->status_approval === 'Rejected') {
+                    if ($row->status_approval === 'Rejected' && $user->can('update customer')) {
                         $btn .= '<button type="button" class="btn btn-warning btn-recall-customer shadow-sm"
                                 data-json="' . $jsonRow . '"
                                 data-bs-toggle="tooltip"
@@ -205,7 +210,7 @@ class CustomerController extends Controller
                             <i class="fa-solid fa-eye text-white"></i>
                         </button>';
 
-                    if ($row->status_approval === 'Pending' || $row->status_approval === 'Rejected') {
+                    if ($row->status_approval === 'Pending' || $row->status_approval === 'Rejected' && $user->can('delete customer')) {
                         $btn .= '<form action="' . route('customers.destroy', $row->id) . '" method="POST" class="delete-form delete-customer-btn" style="display:inline;">
                                 ' . csrf_field() . method_field('DELETE') . '
                                 <button type="submit" class="btn btn-danger" title="Hapus Data">

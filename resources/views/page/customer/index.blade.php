@@ -45,12 +45,14 @@
                     </button>
                 </div>
 
+                @can('create customer')
                 <div class="ms-auto d-flex">
                     <button class="btn btn-primary" type="button" id="btn-create-customer">
                         <i class="ph-bold ph-plus"></i>
                         <span>New Customer</span>
                     </button>
                 </div>
+                @endcan
             </div>
 
             <div class="main-table-container">

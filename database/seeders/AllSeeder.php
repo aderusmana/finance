@@ -20,25 +20,27 @@ class AllSeeder extends Seeder
      */
     public function run(): void
     {
-        // Disable FK checks untuk menghindari error saat insert atasan_nik
         Schema::disableForeignKeyConstraints();
 
         // ==========================================
         // 1. Create Permissions
         // ==========================================
         $permissions = [
+            'view master data menu',
+            'view master management menu',
+            'view customers menu',
+            'view bank garansi menu',
+            'view dashboard',
             'view role', 'create role', 'update role', 'delete role',
             'view permission', 'create permission', 'update permission', 'delete permission',
             'view user', 'create user', 'update user', 'delete user',
             'view department', 'create department', 'update department', 'delete department',
-            'view requisition', 'create requisition', 'update requisition', 'delete requisition',
-            'view approval',
-            'view item', 'create item', 'update item', 'delete item',
+            'view item', 'create item', 'update item', 'delete item', 
             'view customer', 'create customer', 'update customer', 'delete customer',
-            'view log', 'view requisition-form', 'view report', 'view requisition-approval',
+            'view bg', 'create bg', 'update bg', 'delete bg',
+            'view bg-approval', 'approve bg', 'reject bg',
+            'view log', 'view report', 'view approval', 
             'view approval-path', 'view revision',
-            'approve requisition', 'reject requisition',
-            'view dashboard'
         ];
 
         foreach ($permissions as $perm) {
@@ -99,87 +101,75 @@ class AllSeeder extends Seeder
         );
 
         // ==========================================
-        // 5. Create Roles
+        // 5. Create Roles & Assign Permissions
         // ==========================================
+        
+        // --- SUPER ADMIN ---
         $superAdminRole = Role::updateOrCreate(['name' => 'super-admin']);
-        $userRequisitionRole = Role::updateOrCreate(['name' => 'user-requisition']);
-        $approvalRole = Role::updateOrCreate(['name' => 'user-approval']);
+        $superAdminRole->givePermissionTo(Permission::all());
 
-        // --- NEW: Role Sales ---
+        // --- ROLE SALES ---
         $salesRole = Role::updateOrCreate(['name' => 'sales']);
-        $salesRole->givePermissionTo([
+        $salesRole->syncPermissions([
             'view dashboard',
+            'view customers menu',
             'view customer',
             'create customer',
             'update customer',
-            'delete customer',
-            'view report' // Opsional: biasanya sales butuh lihat report
+            'view report'
         ]);
 
-        // Setup Specific Roles (Existing)
-        $headWhRole = Role::updateOrCreate(['name' => 'wh-supervisor']);
-        $headWhRole->givePermissionTo(['view log', 'view requisition-form', 'view report', 'view requisition-approval', 'approve requisition', 'reject requisition']);
-
-        $staffWhRole = Role::updateOrCreate(['name' => 'wh-staff']);
-        $staffWhRole->givePermissionTo(['view log', 'view requisition-form', 'view report', 'view requisition', 'create requisition', 'update requisition', 'delete requisition']);
-
-        $headMaterialRole = Role::updateOrCreate(['name' => 'material-supervisor']);
-        $headMaterialRole->givePermissionTo(['view log', 'view requisition-form', 'view report', 'view requisition-approval', 'approve requisition', 'reject requisition']);
-
-        $staffMaterialRole = Role::updateOrCreate(['name' => 'material-staff']);
-        $staffMaterialRole->givePermissionTo(['view log', 'view requisition-form', 'view report', 'view requisition', 'create requisition', 'update requisition', 'delete requisition']);
-
-        $headSalesMarketingRole = Role::updateOrCreate(['name' => 'head-SNM']);
-        $headSalesMarketingRole->givePermissionTo(['view log', 'view requisition-form', 'view report', 'view requisition-approval', 'approve requisition', 'reject requisition']);
-
-        $staffSalesMarketingRole = Role::updateOrCreate(['name' => 'staff-SNM']);
-        $staffSalesMarketingRole->givePermissionTo(['view log', 'view requisition-form', 'view report', 'view requisition', 'create requisition', 'update requisition', 'delete requisition']);
-
-        $headRndRole = Role::updateOrCreate(['name' => 'head-R&D']);
-        $headRndRole->givePermissionTo(['view log', 'view requisition-form', 'view report', 'view requisition-approval', 'approve requisition', 'reject requisition']);
-
-        $staffRndRole = Role::updateOrCreate(['name' => 'staff-R&D']);
-        $staffRndRole->givePermissionTo(['view log', 'view requisition-form', 'view report', 'view requisition', 'create requisition', 'update requisition', 'delete requisition']);
-
-        $headQaRole = Role::updateOrCreate(['name' => 'head-QA']);
-        $headQaRole->givePermissionTo(['view log', 'view requisition-form', 'view report', 'view requisition-approval', 'approve requisition', 'reject requisition']);
-
-        $staffQaRole = Role::updateOrCreate(['name' => 'staff-QA']);
-        $staffQaRole->givePermissionTo(['view log', 'view requisition-form', 'view report', 'view requisition', 'create requisition', 'update requisition', 'delete requisition']);
-
-        $headHcdRole = Role::updateOrCreate(['name' => 'head-HCD']);
-        $headHcdRole->givePermissionTo(['view log', 'view requisition-form', 'view report', 'view requisition-approval', 'approve requisition', 'reject requisition']);
-
-        $staffHcdRole = Role::updateOrCreate(['name' => 'staff-HCD']);
-        $staffHcdRole->givePermissionTo(['view log', 'view requisition-form', 'view report', 'view requisition', 'create requisition', 'update requisition', 'delete requisition']);
-
-        $atasanRole = Role::updateOrCreate(['name' => 'atasan']);
-        $atasanRole->givePermissionTo(['view log', 'view requisition-form', 'view report', 'view requisition-approval', 'approve requisition', 'reject requisition']);
+        // --- ROLE FINANCE ---
+        $financePerms = [
+            'view dashboard',
+            'view customers menu', 'view customer', 'update customer', 
+            'view bank garansi menu', 
+            'view bg', 'create bg', 'update bg', 'delete bg', 
+            'view bg-approval', 'approve bg', 'reject bg',
+            'view master management menu',
+            'view log', 'view report', 'view approval'
+        ];
 
         $managerFinanceRole = Role::updateOrCreate(['name' => 'manager-finance']);
-        $managerFinanceRole->givePermissionTo([
-            'view log', 'view requisition-form', 'view report', 'view approval',
-            'view requisition-approval', 'approve requisition', 'reject requisition',
-            'view customer', 'create customer', 'update customer'
-        ]);
+        $managerFinanceRole->syncPermissions($financePerms);
 
         $headFinanceRole = Role::updateOrCreate(['name' => 'head-finance']);
-        $headFinanceRole->givePermissionTo([
-            'view log', 'view requisition-form', 'view report', 'view approval',
-            'view requisition-approval', 'approve requisition', 'reject requisition',
-            'view customer', 'create customer', 'update customer'
-        ]);
+        $headFinanceRole->syncPermissions($financePerms);
 
+        // --- ROLE IT ---
         $itRole = Role::updateOrCreate(['name' => 'it']);
-        $itRole->givePermissionTo([
-            'view log', 'view requisition-form', 'view report', 'view approval',
-            'view requisition-approval', 'approve requisition', 'reject requisition',
-            'view customer', 'create customer', 'update customer'
+        $itRole->syncPermissions([
+            'view dashboard',
+            'view master data menu', 
+            'view master management menu',
+            'view customers menu', 'view customer', 'update customer',
+            'view role', 'view permission', 'view user',
+            'view log', 'view approval-path'
         ]);
 
-        $userRequisitionRole->givePermissionTo(['view log', 'view requisition-form', 'view report', 'view requisition', 'create requisition', 'update requisition', 'delete requisition']);
-        $approvalRole->givePermissionTo(['view log', 'view requisition-form', 'view report', 'view approval', 'view requisition-approval', 'approve requisition', 'reject requisition']);
-        $superAdminRole->givePermissionTo(Permission::all());
+        $userRequisitionRole = Role::updateOrCreate(['name' => 'user-requisition']);
+        $userRequisitionRole->syncPermissions(['view log', 'view report']);
+
+        $approvalRole = Role::updateOrCreate(['name' => 'user-approval']);
+        $approvalRole->syncPermissions(['view log', 'view report', 'view approval']);
+
+        // --- HEAD & STAFF DEPARTMENTS ---
+        $deptRoles = [
+            'wh-supervisor', 'wh-staff',
+            'material-supervisor', 'material-staff',
+            'head-SNM', 'staff-SNM',
+            'head-R&D', 'staff-R&D',
+            'head-QA', 'staff-QA',
+            'head-HCD', 'staff-HCD',
+            'atasan'
+        ];
+
+        $basicPerms = ['view log', 'view report'];
+
+        foreach($deptRoles as $rName) {
+            $r = Role::updateOrCreate(['name' => $rName]);
+            $r->syncPermissions($basicPerms);
+        }
 
         // ==========================================
         // 6. Create Users
@@ -200,18 +190,13 @@ class AllSeeder extends Seeder
             ]
         );
         $superAdminUser->assignRole($superAdminRole);
-
+        
         $userRequsition = User::updateOrCreate(
             ['email' => 'user-requisition@example.com'],
             [
-                'name' => 'User Requisition',
-                'nik' => 'AG2222',
-                'username' => 'user-requisition',
-                'password' => Hash::make('password'),
-                'email_verified_at' => now(),
-                'department_id' => 2,
-                'status' => 'active',
-                'atasan_nik' => 'AG3333',
+                'name' => 'User Requisition', 'nik' => 'AG2222', 'username' => 'user-requisition',
+                'password' => Hash::make('password'), 'email_verified_at' => now(),
+                'department_id' => 2, 'status' => 'active', 'atasan_nik' => 'AG3333',
                 'position_id' => $posGM->id,
             ]
         );
@@ -220,124 +205,15 @@ class AllSeeder extends Seeder
         $userApproval = User::updateOrCreate(
             ['email' => 'no-reply@example.com'],
             [
-                'name' => 'User Approval',
-                'nik' => 'AG3333',
-                'username' => 'user-approval',
-                'password' => Hash::make('password'),
-                'email_verified_at' => now(),
-                'department_id' => 3,
-                'status' => 'active',
-                'atasan_nik' => 'AG1111',
+                'name' => 'User Approval', 'nik' => 'AG3333', 'username' => 'user-approval',
+                'password' => Hash::make('password'), 'email_verified_at' => now(),
+                'department_id' => 3, 'status' => 'active', 'atasan_nik' => 'AG1111',
                 'position_id' => $posManager->id,
             ]
         );
         $userApproval->assignRole($approvalRole);
 
-        $managerFinance = User::updateOrCreate(
-            ['email' => 'ziddanazzahra10@gmail.com'],
-            [
-                'name' => 'Manager Finance',
-                'nik' => 'MF001',
-                'username' => 'manager.finance',
-                'password' => Hash::make('password'),
-                'email_verified_at' => now(),
-                'no_telepon' => '081234567890',
-                'department_id' => 2,
-                'status' => 'active',
-                'atasan_nik' => 'HDFN01',
-                'position_id' => $posManager->id,
-            ]
-        );
-        $managerFinance->assignRole($managerFinanceRole);
-
-        $headFinance = User::updateOrCreate(
-            ['email' => 'head.finance@example.com'],
-            [
-                'name' => 'Dept Head Finance',
-                'nik' => 'HDFIN01',
-                'username' => 'head.finance',
-                'password' => Hash::make('password'),
-                'email_verified_at' => now(),
-                'no_telepon' => '081234567891',
-                'department_id' => 2,
-                'status' => 'active',
-                'atasan_nik' => 'AG1111',
-                'position_id' => $posManager->id,
-            ]
-        );
-        $headFinance->assignRole($headFinanceRole);
-
-        $itEngineer = User::updateOrCreate(
-            ['email' => 'it.engineer@example.com'],
-            [
-                'name' => 'IT Engineer',
-                'nik' => 'IT001',
-                'username' => 'it.engineer',
-                'password' => Hash::make('password'),
-                'email_verified_at' => now(),
-                'department_id' => 1,
-                'status' => 'active',
-                'atasan_nik' => 'AG1111',
-                'position_id' => $posStaff->id,
-            ]
-        );
-        $itEngineer->assignRole($itRole);
-
-        $headWh = User::updateOrCreate(
-            ['email' => 'head.wh@example.com'],
-            [
-                'name' => 'Head WH', 'nik' => 'HDWH01', 'username' => 'head.wh',
-                'password' => Hash::make('password'), 'email_verified_at' => now(),
-                'department_id' => 9, 'status' => 'active', 'atasan_nik' => 'AG1111',
-                'position_id' => $posManager->id,
-            ]
-        );
-        $headWh->assignRole($headWhRole);
-
-        $staffWh1 = User::updateOrCreate(
-            ['email' => 'staff.wh1@example.com'],
-            [
-                'name' => 'Staff WH 1', 'nik' => 'STWH01', 'username' => 'staff.wh1',
-                'password' => Hash::make('password'), 'email_verified_at' => now(),
-                'department_id' => 9, 'status' => 'active', 'atasan_nik' => 'HDWH01',
-                'position_id' => $posStaff->id,
-            ]
-        );
-        $staffWh1->assignRole($staffWhRole);
-
-        $headMaterial = User::updateOrCreate(
-            ['email' => 'head.material@example.com'],
-            [
-                'name' => 'Head Material', 'nik' => 'HDMT01', 'username' => 'head.material',
-                'password' => Hash::make('password'), 'email_verified_at' => now(),
-                'department_id' => 8, 'status' => 'active', 'atasan_nik' => 'AG1111',
-                'position_id' => $posManager->id,
-            ]
-        );
-        $headMaterial->assignRole($headMaterialRole);
-
-        $staffMaterial1 = User::updateOrCreate(
-            ['email' => 'staff.material1@example.com'],
-            [
-                'name' => 'Staff Material 1', 'nik' => 'STMT01', 'username' => 'staff.material1',
-                'password' => Hash::make('password'), 'email_verified_at' => now(),
-                'department_id' => 8, 'status' => 'active', 'atasan_nik' => 'HDMT01',
-                'position_id' => $posStaff->id,
-            ]
-        );
-        $staffMaterial1->assignRole($staffMaterialRole);
-
-        $headSales = User::updateOrCreate(
-            ['email' => 'head.sales@example.com'],
-            [
-                'name' => 'Head SNM', 'nik' => 'HDSM01', 'username' => 'head.sales',
-                'password' => Hash::make('password'), 'email_verified_at' => now(),
-                'department_id' => 7, 'status' => 'active', 'atasan_nik' => 'AG1111',
-                'position_id' => $posManager->id,
-            ]
-        );
-        $headSales->assignRole($headSalesMarketingRole);
-
+        // --- SALES TEAM ---
         $staffSales1 = User::updateOrCreate(
             ['email' => 'staff.sales1@example.com'],
             [
@@ -347,7 +223,7 @@ class AllSeeder extends Seeder
                 'position_id' => $posStaff->id,
             ]
         );
-        $staffSales1->assignRole($staffSalesMarketingRole);
+        $staffSales1->assignRole('staff-SNM');
         $staffSales1->assignRole($salesRole);
 
         $staffSales2 = User::updateOrCreate(
@@ -359,154 +235,56 @@ class AllSeeder extends Seeder
                 'position_id' => $posStaff->id,
             ]
         );
-        $staffSales2->assignRole($staffSalesMarketingRole);
+        $staffSales2->assignRole('staff-SNM');
         $staffSales2->assignRole($salesRole);
 
-        $headRnd = User::updateOrCreate(
-            ['email' => 'head.rnd@example.com'],
+        // --- FINANCE TEAM ---
+        $managerFinance = User::updateOrCreate(
+            ['email' => 'ziddanazzahra10@gmail.com'],
             [
-                'name' => 'Head R&D', 'nik' => 'HDRD01', 'username' => 'head.rnd',
+                'name' => 'Manager Finance', 'nik' => 'MF001', 'username' => 'manager.finance',
                 'password' => Hash::make('password'), 'email_verified_at' => now(),
-                'department_id' => 6, 'status' => 'active', 'atasan_nik' => 'AG1111',
-                'position_id' => $posManager->id,
+                'no_telepon' => '081234567890', 'department_id' => 2, 'status' => 'active',
+                'atasan_nik' => 'HDFN01', 'position_id' => $posManager->id,
             ]
         );
-        $headRnd->assignRole($headRndRole);
+        $managerFinance->assignRole($managerFinanceRole);
 
-        $staffRnd1 = User::updateOrCreate(
-            ['email' => 'staff.rnd1@example.com'],
+        $headFinance = User::updateOrCreate(
+            ['email' => 'head.finance@example.com'],
             [
-                'name' => 'Staff R&D 1', 'nik' => 'STRD01', 'username' => 'staff.rnd1',
+                'name' => 'Dept Head Finance', 'nik' => 'HDFIN01', 'username' => 'head.finance',
                 'password' => Hash::make('password'), 'email_verified_at' => now(),
-                'department_id' => 6, 'status' => 'active', 'atasan_nik' => 'HDRD01',
-                'position_id' => $posStaff->id,
+                'no_telepon' => '081234567891', 'department_id' => 2, 'status' => 'active',
+                'atasan_nik' => 'AG1111', 'position_id' => $posManager->id,
             ]
         );
-        $staffRnd1->assignRole($staffRndRole);
+        $headFinance->assignRole($headFinanceRole);
 
-        $staffRnd2 = User::updateOrCreate(
-            ['email' => 'staff.rnd2@example.com'],
+        // --- IT TEAM ---
+        $itEngineer = User::updateOrCreate(
+            ['email' => 'it.engineer@example.com'],
             [
-                'name' => 'Staff R&D 2', 'nik' => 'STRD02', 'username' => 'staff.rnd2',
-                'password' => Hash::make('password'), 'email_verified_at' => now(),
-                'department_id' => 6, 'status' => 'active', 'atasan_nik' => 'HDRD01',
-                'position_id' => $posStaff->id,
-            ]
-        );
-        $staffRnd2->assignRole($staffRndRole);
-
-        $headQa = User::updateOrCreate(
-            ['email' => 'head.qa@example.com'],
-            [
-                'name' => 'Head QA', 'nik' => 'HDQA01', 'username' => 'head.qa',
-                'password' => Hash::make('password'), 'email_verified_at' => now(),
-                'department_id' => 5, 'status' => 'active', 'atasan_nik' => 'AG1111',
-                'position_id' => $posManager->id,
-            ]
-        );
-        $headQa->assignRole($headQaRole);
-
-        $staffQa1 = User::updateOrCreate(
-            ['email' => 'staff.qa1@example.com'],
-            [
-                'name' => 'Staff QA 1', 'nik' => 'STQA01', 'username' => 'staff.qa1',
-                'password' => Hash::make('password'), 'email_verified_at' => now(),
-                'department_id' => 5, 'status' => 'active', 'atasan_nik' => 'HDQA01',
-                'position_id' => $posStaff->id,
-            ]
-        );
-        $staffQa1->assignRole($staffQaRole);
-
-        $staffQa2 = User::updateOrCreate(
-            ['email' => 'staff.qa2@example.com'],
-            [
-                'name' => 'Staff QA 2', 'nik' => 'STQA02', 'username' => 'staff.qa2',
-                'password' => Hash::make('password'), 'email_verified_at' => now(),
-                'department_id' => 5, 'status' => 'active', 'atasan_nik' => 'HDQA01',
-                'position_id' => $posStaff->id,
-            ]
-        );
-        $staffQa2->assignRole($staffQaRole);
-
-        $headHcd = User::updateOrCreate(
-            ['email' => 'head.hcd@example.com'],
-            [
-                'name' => 'Head HCD', 'nik' => 'HDHCD01', 'username' => 'head.hcd',
-                'password' => Hash::make('password'), 'email_verified_at' => now(),
-                'department_id' => 3, 'status' => 'active', 'atasan_nik' => 'AG1111',
-                'position_id' => $posManager->id,
-            ]
-        );
-        $headHcd->assignRole($headHcdRole);
-
-        $staffHcd1 = User::updateOrCreate(
-            ['email' => 'staff.hcd1@example.com'],
-            [
-                'name' => 'Staff HCD 1', 'nik' => 'STHCD01', 'username' => 'staff.hcd1',
-                'password' => Hash::make('password'), 'email_verified_at' => now(),
-                'department_id' => 3, 'status' => 'active', 'atasan_nik' => 'HDHCD01',
-                'position_id' => $posStaff->id,
-            ]
-        );
-        $staffHcd1->assignRole($staffHcdRole);
-
-        $staffHcd2 = User::updateOrCreate(
-            ['email' => 'staff.hcd2@example.com'],
-            [
-                'name' => 'Staff HCD 2', 'nik' => 'STHCD02', 'username' => 'staff.hcd2',
-                'password' => Hash::make('password'), 'email_verified_at' => now(),
-                'department_id' => 3, 'status' => 'active', 'atasan_nik' => 'HDHCD01',
-                'position_id' => $posStaff->id,
-            ]
-        );
-        $staffHcd2->assignRole($staffHcdRole);
-
-        $atasan1 = User::updateOrCreate(
-            ['email' => 'atasan1@example.com'],
-            [
-                'name' => 'Atasan 1', 'nik' => 'ATASAN01', 'username' => 'atasan1',
+                'name' => 'IT Engineer', 'nik' => 'IT001', 'username' => 'it.engineer',
                 'password' => Hash::make('password'), 'email_verified_at' => now(),
                 'department_id' => 1, 'status' => 'active', 'atasan_nik' => 'AG1111',
-                'position_id' => $posManager->id,
-            ]
-        );
-        $atasan1->assignRole($atasanRole);
-
-        $anotherUserRequisition = User::updateOrCreate(
-            ['email' => 'staff.eng@example.com'],
-            [
-                'name' => 'Staff Engineering', 'nik' => 'ST0001', 'username' => 'staff.eng',
-                'password' => Hash::make('password'), 'email_verified_at' => now(),
-                'department_id' => 7, 'status' => 'active', 'atasan_nik' => 'HD0001',
                 'position_id' => $posStaff->id,
             ]
         );
-        $anotherUserRequisition->assignRole('user-requisition');
-
+        $itEngineer->assignRole($itRole);
+        
         $warehouseUsers = [
             [
-                'name' => 'Inward WH Supervisor',
-                'nik' => 'WH0001',
-                'username' => 'inward.wh',
-                'email' => 'inward.wh@example.com',
-                'department_id' => 8,
-                'position_id' => $posSupervisor->id,
+                'name' => 'Inward WH Supervisor', 'nik' => 'WH0001', 'username' => 'inward.wh',
+                'email' => 'inward.wh@example.com', 'department_id' => 8, 'position_id' => $posSupervisor->id,
             ],
             [
-                'name' => 'Material Support Supervisor',
-                'nik' => 'MS0001',
-                'username' => 'material.support',
-                'email' => 'material.support@example.com',
-                'department_id' => 8,
-                'position_id' => $posSupervisor->id,
+                'name' => 'Material Support Supervisor', 'nik' => 'MS0001', 'username' => 'material.support',
+                'email' => 'material.support@example.com', 'department_id' => 8, 'position_id' => $posSupervisor->id,
             ],
             [
-                'name' => 'Outward WH Supervisor',
-                'nik' => 'WH0002',
-                'username' => 'outward.wh',
-                'email' => 'outward.wh@example.com',
-                'department_id' => 8,
-                'position_id' => $posSupervisor->id,
+                'name' => 'Outward WH Supervisor', 'nik' => 'WH0002', 'username' => 'outward.wh',
+                'email' => 'outward.wh@example.com', 'department_id' => 8, 'position_id' => $posSupervisor->id,
             ],
         ];
 
@@ -514,18 +292,13 @@ class AllSeeder extends Seeder
             $user = User::updateOrCreate(
                 ['email' => $whUser['email']],
                 [
-                    'name' => $whUser['name'],
-                    'nik' => $whUser['nik'],
-                    'username' => $whUser['username'],
-                    'password' => Hash::make('password'),
-                    'email_verified_at' => now(),
-                    'department_id' => $whUser['department_id'],
-                    'status' => 'active',
-                    'atasan_nik' => 'AG1111',
-                    'position_id' => $whUser['position_id'],
+                    'name' => $whUser['name'], 'nik' => $whUser['nik'], 'username' => $whUser['username'],
+                    'password' => Hash::make('password'), 'email_verified_at' => now(),
+                    'department_id' => $whUser['department_id'], 'status' => 'active',
+                    'atasan_nik' => 'AG1111', 'position_id' => $whUser['position_id'],
                 ]
             );
-            $user->assignRole('user-requisition');
+            $user->assignRole($userRequisitionRole);
         }
 
         Schema::enableForeignKeyConstraints();
