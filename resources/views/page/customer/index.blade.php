@@ -1587,7 +1587,6 @@
                                 .then(result => {
                                     const text = result.data.text || '';
                                     const lines = text.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
-                                    console.log('OCR Lines:', lines);
 
                                     // 1. CARI POSISI BARIS NPWP
                                     let npwpLineIdx = -1;
