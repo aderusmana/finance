@@ -6,21 +6,21 @@
     <title>Customer Approval : {{ $customer->name }}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    
+
     {{-- CSS INLINE (INTERNAL) --}}
     <style>
         body { font-family: 'Inter', 'Segoe UI', sans-serif; background-color: #f1f5f9; color: #334155; }
         .main-container { display: grid; grid-template-columns: 2.5fr 1fr; gap: 30px; max-width: 1400px; margin: 40px auto; padding: 0 20px; }
-        
+
         /* Card Styles */
         .card { border: none; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); background: white; margin-bottom: 24px; }
         .card-header.main-header { background: linear-gradient(to right, #1e3a8a, #2563eb); color: white; padding: 20px 30px; border-radius: 12px 12px 0 0 !important; }
-        
+
         /* Typography */
         .section-title { font-size: 0.95rem; font-weight: 700; color: #1e3a8a; margin-bottom: 15px; padding-bottom: 8px; border-bottom: 2px solid #e2e8f0; display: flex; align-items: center; letter-spacing: 0.5px; text-transform: uppercase; }
         .info-label { font-size: 0.7rem; text-transform: uppercase; color: #64748b; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 3px; }
         .info-value { font-size: 0.9rem; color: #0f172a; font-weight: 500; word-break: break-word; }
-        
+
         /* Utility Colors */
         .bg-light-info { background-color: #e0f2fe; color: #0284c7; }
         .bg-light-success { background-color: #dcfce7; color: #16a34a; }
@@ -57,6 +57,12 @@
             max-height: 80vh;
             box-shadow: 0 0 20px rgba(0,0,0,0.5);
         }
+
+        /* Class btn-date tetap ada untuk selector JS, style utamanya sudah di-inline */
+        .btn-date {
+            /* Styles handled inline for specific box shape requirements */
+        }
+
         /* Responsive */
         @media (max-width: 992px) { .main-container { grid-template-columns: 1fr; } .action-card { position: static; } }
     </style>
@@ -64,11 +70,9 @@
 <body>
     @php
         $approverUser = \App\Models\User::where('nik', $log->approver_nik)->first();
-        // Permission Check
-        $canAdjust = $approverUser && ($approverUser->hasRole('manager-finance') || $approverUser->hasRole('head-finance'));
+        $canAdjust = $approverUser && ($approverUser->hasRole('manager-finance') || $approverUser->hasRole('head-finance') || $approverUser->hasRole('super-admin'));
         $isIT = $approverUser && $approverUser->hasRole('it');
-        
-        // Ambil File untuk Preview
+
         $doc = $customer->files ? $customer->files->first() : null;
         $npwpPath = ($doc && $doc->npwp_file) ? asset('storage/' . $doc->npwp_file) : null;
         $nibPath  = ($doc && $doc->nib_siup_file) ? asset('storage/' . $doc->nib_siup_file) : null;
@@ -77,7 +81,7 @@
     @endphp
 
     <div class="main-container">
-        
+
         <div class="left-column">
             <div class="card">
                 <div class="card-header main-header">
@@ -93,7 +97,7 @@
                 </div>
 
                 <div class="card-body p-4 p-md-5">
-                    
+
                     {{-- IT SECTION --}}
                     @if($isIT)
                     <div class="card border-warning mb-5">
@@ -128,10 +132,10 @@
 
                     <h5 class="section-title mt-5"><i class="fas fa-info-circle me-2"></i> General Information</h5>
                     <div class="row g-4 mb-4">
-                        <div class="col-md-6">
+                        <div class="col-md-12">
                             <div class="p-3 bg-light rounded h-100">
                                 <div class="row g-3">
-                                    <div class="col-12">
+                                    <div class="col-6">
                                         <div class="info-label">Main Address</div>
                                         <div class="info-value">{{ $customer->address1 }}</div>
                                         @if($customer->address2) <div class="info-value">{{ $customer->address2 }}</div> @endif
@@ -153,25 +157,15 @@
                                         <div class="info-label">Country</div>
                                         <div class="info-value">{{ $customer->country }}</div>
                                     </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="row g-4">
-                                <div class="col-md-6">
-                                    <div class="info-group">
+                                    <div class="col-md-6">
                                         <div class="info-label">Sort Name / Alias</div>
                                         <div class="info-value">{{ $customer->sort_name ?? '-' }}</div>
                                     </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="info-group">
+                                    <div class="col-md-6">
                                         <div class="info-label">No. PKD</div>
                                         <div class="info-value text-dark fw-bold">{{ $customer->no_pkd ?? '-' }}</div>
                                     </div>
-                                </div>
-                                <div class="col-md-12">
-                                    <div class="info-group">
+                                    <div class="col-md-6">
                                         <div class="info-label">General Email</div>
                                         <div class="info-value"><a href="mailto:{{ $customer->email }}">{{ $customer->email }}</a></div>
                                     </div>
@@ -299,9 +293,11 @@
                             <div class="p-3 border rounded bg-light h-100">
                                 <label class="info-label mb-2">Lead Time (Days)</label>
                                 @if($canAdjust)
-                                    <input type="number" class="form-control form-control-sm fw-bold editable-field" 
-                                        name="update_lead_time" id="left_lead_time" 
-                                        value="{{ $customer->lead_time }}" form="approvalForm" disabled>
+                                    <input type="number" class="form-control form-control-sm fw-bold editable-field"
+                                        name="update_lead_time" id="left_lead_time"
+                                        value="{{ $customer->lead_time == 0 ? '' : $customer->lead_time }}"
+                                        placeholder="0"
+                                        form="approvalForm" disabled>
                                 @else
                                     <div class="info-value fw-bold">{{ $customer->lead_time }} Days</div>
                                 @endif
@@ -336,8 +332,8 @@
                                     <div class="mb-4">
                                         <label class="info-label mb-2">Virtual Account</label>
                                         @if($canAdjust)
-                                            <input type="text" class="form-control editable-field" 
-                                                name="update_va" value="{{ $customer->virtual_account }}" 
+                                            <input type="text" class="form-control editable-field"
+                                                name="update_va" value="{{ $customer->virtual_account }}"
                                                 form="approvalForm" placeholder="Masukkan Nomor VA" disabled>
                                         @else
                                             <div class="info-value fw-bold">{{ $customer->virtual_account ?? '-' }}</div>
@@ -348,15 +344,15 @@
                                         {{-- LEFT: PAYMENT --}}
                                         <div class="col-md-6 border-end">
                                             <h6 class="text-primary fw-bold mb-3 border-bottom pb-2">Payment Schedule</h6>
-                                            
+
                                             {{-- Payment Days --}}
                                             <div class="mb-3">
                                                 <label class="info-label mb-2 d-block">Payment Days</label>
                                                 @if($canAdjust)
                                                     <div class="schedule-selector" id="payment_days_container">
                                                         {{-- Hidden Input untuk kirim array ke backend --}}
-                                                        <div id="payment_days_inputs"></div> 
-                                                        
+                                                        <div id="payment_days_inputs"></div>
+
                                                         <button type="button" class="btn btn-sm btn-outline-dark me-2 mb-1 btn-day" data-val="All" onclick="toggleSchedule(this, 'payment_days')">All Days</button>
                                                         @foreach(['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'] as $day)
                                                             <button type="button" class="btn btn-sm btn-outline-primary mb-1 btn-day" data-val="{{ $day }}" onclick="toggleSchedule(this, 'payment_days')">{{ $day }}</button>
@@ -383,7 +379,13 @@
                                                         <button type="button" class="btn btn-sm btn-outline-dark me-2 mb-1 w-100" data-val="All" onclick="toggleSchedule(this, 'payment_date')">All Dates (1-31)</button>
                                                         <div class="d-flex flex-wrap gap-1 mt-2">
                                                             @for($i=1; $i<=31; $i++)
-                                                                <button type="button" class="btn btn-xs btn-outline-secondary btn-date" style="width: 32px;" data-val="{{ $i }}" onclick="toggleSchedule(this, 'payment_date')">{{ $i }}</button>
+                                                                <button type="button"
+                                                                    class="btn btn-xs btn-outline-secondary btn-date"
+                                                                    style="width: 38px !important; height: 38px !important; padding: 0 !important; display: inline-flex !important; align-items: center; justify-content: center; font-size: 0.85rem !important; font-weight: 600; line-height: 1 !important; white-space: nowrap !important;"
+                                                                    data-val="{{ $i }}"
+                                                                    onclick="toggleSchedule(this, 'payment_date')">
+                                                                    {{ $i }}
+                                                                </button>
                                                             @endfor
                                                         </div>
                                                     </div>
@@ -405,22 +407,14 @@
 
                                             {{-- Faktur Days --}}
                                             <div class="mb-3">
-                                                <label class="info-label mb-2 d-block">Payment Date</label>
+                                                <label class="info-label mb-2 d-block">Faktur Days</label>
                                                 @if($canAdjust)
-                                                    <div class="schedule-selector" id="payment_date_container">
-                                                        <div id="payment_date_inputs"></div>
-                                                        <button type="button" class="btn btn-sm btn-outline-dark me-2 mb-1 w-100" data-val="All" onclick="toggleSchedule(this, 'payment_date')">All Dates (1-31)</button>
-                                                        <div class="d-flex flex-wrap gap-1 mt-2">
-                                                            @for($i=1; $i<=31; $i++)
-                                                                <button type="button" 
-                                                                    class="btn btn-xs btn-outline-secondary btn-date" 
-                                                                    style="width: 38px !important; height: 38px !important; padding: 0 !important; display: inline-flex !important; align-items: center; justify-content: center; font-size: 0.85rem !important; font-weight: 600; line-height: 1 !important; white-space: nowrap !important;"
-                                                                    data-val="{{ $i }}" 
-                                                                    onclick="toggleSchedule(this, 'payment_date')">
-                                                                    {{ $i }}
-                                                                </button>
-                                                            @endfor
-                                                        </div>
+                                                    <div class="schedule-selector" id="faktur_days_container">
+                                                        <div id="faktur_days_inputs"></div>
+                                                        <button type="button" class="btn btn-sm btn-outline-dark me-2 mb-1 btn-day" data-val="All" onclick="toggleSchedule(this, 'faktur_days')">All Days</button>
+                                                        @foreach(['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'] as $day)
+                                                            <button type="button" class="btn btn-sm btn-outline-success mb-1 btn-day" data-val="{{ $day }}" onclick="toggleSchedule(this, 'faktur_days')">{{ $day }}</button>
+                                                        @endforeach
                                                     </div>
                                                 @else
                                                     <div>
@@ -442,10 +436,10 @@
                                                         <button type="button" class="btn btn-sm btn-outline-dark me-2 mb-1 w-100" data-val="All" onclick="toggleSchedule(this, 'faktur_date')">All Dates (1-31)</button>
                                                         <div class="d-flex flex-wrap gap-1 mt-2">
                                                             @for($i=1; $i<=31; $i++)
-                                                                <button type="button" 
-                                                                    class="btn btn-xs btn-outline-secondary btn-date" 
+                                                                <button type="button"
+                                                                    class="btn btn-xs btn-outline-secondary btn-date"
                                                                     style="width: 38px !important; height: 38px !important; padding: 0 !important; display: inline-flex !important; align-items: center; justify-content: center; font-size: 0.85rem !important; font-weight: 600; line-height: 1 !important; white-space: nowrap !important;"
-                                                                    data-val="{{ $i }}" 
+                                                                    data-val="{{ $i }}"
                                                                     onclick="toggleSchedule(this, 'faktur_date')">
                                                                     {{ $i }}
                                                                 </button>
@@ -490,8 +484,8 @@
                                             <tbody>
                                                 @php $totalAmount = 0; @endphp
                                                 @forelse($customer->items as $item)
-                                                    @php 
-                                                        $rowTotal = $item->quantity * $item->price; 
+                                                    @php
+                                                        $rowTotal = $item->quantity * $item->price;
                                                         $totalAmount += $rowTotal;
                                                     @endphp
                                                     <tr>
@@ -532,11 +526,11 @@
                                         <label class="info-label mb-1">NPWP Number</label>
                                         @if($canAdjust)
                                             <div class="input-group">
-                                                <input type="text" class="form-control fw-bold editable-field" 
-                                                    name="update_npwp" id="input_npwp_main" 
-                                                    value="{{ $customer->npwp }}" 
+                                                <input type="text" class="form-control fw-bold editable-field"
+                                                    name="update_npwp" id="input_npwp_main"
+                                                    value="{{ $customer->npwp }}"
                                                     form="approvalForm" disabled>
-                                                
+
                                                 <button type="button" class="btn btn-outline-primary" id="btn-verify-npwp" disabled
                                                     data-bs-toggle="tooltip" title="Lihat File & Edit NPWP">
                                                     <i class="fas fa-search me-1"></i> Verify & Edit
@@ -760,10 +754,10 @@
                                 <div class="alert alert-info small mb-3">
                                     <i class="fas fa-info-circle me-1"></i> Cocokkan data di kiri dengan input di bawah.
                                 </div>
-                                
+
                                 <div class="mb-4">
                                     <label class="form-label fw-bold text-muted small">NOMOR NPWP (SISTEM)</label>
-                                    <input type="text" id="modal_npwp_input" class="form-control form-control-lg fw-bold text-dark border-primary" 
+                                    <input type="text" id="modal_npwp_input" class="form-control form-control-lg fw-bold text-dark border-primary"
                                         value="{{ $customer->npwp }}" placeholder="Masukkan Nomor NPWP yang benar">
                                 </div>
 
@@ -798,7 +792,7 @@
             const notesField = document.getElementById('notes');
             const noteAsterisk = document.getElementById('note-asterisk');
             const noteHelper = document.getElementById('note-helper');
-            
+
             const canAdjust = @json($canAdjust);
             const isITMode = document.getElementById('it_code') !== null;
 
@@ -839,8 +833,7 @@
             // ==========================================
             // 2. NEW LOGIC: PAYMENT & FAKTUR SCHEDULE
             // ==========================================
-            
-            // Fungsi ini harus ditempel ke window agar bisa dipanggil via onclick di HTML
+
             window.toggleSchedule = function(btn, type) {
                 const container = document.getElementById(type + '_container');
                 const value = btn.getAttribute('data-val');
@@ -887,7 +880,7 @@
 
                 } else {
                     // === LOGIC TOMBOL SPESIFIK (Senin, 1, 2, dll) ===
-                    
+
                     // 1. Matikan tombol 'All' dulu (karena kita mode manual selection)
                     const allBtn = container.querySelector('button[data-val="All"]');
                     if(allBtn) {
@@ -897,7 +890,7 @@
 
                     // 2. Toggle tombol yang diklik
                     btn.classList.toggle('active');
-                    
+
                     if (btn.classList.contains('active')) {
                         // STATE AKTIF (SOLID COLOR)
                         btn.classList.add('text-white');
@@ -918,23 +911,23 @@
                         }
                     }
                 }
-                
+
                 updateHiddenInputs(type);
             };
 
             function updateHiddenInputs(type) {
                 const container = document.getElementById(type + '_container');
                 const inputContainer = document.getElementById(type + '_inputs');
-                inputContainer.innerHTML = ''; 
+                inputContainer.innerHTML = '';
 
                 // Cek apakah tombol "All" aktif?
                 const allBtn = container.querySelector('button[data-val="All"]');
-                
+
                 if (allBtn && allBtn.classList.contains('active')) {
                     // Jika All aktif, kirim value "All" saja ke backend
                     const input = document.createElement('input');
                     input.type = 'hidden';
-                    input.name = `update_${type}[]`; 
+                    input.name = `update_${type}[]`;
                     input.value = 'All';
                     input.setAttribute('form', 'approvalForm');
                     inputContainer.appendChild(input);
@@ -945,7 +938,7 @@
                         const val = btn.getAttribute('data-val');
                         const input = document.createElement('input');
                         input.type = 'hidden';
-                        input.name = `update_${type}[]`; 
+                        input.name = `update_${type}[]`;
                         input.value = val;
                         input.setAttribute('form', 'approvalForm');
                         inputContainer.appendChild(input);
@@ -954,7 +947,7 @@
             }
 
             function loadSavedSchedule() {
-                if (!canAdjust) return; 
+                if (!canAdjust) return;
 
                 ['payment_days', 'payment_date', 'faktur_days', 'faktur_date'].forEach(type => {
                     const data = savedData[type];
@@ -964,11 +957,12 @@
                             if (btn) {
                                 // Trigger logic visual secara manual
                                 if (val === 'All') {
-                                    btn.classList.add('active', 'btn-dark');
+                                    // Klik All akan men-trigger logic 'Select All'
+                                    toggleSchedule(btn, type);
                                 } else {
                                     const colorClass = type.includes('faktur') ? 'btn-success' : 'btn-primary';
                                     const dateColor = 'btn-info';
-                                    
+
                                     btn.classList.add('active');
                                     if (btn.classList.contains('btn-date')) {
                                         btn.classList.add(dateColor, 'text-white');
@@ -991,12 +985,12 @@
             function updateValidationRules() {
                 const actionReview = document.getElementById('action_review').checked;
                 const actionReject = document.getElementById('action_reject') ? document.getElementById('action_reject').checked : false;
-                
+
                 // Reset states
                 notesField.required = false;
                 noteAsterisk.classList.add('d-none');
                 noteHelper.innerText = "";
-                noteHelper.className = "text-muted f-s-12"; 
+                noteHelper.className = "text-muted f-s-12";
                 if(topMsg) topMsg.classList.add('d-none');
 
                 // 1. REJECT
@@ -1005,7 +999,7 @@
                     noteAsterisk.classList.remove('d-none');
                     noteHelper.innerText = "Alasan penolakan wajib diisi dengan kalimat yang jelas.";
                     noteHelper.classList.add('text-danger');
-                } 
+                }
                 // 2. REVIEW/APPROVE (Finance)
                 else if (actionReview && canAdjust) {
                     const currentTop = inputTop.value;
@@ -1038,7 +1032,7 @@
                     if (canAdjust) {
                         editableFields.forEach(el => el.disabled = false);
                         if(btnVerifyNpwp) btnVerifyNpwp.disabled = false;
-                        
+
                         btnSubmit.classList.remove('btn-primary', 'btn-danger');
                         btnSubmit.classList.add('btn-info', 'text-white');
                         btnSubmit.innerHTML = '<i class="fas fa-edit me-2"></i> Submit Review & Changes';
@@ -1074,7 +1068,11 @@
 
             if (canAdjust) {
                 if(inputTop) inputTop.addEventListener('change', () => { calculateLimit(); updateValidationRules(); });
-                if(inputLead) inputLead.addEventListener('input', updateValidationRules); 
+
+                if(inputLead) inputLead.addEventListener('input', () => {
+                    calculateLimit();
+                    updateValidationRules();
+                });
             }
 
             // Document Preview
@@ -1082,11 +1080,11 @@
                 btn.addEventListener('click', function() {
                     const url = this.getAttribute('data-file-url');
                     const title = this.getAttribute('data-file-title');
-                    
+
                     if(!url) return;
 
                     previewModalTitle.innerHTML = `<i class="fas fa-file me-2"></i> ${title}`;
-                    
+
                     const ext = url.split('.').pop().toLowerCase();
                     let content = '';
 
@@ -1106,7 +1104,7 @@
             // NPWP Verify
             if (btnVerifyNpwp) {
                 btnVerifyNpwp.addEventListener('click', function() {
-                    modalNpwpInput.value = inputNpwpMain.value; 
+                    modalNpwpInput.value = inputNpwpMain.value;
                     verifyModal.show();
                 });
             }
@@ -1115,16 +1113,16 @@
                 btnSaveVerify.addEventListener('click', function() {
                     inputNpwpMain.value = modalNpwpInput.value;
                     verifyModal.hide();
-                    updateValidationRules(); 
+                    updateValidationRules();
                 });
             }
 
-            // Calculator
+            // Calculator (UPDATED LOGIC)
             function calculateLimit() {
                 if (!inputTop || !inputLead) return;
                 const topStr = inputTop.value; // Bisa string "7", "14", "CBD"
                 const lt = parseFloat(inputLead.value) || 0;
-                
+
                 // Jika CBD, set 0
                 if (topStr === 'CBD') {
                     document.getElementById('display_credit_limit').innerText = 'IDR 0';
@@ -1137,18 +1135,18 @@
                 let divider = topDays; // Default pembagi = TOP
 
                 // Logic Pembagi Khusus
-                if (topDays === 7) { 
-                    divider = 7.5; 
-                } else if (topDays === 14) { 
-                    divider = 15; 
+                if (topDays === 7) {
+                    divider = 7.5;
+                } else if (topDays === 14) {
+                    divider = 15;
                 }
-                
+
                 // Safety check
                 if (divider === 0) divider = 30; // Default fallback
 
                 // Hitung Limit: (TOP + LT) * BaseAmount / Divider
                 const result = ((topDays + lt) * baseAmount) / divider;
-                
+
                 document.getElementById('display_credit_limit').innerText = 'IDR ' + new Intl.NumberFormat('id-ID').format(Math.round(result));
                 document.getElementById('final_credit_limit_input').value = Math.round(result);
                 document.getElementById('calc-badge').classList.remove('d-none');
@@ -1195,10 +1193,10 @@
                     Swal.fire({ icon: 'warning', title: 'Validasi Gagal', text: errorMsg });
                     return;
                 }
-                
+
                 if (selected === 'review' && canAdjust) {
                     editableFields.forEach(el => el.disabled = false);
-                    inputNpwpMain.disabled = false; 
+                    inputNpwpMain.disabled = false;
                 }
 
                 Swal.fire({

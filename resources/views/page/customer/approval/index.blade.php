@@ -12,7 +12,7 @@
         <p class="text-muted">Please wait while we update the status.</p>
     </div>
 
-    {{-- Stats and Header Section (Unchanged) --}}
+    {{-- Stats and Header Section --}}
     <div class="row m-1">
         <div class="col-12">
             <h4 class="main-title">Approvals Management</h4>
@@ -23,26 +23,23 @@
         </div>
     </div>
 
-    {{-- Filters and Table Section (Unchanged) --}}
+    {{-- Filters and Table Section --}}
     <div class="row">
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <div class="d-none d-md-flex align-items-center gap-2 mb-3">
                     <span class="text-muted fw-bold me-1"><i class="ph-bold ph-funnel"></i> Filter:</span>
-                    
                     <select id="statusFilter" class="form-select select2" style="width: 150px;">
                         <option value="all">All Account</option>
                         <option value="Active">Active (BG)</option>
                         <option value="Inactive">Inactive (BG)</option>
                     </select>
-
                     <select id="approvalStatusFilter" class="form-select select2" style="width: 175px;">
                         <option value="all">All Approval</option>
                         @foreach($approvalStatuses as $status)
                             <option value="{{ $status }}">{{ $status }}</option>
                         @endforeach
                     </select>
-
                     <button id="resetFilters" class="btn btn-sm btn-secondary border" title="Reset Filters">
                         <i class="ph-bold ph-arrow-counter-clockwise"></i>
                     </button>
@@ -50,14 +47,12 @@
             </div>
 
             <div class="main-table-container">
-                {{-- Stats Header --}}
                 <div class="table-header-enhanced d-flex justify-content-between align-items-center">
                     <div>
                         <h4 class="table-title mb-1"><i class="ph-duotone ph-users-three me-2"></i> Approval Queue</h4>
                         <small class="text-white opacity-75 f-s-12">Review customer requests, check credit limits, and approve or reject.</small>
                     </div>
                     <div class="d-none d-md-flex gap-4 text-white align-items-center pe-2">
-                        {{-- Stats (Pending, Approved, etc) --}}
                         <div class="d-flex align-items-center gap-2">
                             <div class="bg-white bg-opacity-25 rounded-circle p-1 d-flex justify-content-center align-items-center" style="width: 32px; height: 32px;">
                                 <i class="ph-fill ph-clock-countdown text-warning f-s-18"></i>
@@ -98,13 +93,10 @@
         </div>
     </div>
 
-    {{-- ========================================================================================= --}}
-    {{-- NEW MODAL VIEW DETAIL & ACTION (UPDATED DESIGN) --}}
-    {{-- ========================================================================================= --}}
+    {{-- MODAL VIEW DETAIL --}}
     <div class="modal fade" id="viewModal" tabindex="-1" aria-labelledby="viewModalLabel" aria-hidden="true" data-bs-backdrop="static">
         <div class="modal-dialog modal-dialog-centered modal-xl">
             <div class="modal-content border-0 overflow-hidden">
-
                 <div class="modal-header bg-primary text-white py-3">
                     <div class="d-flex align-items-center gap-3">
                         <div class="bg-white bg-opacity-25 rounded-circle p-2">
@@ -120,14 +112,14 @@
 
                 <div class="modal-body bg-light p-4" style="max-height: 85vh; overflow-y: auto;">
 
-                    {{-- Status Banner (Tetap Sama) --}}
+                    {{-- Status Banner --}}
                     <div class="card border-0 shadow-sm mb-4">
                         <div class="card-body p-4">
                             <div class="d-flex align-items-center justify-content-between">
                                 <div class="d-flex align-items-center gap-5">
                                     <div>
                                         <label class="fw-bold text-muted text-uppercase f-s-11 mb-1">Account Status</label>
-                                        <div><span id="view_status_badge" class="badge bg-secondary f-s-12 px-3 py-2">STATUS</span></div>
+                                        <div><span id="view_status_badge" class="badge bg-secondary f-s-12 px-3 py-2">-</span></div>
                                     </div>
                                     <div class="vr" style="height: 40px; opacity: 0.1;"></div>
                                     <div>
@@ -144,7 +136,7 @@
                         </div>
                     </div>
 
-                    {{-- General Info (Tetap Sama) --}}
+                    {{-- General Info --}}
                     <h5 class="fw-bold text-primary mb-3 d-flex align-items-center"><i class="ph-fill ph-info me-2"></i> General Information</h5>
                     <div class="card border-0 shadow-sm mb-4">
                          <div class="card-body p-4">
@@ -193,16 +185,17 @@
                         </div>
                     </div>
 
-                    {{-- Financial & Tax (DIMODIFIKASI UNTUK INPUT FINANCE) --}}
+                    {{-- Financial & Tax --}}
                     <h5 class="fw-bold text-primary mb-3 d-flex align-items-center"><i class="ph-fill ph-currency-dollar me-2"></i> Financial & Tax</h5>
                     <div class="row g-3 mb-4">
+                        {{-- 1. Credit Limit & TOP (TARGET UTAMA UNTUK DITIMPA JIKA FINANCE) --}}
                         <div class="col-md-4">
                             <div class="card bg-primary text-white border-0 shadow-sm h-100">
                                 <div class="card-body p-4">
                                     <div class="d-flex justify-content-between align-items-start mb-3">
                                         <div>
                                             <label class="text-white text-opacity-75 text-uppercase f-s-12 fw-bold">Credit Limit</label>
-                                            {{-- Container Credit Limit agar bisa diubah JS --}}
+                                            {{-- Container Credit Limit --}}
                                             <div id="container_credit_limit">
                                                 <h3 class="mb-0 fw-bold mt-1" id="view_credit_limit">IDR 0</h3>
                                             </div>
@@ -213,7 +206,7 @@
                                         <span class="f-s-13 opacity-75">Term of Payment</span>
                                         {{-- Container TOP --}}
                                         <div id="container_top">
-                                            <span class="fw-bold f-s-16 bg-warning bg-opacity-20 px-2 py-1 rounded"><span id="view_term_of_payment">-</span></span>
+                                            <span class="fw-bold f-s-16 bg-warning bg-opacity-20 px-2 py-1 rounded" id="view_term_of_payment">-</span>
                                         </div>
                                     </div>
                                     <div class="mt-2 d-flex justify-content-between align-items-center">
@@ -227,14 +220,17 @@
                             </div>
                         </div>
 
-                        {{-- Card Tax & Billing (Tetap Sama) --}}
+                        {{-- 2. Tax & NPWP (TARGET UTAMA UNTUK DITIMPA JIKA FINANCE) --}}
                         <div class="col-md-4">
                             <div class="card border-0 shadow-sm h-100">
                                 <div class="card-body p-4">
                                     <h6 class="fw-bold text-dark border-bottom pb-3 mb-3">Tax Information</h6>
-                                    <div class="d-flex justify-content-between mb-3">
-                                        <span class="fw-bold text-secondary f-s-13">NPWP No.</span>
-                                        <span class="fw-bold text-dark" id="view_npwp">-</span>
+                                    {{-- Container NPWP --}}
+                                    <div class="mb-3">
+                                        <span class="fw-bold text-secondary f-s-13 d-block mb-1">NPWP No.</span>
+                                        <div id="container_npwp">
+                                            <span class="fw-bold text-dark" id="view_npwp">-</span>
+                                        </div>
                                     </div>
                                     <div class="d-flex justify-content-between mb-3">
                                         <span class="fw-bold text-secondary f-s-13">NPWP Date</span>
@@ -252,6 +248,7 @@
                             </div>
                         </div>
 
+                        {{-- 3. Billing --}}
                         <div class="col-md-4">
                             <div class="card border-0 shadow-sm h-100">
                                 <div class="card-body p-4">
@@ -273,8 +270,13 @@
                         </div>
                     </div>
 
-                    {{-- Management & Shipping (Tetap Sama) --}}
-                     <h5 class="fw-bold text-primary mb-3 d-flex align-items-center"><i class="ph-fill ph-users-three me-2"></i> Management & Logistics</h5>
+                    {{-- NEW: Container Khusus Schedule (Hanya Muncul Jika Finance) --}}
+                    <div id="finance_schedule_container" style="display: none;">
+                        {{-- JS akan mengisi ini jika user adalah Finance --}}
+                    </div>
+
+                    {{-- Management & Logistics --}}
+                     <h5 class="fw-bold text-primary mb-3 d-flex align-items-center mt-4"><i class="ph-fill ph-users-three me-2"></i> Management & Logistics</h5>
                     <div class="row g-3 mb-4">
                         <div class="col-md-8">
                             <div class="card border-0 shadow-sm h-100">
@@ -322,7 +324,7 @@
                         </div>
                     </div>
 
-                    {{-- Documents (Tetap Sama) --}}
+                    {{-- Documents --}}
                      <h5 class="fw-bold text-primary mb-3 d-flex align-items-center"><i class="ph-fill ph-files me-2"></i> Documents</h5>
                     <div class="row g-3" id="document_grid"></div>
                     <div id="no_documents" class="text-center py-5 text-muted border border-dashed rounded bg-white" style="display:none;">
@@ -346,19 +348,23 @@
         </div>
     </div>
 
-    {{-- Modal Preview File (Standard) --}}
+    {{-- Modal Preview File --}}
     <div class="modal fade" id="filePreviewModal" tabindex="-1" aria-labelledby="filePreviewModalLabel" aria-hidden="true" style="z-index: 1060;">
-        <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-dialog modal-dialog-centered modal-lg"> 
             <div class="modal-content border-0">
                 <div class="modal-header bg-dark text-white border-0 py-2">
-                    <h6 class="modal-title text-white fw-bold f-s-14" id="filePreviewModalLabel">
-                        FILE PREVIEW
-                    </h6>
+                    <h6 class="modal-title text-white fw-bold f-s-14" id="filePreviewModalLabel">FILE PREVIEW</h6>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body p-0 d-flex align-items-center justify-content-center bg-dark" style="min-height: 500px;">
-                    <img id="previewImageContent" src="" class="img-fluid" style="max-height: 80vh; display: none;" alt="File Preview">
-                    <iframe id="previewPdfContent" src="" style="width: 100%; height: 80vh; border: none; display: none;"></iframe>
+                
+                <div class="modal-body p-0 d-flex align-items-center justify-content-center bg-dark" style="min-height: 400px;">
+                    
+                    <img id="previewImageContent" src="" class="img-fluid" 
+                        style="max-height: 60vh; max-width: 100%; display: none;" alt="File Preview">
+                    
+                    <iframe id="previewPdfContent" src="" 
+                            style="width: 100%; height: 60vh; border: none; display: none;"></iframe>
+                    
                     <div id="previewErrorMessage" class="text-white p-5 text-center" style="display: none;">
                         <i class="ph-bold ph-file-x f-s-30 mb-2"></i><br>
                         File type not supported for preview.<br>
@@ -369,10 +375,116 @@
         </div>
     </div>
 
+    {{-- MODAL KHUSUS: VERIFY & EDIT NPWP --}}
+    <div class="modal fade" id="modalVerifyNpwpSystem" tabindex="-1" aria-hidden="true" style="z-index: 1070;">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            
+            <div class="modal-content" style="min-height: auto;">
+                <div class="modal-header bg-dark text-white py-2">
+                    <h6 class="modal-title fw-bold"><i class="ph-bold ph-scan me-2"></i> Verify NPWP Data</h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <div class="container-fluid">
+                        <div class="row g-0">
+                            <div class="col-lg-7 d-flex align-items-center justify-content-center bg-secondary bg-opacity-25 border-end" 
+                                style="background-color: #525252; min-height: 400px; max-height: 500px;">
+                                <div id="npwp_preview_container" class="w-100 h-100 d-flex align-items-center justify-content-center p-2">
+                                </div>
+                            </div>
+
+                            <div class="col-lg-5 p-3 bg-white d-flex flex-column justify-content-center">
+                                <h6 class="fw-bold text-primary mb-2">Koreksi Nomor NPWP</h6>
+                                
+                                <div class="alert alert-info small mb-3 border-info p-2">
+                                    <div class="d-flex align-items-center">
+                                        <i class="ph-fill ph-info f-s-16 me-2"></i>
+                                        <div style="line-height: 1.2;">Cocokkan dokumen kiri dengan input.</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold text-muted small text-uppercase mb-1">Nomor NPWP (Sistem)</label>
+                                    <input type="text" id="input_npwp_verification" class="form-control fw-bold text-dark border-primary" 
+                                        placeholder="Nomor NPWP">
+                                </div>
+
+                                <div class="d-grid gap-2">
+                                    <button type="button" class="btn btn-success shadow-sm" id="btn_save_npwp_verification">
+                                        <i class="ph-bold ph-check me-2"></i> Simpan
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-light border" data-bs-dismiss="modal">Batal</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     @push('scripts')
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <script>
             $('.select2').select2({ theme: 'bootstrap-5', minimumResultsForSearch: 10 });
+
+            // --- GLOBAL FUNCTION: Toggle Schedule ---
+            window.toggleSchedule = function(btn, type) {
+                const button = $(btn);
+                const container = $('#' + type + '_container_modal');
+                const inputContainer = $('#' + type + '_inputs_modal');
+                const value = button.data('val');
+                const isAll = value === 'All';
+
+                const colorClass = type.includes('faktur') ? 'btn-success' : 'btn-primary';
+                const dateColor = 'btn-info';
+                const isDateBtn = button.hasClass('btn-date-schedule');
+
+                if (isAll) {
+                    const isActive = button.hasClass('active');
+                    if (!isActive) {
+                        button.addClass('active btn-dark').removeClass('btn-outline-dark');
+                        container.find('button:not([data-val="All"])').each(function() {
+                            const childIsDate = $(this).hasClass('btn-date-schedule');
+                            $(this).addClass('active text-white').removeClass('btn-outline-secondary btn-outline-primary btn-outline-success');
+                            if (childIsDate) $(this).addClass(dateColor); else $(this).addClass(colorClass);
+                        });
+                    } else {
+                        button.removeClass('active btn-dark').addClass('btn-outline-dark');
+                        container.find('button').each(function() {
+                            const childIsDate = $(this).hasClass('btn-date-schedule');
+                            $(this).removeClass('active text-white ' + colorClass + ' ' + dateColor);
+                            if (childIsDate) $(this).addClass('btn-outline-secondary');
+                            else if ($(this).data('val') !== 'All') {
+                                $(this).addClass(type.includes('faktur') ? 'btn-outline-success' : 'btn-outline-primary');
+                            }
+                        });
+                    }
+                } else {
+                    const allBtn = container.find('button[data-val="All"]');
+                    allBtn.removeClass('active btn-dark').addClass('btn-outline-dark');
+                    button.toggleClass('active');
+                    if (button.hasClass('active')) {
+                        button.addClass('text-white');
+                        button.removeClass(type.includes('faktur') ? 'btn-outline-success' : 'btn-outline-primary');
+                        if (isDateBtn) button.addClass(dateColor).removeClass('btn-outline-secondary');
+                        else button.addClass(colorClass);
+                    } else {
+                        button.removeClass('text-white ' + colorClass + ' ' + dateColor);
+                        if (isDateBtn) button.addClass('btn-outline-secondary');
+                        else button.addClass(type.includes('faktur') ? 'btn-outline-success' : 'btn-outline-primary');
+                    }
+                }
+
+                inputContainer.empty();
+                if (container.find('button[data-val="All"]').hasClass('active')) {
+                    inputContainer.append(`<input type="hidden" name="update_${type}[]" value="All" form="modalResponseForm">`);
+                } else {
+                    container.find('button.active:not([data-val="All"])').each(function() {
+                        inputContainer.append(`<input type="hidden" name="update_${type}[]" value="${$(this).data('val')}" form="modalResponseForm">`);
+                    });
+                }
+            };
 
             $(document).ready(function() {
                  const table = $('#sampleTable').DataTable({
@@ -385,32 +497,16 @@
                             d.approval_status = $('#approvalStatusFilter').val();
                         }
                     },
-                    // UBAH DISINI: Arahkan ke index kolom updated_at (Index 7)
-                    order: [[7, 'desc']], 
+                    order: [[7, 'desc']],
                     columns: [
-                        // Index 0
                         { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false, className: 'text-center dt-no-wrap' },
-                        // Index 1
                         { data: 'approver_nik', name: 'approver_nik', className: 'dt-no-wrap' },
-                        // Index 2
                         { data: 'customer_name', name: 'customers.name', className: 'dt-wrap' },
-                        // Index 3
                         { data: 'level', name: 'approval_logs.level', className: 'text-center dt-no-wrap' },
-                        // Index 4
                         { data: 'status_approval', name: 'customers.status_approval', className: 'text-center dt-no-wrap' },
-                        // Index 5
                         { data: 'route_to', name: 'customers.route_to', className: 'text-center dt-wrap' },
-                        // Index 6
                         { data: 'action', name: 'action', orderable: false, searchable: false, className: 'text-center dt-no-wrap' },
-                        
-                        // Index 7: HIDDEN COLUMN (UPDATED_AT)
-                        // Pastikan 'approval_logs.updated_at' atau 'approval_logs.created_at' terpilih di Controller
-                        { 
-                            data: 'updated_at', 
-                            name: 'approval_logs.updated_at', 
-                            visible: false, 
-                            searchable: false 
-                        }
+                        { data: 'updated_at', name: 'approval_logs.updated_at', visible: false, searchable: false }
                     ],
                     autoWidth: false
                 });
@@ -421,9 +517,10 @@
                     $('#approvalStatusFilter').val('all').trigger('change');
                 });
 
-                // --- 1. POPULATE FORM FUNCTION (UPDATED FOR NEW LAYOUT) ---
                 window.populateViewForm = function(data) {
-                    // Header & General Info (Tetap sama)
+                    console.log('Populate View Form Data:', data);
+
+                    // --- Basic Info ---
                     $('#view_header_name').text(data.name || 'Unknown Customer');
                     $('#view_header_code').text(data.code || 'New Customer (No Code)');
                     $('#view_status_badge').text(data.status || '-');
@@ -443,76 +540,221 @@
                     $('#view_sort_name').text(data.sort_name || '-');
                     $('#view_no_pkd').text(data.no_pkd || '-');
                     $('#view_email').text(data.email || '-');
-
                     const fullAddr = [data.address1, data.address2, data.address3].filter(Boolean).join(', ');
                     $('#view_full_address').text(fullAddr || '-');
                     $('#view_city').text(data.city || '-');
                     $('#view_area').text(data.area || '-');
                     $('#view_postal_code').text(data.postal_code || '-');
 
-
-                    // === FINANCE SECTION LOGIC (INPUT vs TEXT) ===
+                    // --- FINANCE SECTION ---
                     const limit = parseFloat(data.credit_limit) || 0;
                     const formattedLimit = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(limit);
 
-                    if (data.can_adjust_finance) {
-                        // RENDER INPUTS FOR FINANCE MANAGER
+                    // RESET CONTAINER DULU AGAR BERSIH
+                    $('#container_top, #container_lead_time, #container_credit_limit, #container_npwp, #finance_schedule_container').empty();
+                    $('#finance_schedule_container').hide();
+                    $('#calc_badge').hide();
 
-                        // 1. Credit Limit (Hidden Input + Display)
+                    if (data.can_adjust_finance) {
                         $('#container_credit_limit').html(`
-                            <h3 class="mb-0 fw-bold mt-1 text-primary" id="view_credit_limit">${formattedLimit}</h3>
+                            <h3 class="mb-0 fw-bold mt-1 text-white" id="view_credit_limit">${formattedLimit}</h3>
                             <input type="hidden" name="update_credit_limit_value" id="hidden_credit_limit" value="${limit}" form="modalResponseForm">
                             <small id="calc_badge" class="badge bg-warning text-dark mt-1" style="display:none; font-size: 0.65rem;">
-                                <i class="fas fa-calculator me-1"></i> Updated
+                                <i class="fas fa-calculator me-1"></i> Auto-Calculated
                             </small>
                         `);
 
-                        // 2. Term of Payment (Select)
+                        let currentTop = data.term_of_payment || '30'; // Ambil data dari DB
+
                         let topOptions = `
                             <option value="7">Net 7 Days</option>
                             <option value="14">Net 14 Days</option>
                             <option value="30">Net 30 Days</option>
                             <option value="45">Net 45 Days</option>
-                            <option value="60">Net 60 Days</option>
                             <option value="CBD">Cash Before Delivery (CBD)</option>
                         `;
+
+                        // Pastikan attribute data-original="${currentTop}" ADA DISINI
                         $('#container_top').html(`
                             <select class="form-select form-select-sm fw-bold text-primary border-primary"
-                                    name="update_top" id="input_top" form="modalResponseForm">
+                                    name="update_top" 
+                                    id="input_top" 
+                                    data-original="${currentTop}"
+                                    form="modalResponseForm">
                                 ${topOptions}
                             </select>
                         `);
-                        $('#input_top').val(data.term_of_payment || '30');
+                        $('#input_top').val(currentTop);
 
-                        // 3. Lead Time (Input Number)
+                        let leadTimeValue = (data.lead_time && data.lead_time != 0) ? data.lead_time : '';
                         $('#container_lead_time').html(`
                             <div class="input-group input-group-sm">
                                 <input type="number" class="form-control fw-bold text-primary border-primary"
-                                       name="update_lead_time" id="input_lead_time"
-                                       value="${data.lead_time || 0}" form="modalResponseForm">
+                                    name="update_lead_time" id="input_lead_time"
+                                    value="${leadTimeValue}" 
+                                    placeholder="0" 
+                                    form="modalResponseForm">
                                 <span class="input-group-text bg-primary text-white border-primary">Days</span>
                             </div>
                         `);
 
-                        // --- CALCULATOR LOGIC ---
+                        $('#container_npwp').html(`
+                            <input type="text" class="form-control form-control-sm fw-bold border-primary text-dark"
+                                name="update_npwp" value="${data.npwp || ''}" form="modalResponseForm" placeholder="Edit NPWP">
+                        `);
+
+                        let npwpUrl = null;
+                            if (data.files && data.files.length > 0) {
+                                const file = data.files.find(f => f.npwp_file);
+                                if (file && file.npwp_file) {
+                                    npwpUrl = "{{ asset('storage') }}/" + file.npwp_file;
+                                }
+                            }
+                            
+                            if (!npwpUrl && data.file_npwp_path) npwpUrl = data.file_npwp_path;
+
+                            $('#container_npwp').html(`
+                                <div class="input-group">
+                                    <input type="text" class="form-control form-control-sm fw-bold border-primary text-dark" 
+                                        id="display_npwp_main" value="${data.npwp || ''}" readonly>
+                                    
+                                    <button type="button" class="btn btn-sm btn-outline-primary" 
+                                            onclick="openNpwpVerificationModal('${npwpUrl}', '${data.npwp || ''}')">
+                                        <i class="ph-bold ph-pencil-simple me-1"></i> Verify
+                                    </button>
+                                    <input type="hidden" name="update_npwp" id="real_update_npwp" 
+                                        value="${data.npwp || ''}" form="modalResponseForm">
+                                </div>
+                            `);
+
+                        const genBtn = (type, val, label, isDate = false) => {
+                            const activeArr = data[type] || [];
+                            let activeClass = '';
+
+                            const color = type.includes('faktur') ? 'btn-success' : 'btn-primary';
+                            const dateColor = 'btn-info';
+
+                            let isActive = false;
+                            if (activeArr.includes('All')) {
+                                isActive = true;
+                            } else if (activeArr.includes(String(val))) {
+                                isActive = true;
+                            }
+
+                            if (isActive) {
+                                if(val === 'All') activeClass = 'active btn-dark';
+                                else activeClass = `active text-white ${isDate ? dateColor : color}`;
+                            } else {
+                                if(val === 'All') activeClass = 'btn-outline-dark';
+                                else activeClass = isDate ? 'btn-outline-secondary' : (type.includes('faktur') ? 'btn-outline-success' : 'btn-outline-primary');
+                            }
+
+                            let style = 'font-size: 0.75rem !important; font-weight: 600;';
+                            if(isDate) style += 'width: 32px !important; height: 32px !important; padding: 0 !important; display: inline-flex !important; align-items: center; justify-content: center; line-height: 1 !important;';
+                            else style += 'padding: 4px 12px !important;';
+
+                            const identifierClass = isDate ? 'btn-date-schedule' : 'btn-day-schedule';
+
+                            return `<button type="button" class="btn btn-sm ${activeClass} mb-1 me-1 ${identifierClass}"
+                                    style="${style}" data-val="${val}" onclick="toggleSchedule(this, '${type}')">${label}</button>`;
+                        };
+
+                        let payDays = genBtn('payment_days', 'All', 'All Days');
+                        ['Senin','Selasa','Rabu','Kamis','Jumat'].forEach(d => payDays += genBtn('payment_days', d, d));
+
+                        let payDates = genBtn('payment_date', 'All', 'All Dates');
+                        payDates += '<div class="d-flex flex-wrap gap-1 mt-2">';
+                        for(let i=1; i<=31; i++) payDates += genBtn('payment_date', i, i, true);
+                        payDates += '</div>';
+
+                        let fakDays = genBtn('faktur_days', 'All', 'All Days');
+                        ['Senin','Selasa','Rabu','Kamis','Jumat'].forEach(d => fakDays += genBtn('faktur_days', d, d));
+
+                        let fakDates = genBtn('faktur_date', 'All', 'All Dates');
+                        fakDates += '<div class="d-flex flex-wrap gap-1 mt-2">';
+                        for(let i=1; i<=31; i++) fakDates += genBtn('faktur_date', i, i, true);
+                        fakDates += '</div>';
+
+                        $('#finance_schedule_container').html(`
+                            <div class="card border border-primary border-opacity-25 shadow-sm mt-3">
+                                <div class="card-header bg-primary bg-opacity-10 py-2">
+                                    <i class="ph-bold ph-calendar-check me-2 text-primary"></i>
+                                    <span class="fw-bold text-primary">Payment & Faktur Schedule (Finance Adjustment)</span>
+                                </div>
+                                <div class="card-body p-3">
+                                    <div class="mb-3">
+                                        <label class="small fw-bold text-muted text-uppercase mb-1">Virtual Account</label>
+                                        <input type="text" class="form-control form-control-sm border-primary fw-bold"
+                                            name="update_va" value="${data.virtual_account || ''}"
+                                            placeholder="Virtual Account Number" form="modalResponseForm">
+                                    </div>
+                                    <div class="row g-4">
+                                        <div class="col-md-6 border-end">
+                                            <h6 class="text-primary fw-bold small mb-2">Payment Schedule</h6>
+                                            <div class="mb-3">
+                                                <label class="small text-muted d-block mb-1">Payment Days</label>
+                                                <div id="payment_days_container_modal">${payDays}</div>
+                                                <div id="payment_days_inputs_modal"></div> </div>
+                                            <div>
+                                                <label class="small text-muted d-block mb-1">Payment Dates</label>
+                                                <div id="payment_date_container_modal">${payDates}</div>
+                                                <div id="payment_date_inputs_modal"></div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <h6 class="text-success fw-bold small mb-2">Faktur Schedule</h6>
+                                            <div class="mb-3">
+                                                <label class="small text-muted d-block mb-1">Faktur Days</label>
+                                                <div id="faktur_days_container_modal">${fakDays}</div>
+                                                <div id="faktur_days_inputs_modal"></div>
+                                            </div>
+                                            <div>
+                                                <label class="small text-muted d-block mb-1">Faktur Dates</label>
+                                                <div id="faktur_date_container_modal">${fakDates}</div>
+                                                <div id="faktur_date_inputs_modal"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `);
+                        $('#finance_schedule_container').show();
+
+                        ['payment_days', 'payment_date', 'faktur_days', 'faktur_date'].forEach(type => {
+                            const arr = data[type] || [];
+                            const inputDiv = $('#' + type + '_inputs_modal');
+                            inputDiv.empty();
+                            if(arr.includes('All')) {
+                                inputDiv.append(`<input type="hidden" name="update_${type}[]" value="All" form="modalResponseForm">`);
+                            } else {
+                                arr.forEach(val => {
+                                    inputDiv.append(`<input type="hidden" name="update_${type}[]" value="${val}" form="modalResponseForm">`);
+                                });
+                            }
+                        });
+
                         const baseAmount = parseFloat(data.base_total_amount) || 0;
 
                         function calculateFinanceLimit() {
                             const topStr = $('#input_top').val();
                             const lt = parseFloat($('#input_lead_time').val()) || 0;
+                            let topDays = 0, divider = 30;
 
-                            let topDays = 0;
-                            let divider = 30;
+                            if (topStr === 'CBD') {
+                                topDays = 0;
+                                divider = 30;
+                            } else {
+                                topDays = parseInt(topStr) || 0;
+                                divider = topDays > 0 ? topDays : 30;
+                            }
 
-                            if (topStr === '7') { topDays = 7; divider = 7.5; }
-                            else if (topStr === '14') { topDays = 14; divider = 15; }
-                            else if (topStr === '30') { topDays = 30; divider = 30; }
-                            else if (topStr === '45') { topDays = 45; divider = 45; }
-                            else if (topStr === '60') { topDays = 60; divider = 60; }
-                            else if (topStr === 'CBD') { topDays = 0; divider = 30; }
-                            else { topDays = parseInt(topStr) || 0; divider = topDays > 0 ? topDays : 30; }
+                            if (topStr === '7') divider = 7.5;
+                            if (topStr === '14') divider = 15;
 
-                            const result = ((topDays + lt) * baseAmount) / divider;
+                            let result = ((topDays + lt) * baseAmount) / divider;
+
+                            if (topStr === 'CBD') result = 0;
+
                             const rounded = Math.round(result);
 
                             $('#view_credit_limit').text(new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(rounded));
@@ -520,42 +762,34 @@
                             $('#calc_badge').show();
                         }
 
-                        // Attach Event Listeners
                         $('#input_top, #input_lead_time').on('change input', calculateFinanceLimit);
 
                     } else {
-                        // RENDER PLAIN TEXT (STANDARD)
-                        $('#container_credit_limit').html(`<h3 class="mb-0 fw-bold mt-1" id="view_credit_limit">${formattedLimit}</h3>`);
+                        $('#container_credit_limit').html(`<h3 class="mb-0 fw-bold mt-1 text-white" id="view_credit_limit">${formattedLimit}</h3>`);
                         $('#container_top').html(`<span class="fw-bold f-s-16 bg-warning bg-opacity-20 px-2 py-1 rounded">${data.term_of_payment || '-'}</span>`);
                         $('#container_lead_time').html(`<span class="fw-bold f-s-14">${data.lead_time || 0} Days</span>`);
+                        $('#container_npwp').html(`<span class="fw-bold text-dark" id="view_npwp">${data.npwp || '-'}</span>`);
+                        $('#finance_schedule_container').hide();
                     }
 
-                    // --- Sisa Data (Tax, Billing, dll) tetap sama ---
-                    $('#view_npwp').text(data.npwp || '-');
                     $('#view_tanggal_npwp').text(data.tanggal_npwp || '-');
                     $('#view_nppkp').text(data.nppkp || '-');
                     $('#view_output_tax').text(data.output_tax || '-');
-
                     $('#view_penagihan_nama_kontak').text(data.penagihan_nama_kontak || '-');
                     $('#view_penagihan_telepon').text(data.penagihan_telepon || '-');
                     $('#view_penagihan_address').text(data.penagihan_address || '-');
-
                     $('#view_purchasing_manager_name').text(data.purchasing_manager_name || '-');
                     $('#view_purchasing_manager_email').text(data.purchasing_manager_email || '-');
                     $('#view_finance_manager_name').text(data.finance_manager_name || '-');
                     $('#view_finance_manager_email').text(data.finance_manager_email || '-');
-
                     $('#view_shipping_to_name').text(data.shipping_to_name || '-');
                     $('#view_shipping_to_address').text(data.shipping_to_address || '-');
 
-                    // Files (Grid Generation - Sama)
                     const gridContainer = $('#document_grid');
                     gridContainer.empty();
                     $('#no_documents').hide();
-
                     let fileCount = 0;
                     const storageBase = "{{ asset('storage') }}";
-
                     function appendFileCard(label, filename) {
                         if(!filename) return;
                         fileCount++;
@@ -565,7 +799,6 @@
                         let icon = 'ph-file-text';
                         if(['jpg','jpeg','png'].includes(ext)) icon = 'ph-image';
                         if(ext === 'pdf') icon = 'ph-file-pdf';
-
                         const html = `
                             <div class="col-md-3">
                                 <div class="card h-100 border shadow-sm btn-preview-file cursor-pointer"
@@ -583,7 +816,6 @@
                         `;
                         gridContainer.append(html);
                     }
-
                     if(data.files && data.files.length > 0) {
                         const f = data.files[0];
                         appendFileCard('NPWP Document', f.npwp_file);
@@ -594,27 +826,69 @@
                         appendFileCard('NIB/SIUP Document', data.file_nib);
                         appendFileCard('KTP Document', data.file_ktp);
                     }
-
                     if(fileCount === 0) $('#no_documents').show();
                 };
 
-                // --- 2. FILE PREVIEW HANDLER (Unchanged logic, just ID references) ---
+                window.openNpwpVerificationModal = function(fileUrl, currentNpwp) {
+                    $('#input_npwp_verification').val(currentNpwp);
+
+                    const container = $('#npwp_preview_container');
+                    container.empty();
+
+                    if (fileUrl) {
+                        const ext = fileUrl.split('.').pop().toLowerCase();
+                        
+                        if (['jpg', 'jpeg', 'png', 'webp', 'bmp'].includes(ext)) {
+                            container.html(`<img src="${fileUrl}" class="img-fluid shadow-sm" style="max-height: 400px; max-width: 100%;">`);
+                        } else if (ext === 'pdf') {
+                            container.html(`<iframe src="${fileUrl}" width="100%" height="100%" style="min-height: 400px; border:none;" class="shadow-sm rounded"></iframe>`);
+                        } else {
+                            container.html(`
+                                <div class="text-center text-white">
+                                    <i class="ph-duotone ph-file-x f-s-48 mb-3 opacity-50"></i>
+                                    <p>Preview tidak tersedia untuk format file ini.</p>
+                                    <a href="${fileUrl}" target="_blank" class="btn btn-primary btn-sm mt-2">Download File</a>
+                                </div>
+                            `);
+                        }
+                    } else {
+                        container.html(`
+                            <div class="text-center text-white-50">
+                                <i class="ph-duotone ph-file-dashed f-s-64 mb-3"></i>
+                                <p class="h6">Tidak ada file NPWP yang diupload.</p>
+                            </div>
+                        `);
+                    }
+
+                    const modal = new bootstrap.Modal(document.getElementById('modalVerifyNpwpSystem'));
+                    modal.show();
+                };
+
+                $(document).on('click', '#btn_save_npwp_verification', function() {
+                    const newVal = $('#input_npwp_verification').val();
+                    $('#display_npwp_main').val(newVal);
+                    $('#real_update_npwp').val(newVal);
+                    
+                    const modalEl = document.getElementById('modalVerifyNpwpSystem');
+                    const modal = bootstrap.Modal.getInstance(modalEl);
+                    modal.hide();
+
+                    $('#display_npwp_main').addClass('bg-warning bg-opacity-10').focus();
+                    setTimeout(() => $('#display_npwp_main').removeClass('bg-warning bg-opacity-10'), 1000);
+                });
+
                 $(document).on('click', '.btn-preview-file', function() {
                     const url = $(this).data('url');
                     const filename = $(this).data('filename');
                     const title = $(this).data('title');
                     const customerName = $(this).data('customer-name');
-
                     $('#previewImageContent').hide();
                     $('#previewPdfContent').hide();
                     $('#previewErrorMessage').hide();
-
                     const headerTitle = `<i class="ph-bold ph-image me-2"></i> ${title} <span class="text-white-50 mx-2">|</span> <span class="fw-light">${customerName}</span>`;
                     $('#filePreviewModalLabel').html(headerTitle);
-
                     if (!url) return;
                     const extension = filename.split('.').pop().toLowerCase();
-
                     if (['jpg', 'jpeg', 'png', 'bmp', 'webp'].includes(extension)) {
                         $('#previewImageContent').attr('src', url).show();
                     } else if (extension === 'pdf') {
@@ -623,28 +897,21 @@
                         $('#downloadFallbackLink').attr('href', url);
                         $('#previewErrorMessage').show();
                     }
-
                     const fileModal = new bootstrap.Modal(document.getElementById('filePreviewModal'));
                     fileModal.show();
                 });
 
+                // Modal Action Buttons
                 $(document).on('click', '.action-btn-modal, .action-btn', function() {
                     const button = $(this);
-
-                    // Kita treat .action-btn (tombol Quick Approve lama) sama seperti modal btn
                     const customerId = button.data('id');
                     const token = button.data('token');
-
-                    // Baca action. Jika tombol Quick Approve (yg lama), kita paksa action = 'approve'
                     let action = button.data('action');
-                    if(button.hasClass('action-btn')) {
-                        action = 'approve';
-                    }
+                    if(button.hasClass('action-btn')) action = 'approve';
 
                     const customerName = button.data('name');
                     const btnTitle = button.attr('title') || '';
                     const isITInput = btnTitle.includes('Input Customer Code');
-
                     const originalIcon = button.html();
                     button.html('<span class="spinner-border spinner-border-sm"></span>').prop('disabled', true);
 
@@ -652,31 +919,23 @@
                         url: `/customers/${customerId}`,
                         type: 'GET',
                         success: function(response) {
-                            populateViewForm(response); // Ini akan merender input finance jika permission ada
-
+                            populateViewForm(response);
                             const isReject = action === 'reject';
                             const isApprove = action === 'approve';
-
-                            // Styles
                             const cardClass = isReject ? 'bg-danger bg-opacity-10 border-danger' : 'bg-success bg-opacity-10 border-success';
                             const titleClass = isReject ? 'text-danger' : 'text-success';
                             const btnClass = isReject ? 'btn-danger' : 'btn-success';
                             const iconClass = isReject ? 'ph-x-circle' : 'ph-check-circle';
-
                             let btnText = isReject ? 'Submit Reject' : 'Submit Approval';
                             if (isITInput) btnText = 'Save & Activate';
-                            if (isApprove) btnText = 'Confirm Approve'; // Teks khusus quick approve
-
+                            if (isApprove) btnText = 'Confirm Approve';
                             let notesLabel = isReject ? 'Rejection Reason' : 'Review Notes';
-                            if (isITInput) notesLabel = 'Notes';
-
-                            // Notes visibility logic: Jika Approve, sembunyikan notes
+                            if (isITInput) notesLabel = 'Notes (Optional)';
                             const notesDisplay = isApprove ? 'display:none;' : '';
                             const notesRequired = isReject ? 'required' : '';
 
                             let additionalInputs = '';
                             if (isITInput) {
-                                // (Logic IT Inputs sama)
                                 let today = new Date().toISOString().split('T')[0];
                                 let joinVal = response.join_date ? response.join_date.split(' ')[0] : today;
                                 let codeVal = response.code || '';
@@ -690,7 +949,6 @@
                                     </div>`;
                             }
 
-                            // Build Form HTML
                             const actionFormHtml = `
                                 <div class="card ${cardClass} shadow-sm">
                                     <div class="card-header bg-transparent border-0 pt-3 pb-0">
@@ -701,24 +959,19 @@
                                             @csrf
                                             <input type="hidden" name="token" value="${token}">
                                             <input type="hidden" name="action" value="${action}">
-
                                             ${additionalInputs}
-
                                             <div class="mb-2" style="${notesDisplay}">
                                                 <label for="modal_notes" class="form-label fw-bold small text-dark">${notesLabel} ${isReject ? '<span class="text-danger">*</span>' : ''}</label>
                                                 <textarea class="form-control bg-white" id="modal_notes" name="notes" rows="3" placeholder="Type your notes here..." ${notesRequired}></textarea>
                                             </div>
-
                                             ${isApprove ? '<p class="mb-0 text-success small fw-bold"><i class="ph-bold ph-info me-1"></i> You are approving this customer without notes.</p>' : ''}
                                         </form>
                                     </div>
                                 </div>
                             `;
-
                             const submitUrl = "{{ route('customers.approval_action', ':id') }}".replace(':id', customerId);
                             $('#viewModalActionFormContainer').html(actionFormHtml);
                             $('#viewModalActionFormContainer form').attr('action', submitUrl);
-
                             const submitBtnHtml = `
                                 <button type="submit" form="modalResponseForm" class="btn ${btnClass} px-4 rounded-pill fw-bold shadow-sm">
                                     <i class="ph-bold ${iconClass} me-2"></i> ${btnText}
@@ -726,73 +979,71 @@
                             `;
                             $('#viewModalFooter button[type="submit"]').remove();
                             $('#viewModalFooter').prepend(submitBtnHtml);
-
                             $('#viewModal').modal('show');
                         },
-                        error: function() {
-                            Swal.fire('Error', 'Failed to fetch customer data.', 'error');
-                        },
-                        complete: function() {
-                            button.html(originalIcon).prop('disabled', false);
-                        }
+                        error: function() { Swal.fire('Error', 'Failed to fetch customer data.', 'error'); },
+                        complete: function() { button.html(originalIcon).prop('disabled', false); }
                     });
                 });
 
-                // --- 4. SUBMIT HANDLER (UPDATED FOR QUICK APPROVE CONFIRMATION) ---
+                // Submit Handler
                 $(document).on('submit', '#modalResponseForm', function(e) {
                     e.preventDefault();
                     const form = $(this);
                     const notesValue = $('#modal_notes').val().trim();
                     const action = form.find('input[name="action"]').val();
+                    const topInput = $('#input_top');
+                    const isITForm = form.find('input[name="update_code"]').length > 0;
+                    const isFinanceForm = topInput.length > 0; 
+
                     const isReject = action === 'reject';
                     const isApprove = action === 'approve';
 
-                    // Validasi Notes (Hanya jika tidak Approve)
-                    if (!isApprove && (!notesValue || !/[a-zA-Z]/.test(notesValue))) {
-                         Swal.fire({ icon: 'warning', title: 'Invalid Notes', text: 'Please provide valid text notes.', target: document.getElementById('viewModal') });
-                         return;
+                    if (isReject) {
+                        if (!notesValue || !/[a-zA-Z]/.test(notesValue)) {
+                            Swal.fire('Warning', 'Alasan penolakan wajib diisi dengan jelas.', 'warning');
+                            return;
+                        }
+                    } 
+                    else if (action === 'review') {
+                        if (isFinanceForm) {
+                            const currentTop = String(topInput.val() || '').trim();
+                            const originalTop = String(topInput.attr('data-original') || '').trim();
+
+                            if (currentTop !== originalTop) {
+                                if (!notesValue) {
+                                    Swal.fire('Warning', 'Notes wajib diisi karena Anda mengubah Term of Payment (TOP).', 'warning');
+                                    return;
+                                }
+                            }
+                        } 
+                        else if (!isITForm) {
+                            if (!notesValue) {
+                                Swal.fire('Warning', 'Notes review wajib diisi.', 'warning');
+                                return;
+                            }
+                        }
                     }
 
-                    // Tentukan Pesan Konfirmasi
                     let title = 'Confirm Action?';
                     let text = 'Proceed with this decision?';
                     let confirmColor = '#3085d6';
                     let icon = 'question';
-
+                    
                     if (isReject) {
-                        title = 'Confirm Rejection?';
-                        text = "This request will be rejected.";
-                        icon = 'warning';
-                        confirmColor = '#d33';
+                        title = 'Confirm Rejection?'; text = "This request will be rejected."; icon = 'warning'; confirmColor = '#d33';
                     } else if (isApprove) {
-                        // Quick Approve Confirmation
-                        title = 'Approve without Notes?';
-                        text = "Are you sure you want to approve this customer immediately?";
-                        confirmColor = '#28a745';
+                        title = 'Approve without Notes?'; text = "Are you sure you want to approve this customer immediately?"; confirmColor = '#28a745';
                     } else {
-                        // Review
-                         title = 'Submit Review?';
-                         text = "Submit approval with notes/changes?";
+                            title = 'Submit Review?'; text = "Submit approval with notes/changes?";
                     }
 
                     Swal.fire({
-                        title: title,
-                        text: text,
-                        icon: icon,
-                        showCancelButton: true,
-                        confirmButtonColor: confirmColor,
-                        confirmButtonText: 'Yes, Submit!',
-                        target: document.getElementById('viewModal')
+                        title: title, text: text, icon: icon, showCancelButton: true, confirmButtonColor: confirmColor, confirmButtonText: 'Yes, Submit!', target: document.getElementById('viewModal')
                     }).then((result) => {
                         if (result.isConfirmed) {
                             $('#loading-overlay').css('display', 'flex');
                             $('#viewModal').modal('hide');
-
-                            // Pastikan input hidden credit limit terupdate sebelum submit jika ada
-                            if($('#hidden_credit_limit').length){
-                                // Value sudah diupdate oleh event listener 'change'
-                            }
-
                             $.ajax({
                                 url: form.attr('action'), method: 'POST', data: form.serialize(),
                                 success: function(res) {
@@ -809,34 +1060,9 @@
                     });
                 });
 
-                // Clear injected form when modal closes
                 $('#viewModal').on('hidden.bs.modal', function () {
                     $('#viewModalActionFormContainer').empty();
                     $('#viewModalFooter button[type="submit"]').remove();
-                });
-
-                // Resend Email (Logic Unchanged)
-                 $(document).on('click', '.btn-resend-email', function(e) {
-                    e.preventDefault();
-                    const button = $(this);
-                    const token = button.data('token');
-                    const approverName = button.data('approver-name') || 'User';
-
-                    Swal.fire({
-                        title: 'Resend Email?', html: `Resend approval email to <b>${approverName}</b>?`, icon: 'question',
-                        showCancelButton: true, confirmButtonColor: '#ffc107', confirmButtonText: 'Yes, Resend!'
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            const original = button.html();
-                            button.html('<span class="spinner-border spinner-border-sm"></span>').prop('disabled', true);
-                            $.ajax({
-                                url: `/approvals/resend/${token}`, method: 'POST', data: { _token: '{{ csrf_token() }}' },
-                                success: function(res) { Swal.fire('Sent!', res.message, 'success'); },
-                                error: function(xhr) { Swal.fire('Error!', xhr.responseJSON?.message || 'Failed.', 'error'); },
-                                complete: function() { button.html(original).prop('disabled', false); }
-                            });
-                        }
-                    });
                 });
             });
         </script>

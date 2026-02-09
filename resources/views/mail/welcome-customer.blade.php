@@ -50,7 +50,7 @@
                                 {{ $customer->city }}{{ $customer->postal_code ? ', ' . $customer->postal_code : '' }}
                             </p>
 
-                            <p style="margin: 20px 0; font-weight: bold; font-family: Arial, sans-serif;">Welcome to Sinar Meadow {{ $customer->name }}</p>
+                            <p style="margin: 20px 0; font-weight: bold; font-family: Arial, sans-serif;">Welcome to {{ $customer->name }}</p>
 
                             <p style="margin: 0 0 15px; font-family: Arial, sans-serif;">Dear Sirs,</p>
                             <p style="margin: 0 0 15px; font-family: Arial, sans-serif;">On behalf of everyone at PT Sinar Meadow International Indonesia, we want to extend a warm welcome. We are so glad to have you as a new customer and are thrilled you've chosen us for your material needs.</p>

@@ -28,6 +28,7 @@ use App\Mail\CustomerWelcomeMail;
 use Illuminate\Support\Str;
 use Spatie\Activitylog\Models\Activity;
 use App\Services\CustomerService;
+use Illuminate\Http\UploadedFile;
 
 class CustomerController extends Controller
 {
@@ -312,6 +313,27 @@ class CustomerController extends Controller
             return response()->json(['success' => false, 'message' => 'Hanya data dengan status Rejected yang bisa diajukan ulang (Recall).'], 403);
         }
 
+        $dynamicFileRule = function ($attribute, $value, $fail) {
+            if (!$value instanceof UploadedFile) return;
+            $extension = strtolower($value->getClientOriginalExtension());
+            $sizeInKb = $value->getSize() / 1024;
+
+            if (in_array($extension, ['jpg', 'jpeg', 'png'])) {
+                if ($sizeInKb > 1024) $fail("File {$attribute} (Gambar) maks 1MB.");
+            } elseif ($extension === 'pdf') {
+                if ($sizeInKb > 5120) $fail("File {$attribute} (PDF) maks 5MB.");
+            } else {
+                $fail("Format {$attribute} salah.");
+            }
+        };
+
+        $request->validate([
+            'file_npwp' => ['nullable', 'file', $dynamicFileRule],
+            'file_nib'  => ['nullable', 'file', $dynamicFileRule],
+            'file_ktp'  => ['nullable', 'file', $dynamicFileRule],
+            'file_akte' => ['nullable', 'file', 'mimes:pdf', 'max:5120'],
+        ]);
+
         $newLogs = null;
 
         DB::transaction(function () use ($request, $customer, &$newLogs) {
@@ -446,7 +468,7 @@ class CustomerController extends Controller
     public function show(Customer $customer)
     {
         $user = Auth::user();
-        $canAdjustFinance = $user->hasRole('manager-finance') || $user->hasRole('head-finance');
+        $canAdjustFinance = $user->hasRole('manager-finance') || $user->hasRole('head-finance')|| $user->hasRole('super-admin');
 
         $baseTotalAmount = 0;
         foreach ($customer->items as $item) {
@@ -653,8 +675,8 @@ class CustomerController extends Controller
 
         $actor = User::where('nik', $currentLog->approver_nik)->first();
 
-
-        $isFinanceAdjuster = $actor && ($actor->hasRole('manager-finance') || $actor->hasRole('head-finance'));
+        $isFinanceAdjuster = $actor && ($actor->hasRole('manager-finance') || $actor->hasRole('head-finance') || $actor->hasRole('super-admin'));
+        $isIT = $actor && $actor->hasRole('it');
         $cleanNotes = trim($notes);
 
         if ($isFinanceAdjuster && ($action === 'review' || $action === 'approve')) {
@@ -666,16 +688,17 @@ class CustomerController extends Controller
                     return back()->withInput()->withErrors(['notes' => 'Notes wajib diisi karena Anda mengubah Term of Payment (TOP).']);
                 }
             }
-        }
-
-        else {
+        } else {
             if ($action === 'review' || $action === 'reject') {
-                if (empty($cleanNotes)) {
-                    return back()->withInput()->withErrors(['notes' => 'Notes wajib diisi untuk keputusan Review/Reject.']);
-                }
+                
+                if (!$isIT) { 
+                    if (empty($cleanNotes)) {
+                        return back()->withInput()->withErrors(['notes' => 'Notes wajib diisi untuk keputusan Review/Reject.']);
+                    }
 
-                if (!preg_match('/[a-zA-Z]{2,}/', $cleanNotes)) {
-                    return back()->withInput()->withErrors(['notes' => 'Notes harus berisi kalimat yang jelas (bukan hanya angka, tanda baca, atau 1 huruf).']);
+                    if (!preg_match('/[a-zA-Z]{2,}/', $cleanNotes)) {
+                        return back()->withInput()->withErrors(['notes' => 'Notes harus berisi kalimat yang jelas.']);
+                    }
                 }
             }
         }

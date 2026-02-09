@@ -53,7 +53,6 @@ class MasterManagementSeeder extends Seeder
             ['branch_name' => 'Branch Medan'],
             ['branch_name' => 'Branch Makassar'],
             ['branch_name' => 'Pusat'],
-
         ];
 
         foreach ($branches as $branch) {
@@ -73,6 +72,12 @@ class MasterManagementSeeder extends Seeder
             ];
         }
 
+        $accountGroups[] = [
+            'name_account_group' => 'EXPORT',
+            'bank_garansi' => false,
+            'ccar' => 'smd_usd',
+        ];
+
         foreach ($accountGroups as $group) {
             AccountGroup::updateOrCreate(
                 ['name_account_group' => $group['name_account_group']],
@@ -82,7 +87,6 @@ class MasterManagementSeeder extends Seeder
                 ]
             );
         }
-
 
         // ==========================================
         // 4. Seed TOP (Terms of Payment)
@@ -100,17 +104,18 @@ class MasterManagementSeeder extends Seeder
         }
 
         // ==========================================
-        // 5. Seed Customer Class
+        // 5. Seed Customer Class (UPDATED)
         // ==========================================
         $classes = [
             ['name_class' => 'Bakery'],
-            ['name_class' => 'Key Account'],
-            ['name_class' => 'Distributor'],
-            ['name_class' => 'Food Service'],
-            ['name_class' => 'HORECA'],
-            ['name_class' => 'Bulk Olein/Oil'],
-            ['name_class' => 'Export'],
-
+            ['name_class' => 'Chain resto'],
+            ['name_class' => 'Chain cafe'],
+            ['name_class' => 'Dist provider'],
+            ['name_class' => 'Bakery manufacturing'],
+            ['name_class' => 'Frying'],
+            ['name_class' => 'Modern trade - bakery'],
+            ['name_class' => 'Retail'],
+            ['name_class' => 'Food ingridient'],
         ];
 
         foreach ($classes as $cls) {

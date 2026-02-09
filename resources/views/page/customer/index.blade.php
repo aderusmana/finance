@@ -858,6 +858,40 @@
                     </div>
 
                     <h5 class="fw-bold text-primary mb-3 d-flex align-items-center">
+                        <i class="ph-fill ph-calendar-check me-2"></i> Payment & Faktur Schedule
+                    </h5>
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-body p-4">
+                            <div class="row g-4">
+                                <div class="col-md-6 border-end">
+                                    <div class="row g-4">
+                                        <div class="col-md-12">
+                                            <label class="fw-bold text-secondary text-uppercase f-s-12 mb-1">Payment Date</label>
+                                            <div class="fw-bold text-dark f-s-16" id="view_payment_date">-</div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="fw-bold text-secondary text-uppercase f-s-12 mb-1">Payment Days</label>
+                                            <div class="fw-bold text-dark f-s-14" id="view_payment_days">-</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 ps-md-4">
+                                    <div class="row g-4">
+                                        <div class="col-12">
+                                            <label class="fw-bold text-secondary text-uppercase f-s-12 mb-1">Faktur Date</label>
+                                            <div class="fw-bold text-dark f-s-14 lh-base" id="view_faktur_date">-</div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="fw-bold text-secondary text-uppercase f-s-12 mb-1">Faktur Days</label>
+                                            <div class="fw-bold text-dark f-s-14" id="view_faktur_days">-</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h5 class="fw-bold text-primary mb-3 d-flex align-items-center">
                         <i class="ph-fill ph-files me-2"></i> Documents
                     </h5>
                     <div class="row g-3" id="document_grid">
@@ -1213,7 +1247,6 @@
         <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.5/dist/tesseract.min.js"></script>
         <script>
             $(document).ready(function() {
-                // 1. Initialize Select2
                 $('.select2').select2({
                     theme: 'bootstrap-5',
                     minimumResultsForSearch: Infinity
@@ -1230,7 +1263,6 @@
                     placeholder: 'Search & Select User'
                 });
 
-                // Inisialisasi Select2 untuk Account Group, Class, dan SEMUA Financial Terms
                 $('#account_group, #customer_class, #term_of_payment, #output_tax, #ccar, #bank_garansi').select2({
                     dropdownParent: $('#customerModal'),
                     theme: 'bootstrap-5',
@@ -1277,7 +1309,6 @@
                     }
                 }
 
-                // Event Add Item
                 $('#btn-recall-add-item').on('click', function() {
                     addRecallItemRow();
                 });
@@ -1409,7 +1440,6 @@
                     $('#recallCustomerModal').modal('show');
                 });
 
-                // --- SUBMIT RECALL ---
                 $('#recallCustomerForm').on('submit', function(e) {
                     e.preventDefault();
 
@@ -1840,7 +1870,6 @@
                     }
                 });
 
-                // --- 3. EVENT SAAT ACCOUNT GROUP BERUBAH (MODIFIKASI: SET BG OTOMATIS) ---
                 $('#account_group, #customer_class').on('change', function() {
                     const ag = $('#account_group').val();
                     const cc = $('#customer_class').val();
@@ -1895,7 +1924,6 @@
                     }
                 }
 
-                // Event Listener saat TOP Berubah
                 $('#term_of_payment').on('change', function() {
                     checkCreditLimitAccess();
                 });
@@ -2085,7 +2113,6 @@
                     $('#view_shipping_name').text(btn.data('shipping_to_name'));
                     $('#view_shipping_address').text(btn.data('shipping_to_address'));
 
-                    // 5. DOCUMENTS
                     const docs = [
                         { name: 'NPWP Document', path: btn.data('file_npwp_path'), icon: 'ph-file-text' },
                         { name: 'NIB / SIUP', path: btn.data('file_nib_path'), icon: 'ph-file-code' },

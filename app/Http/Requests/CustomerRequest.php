@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\UploadedFile;
 
 class CustomerRequest extends FormRequest
 {
@@ -20,6 +21,32 @@ class CustomerRequest extends FormRequest
      */
     public function rules(): array
     {
+        $dynamicFileRule = function ($attribute, $value, $fail) {
+            if (!$value instanceof UploadedFile) {
+                return;
+            }
+
+            $extension = strtolower($value->getClientOriginalExtension());
+            $sizeInKb = $value->getSize() / 1024; 
+
+            // Validasi Image (JPG, JPEG, PNG) - Max 1MB
+            if (in_array($extension, ['jpg', 'jpeg', 'png'])) {
+                if ($sizeInKb > 1024) {
+                    $fail("File {$attribute} berformat Gambar (JPG/PNG) tidak boleh lebih dari 1MB.");
+                }
+            } 
+            // Validasi PDF - Max 5MB
+            elseif ($extension === 'pdf') {
+                if ($sizeInKb > 5120) {
+                    $fail("File {$attribute} berformat PDF tidak boleh lebih dari 5MB.");
+                }
+            } 
+            // Format tidak dikenali
+            else {
+                $fail("File {$attribute} harus berformat PDF, JPG, atau PNG.");
+            }
+        };
+
         return [
             // --- 1. Requester Info ---
             'user_id' => 'required|exists:users,id',
@@ -28,11 +55,36 @@ class CustomerRequest extends FormRequest
             'account_group' => 'required|exists:account_groups,id',
             'customer_class' => 'required|exists:customer_classes,id',
 
-            // --- 3. Documents (File Uploads) ---
-            'file_npwp' => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120',
-            'file_nib'  => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120',
-            'file_ktp'  => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120',
-            'file_akte' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            // --- 3. Documents (LOGIC BARU DISINI) ---
+            
+            // NPWP: Required + Dynamic Rule
+            'file_npwp' => [
+                'required', 
+                'file', 
+                $dynamicFileRule
+            ],
+
+            // NIB: Required + Dynamic Rule
+            'file_nib' => [
+                'required', 
+                'file', 
+                $dynamicFileRule
+            ],
+
+            // KTP: Required + Dynamic Rule
+            'file_ktp' => [
+                'required', 
+                'file', 
+                $dynamicFileRule
+            ],
+
+            // AKTE: Nullable + PDF Only + Max 5MB
+            'file_akte' => [
+                'nullable', 
+                'file', 
+                'mimes:pdf', // Hanya PDF
+                'max:5120'   // Max 5MB
+            ],
 
             // --- 4. General Info ---
             'name' => 'required|string|max:255',
@@ -71,8 +123,8 @@ class CustomerRequest extends FormRequest
             'no_pengukuhan_kaber' => 'nullable|string|max:255',
 
             // --- 7. Financial Terms ---
-            'term_of_payment' => 'required|string', // Sesuaikan jika ini relasi ID
-            'output_tax' => 'required|in:Terhutang PPN,NON-PPN,PPN', // Sesuaikan opsi
+            'term_of_payment' => 'required|string',
+            'output_tax' => 'required|in:Terhutang PPN,NON-PPN,PPN', 
             'credit_limit' => [
             'required',
             'numeric',
@@ -106,16 +158,15 @@ class CustomerRequest extends FormRequest
             // --- 3. Documents (Files) ---
             // NPWP
             'file_npwp.required' => 'Dokumen NPWP wajib diupload.',
-            'file_npwp.mimes'    => 'Format file NPWP harus PDF, JPG, atau PNG.',
-            'file_npwp.max'      => 'Ukuran file NPWP maksimal 5MB.',
-            // NIB/SIUP
-            'file_nib.mimes'    => 'Format file NIB/SIUP harus PDF, JPG, atau PNG.',
-            'file_nib.max'      => 'Ukuran file NIB/SIUP maksimal 5MB.',
-            // KTP
-            'file_ktp.mimes'    => 'Format file KTP harus PDF, JPG, atau PNG.',
-            'file_ktp.max'      => 'Ukuran file KTP maksimal 5MB.',
-            // Akte Pendirian
-            'file_akte.mimes'    => 'Format Akte harus PDF, JPG, atau PNG.',
+            'file_npwp.file'     => 'Dokumen NPWP harus berupa file yang valid.',
+            
+            'file_nib.required'  => 'Dokumen NIB/SIUP wajib diupload.',
+            'file_nib.file'      => 'Dokumen NIB/SIUP harus berupa file yang valid.',
+            
+            'file_ktp.required'  => 'Dokumen KTP wajib diupload.',
+            'file_ktp.file'      => 'Dokumen KTP harus berupa file yang valid.',
+
+            'file_akte.mimes'    => 'Format Akte harus PDF.',
             'file_akte.max'      => 'Ukuran file Akte maksimal 5MB.',
 
             // --- 4. General Info ---
