@@ -85,8 +85,7 @@
                         <i class="ph-duotone ph-user-plus"></i>
                         Create Approver
                     </h5>
-                    <button type="button" class="btn-close btn-close-white fs-5" data-bs-dismiss="modal"
-                        aria-label="Close"></button>
+                    <button type="button" class="btn-close btn-close-white fs-5" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body modal-body-enhanced">
                     <form action="#" method="POST" data-mode="create" id="ApproverForm">
@@ -95,23 +94,43 @@
                         <div class="mb-3">
                             <label for="category_id" class="form-label">Category</label>
                             <select class="form-select" id="category_id" name="category_id" required>
-                            </select>
+                                </select>
                             <div class="invalid-feedback" data-error-for="category_id"></div>
                         </div>
 
                         <div class="mb-3">
                             <label for="sub_category_id" class="form-label">Sub Category</label>
                             <select class="form-select" id="sub_category_id" name="sub_category_id">
-                            </select>
+                                </select>
                             <input type="hidden" name="sub_category_id" id="hidden_sub_category_id" disabled>
                             <div class="invalid-feedback" data-error-for="sub_category_id"></div>
                         </div>
 
                         <div class="mb-3">
-                            <label for="approvers" class="form-label">Approver Sequence</label>
-                            <select class="form-select" id="approvers" name="approvers[]" multiple="multiple" required>
-                            </select>
-                            <div class="invalid-feedback" data-error-for="approvers"></div>
+                            <label class="form-label">Approver Sequence</label>
+
+                            <div class="d-flex gap-2 mb-2">
+                                <div class="flex-grow-1">
+                                    <select class="form-select" id="source_approver_select">
+                                        <option value="" selected disabled>Select Role to Add...</option>
+                                        </select>
+                                </div>
+                                <button type="button" class="btn btn-primary" id="btn-add-to-sequence" disabled>
+                                    <i class="ph-bold ph-plus"></i> Add
+                                </button>
+                            </div>
+
+                            <div class="p-3 border rounded bg-light" style="min-height: 150px; max-height: 300px; overflow-y: auto;">
+                                <ul id="approver_sequence_list" class="list-group list-group-flush bg-transparent">
+                                    <li class="list-group-item bg-transparent text-center text-muted fst-italic empty-msg">
+                                        No approvers added yet.
+                                    </li>
+                                </ul>
+                                <div class="invalid-feedback d-block" id="sequence_error_msg" data-error-for="approvers"></div>
+                            </div>
+                            <div class="form-text">
+                                The approval process will follow the sequence numbers (1, 2, 3...).
+                            </div>
                         </div>
 
                     </form>
@@ -129,6 +148,10 @@
     @push('scripts')
         <script src="https://unpkg.com/@phosphor-icons/web"></script>
         <script>
+            // ==========================================
+            // 1. HELPER FUNCTIONS (SweetAlert & Utilities)
+            // ==========================================
+
             function successMessage(message, title = 'Success', timer = 1500) {
                 Swal.fire({
                     icon: 'success',
@@ -178,233 +201,319 @@
                 });
             }
 
+            // ==========================================
+            // 2. MAIN LOGIC (Document Ready)
+            // ==========================================
+
             $(document).ready(function() {
                 let allSubCategories = [];
                 let existingPaths = [];
+                let categoryMapping = {}; // Store mapping: Category -> [SubCategories]
 
-                $('#approvers, #category_id, #sub_category_id').select2({
+                // --- A. INITIALIZE SELECT2 ---
+
+                // Setup dropdown styling
+                $('#category_id, #sub_category_id').select2({
                     theme: 'bootstrap-5',
                     dropdownParent: $('#ApproverModal')
                 });
 
-                $('#category_id').select2({
+                $('#source_approver_select').select2({
                     theme: 'bootstrap-5',
-                    placeholder: 'Select a category',
+                    placeholder: 'Select Role to Add...',
                     dropdownParent: $('#ApproverModal')
                 });
 
-                $('#sub_category_id').select2({
-                    theme: 'bootstrap-5',
-                    placeholder: 'Select a sub-category',
-                    dropdownParent: $('#ApproverModal')
+
+                // --- B. APPROVER SEQUENCE LOGIC (List 1, 2, 3...) ---
+
+                // Fungsi menambahkan item ke visual list
+                function addApproverItem(id, name) {
+                    // Hapus pesan "No approvers added" jika ada
+                    $('#approver_sequence_list .empty-msg').remove();
+
+                    // Hitung nomor urut selanjutnya
+                    let count = $('#approver_sequence_list .sequence-item').length + 1;
+
+                    let html = `
+                        <li class="list-group-item d-flex align-items-center justify-content-between sequence-item p-2 mb-2 border rounded bg-white shadow-sm">
+                            <div class="d-flex align-items-center w-100">
+                                <span class="badge bg-primary rounded-circle me-3 sequence-number"
+                                    style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-size: 14px;">
+                                    ${count}
+                                </span>
+
+                                <div class="d-flex flex-column">
+                                    <span class="fw-bold text-dark">${name}</span>
+                                </div>
+
+                                <input type="hidden" name="approvers[]" value="${id}">
+                            </div>
+
+                            <button type="button" class="btn btn-sm btn-outline-danger btn-remove-item ms-2 rounded-circle"
+                                    style="width: 32px; height: 32px; padding: 0;" title="Remove">
+                                <i class="ph-bold ph-trash"></i>
+                            </button>
+                        </li>
+                    `;
+
+                    $('#approver_sequence_list').append(html);
+                }
+
+                // Fungsi merapikan ulang nomor urut (1, 2, 3) setelah hapus
+                function reorderSequence() {
+                    let list = $('#approver_sequence_list');
+                    let items = list.find('.sequence-item');
+
+                    if (items.length === 0) {
+                        list.html('<li class="list-group-item bg-transparent text-center text-muted fst-italic empty-msg">No approvers added yet.</li>');
+                    } else {
+                        items.each(function(index) {
+                            $(this).find('.sequence-number').text(index + 1);
+                        });
+                    }
+                }
+
+                // Event Click: Tombol "Add" Approver
+                $('#btn-add-to-sequence').on('click', function() {
+                    let select = $('#source_approver_select');
+                    let id = select.val();
+                    let name = select.find(':selected').text();
+
+                    if (!id) {
+                        warningMessage('Please select a role first.');
+                        return;
+                    }
+
+                    addApproverItem(id, name);
+                    select.val('').trigger('change'); // Reset dropdown setelah add
                 });
 
-                $('#approvers').select2({
-                    theme: 'bootstrap-5',
-                    placeholder: 'Select approvers in order',
-                    dropdownParent: $('#ApproverModal')
+                // Event Click: Tombol "Trash" (Hapus Item)
+                $(document).on('click', '.btn-remove-item', function() {
+                    $(this).closest('li').remove();
+                    reorderSequence();
                 });
 
-                $('#approvers').on('select2:select', function(e) {
-                    let id = e.params.data.id;
-                    let option = $(this).find('option[value="' + id + '"]');
-                    option.appendTo(this);
-                });
 
-                $('#category_id').on('change', function() {
-                    let selectedCategory = $(this).val();
+                // --- C. CATEGORY & SUB-CATEGORY LOGIC (CORE FIX) ---
+
+                /**
+                 * Fungsi Sentral untuk mengisi Sub-Category.
+                 * Dipakai saat: 1. User ganti kategori, 2. Saat tombol Edit ditekan.
+                 */
+                function populateSubCategories(selectedCategory, selectedSubCategory = null) {
                     let subCategorySelect = $('#sub_category_id');
-                    let approversSelect = $('#approvers');
-                    const isEditMode = $('#ApproverForm').attr('data-mode') === 'edit';
+                    subCategorySelect.empty();
+                    subCategorySelect.append(new Option('Select a sub-category', '', true, true)); // Placeholder
 
-                    if (isEditMode) return;
+                    // Cek apakah kategori punya sub-category
+                    if (selectedCategory && categoryMapping[selectedCategory] && categoryMapping[selectedCategory].length > 0) {
 
-                    // Reset dropdown sub-category & approvers
-                    subCategorySelect.empty().trigger('change');
-                    approversSelect.val(null).trigger('change').prop('disabled', false);
-
-                    // Cek apakah kategori ini punya sub-categories di mapping
-                    if (selectedCategory && categoryMapping[selectedCategory] && categoryMapping[
-                            selectedCategory].length > 0) {
-
-                        // Aktifkan Sub Category
+                        // ENABLE dropdown agar bisa dipilih/diganti
                         subCategorySelect.prop('disabled', false);
-                        subCategorySelect.append(new Option('Select a sub-category', '', true,
-                            true)); // Placeholder
 
-                        // Loop data sub-category (misal: 'Lampiran D' untuk BG, atau 'CBD' untuk Customer)
                         categoryMapping[selectedCategory].forEach(subVal => {
-                            // Cek apakah path ini sudah ada di database (biar user ga bikin double)
+                            // Cek apakah kombinasi Category+SubCategory ini sudah ada di DB (biar gak duplikat)
                             const pathExists = existingPaths.some(path =>
                                 path.category === selectedCategory && path.sub_category === subVal
                             );
 
                             let newOption = new Option(subVal, subVal, false, false);
-                            if (pathExists) {
-                                $(newOption).prop('disabled', true); // Disable jika sudah ada
+
+                            // Disable opsi jika sudah terpakai di DB, KECUALI jika itu adalah data diri sendiri yg sedang diedit
+                            if (pathExists && subVal !== selectedSubCategory) {
+                                $(newOption).prop('disabled', true);
                             }
                             subCategorySelect.append(newOption);
                         });
 
-                        // Reset placeholder select2
-                        subCategorySelect.val('').trigger('change');
+                        // Jika ada value terpilih (Mode Edit), set value-nya
+                        if (selectedSubCategory) {
+                            subCategorySelect.val(selectedSubCategory).trigger('change');
+                        } else {
+                            subCategorySelect.val('').trigger('change');
+                        }
 
                     } else {
-                        // Jika tidak ada sub-category (misal kategori lain), langsung aktifkan approver
+                        // Jika tidak ada sub-category, disable dropdown
                         subCategorySelect.prop('disabled', true);
-                        approversSelect.prop('disabled', false);
                     }
+                }
+
+                // Event Change: Saat user mengubah Category secara manual
+                $('#category_id').on('change', function() {
+                    let selectedCategory = $(this).val();
+                    let sourceSelect = $('#source_approver_select');
+                    let btnAdd = $('#btn-add-to-sequence');
+                    const isEditMode = $('#ApproverForm').attr('data-mode') === 'edit';
+
+                    // Logic Enable/Disable Input Approver
+                    if (selectedCategory) {
+                        sourceSelect.prop('disabled', false);
+                        btnAdd.prop('disabled', false);
+                    } else {
+                        sourceSelect.prop('disabled', true);
+                        btnAdd.prop('disabled', true);
+                    }
+
+                    // PENTING: Jika sedang mode edit, jangan auto-populate via event change ini
+                    // karena akan menimpa logika pengisian data dari AJAX edit.
+                    if (isEditMode) return;
+
+                    // Jika mode Create, populate normal
+                    populateSubCategories(selectedCategory);
                 });
 
-                $('#sub_category_id').on('change', function() {
-                    // sub category nullable → tidak mempengaruhi approver
-                    $('#approvers').prop('disabled', false);
-                });
+
+                // --- D. LOAD SERVER DATA ---
 
                 function loadDropdownData() {
-                    // Fetch Categories & Sub-Categories
+                    // Get Categories
                     $.ajax({
                         url: "{{ route('get.categories') }}",
                         method: 'GET',
                         dataType: 'json',
                         success: function(data) {
                             let categorySelect = $('#category_id');
-
                             categoryMapping = data.subCategories || {};
                             existingPaths = data.existingPaths || [];
-                            categorySelect.empty().append(
-                                '<option selected disabled value="">Choose a category...</option>');
 
+                            categorySelect.empty().append('<option selected disabled value="">Choose a category...</option>');
                             if (data.categories) {
-                                data.categories.forEach(cat => {
-                                    categorySelect.append(new Option(cat, cat));
-                                });
+                                data.categories.forEach(cat => categorySelect.append(new Option(cat, cat)));
                             }
                         },
-                        error: function() {
-                            errorMessage('Failed to load category data.');
-                        }
+                        error: function() { errorMessage('Failed to load category data.'); }
                     });
 
+                    // Get Approver Roles
                     $.ajax({
                         url: "{{ route('get.approver.name') }}",
                         method: 'GET',
                         dataType: 'json',
                         success: function(data) {
-                            let approverSelect = $('#approvers');
-                            approverSelect.empty();
+                            let sourceSelect = $('#source_approver_select');
+                            sourceSelect.empty().append(new Option('Select Role to Add...', '', true, true));
                             if (data.approverName) {
                                 $.each(data.approverName, function(key, value) {
-                                    approverSelect.append(new Option(value, key, false, false));
+                                    sourceSelect.append(new Option(value, key, false, false));
                                 });
                             }
                         }
                     });
                 }
-
                 loadDropdownData();
 
-                // === DataTable Initialization ===
+
+                // --- E. DATATABLE CONFIGURATION ---
+
                 let table = $('#approvertable').DataTable({
                     processing: true,
                     serverSide: true,
                     ajax: "{{ route('get.approverlist') }}",
-                    columns: [{
-                        data: 'id',
-                        name: 'id',
-                        orderable: false,
-                        searchable: false,
-                        render: function(data, type, row, meta) {
-                            return `<span class="badge bg-secondary rounded-pill">${meta.row + meta.settings._iDisplayStart + 1}</span>`;
-                        }
-                    }, {
-                        data: 'category',
-                        name: 'category',
-                        render: function(data) {
-                            let iconClass = data === 'BG' ? 'ph-building' :
-                                data === 'Customer' ? 'ph-user' : 'ph-question';
-                            return `<div class="d-flex align-items-center text-black">
-                                    <i class="ph-duotone ${iconClass} me-2 text-primary" style="font-size:1.25rem;"></i>
-                                    <span class="fw-medium" style="font-size:1.05rem;">${data}</span>
-                               </div>`;
-                        }
-                    }, {
-                        data: 'sub_category',
-                        name: 'sub_category',
-                        render: function(data, type, row) {
-                            return data ?
-                                `<span class="badge bg-info-subtle text-info rounded-2 px-2 py-1" style="font-size:1rem;">
-                                <i class="ph-duotone ph-tag me-1" style="font-size:1.05rem;"></i>${data}
-                             </span>` :
-                                `<span class="badge bg-light-subtle text-secondary rounded-2 px-2 py-1" style="font-size:1rem;">
-                                <i class="ph-duotone ph-minus-circle me-1" style="font-size:1.05rem;"></i>Non Sub-category
-                             </span>`;
-                        }
-                    }, {
-                        data: 'sequence_approvers',
-                        name: 'sequence_approvers',
-                        render: function(data, type, row) {
-                            if (!Array.isArray(data) || data.length === 0) {
-                                return '<span class="text-muted">No approvers assigned</span>';
+                    columns: [
+                        {
+                            data: 'id', name: 'id', orderable: false, searchable: false,
+                            render: function(data, type, row, meta) {
+                                return `<span class="badge bg-secondary rounded-pill">${meta.row + meta.settings._iDisplayStart + 1}</span>`;
                             }
-                            const listItems = data.map(approver =>
-                                `<li class="d-flex align-items-center mb-1 ">
-                                <i class="ph-duotone ph-user-check fs-5 me-2 text-success"></i>
-                                <span class="fw-medium text-black">${approver}</span>
-                            </li>`
-                            ).join('');
-                            return `<ul style="list-style-type: none; padding-left: 0; margin-bottom: 0;">${listItems}</ul>`;
+                        },
+                        {
+                            data: 'category', name: 'category',
+                            render: function(data) {
+                                let iconClass = data === 'BG' ? 'ph-building' : data === 'Customer' ? 'ph-user' : 'ph-question';
+                                return `<div class="d-flex align-items-center text-black">
+                                            <i class="ph-duotone ${iconClass} me-2 text-primary" style="font-size:1.25rem;"></i>
+                                            <span class="fw-medium" style="font-size:1.05rem;">${data}</span>
+                                    </div>`;
+                            }
+                        },
+                        {
+                            data: 'sub_category', name: 'sub_category',
+                            render: function(data) {
+                                return data ?
+                                    `<span class="badge bg-info-subtle text-info rounded-2 px-2 py-1"><i class="ph-duotone ph-tag me-1"></i>${data}</span>` :
+                                    `<span class="badge bg-light-subtle text-secondary rounded-2 px-2 py-1">Non Sub-category</span>`;
+                            }
+                        },
+                        {
+                            data: 'sequence_approvers', name: 'sequence_approvers',
+                            render: function(data) {
+                                if (!Array.isArray(data) || data.length === 0) return '<span class="text-muted">No approvers assigned</span>';
+                                // Render list 1, 2, 3 di tabel
+                                const listItems = data.map((approver, index) =>
+                                    `<li class="d-flex align-items-center mb-1">
+                                        <span class="badge bg-light text-dark border border-secondary rounded-circle me-2" style="width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:10px;">${index+1}</span>
+                                        <span class="fw-medium text-black">${approver}</span>
+                                    </li>`
+                                ).join('');
+                                return `<ul style="list-style-type: none; padding-left: 0; margin-bottom: 0;">${listItems}</ul>`;
+                            }
+                        },
+                        {
+                            data: 'id', name: 'action', orderable: false, searchable: false,
+                            render: function(data) {
+                                return `
+                                    <div class="action-btn-group">
+                                        <button type="button" class="btn btn-secondary action-btn-hover" data-id="${data}" data-tooltip="Edit Approver">
+                                            <i class="ph-duotone ph-eraser"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-danger action-btn-hover" data-id="${data}" data-tooltip="Delete Approver">
+                                            <i class="ph-duotone ph-trash"></i>
+                                        </button>
+                                    </div>
+                                `;
+                            }
                         }
-                    }, {
-                        data: 'id',
-                        name: 'action',
-                        orderable: false,
-                        searchable: false,
-                        render: function(data, type, row) {
-                            return `
-                                <div class="action-btn-group">
-                                    <button type="button" class="btn btn-secondary action-btn-hover" data-id="${data}" data-tooltip="Edit Approver">
-                                        <i class="ph-duotone ph-eraser"></i>
-                                    </button>
-                                    <button type="button" class="btn btn-danger action-btn-hover" data-id="${data}" data-tooltip="Delete Approver">
-                                        <i class="ph-duotone ph-trash"></i>
-                                    </button>
-                                </div>
-                            `;
-                        }
-                    }]
+                    ]
                 });
 
-                // === DataTable Search Debounce ===
+                // Search Debounce (Agar tidak reload tiap ketik huruf)
                 let searchInput = $('#approvertable_filter input');
                 searchInput.unbind();
                 let debounceTimer;
                 searchInput.bind('keyup', function(e) {
                     clearTimeout(debounceTimer);
-                    debounceTimer = setTimeout(function() {
-                        table.search(searchInput.val()).draw();
-                    }, 500);
+                    debounceTimer = setTimeout(function() { table.search(searchInput.val()).draw(); }, 500);
                 });
 
-                // === Modal: Show for Create ===
+
+                // --- F. FORM HANDLING (CREATE, EDIT, SUBMIT) ---
+
+                function resetFormState() {
+                    const form = $('#ApproverForm');
+                    form[0].reset();
+                    form.find('.is-invalid').removeClass('is-invalid');
+                    form.find('.invalid-feedback').text('');
+
+                    // Reset States
+                    $('#category_id').val(null).trigger('change').prop('disabled', false);
+                    $('#sub_category_id').val(null).trigger('change').prop('disabled', true);
+
+                    // Reset Approver Inputs
+                    $('#source_approver_select').val(null).trigger('change').prop('disabled', true);
+                    $('#btn-add-to-sequence').prop('disabled', true);
+
+                    // Reset Visual List
+                    $('#approver_sequence_list').html('<li class="list-group-item bg-transparent text-center text-muted fst-italic empty-msg">No approvers added yet.</li>');
+                    $('#sequence_error_msg').hide();
+                }
+
+                // 1. OPEN CREATE MODAL
                 $('#btn-create-approver').on('click', function() {
-                    resetFormState(); // Gunakan helper function
+                    resetFormState();
                     $('#ApproverForm').attr('data-mode', 'create');
                     $('#ApproverForm').attr('action', "{{ route('approvers.store') }}");
-
-                    // [MODIFIKASI] Atur state awal saat modal create dibuka
-                    $('#sub_category_id').prop('disabled', true);
-                    $('#approvers').prop('disabled', true);
-
-                    $('#ApproverModalLabel').html(
-                        '<i class="ph-duotone ph-user-plus"></i> Create New Approver');
+                    $('#ApproverModalLabel').html('<i class="ph-duotone ph-user-plus"></i> Create New Approver');
                     $('#ApproverModal').modal('show');
                 });
 
-                // === Modal: Show for Edit ===
+                // 2. OPEN EDIT MODAL / DELETE ACTION
                 $('#approvertable').on('click', '.action-btn-hover', function(e) {
                     e.preventDefault();
 
+                    // --- A. EDIT ---
                     if ($(this).hasClass('btn-secondary')) {
                         let approverId = $(this).data('id');
                         let editUrl = `/approvers/${approverId}/edit`;
@@ -415,33 +524,44 @@
                             method: 'GET',
                             success: function(data) {
                                 resetFormState();
-
                                 $('#ApproverForm').attr('data-mode', 'edit');
                                 $('#ApproverForm').attr('action', updateUrl);
 
-                                $('#category_id').val(data.category_id).trigger('change').prop(
-                                    'disabled', true);
-                                $('#sub_category_id').val(data.sub_category_id).trigger('change')
-                                    .prop('disabled', true);
+                                // 1. Set Category (Disable agar user tidak mengganti kategori utama sembarangan)
+                                $('#category_id').val(data.category_id).trigger('change').prop('disabled', true);
 
-                                // [MODIFIKASI] Pastikan field approver SELALU aktif saat mode edit
-                                $('#approvers').prop('disabled', false).val(data.approver_user_ids)
-                                    .trigger('change');
+                                // 2. Populate & Set Sub Category
+                                // Panggil helper function kita untuk mengisi opsi dan set value
+                                populateSubCategories(data.category_id, data.sub_category_id);
 
-                                $('#ApproverModalLabel').html(
-                                    '<i class="ph-duotone ph-user-gear"></i> Edit Approver Sequence'
-                                );
+                                // Pastikan dropdown ENABLED jika memang ada sub-kategorinya
+                                if (categoryMapping[data.category_id] && categoryMapping[data.category_id].length > 0) {
+                                    $('#sub_category_id').prop('disabled', false);
+                                }
+
+                                // 3. Rebuild Approver List (1, 2, 3...)
+                                $('#approver_sequence_list').empty();
+                                if (data.approver_user_ids && Array.isArray(data.approver_user_ids)) {
+                                    data.approver_user_ids.forEach(function(roleName) {
+                                        addApproverItem(roleName, roleName);
+                                    });
+                                }
+
+                                // 4. Enable Input Approver di mode edit
+                                $('#source_approver_select').prop('disabled', false);
+                                $('#btn-add-to-sequence').prop('disabled', false);
+
+                                $('#ApproverModalLabel').html('<i class="ph-duotone ph-user-gear"></i> Edit Approver Sequence');
                                 $('#ApproverModal').modal('show');
                             },
                             error: function(xhr) {
-                                errorMessage(xhr.responseJSON?.message ||
-                                    'Could not fetch approver data.');
+                                errorMessage('Could not fetch approver data.');
                             }
                         });
+
+                    // --- B. DELETE ---
                     } else if ($(this).hasClass('btn-danger')) {
-                        // Delete functionality
                         let approverId = $(this).data('id');
-                        // IMPORTANT: Replace with your actual destroy route
                         let deleteUrl = `/approvers/${approverId}`;
 
                         confirmDialog({
@@ -458,12 +578,10 @@
                                     },
                                     success: function(res) {
                                         table.ajax.reload(null, false);
-                                        successMessage(res.message ||
-                                            'Approver deleted successfully!');
+                                        successMessage(res.message || 'Approver deleted successfully!');
                                     },
                                     error: function(xhr) {
-                                        errorMessage(xhr.responseJSON?.message ||
-                                            'Failed to delete approver.');
+                                        errorMessage('Failed to delete approver.');
                                     }
                                 });
                             }
@@ -471,34 +589,32 @@
                     }
                 });
 
-                function resetFormState() {
-                    const form = $('#ApproverForm');
-                    form[0].reset();
-                    form.find('.is-invalid').removeClass('is-invalid');
-                    form.find('.invalid-feedback').text('');
-
-                    // Aktifkan kembali field yang mungkin di-disable saat edit
-                    $('#category_id, #sub_category_id').prop('disabled', false);
-
-                    // Reset dan disable field secara berurutan
-                    $('#category_id').val(null).trigger('change');
-                    $('#sub_category_id').val(null).trigger('change').prop('disabled', true);
-                    $('#approvers').val(null).trigger('change').prop('disabled', true);
-                }
-
-                // === Form Submit Handler (Create & Edit) ===
+                // 3. SUBMIT FORM
                 $('#ApproverForm').on('submit', function(e) {
                     e.preventDefault();
                     $('.is-invalid').removeClass('is-invalid');
                     $('.invalid-feedback').text('');
+                    $('#sequence_error_msg').hide();
+
+                    // Validasi: Pastikan ada minimal 1 approver
+                    if ($('#approver_sequence_list .sequence-item').length === 0) {
+                        $('#sequence_error_msg').text('Please add at least one approver.').show();
+                        return;
+                    }
 
                     let form = $(this);
                     let url = form.attr('action');
                     let formData = new FormData(this);
-                    let mode = form.attr('data-mode'); // Ambil mode form
+                    let mode = form.attr('data-mode');
 
                     if (mode === 'edit') {
                         formData.append('_method', 'PUT');
+
+                        // FIX: Input yang 'disabled' tidak terkirim via FormData.
+                        // Kita harus append manual category_id agar validasi backend tidak gagal.
+                        if($('#category_id').prop('disabled')) {
+                            formData.append('category_id', $('#category_id').val());
+                        }
                     }
 
                     $.ajax({
@@ -512,80 +628,47 @@
                             table.ajax.reload(null, false);
                             successMessage(res.message || 'Operation successful!');
 
+                            // Update local cache untuk mencegah duplikasi create tanpa refresh page
                             if (mode === 'create') {
-                                const newCategory = formData.get('category_id');
-                                const newSubCategory = formData.get('sub_category_id');
-
-                                // Tambahkan path baru ke array di sisi klien
                                 existingPaths.push({
-                                    category: newCategory,
-                                    sub_category: newSubCategory
+                                    category: formData.get('category_id'),
+                                    sub_category: formData.get('sub_category_id')
                                 });
                             }
                         },
                         error: function(xhr) {
-                            if (xhr.status === 422) { // Validation Error
+                            if (xhr.status === 422) { // Error Validasi Laravel
                                 let errors = xhr.responseJSON.errors;
                                 for (let key in errors) {
-                                    let input = $(`[name="${key}"], [name="${key}[]"]`);
-                                    let errorContainer = $(`[data-error-for="${key}"]`);
-
-                                    if (input.hasClass('select2-hidden-accessible')) {
-                                        input.next('.select2-container').find('.select2-selection')
-                                            .addClass('is-invalid');
+                                    // Handle error array approvers
+                                    if (key === 'approvers') {
+                                        $('#sequence_error_msg').text(errors[key][0]).show();
                                     } else {
-                                        input.addClass('is-invalid');
-                                    }
+                                        let input = $(`[name="${key}"], [name="${key}[]"]`);
+                                        let errorContainer = $(`[data-error-for="${key}"]`);
 
-                                    if (errorContainer.length) {
-                                        errorContainer.text(errors[key][0]);
+                                        if (input.hasClass('select2-hidden-accessible')) {
+                                            input.next('.select2-container').find('.select2-selection').addClass('is-invalid');
+                                        } else {
+                                            input.addClass('is-invalid');
+                                        }
+                                        if (errorContainer.length) {
+                                            errorContainer.text(errors[key][0]);
+                                        }
                                     }
                                 }
                                 errorMessage('Please fix the errors in the form.');
                             } else {
-                                errorMessage(xhr.responseJSON?.message ||
-                                    'An unexpected error occurred.');
+                                errorMessage(xhr.responseJSON?.message || 'An unexpected error occurred.');
                             }
                         }
                     });
                 });
 
-                // === Delete Handler ===
-                $('#approvertable').on('click', '.delete-approver-btn', function(e) {
-                    e.preventDefault();
-                    let approverId = $(this).data('id');
-                    // IMPORTANT: Replace with your actual destroy route
-                    let deleteUrl = `/approvers/${approverId}`;
 
-                    confirmDialog({
-                        text: 'You won\'t be able to revert this!',
-                        confirmButtonText: 'Yes, delete it!'
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            $.ajax({
-                                url: deleteUrl,
-                                method: 'POST',
-                                data: {
-                                    _method: 'DELETE',
-                                    _token: '{{ csrf_token() }}'
-                                },
-                                success: function(res) {
-                                    table.ajax.reload(null, false);
-                                    successMessage(res.message ||
-                                        'Approver deleted successfully!');
-                                },
-                                error: function(xhr) {
-                                    errorMessage(xhr.responseJSON?.message ||
-                                        'Failed to delete approver.');
-                                }
-                            });
-                        }
-                    });
-                });
-
-                // Custom Tooltip Handler for Action Buttons
+                // --- G. TOOLTIPS ---
+                // Menangani tooltip hover tombol action
                 function initActionTooltips() {
-                    // Remove any existing event handlers to prevent duplicates
                     $(document).off('mouseenter.customTooltip mouseleave.customTooltip', '.action-btn-hover');
 
                     $(document).on('mouseenter.customTooltip', '.action-btn-hover', function(e) {
@@ -595,142 +678,34 @@
                             $('body').append(tooltip);
 
                             const button = $(this);
-                            let isDestroyed = false;
 
-                            // Function to update tooltip position
-                            function updateTooltipPosition() {
-                                if (isDestroyed || !button.is(':visible') || !tooltip.parent().length) {
-                                    return;
-                                }
+                            // Simple positioning
+                            const offset = button.offset();
+                            tooltip.css({
+                                position: 'absolute',
+                                left: (offset.left + button.outerWidth() / 2 - tooltip.outerWidth() / 2) + 'px',
+                                top: (offset.top - tooltip.outerHeight() - 10) + 'px',
+                                zIndex: 9999
+                            }).addClass('show');
 
-                                // Get button position
-                                const buttonOffset = button.offset();
-                                if (!buttonOffset) return;
-
-                                const buttonWidth = button.outerWidth();
-                                const buttonHeight = button.outerHeight();
-                                const tooltipWidth = tooltip.outerWidth();
-                                const tooltipHeight = tooltip.outerHeight();
-                                const windowWidth = $(window).width();
-                                const windowHeight = $(window).height();
-                                const scrollTop = $(window).scrollTop();
-
-                                // Calculate position
-                                let left = buttonOffset.left + (buttonWidth / 2) - (tooltipWidth / 2);
-                                let top = buttonOffset.top - tooltipHeight - 12;
-
-                                // Horizontal bounds checking
-                                if (left < 10) {
-                                    left = 10;
-                                } else if (left + tooltipWidth > windowWidth - 10) {
-                                    left = windowWidth - tooltipWidth - 10;
-                                }
-
-                                // Vertical bounds checking
-                                if (top < scrollTop + 10) {
-                                    top = buttonOffset.top + buttonHeight + 12;
-                                    tooltip.addClass('below');
-                                } else {
-                                    tooltip.removeClass('below');
-                                }
-
-                                tooltip.css({
-                                    position: 'absolute',
-                                    left: left + 'px',
-                                    top: top + 'px',
-                                    zIndex: 9999
-                                });
-                            }
-
-                            // Initial positioning
-                            setTimeout(() => {
-                                updateTooltipPosition();
-                            }, 10);
-
-                            // Show tooltip with delay
-                            setTimeout(() => {
-                                if (!isDestroyed) {
-                                    tooltip.addClass('show');
-                                }
-                            }, 100);
-
-                            // Store tooltip element and update function
                             button.data('tooltip-element', tooltip);
-                            button.data('update-tooltip-position', updateTooltipPosition);
-                            button.data('tooltip-destroyed', false);
-
-                            // Create unique namespace for this tooltip
-                            const tooltipId = 'tooltip_' + Date.now() + '_' + Math.random().toString(36).substr(
-                                2, 9);
-                            button.data('tooltip-id', tooltipId);
-
-                            // Listen for scroll events with throttling
-                            let scrollTimeout;
-
-                            function throttledUpdate() {
-                                if (scrollTimeout) {
-                                    clearTimeout(scrollTimeout);
-                                }
-                                scrollTimeout = setTimeout(() => {
-                                    if (!isDestroyed) {
-                                        updateTooltipPosition();
-                                    }
-                                }, 10);
-                            }
-
-                            $(window).on('scroll.' + tooltipId + ' resize.' + tooltipId, throttledUpdate);
-                            $('.dataTables_scrollBody').on('scroll.' + tooltipId, throttledUpdate);
-                            $('.table-responsive').on('scroll.' + tooltipId, throttledUpdate);
-                            $('#approvertable_wrapper').on('scroll.' + tooltipId, throttledUpdate);
-
-                            // Store cleanup function
-                            button.data('tooltip-cleanup', function() {
-                                isDestroyed = true;
-                                $(window).off('.' + tooltipId);
-                                $('.dataTables_scrollBody').off('.' + tooltipId);
-                                $('.table-responsive').off('.' + tooltipId);
-                                $('#approvertable_wrapper').off('.' + tooltipId);
-                                if (scrollTimeout) {
-                                    clearTimeout(scrollTimeout);
-                                }
-                            });
                         }
                     });
 
                     $(document).on('mouseleave.customTooltip', '.action-btn-hover', function(e) {
                         const button = $(this);
                         const tooltip = button.data('tooltip-element');
-                        const cleanup = button.data('tooltip-cleanup');
-
                         if (tooltip) {
-                            button.data('tooltip-destroyed', true);
-
-                            tooltip.removeClass('show');
-                            setTimeout(() => {
-                                tooltip.remove();
-                            }, 200);
-
-                            // Execute cleanup
-                            if (cleanup) {
-                                cleanup();
-                            }
-
-                            // Clear all data
+                            tooltip.remove();
                             button.removeData('tooltip-element');
-                            button.removeData('update-tooltip-position');
-                            button.removeData('tooltip-id');
-                            button.removeData('tooltip-cleanup');
-                            button.removeData('tooltip-destroyed');
                         }
                     });
                 }
 
-                // Initialize tooltips after DataTable is ready
+                // Init tooltip saat tabel di-load atau di-refresh
                 table.on('draw', function() {
                     initActionTooltips();
                 });
-
-                // Initialize tooltips for the first load
                 initActionTooltips();
             });
         </script>

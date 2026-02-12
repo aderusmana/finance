@@ -126,12 +126,16 @@ class CustomerRequest extends FormRequest
             'term_of_payment' => 'required|string',
             'output_tax' => 'required|in:Terhutang PPN,NON-PPN,PPN', 
             'credit_limit' => [
-            'required',
-            'numeric',
-            'min:0',
+                'required',
+                'numeric',
+                'min:0',
                 function ($attribute, $value, $fail) {
-                    if (request('bank_garansi') === 'TIDAK' && $value <= 0) {
-                        $fail('Jika Bank Garansi NO, Credit Limit harus diisi (lebih dari 0).');
+                    $bg = request('bank_garansi');
+                    $top = request('term_of_payment');
+                    if ($bg === 'TIDAK' && $top !== 'CBD') {
+                        if ($value <= 0) {
+                            $fail('Jika Bank Garansi NO dan bukan CBD, Credit Limit harus diisi (lebih dari 0).');
+                        }
                     }
                 },
             ],

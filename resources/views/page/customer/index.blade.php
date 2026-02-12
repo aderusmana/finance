@@ -1511,9 +1511,6 @@
                     }
 
                     const formData = new FormData(this);
-
-                    // BERSIHKAN FORMAT RUPIAH SEBELUM KIRIM
-                    // Agar tidak error "credit_limit must be a number"
                     let rawCreditLimit = formData.get('credit_limit');
                     if (rawCreditLimit) {
                         let cleanCreditLimit = rawCreditLimit.toString().replace(/[^0-9]/g, '');

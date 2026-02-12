@@ -5,7 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Welcome to Sinar Meadow {{ $customer->name }}</title>
     <style type="text/css">
-        /* RESET STYLES - Biarkan di head untuk klien yang support */
+        /* MEDIA QUERIES */
+        @media screen and (max-width: 850px) {
+            .email-container {
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+            .mobile-padding {
+                padding: 20px !important;
+            }
+            /* Penyesuaian font di mobile agar tidak terlalu memenuhi layar */
+            .header-text {
+                font-size: 24px !important;
+            }
+            .body-text {
+                font-size: 16px !important;
+            }
+        }
+
+        /* RESET STYLES */
         body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
         table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
         img { -ms-interpolation-mode: bicubic; border: 0; height: auto; line-height: 100%; outline: none; text-decoration: none; }
@@ -19,20 +37,17 @@
         <tr>
             <td align="center" style="padding: 20px 0;">
 
-                <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; background-color: #ffffff; border: 1px solid #dddddd;" class="email-container">
+                <table border="0" cellpadding="0" cellspacing="0" width="100%" class="email-container" style="max-width: 850px; background-color: #ffffff; border: 1px solid #dddddd;">
 
-                    {{-- HEADER: Warna diubah menjadi #a68831 --}}
                     <tr>
-                        <td bgcolor="#a68831" style="padding: 15px 20px;">
+                        <td bgcolor="#a68831" style="padding: 30px 30px;">
                             <table border="0" cellpadding="0" cellspacing="0" width="100%">
                                 <tr>
-                                    <td width="60" style="vertical-align: middle;">
-                                        {{-- Logo Placeholder disesuaikan warnanya --}}
-                                        <img src="https://via.placeholder.com/50x50/ffffff/a68831?text=LOGO" alt="Logo" width="50" style="display: block;" />
-                                    </td>
+
                                     <td style="vertical-align: middle; padding-left: 15px; color: #ffffff; font-family: Arial, sans-serif;">
-                                        <h1 style="margin: 0; font-size: 20px; font-weight: bold; letter-spacing: 1px;">PT. SINAR MEADOW</h1>
-                                        <p style="margin: 2px 0 0; font-size: 12px; opacity: 0.9;">International Indonesia</p>
+                                        <h1 class="header-text" style="margin: 0; font-size: 28px; font-weight: bold; letter-spacing: 1px; line-height: 1.3; text-transform: uppercase;">
+                                            PT. SINAR MEADOW INTERNATIONAL INDONESIA
+                                        </h1>
                                     </td>
                                 </tr>
                             </table>
@@ -40,129 +55,125 @@
                     </tr>
 
                     <tr>
-                        <td style="padding: 10px 40px; color: #333333; line-height: 1.6; font-size: 14px; font-family: Arial, sans-serif;">
+                        <td class="mobile-padding" style="padding: 40px 50px; color: #333333; line-height: 1.8; font-size: 18px; font-family: Arial, sans-serif;">
 
-                            <p style="margin: 0 0 15px; font-family: Arial, sans-serif;">[Date: {{ date('d M Y') }}]</p>
+                            <p style="margin: 0 0 25px; font-family: Arial, sans-serif; font-size: 16px; color: #666;">[Date: {{ date('d M Y') }}]</p>
 
-                            <p style="margin: 0 0 20px; font-family: Arial, sans-serif;">
-                                <strong>{{ $customer->name }}</strong><br>
-                                {{ $customer->address1 }}<br>
-                                {{ $customer->city }}{{ $customer->postal_code ? ', ' . $customer->postal_code : '' }}
-                            </p>
+                            <div style="margin: 0 0 35px; font-family: Arial, sans-serif; border-left: 6px solid #a68831; padding-left: 20px;">
+                                <strong style="font-size: 20px;">{{ $customer->name }}</strong><br>
+                                <span style="font-size: 18px; line-height: 1.6;">
+                                    {{ $customer->address1 }}<br>
+                                    {{ $customer->city }}{{ $customer->postal_code ? ', ' . $customer->postal_code : '' }}
+                                </span>
+                            </div>
 
-                            <p style="margin: 20px 0; font-weight: bold; font-family: Arial, sans-serif;">Welcome to {{ $customer->name }}</p>
+                            <p style="margin: 30px 0; font-weight: bold; font-family: Arial, sans-serif; font-size: 26px; color: #a68831;">Welcome to Sinar Meadow</p>
 
-                            <p style="margin: 0 0 15px; font-family: Arial, sans-serif;">Dear Sirs,</p>
-                            <p style="margin: 0 0 15px; font-family: Arial, sans-serif;">On behalf of everyone at PT Sinar Meadow International Indonesia, we want to extend a warm welcome. We are so glad to have you as a new customer and are thrilled you've chosen us for your material needs.</p>
-                            <p style="margin: 0 0 15px; font-family: Arial, sans-serif;">We are committed to providing you with excellent product and services. As a valued customer, your satisfaction is our top priority, and we are here to support you every step of the way.</p>
-                            <p style="margin: 0 0 5px; font-family: Arial, sans-serif;">To help you get started, here are some helpful resources:</p>
+                            <p class="body-text" style="margin: 0 0 20px; font-family: Arial, sans-serif; font-size: 18px;">Dear Sirs,</p>
 
-                            <ul style="padding-left: 15px; margin-top: 10px; font-family: Arial, sans-serif;">
+                            <p class="body-text" style="margin: 0 0 20px; font-family: Arial, sans-serif; font-size: 18px;">On behalf of everyone at PT Sinar Meadow International Indonesia, we want to extend a warm welcome. We are so glad to have you as a new customer and are thrilled you've chosen us for your material needs.</p>
 
-                                <li style="margin-bottom: 20px; font-size: 14px;">
-                                    <strong>Your account details:</strong>
-                                    {{-- INLINE CSS: content-indent --}}
-                                    <div style="margin-left: 25px; margin-top: 5px;">
-                                        <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                            <p class="body-text" style="margin: 0 0 20px; font-family: Arial, sans-serif; font-size: 18px;">We are committed to providing you with excellent product and services. As a valued customer, your satisfaction is our top priority, and we are here to support you every step of the way.</p>
+
+                            <p class="body-text" style="margin: 0 0 15px; font-family: Arial, sans-serif; font-size: 18px;">To help you get started, here are some helpful resources:</p>
+
+                            <ul style="padding-left: 20px; margin-top: 15px; font-family: Arial, sans-serif;">
+
+                                <li style="margin-bottom: 35px; font-size: 18px;">
+                                    <strong style="font-size: 20px;">Your account details:</strong>
+                                    <div style="margin-left: 0px; margin-top: 15px; background-color: #f9f9f9; padding: 25px; border-radius: 8px;">
+                                        <table border="0" cellpadding="0" cellspacing="0" width="100%" style="font-size: 17px; line-height: 1.6;">
                                             <tr>
-                                                <td style="width: 130px; padding: 2px 0; color: #333;">Customer ID</td>
-                                                <td style="width: 15px; text-align: center; padding: 2px 0; color: #333;">:</td>
-                                                <td style="padding: 2px 0; color: #333;">{{ $customer->code }}</td>
+                                                <td style="width: 200px; padding: 8px 0; color: #555; font-weight: 600;">Customer ID</td>
+                                                <td style="width: 20px; text-align: center; padding: 8px 0; color: #555;">:</td>
+                                                <td style="padding: 8px 0; color: #333; font-weight: bold;">{{ $customer->code }}</td>
                                             </tr>
                                             <tr>
-                                                <td style="width: 130px; padding: 2px 0; color: #333;">Customer Name</td>
-                                                <td style="width: 15px; text-align: center; padding: 2px 0; color: #333;">:</td>
-                                                <td style="padding: 2px 0; color: #333;">{{ $customer->name }}</td>
+                                                <td style="width: 200px; padding: 8px 0; color: #555; font-weight: 600;">Customer Name</td>
+                                                <td style="width: 20px; text-align: center; padding: 8px 0; color: #555;">:</td>
+                                                <td style="padding: 8px 0; color: #333; font-weight: bold;">{{ $customer->name }}</td>
                                             </tr>
                                             <tr>
-                                                <td style="width: 130px; padding: 2px 0; color: #333;">Term of Payment</td>
-                                                <td style="width: 15px; text-align: center; padding: 2px 0; color: #333;">:</td>
-                                                <td style="padding: 2px 0; color: #333;">{{ $customer->term_of_payment }}</td>
+                                                <td style="width: 200px; padding: 8px 0; color: #555; font-weight: 600;">Term of Payment</td>
+                                                <td style="width: 20px; text-align: center; padding: 8px 0; color: #555;">:</td>
+                                                <td style="padding: 8px 0; color: #333;">{{ $customer->term_of_payment }}</td>
                                             </tr>
                                             <tr>
-                                                <td style="width: 130px; padding: 2px 0; color: #333;">Credit Limit</td>
-                                                <td style="width: 15px; text-align: center; padding: 2px 0; color: #333;">:</td>
-                                                <td style="padding: 2px 0; color: #333;">IDR {{ number_format($customer->credit_limit, 0, ',', '.') }}</td>
-                                            </tr>
-                                            <tr>
-                                                <td style="width: 130px; padding: 2px 0; color: #333;">Credit Rating</td>
-                                                <td style="width: 15px; text-align: center; padding: 2px 0; color: #333;">:</td>
-                                                <td style="padding: 2px 0; color: #333;">N/A</td>
+                                                <td style="width: 200px; padding: 8px 0; color: #555; font-weight: 600;">Credit Limit</td>
+                                                <td style="width: 20px; text-align: center; padding: 8px 0; color: #555;">:</td>
+                                                <td style="padding: 8px 0; color: #333;">IDR {{ number_format($customer->credit_limit, 0, ',', '.') }}</td>
                                             </tr>
                                         </table>
                                     </div>
                                 </li>
 
-                                <li style="margin-bottom: 20px; font-size: 14px;">
-                                    <strong>Support:</strong> For any questions, you can reach our support team :
+                                <li style="margin-bottom: 35px; font-size: 18px;">
+                                    <strong style="font-size: 20px;">Support:</strong> <br>For any questions, you can reach our support team :
 
-                                    <div style="margin-left: 25px; margin-top: 10px;">
-
-                                        <div style="margin-bottom: 10px; font-weight: bold;">Sales Representative</div>
-                                        <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                                    <div style="margin-left: 0px; margin-top: 20px;">
+                                        <div style="margin-bottom: 12px; font-weight: bold; color: #a68831; font-size: 19px;">Sales Representative</div>
+                                        <table border="0" cellpadding="0" cellspacing="0" width="100%" style="font-size: 17px; margin-bottom: 25px; line-height: 1.6;">
                                             <tr>
-                                                <td style="width: 130px; padding: 2px 0; color: #333;">Name</td>
-                                                <td style="width: 15px; text-align: center; padding: 2px 0; color: #333;">:</td>
-                                                <td style="padding: 2px 0; color: #333;">{{ $salesRep->name ?? '-' }}</td>
+                                                <td style="width: 200px; padding: 6px 0; color: #555;">Name</td>
+                                                <td style="width: 20px; text-align: center; padding: 6px 0; color: #555;">:</td>
+                                                <td style="padding: 6px 0; color: #333;">{{ $salesRep->name ?? '-' }}</td>
                                             </tr>
                                             <tr>
-                                                <td style="width: 130px; padding: 2px 0; color: #333;">Email</td>
-                                                <td style="width: 15px; text-align: center; padding: 2px 0; color: #333;">:</td>
-                                                <td style="padding: 2px 0; color: #333;">{{ $salesRep->email ?? '-' }}</td>
+                                                <td style="width: 200px; padding: 6px 0; color: #555;">Email</td>
+                                                <td style="width: 20px; text-align: center; padding: 6px 0; color: #555;">:</td>
+                                                <td style="padding: 6px 0; color: #333;">{{ $salesRep->email ?? '-' }}</td>
                                             </tr>
                                             <tr>
-                                                <td style="width: 130px; padding: 2px 0; color: #333;">Contact No</td>
-                                                <td style="width: 15px; text-align: center; padding: 2px 0; color: #333;">:</td>
-                                                <td style="padding: 2px 0; color: #333;">{{ $salesRep->no_telepon ?? '-'  }}</td>
+                                                <td style="width: 200px; padding: 6px 0; color: #555;">Contact No</td>
+                                                <td style="width: 20px; text-align: center; padding: 6px 0; color: #555;">:</td>
+                                                <td style="padding: 6px 0; color: #333;">{{ $salesRep->no_telepon ?? '-'  }}</td>
                                             </tr>
                                         </table>
 
-                                        <div style="margin-top: 15px; margin-bottom: 10px; font-weight: bold;">Finance Support</div>
-                                        <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                                        <div style="margin-bottom: 12px; font-weight: bold; color: #a68831; font-size: 19px;">Finance Support</div>
+                                        <table border="0" cellpadding="0" cellspacing="0" width="100%" style="font-size: 17px; line-height: 1.6;">
                                             <tr>
-                                                <td style="width: 130px; padding: 2px 0; color: #333;">Name</td>
-                                                <td style="width: 15px; text-align: center; padding: 2px 0; color: #333;">:</td>
-                                                <td style="padding: 2px 0; color: #333;">{{ $managerFinance->name ?? '-' }}</td>
+                                                <td style="width: 200px; padding: 6px 0; color: #555;">Name</td>
+                                                <td style="width: 20px; text-align: center; padding: 6px 0; color: #555;">:</td>
+                                                <td style="padding: 6px 0; color: #333;">{{ $managerFinance->name ?? '-' }}</td>
                                             </tr>
                                             <tr>
-                                                <td style="width: 130px; padding: 2px 0; color: #333;">Email</td>
-                                                <td style="width: 15px; text-align: center; padding: 2px 0; color: #333;">:</td>
-                                                <td style="padding: 2px 0; color: #333;">{{ $managerFinance->email ?? '-' }}</td>
+                                                <td style="width: 200px; padding: 6px 0; color: #555;">Email</td>
+                                                <td style="width: 20px; text-align: center; padding: 6px 0; color: #555;">:</td>
+                                                <td style="padding: 6px 0; color: #333;">{{ $managerFinance->email ?? '-' }}</td>
                                             </tr>
                                             <tr>
-                                                <td style="width: 130px; padding: 2px 0; color: #333;">Contact No</td>
-                                                <td style="width: 15px; text-align: center; padding: 2px 0; color: #333;">:</td>
-                                                 <td style="padding: 2px 0; color: #333;">{{ $managerFinance->no_telepon ?? '-'  }}</td>
+                                                <td style="width: 200px; padding: 6px 0; color: #555;">Contact No</td>
+                                                <td style="width: 20px; text-align: center; padding: 6px 0; color: #555;">:</td>
+                                                 <td style="padding: 6px 0; color: #333;">{{ $managerFinance->no_telepon ?? '-'  }}</td>
                                             </tr>
                                         </table>
-
                                     </div>
                                 </li>
 
-                                <li style="margin-bottom: 15px; font-size: 14px;">
-                                    <strong>Learn more</strong>
-                                    <div style="margin-left: 25px; margin-top: 5px;">
-                                        {{-- Link Color diubah menjadi #a68831 --}}
-                                        Explore our <a href="https://www.sinarmeadow.com" style="color: #a68831; text-decoration: underline;">[website/blog]</a> to learn more about another product
+                                <li style="margin-bottom: 25px; font-size: 18px;">
+                                    <strong style="font-size: 19px;">Learn more</strong>
+                                    <div style="margin-left: 0px; margin-top: 10px;">
+                                        Explore our <a href="https://www.sinarmeadow.com" style="color: #a68831; text-decoration: underline; font-weight: bold;">[website/blog]</a> to learn more about another product
                                     </div>
                                 </li>
                             </ul>
 
-                            <p style="margin: 10px; font-family: Arial, sans-serif;">We look forward to building a long-lasting relationship with you.</p>
+                            <p style="margin: 35px 0 20px; font-family: Arial, sans-serif; font-size: 18px;">We look forward to building a long-lasting relationship with you.</p>
 
-                            <p style="margin: 0; font-family: Arial, sans-serif;">Sincerely,</p>
+                            <p style="margin: 0; font-family: Arial, sans-serif; font-size: 18px;">Sincerely,</p>
 
                             <br><br>
 
-                            <p style="margin: 0; font-family: Arial, sans-serif;">
-                                <strong>{{ $managerFinance->name ?? '-' }}</strong><br>
-                                Finance Accounting & Tax Manager
+                            <p style="margin: 0; font-family: Arial, sans-serif; font-size: 18px;">
+                                <strong style="font-size: 20px;">{{ $managerFinance->name ?? '-' }}</strong><br>
+                                <span style="font-size: 16px; color: #666;">Finance Accounting & Tax Manager</span>
                             </p>
                         </td>
                     </tr>
 
                     <tr>
-                        <td align="center" bgcolor="#f4f4f4" style="padding: 20px; font-size: 11px; color: #999999; font-family: Arial, sans-serif;">
+                        <td align="center" bgcolor="#a68831" style="padding: 25px; font-size: 14px; color: #ffffff; font-family: Arial, sans-serif;">
                             &copy; {{ date('Y') }} PT. Sinar Meadow International Indonesia.<br>
                             Automated System Notification.
                         </td>
@@ -172,4 +183,4 @@
         </tr>
     </table>
 </body>
-</html>
+</html> 

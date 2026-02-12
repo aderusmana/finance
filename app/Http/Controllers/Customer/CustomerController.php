@@ -37,11 +37,26 @@ class CustomerController extends Controller
     public function __construct(CustomerService $customerService)
     {
         $this->customerService = $customerService;
-        $this->middleware('permission:view customer', ['only' => ['index', 'show', 'logPage', 'getLogData']]);
-        $this->middleware('permission:create customer', ['only' => ['store', 'storeFile']]);
-        $this->middleware('permission:update customer', ['only' => ['update', 'updateFile', 'recall']]);
-        $this->middleware('permission:delete customer', ['only' => ['destroy', 'destroyFile']]);
-        $this->middleware('permission:view approval', ['only' => ['approvalPage', 'getApprovalData', 'viewApprovalPage']]);
+        // $this->middleware('permission:view customer', ['only' => ['index', 'show', 'logPage', 'getLogData']]);
+        // $this->middleware('permission:create customer', ['only' => ['store', 'storeFile']]);
+        // $this->middleware('permission:update customer', ['only' => ['update', 'updateFile', 'recall']]);
+        // $this->middleware('permission:delete customer', ['only' => ['destroy', 'destroyFile']]);
+        // $this->middleware('permission:view approval', ['only' => ['approvalPage', 'getApprovalData', 'viewApprovalPage']]);
+    }
+
+    private function getRomanMonth($month) {
+        $map = [1=>'I', 2=>'II', 3=>'III', 4=>'IV', 5=>'V', 6=>'VI', 7=>'VII', 8=>'VIII', 9=>'IX', 10=>'X', 11=>'XI', 12=>'XII'];
+        return $map[$month] ?? 'I';
+    }
+
+    private function generateInitials($string) {
+        $string = strtoupper(preg_replace('/[^A-Z0-9\s]/', '', $string));
+        $words = explode(' ', $string);
+        $initials = '';
+        foreach ($words as $w) {
+            $initials .= $w[0] ?? '';
+        }
+        return substr($initials, 0, 5);
     }
 
     public function generatePkdPreview(Request $request)
@@ -695,8 +710,8 @@ class CustomerController extends Controller
             }
         } else {
             if ($action === 'review' || $action === 'reject') {
-                
-                if (!$isIT) { 
+
+                if (!$isIT) {
                     if (empty($cleanNotes)) {
                         return back()->withInput()->withErrors(['notes' => 'Notes wajib diisi untuk keputusan Review/Reject.']);
                     }

@@ -129,37 +129,20 @@ class MasterManagementSeeder extends Seeder
         $anyBranch = Branch::inRandomOrder()->first();
         $anyAccountGroup = AccountGroup::inRandomOrder()->first();
 
-        $targetUsers = User::whereIn('username', ['staff.sales1', 'head.sales'])->get();
-        $jktRegion = Regions::where('region_name', 'COMMERCIAL')->first();
-        $hoBranch = Branch::where('branch_name', 'Head Office - Jakarta')->first();
-        $distAccountGroup = AccountGroup::where('name_account_group', 'COMMERCIAL')->first();
-        $salesUser = User::where('username', 'staff.sales1')->first();
+        $region = Regions::where('region_name', 'COMMERCIAL')->first() ?? Regions::first();
+        $branch = Branch::where('branch_name', 'Head Office - Jakarta')->first() ?? Branch::first();
+        $accGroup = AccountGroup::first();
+        $headSnmUser = User::where('username', 'head.snm')->first();
 
-        if ($salesUser && $jktRegion && $hoBranch && $distAccountGroup) {
+        if ($headSnmUser && $region && $branch && $accGroup) {
             Sales::updateOrCreate(
-                ['user_id' => $salesUser->id],
+                ['user_id' => $headSnmUser->id], // Kunci pencarian
                 [
-                    'region_id' => $jktRegion->id,
-                    'branch_id' => $hoBranch->id,
-                    'account_group_id' => $distAccountGroup->id,
+                    'region_id' => $region->id,
+                    'branch_id' => $branch->id,
+                    'account_group_id' => $accGroup->id,
                 ]
             );
-            if ($targetUsers->isEmpty()) {
-                $targetUsers = User::limit(2)->get();
-            }
-
-            if ($anyRegion && $anyBranch && $anyAccountGroup) {
-                foreach ($targetUsers as $user) {
-                    Sales::updateOrCreate(
-                        ['user_id' => $user->id],
-                        [
-                            'region_id' => $anyRegion->id,
-                            'branch_id' => $anyBranch->id,
-                            'account_group_id' => $anyAccountGroup->id,
-                        ]
-                    );
-                }
-            }
         }
     }
 }
