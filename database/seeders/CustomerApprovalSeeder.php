@@ -18,7 +18,7 @@ class CustomerApprovalSeeder extends Seeder
         // A. Urutan untuk CBD
         $rolesCBD = [
             'atasan',
-            'head-snm',
+            'head-SNM',
             'head-finance',
             'manager-finance',
             'it'
@@ -57,7 +57,7 @@ class CustomerApprovalSeeder extends Seeder
         ApprovalPath::updateOrCreate(
             [
                 'category'     => 'Customer',
-                'sub_category' => null, 
+                'sub_category' => null,
             ],
             [
                 'sequence_approvers' => $rolesGeneral,
