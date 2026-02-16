@@ -35,11 +35,11 @@ class AllSeeder extends Seeder
             'view permission', 'create permission', 'update permission', 'delete permission',
             'view user', 'create user', 'update user', 'delete user',
             'view department', 'create department', 'update department', 'delete department',
-            'view item', 'create item', 'update item', 'delete item', 
+            'view item', 'create item', 'update item', 'delete item',
             'view customer', 'create customer', 'update customer', 'delete customer',
             'view bg', 'create bg', 'update bg', 'delete bg',
             'view bg-approval', 'approve bg', 'reject bg',
-            'view log', 'view report', 'view approval', 
+            'view log', 'view report', 'view approval',
             'view approval-path', 'view revision',
         ];
 
@@ -74,7 +74,7 @@ class AllSeeder extends Seeder
         // ==========================================
         // 4. Create Roles
         // ==========================================
-        
+
         // Super Admin
         $superAdminRole = Role::updateOrCreate(['name' => 'super-admin']);
         $superAdminRole->givePermissionTo(Permission::all());
@@ -85,12 +85,12 @@ class AllSeeder extends Seeder
 
         // Finance Roles
         $financePerms = [
-            'view dashboard', 'view customers menu', 'view customer', 'update customer', 
-            'view bank garansi menu', 'view bg', 'create bg', 'update bg', 'delete bg', 
+            'view dashboard', 'view customers menu', 'view customer', 'update customer',
+            'view bank garansi menu', 'view bg', 'create bg', 'update bg', 'delete bg',
             'view bg-approval', 'approve bg', 'reject bg',
             'view log', 'view report', 'view approval'
         ];
-        
+
         $managerFinanceRole = Role::updateOrCreate(['name' => 'manager-finance']);
         $managerFinanceRole->syncPermissions($financePerms);
 
@@ -98,9 +98,9 @@ class AllSeeder extends Seeder
         $headFinanceRole->syncPermissions($financePerms);
 
         // Sales Role (Head SNM)
-        $headSnmRole = Role::updateOrCreate(['name' => 'head-snm']);
+        $headSnmRole = Role::updateOrCreate(['name' => 'head-SNM']);
         $headSnmRole->syncPermissions([
-            'view dashboard', 'view customers menu', 'view customer', 
+            'view dashboard', 'view customers menu', 'view customer',
             'create customer', 'update customer', 'view report', 'view approval'
         ]);
 
@@ -139,12 +139,12 @@ class AllSeeder extends Seeder
             ['email' => 'head.finance@example.com'],
             [
                 'name' => 'Head Finance',
-                'nik' => 'HDFN01', 
+                'nik' => 'HDFN01',
                 'username' => 'head.finance',
                 'password' => Hash::make('password'),
                 'email_verified_at' => now(),
-                'no_telepon' => '081234567891', 
-                'department_id' => 2, 
+                'no_telepon' => '081234567891',
+                'department_id' => 2,
                 'status' => 'active',
                 'atasan_nik' => 'DIR001', // Langsung ke Director
                 'position_id' => $posHead->id,
@@ -156,13 +156,13 @@ class AllSeeder extends Seeder
         $managerFinance = User::updateOrCreate(
             ['email' => 'ziddanazzahra10@gmail.com'],
             [
-                'name' => 'Manager Finance', 
-                'nik' => 'MF001', 
+                'name' => 'Manager Finance',
+                'nik' => 'MF001',
                 'username' => 'manager.finance',
                 'password' => Hash::make('password'),
                 'email_verified_at' => now(),
-                'no_telepon' => '081234567890', 
-                'department_id' => 2, 
+                'no_telepon' => '081234567890',
+                'department_id' => 2,
                 'status' => 'active',
                 'atasan_nik' => 'HDFN01', // Atasannya Head Finance
                 'position_id' => $posManager->id,
@@ -174,12 +174,12 @@ class AllSeeder extends Seeder
         $headSnm = User::updateOrCreate(
             ['email' => 'head.snm@example.com'],
             [
-                'name' => 'Head SNM', 
-                'nik' => 'HDSNM01', 
+                'name' => 'Head SNM',
+                'nik' => 'HDSNM01',
                 'username' => 'head.snm',
                 'password' => Hash::make('password'),
                 'email_verified_at' => now(),
-                'department_id' => 7, 
+                'department_id' => 7,
                 'status' => 'active',
                 'atasan_nik' => 'DIR001', // Langsung ke Director
                 'position_id' => $posHead->id,
@@ -191,12 +191,12 @@ class AllSeeder extends Seeder
         $itUser = User::updateOrCreate(
             ['email' => 'it.engineer@example.com'],
             [
-                'name' => 'IT Engineer', 
-                'nik' => 'IT001', 
+                'name' => 'IT Engineer',
+                'nik' => 'IT001',
                 'username' => 'it.engineer',
                 'password' => Hash::make('password'),
                 'email_verified_at' => now(),
-                'department_id' => 10, 
+                'department_id' => 10,
                 'status' => 'active',
                 'atasan_nik' => 'ADM001', // Lapor ke Superadmin
                 'position_id' => $posStaff->id,
