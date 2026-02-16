@@ -30,7 +30,7 @@ class CustomerService
                 $year = date('Y');
                 $monthRoman = $this->getRomanMonth(date('n'));
                 $initials = $this->generateInitials($data['name']);
-                
+
                 $maxSequence = 0;
                 $existingNumbers = Customer::where('no_pkd', 'LIKE', "%/{$year}")
                                     ->pluck('no_pkd')->toArray();
@@ -67,7 +67,7 @@ class CustomerService
                 $termVal = $data['term_of_payment'];
                 $data['top_calc'] = ($termVal === 'CBD') ? 0 : (int) $termVal;
             }
-            
+
             if(empty($data['lead_time'])) {
                 $data['lead_time'] = 0;
             }
@@ -110,7 +110,7 @@ class CustomerService
             CustomerFile::create($fileData);
 
             $subCategory = ($data['term_of_payment'] === 'CBD') ? 'CBD' : null;
-            
+
             $this->generateApprovalLogs($user, $customer->id, 'Customer', $subCategory);
 
             $firstLog = ApprovalLog::where('category', 'Customer')
@@ -122,7 +122,7 @@ class CustomerService
                 $firstApprover = User::where('nik', $firstLog->approver_nik)->first();
                 if ($firstApprover) {
                     $customer->update(['route_to' => $firstApprover->name, 'status_approval' => 'Pending']);
-                    
+
                     try {
                         Notification::send($firstApprover, new SystemNotification(
                             'Butuh Persetujuan',

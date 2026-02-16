@@ -128,7 +128,23 @@ class AllSeeder extends Seeder
                 'email_verified_at' => now(),
                 'department_id' => 10, // IT
                 'status' => 'active',
-                'atasan_nik' => 'IT001', // Atasannya User No 6
+                'atasan_nik' => 'AG2222', // Atasannya User No 6
+                'position_id' => $posManager->id,
+            ]
+        );
+        $superAdmin->assignRole($superAdminRole);
+
+        $superAdmin = User::updateOrCreate(
+            ['email' => 'userapproval@example.com'],
+            [
+                'name' => 'User Approval',
+                'nik' => 'AG2222',
+                'username' => 'user.approval',
+                'password' => Hash::make('password'),
+                'email_verified_at' => now(),
+                'department_id' => 10, // IT
+                'status' => 'active',
+                'atasan_nik' => 'AG1111', // Atasannya User No 6
                 'position_id' => $posManager->id,
             ]
         );
@@ -146,7 +162,7 @@ class AllSeeder extends Seeder
                 'no_telepon' => '081234567891',
                 'department_id' => 2,
                 'status' => 'active',
-                'atasan_nik' => 'DIR001', // Langsung ke Director
+                'atasan_nik' => 'AG1111', // Langsung ke Director
                 'position_id' => $posHead->id,
             ]
         );
@@ -164,7 +180,7 @@ class AllSeeder extends Seeder
                 'no_telepon' => '081234567890',
                 'department_id' => 2,
                 'status' => 'active',
-                'atasan_nik' => 'HDFN01', // Atasannya Head Finance
+                'atasan_nik' => 'AG1111', // Atasannya Head Finance
                 'position_id' => $posManager->id,
             ]
         );
@@ -181,7 +197,7 @@ class AllSeeder extends Seeder
                 'email_verified_at' => now(),
                 'department_id' => 7,
                 'status' => 'active',
-                'atasan_nik' => 'DIR001', // Langsung ke Director
+                'atasan_nik' => 'AG1111', // Langsung ke Director
                 'position_id' => $posHead->id,
             ]
         );
@@ -198,7 +214,7 @@ class AllSeeder extends Seeder
                 'email_verified_at' => now(),
                 'department_id' => 10,
                 'status' => 'active',
-                'atasan_nik' => 'ADM001', // Lapor ke Superadmin
+                'atasan_nik' => 'AG1111', // Lapor ke Superadmin
                 'position_id' => $posStaff->id,
             ]
         );

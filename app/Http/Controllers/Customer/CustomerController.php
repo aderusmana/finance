@@ -795,30 +795,6 @@ class CustomerController extends Controller
                 ]);
 
                 $notes .= "\n[System]: Customer Code & Join Date set by IT (" . $actor->name . ")";
-
-                if ($customer->email) {
-                    try {
-                        Mail::to($customer->email)
-                            ->queue(new CustomerWelcomeMail($customer));
-
-                        $notes .= "\n[System]: Welcome Email sent to Customer ($customer->email).";
-                    } catch (\Exception $e) {
-                        Log::error("Gagal kirim Welcome Email ke Customer: " . $e->getMessage());
-                        $notes .= "\n[System Error]: Gagal kirim email ke customer.";
-                    }
-                }
-
-                // Logic existing untuk notifikasi internal ke Sales bahwa proses selesai
-                $requester = $customer->user;
-                if ($requester && $requester->email) {
-                    $recipients = [[
-                        'email' => $requester->email,
-                        'name' => $requester->name,
-                        'level' => 'Requester',
-                        'is_first' => false
-                    ]];
-                    CustomerJob::dispatch($customer->id, $recipients, null, 'completed');
-                }
             }
 
             // --- 1. Tentukan Status & Notes ---
@@ -900,7 +876,6 @@ class CustomerController extends Controller
                 'token' => null,
             ]);
 
-            // --- 3. Cek Alur Selanjutnya ---
             if ($dbStatus === 'Approved') {
                 $nextLevel = $currentLog->level + 1;
                 $nextLog = ApprovalLog::where('category', 'Customer')
@@ -959,6 +934,18 @@ class CustomerController extends Controller
                         'status' => 'Active'
                     ]);
 
+                    if ($customer->email) {
+                        try {
+                            Mail::to($customer->email)
+                                ->queue(new CustomerWelcomeMail($customer));
+
+                            $notes .= "\n[System]: Welcome Email sent to Customer ($customer->email).";
+                        } catch (\Exception $e) {
+                            Log::error("Gagal kirim Welcome Email ke Customer: " . $e->getMessage());
+                            $notes .= "\n[System Error]: Gagal kirim email ke customer.";
+                        }
+                    }
+
                     $requester = $customer->user;
                     if ($requester && $requester->email) {
                         $recipients = [[
@@ -967,9 +954,7 @@ class CustomerController extends Controller
                             'level' => 'Requester',
                             'is_first' => false
                         ]];
-
                         CustomerJob::dispatch($customer->id, $recipients, null, 'completed');
-                        Log::info("APPROVAL FLOW: Customer #{$customer->id} COMPLETED (Approved). Email notifikasi dikirim ke Requester: {$requester->email}");
                     }
                 }
             } elseif ($dbStatus === 'Rejected') {
