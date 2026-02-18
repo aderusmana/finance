@@ -1834,8 +1834,6 @@
                 $('#resetFilters').on('click', function() {
                     $('#statusFilter').val('all').trigger('change');
                     $('#approvalStatusFilter').val('all').trigger('change');
-
-                    // table.draw() akan terpanggil otomatis karena trigger('change') di atas
                 });
 
                 $('#user_id').on('change', function() {
@@ -1957,18 +1955,13 @@
                     }
                 });
 
-                $(document).on('click focus', '#credit_limit', function(e) {
-                    e.preventDefault();
-
+            $(document).on('focus', '#credit_limit', function(e) {
+                    
                     const bgStatus = $('#bank_garansi').val();
                     const topVal = $('#term_of_payment').val();
-
-                    if (bgStatus === 'YA' || topVal === 'CBD') {
-                        return;
-                    }
-
                     const termString = $('#term_of_payment').val();
-                    if (!termString) {
+
+                    if (!topVal) {
                         Swal.fire({
                             icon: 'warning',
                             title: 'TOP belum dipilih',
@@ -1977,6 +1970,11 @@
                         $('#term_of_payment').select2('open');
                         return;
                     }
+
+                    if (bgStatus === 'YA' || topVal === 'CBD') {
+                        return;
+                    }
+
 
                     $('#calc_products').empty();
 
@@ -2521,7 +2519,7 @@
                         <div class="row g-2 mt-2">
                             <div class="col-md-6">
                                 <label class="form-label">TOP (days)</label>
-                                <input type="number" step="1" id="calc_top" class="form-control" />
+                                <input type="number" step="1" id="calc_top" class="form-control" readonly />
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Lead Time (LT)</label>
