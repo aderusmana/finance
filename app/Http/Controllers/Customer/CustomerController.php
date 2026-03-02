@@ -161,6 +161,25 @@ class CustomerController extends Controller
                     $tglNpwp = $row->tanggal_npwp ? Carbon::parse($row->tanggal_npwp)->format('Y-m-d') : '';
                     $tglNppkp = $row->tanggal_nppkp ? Carbon::parse($row->tanggal_nppkp)->format('Y-m-d') : '';
 
+                    // Ensure payment / faktur fields are strings (DB may store JSON/array in longtext)
+                    $paymentDaysVal = $row->payment_days ?? '';
+                    $paymentDateVal = $row->payment_date ?? '';
+                    $fakturDaysVal = $row->faktur_days ?? '';
+                    $fakturDateVal = $row->faktur_date ?? '';
+
+                    if (is_array($paymentDaysVal) || is_object($paymentDaysVal)) {
+                        $paymentDaysVal = json_encode($paymentDaysVal);
+                    }
+                    if (is_array($paymentDateVal) || is_object($paymentDateVal)) {
+                        $paymentDateVal = json_encode($paymentDateVal);
+                    }
+                    if (is_array($fakturDaysVal) || is_object($fakturDaysVal)) {
+                        $fakturDaysVal = json_encode($fakturDaysVal);
+                    }
+                    if (is_array($fakturDateVal) || is_object($fakturDateVal)) {
+                        $fakturDateVal = json_encode($fakturDateVal);
+                    }
+
                     $dataAttrs = '';
                     $dataAttrs .= ' data-id="' . $row->id . '"';
                     $dataAttrs .= ' data-user_id="' . e($row->user_id) . '"';
@@ -211,6 +230,10 @@ class CustomerController extends Controller
                     $dataAttrs .= ' data-file_nib_path="' . $rowData['file_nib_path'] . '"';
                     $dataAttrs .= ' data-file_ktp_path="' . $rowData['file_ktp_path'] . '"';
                     $dataAttrs .= ' data-file_akte_path="' . $rowData['file_akte_path'] . '"';
+                    $dataAttrs .= ' data-payment_days="' . e($paymentDaysVal) . '"';
+                    $dataAttrs .= ' data-payment_date="' . e($paymentDateVal) . '"';
+                    $dataAttrs .= ' data-faktur_days="' . e($fakturDaysVal) . '"';
+                    $dataAttrs .= ' data-faktur_date="' . e($fakturDateVal) . '"';
 
                     $btn = '<div class="d-flex gap-2">';
 

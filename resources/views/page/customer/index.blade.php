@@ -869,26 +869,69 @@
                         <div class="card-body p-4">
                             <div class="row g-4">
                                 <div class="col-md-6 border-end">
-                                    <div class="row g-4">
-                                        <div class="col-md-12">
-                                            <label class="fw-bold text-secondary text-uppercase f-s-12 mb-1">Payment Date</label>
-                                            <div class="fw-bold text-dark f-s-16" id="view_payment_date">-</div>
+                                    <h6 class="text-primary fw-bold small text-uppercase mb-2">Payment Schedule</h6>
+
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-bold">Payment Days</label>
+                                        <div class="schedule-selector" id="view_payment_days_container">
+                                            <div id="view_payment_days_inputs"></div>
+                                            <button type="button" class="btn btn-sm btn-outline-dark me-1 mb-1 btn-schedule" data-type="payment_days" data-val="All" disabled>All Days</button>
+                                            @foreach(['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'] as $day)
+                                                <button type="button" class="btn btn-sm btn-outline-primary mb-1 btn-schedule" data-type="payment_days" data-val="{{ $day }}" disabled>{{ $day }}</button>
+                                            @endforeach
                                         </div>
-                                        <div class="col-md-6">
-                                            <label class="fw-bold text-secondary text-uppercase f-s-12 mb-1">Payment Days</label>
-                                            <div class="fw-bold text-dark f-s-14" id="view_payment_days">-</div>
+                                    </div>
+
+                                    <div>
+                                        <label class="form-label small fw-bold">Payment Date</label>
+                                        <div class="schedule-selector" id="view_payment_date_container">
+                                            <div id="view_payment_date_inputs"></div>
+                                            <button type="button" class="btn btn-sm btn-outline-dark me-1 mb-2 w-100 btn-schedule" data-type="payment_date" data-val="All" disabled>All Dates (1-31)</button>
+                                            <div class="d-flex flex-wrap gap-1" id="view_payment_date_boxes">
+                                                @for($i=1; $i<=31; $i++)
+                                                    <button type="button"
+                                                        class="btn btn-xs btn-outline-secondary btn-schedule btn-date-box"
+                                                        style="width: 38px !important; height: 38px !important; padding: 0 !important; display: inline-flex !important; align-items: center; justify-content: center; font-size: 0.85rem !important; font-weight: 600; line-height: 1 !important; white-space: nowrap !important;"
+                                                        data-type="payment_date"
+                                                        data-val="{{ $i }}" disabled>
+                                                        {{ $i }}
+                                                    </button>
+                                                @endfor
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
+
                                 <div class="col-md-6 ps-md-4">
-                                    <div class="row g-4">
-                                        <div class="col-12">
-                                            <label class="fw-bold text-secondary text-uppercase f-s-12 mb-1">Faktur Date</label>
-                                            <div class="fw-bold text-dark f-s-14 lh-base" id="view_faktur_date">-</div>
+                                    <h6 class="text-success fw-bold small text-uppercase mb-2">Faktur Schedule</h6>
+
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-bold">Faktur Days</label>
+                                        <div class="schedule-selector" id="view_faktur_days_container">
+                                            <div id="view_faktur_days_inputs"></div>
+                                            <button type="button" class="btn btn-sm btn-outline-dark me-1 mb-1 btn-schedule" data-type="faktur_days" data-val="All" disabled>All Days</button>
+                                            @foreach(['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'] as $day)
+                                                <button type="button" class="btn btn-sm btn-outline-success mb-1 btn-schedule" data-type="faktur_days" data-val="{{ $day }}" disabled>{{ $day }}</button>
+                                            @endforeach
                                         </div>
-                                        <div class="col-md-4">
-                                            <label class="fw-bold text-secondary text-uppercase f-s-12 mb-1">Faktur Days</label>
-                                            <div class="fw-bold text-dark f-s-14" id="view_faktur_days">-</div>
+                                    </div>
+
+                                    <div>
+                                        <label class="form-label small fw-bold">Faktur Date</label>
+                                        <div class="schedule-selector" id="view_faktur_date_container">
+                                            <div id="view_faktur_date_inputs"></div>
+                                            <button type="button" class="btn btn-sm btn-outline-dark me-1 mb-2 w-100 btn-schedule" data-type="faktur_date" data-val="All" disabled>All Dates (1-31)</button>
+                                            <div class="d-flex flex-wrap gap-1" id="view_faktur_date_boxes">
+                                                @for($i=1; $i<=31; $i++)
+                                                    <button type="button"
+                                                        class="btn btn-xs btn-outline-secondary btn-schedule btn-date-box"
+                                                        style="width: 38px !important; height: 38px !important; padding: 0 !important; display: inline-flex !important; align-items: center; justify-content: center; font-size: 0.85rem !important; font-weight: 600; line-height: 1 !important; white-space: nowrap !important;"
+                                                        data-type="faktur_date"
+                                                        data-val="{{ $i }}" disabled>
+                                                        {{ $i }}
+                                                    </button>
+                                                @endfor
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -2052,6 +2095,75 @@
                     $('#customerModal').modal('show');
                 });
 
+                // Helpers to render schedule selectors in detail modal (read-only)
+                function normalizeSelected(val) {
+                    if (!val && val !== 0) return [];
+                    if (Array.isArray(val)) return val.map(String);
+                    if (typeof val === 'object') return Object.values(val).map(String);
+                    if (typeof val === 'string') {
+                        try {
+                            const parsed = JSON.parse(val);
+                            if (Array.isArray(parsed)) return parsed.map(String);
+                            if (parsed === null) return [];
+                        } catch (e) {
+                            // not JSON
+                        }
+                        if (val.indexOf(',') !== -1) return val.split(',').map(s => s.trim());
+                        return [val];
+                    }
+                    return [String(val)];
+                }
+
+                function renderDaySelector(containerSelector, rawVal, isPayment) {
+                    const selected = normalizeSelected(rawVal);
+                    const $container = $(containerSelector);
+                    $container.find('[data-type]').each(function() {
+                        const $b = $(this);
+                        const val = String($b.data('val'));
+                        if (val === 'All') {
+                            if (selected.length === 1 && (selected[0] === 'All' || selected[0] === 'all')) {
+                                $b.removeClass('btn-outline-dark').addClass('btn-dark');
+                            } else {
+                                $b.removeClass('btn-dark').addClass('btn-outline-dark');
+                            }
+                        } else {
+                            const isSelected = selected.includes(val);
+                            if (isPayment) {
+                                if (isSelected) $b.removeClass('btn-outline-primary').addClass('btn-primary text-white');
+                                else $b.removeClass('btn-primary text-white').addClass('btn-outline-primary');
+                            } else {
+                                if (isSelected) $b.removeClass('btn-outline-success').addClass('btn-success text-white');
+                                else $b.removeClass('btn-success text-white').addClass('btn-outline-success');
+                            }
+                        }
+                    });
+                }
+
+                function renderDateBoxes(boxesSelector, rawVal) {
+                    const selected = normalizeSelected(rawVal).map(String);
+                    const $boxes = $(boxesSelector).find('.btn-date-box');
+                    // Handle All Dates: if rawVal === 'All' or contains 'All'
+                    if (typeof rawVal === 'string' && rawVal.toLowerCase() === 'all') {
+                        $(boxesSelector).siblings('button[data-val="All"]').removeClass('btn-outline-dark').addClass('btn-dark');
+                        $boxes.each(function() {
+                            $(this).removeClass('btn-info text-white').addClass('btn-outline-secondary');
+                        });
+                        return;
+                    } else {
+                        $(boxesSelector).siblings('button[data-val="All"]').removeClass('btn-dark').addClass('btn-outline-dark');
+                    }
+
+                    $boxes.each(function() {
+                        const $b = $(this);
+                        const val = String($b.data('val'));
+                        if (selected.includes(val)) {
+                            $b.removeClass('btn-outline-secondary').addClass('btn-info text-white');
+                        } else {
+                            $b.removeClass('btn-info text-white').addClass('btn-outline-secondary');
+                        }
+                    });
+                }
+
                 $(document).on('click', '.btn-show-customer', function() {
                     const btn = $(this);
 
@@ -2111,6 +2223,17 @@
 
                     $('#view_shipping_name').text(btn.data('shipping_to_name'));
                     $('#view_shipping_address').text(btn.data('shipping_to_address'));
+
+                    // Payment & Faktur: render schedule selectors (detail/read-only)
+                    const paymentDaysRaw = btn.attr('data-payment_days') || btn.data('payment_days');
+                    const paymentDateRaw = btn.attr('data-payment_date') || btn.data('payment_date');
+                    const fakturDaysRaw = btn.attr('data-faktur_days') || btn.data('faktur_days');
+                    const fakturDateRaw = btn.attr('data-faktur_date') || btn.data('faktur_date');
+
+                    renderDaySelector('#view_payment_days_container', paymentDaysRaw, true);
+                    renderDateBoxes('#view_payment_date_boxes', paymentDateRaw);
+                    renderDaySelector('#view_faktur_days_container', fakturDaysRaw, false);
+                    renderDateBoxes('#view_faktur_date_boxes', fakturDateRaw);
 
                     const docs = [
                         { name: 'NPWP Document', path: btn.data('file_npwp_path'), icon: 'ph-file-text' },
