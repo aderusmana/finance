@@ -263,31 +263,34 @@
                                         {{-- 1. NPWP (REQUIRED) --}}
                                         <div class="col-md-3">
                                             <label class="form-label">Upload NPWP <span class="text-danger">*</span></label>
-                                            <input type="file" class="form-control" name="file_npwp" required>
-                                            <small class="text-muted f-s-11">Upload NPWP untuk auto-fill nama & alamat.</small>
+                                            <input type="file" class="form-control" name="file_npwp" accept=".jpeg,.jpg,.png" required>
+                                            <small class="text-muted f-s-11">Format: JPEG, JPG, PNG. Upload untuk auto-fill nama & alamat.</small>
                                             <div id="preview_npwp" class="mt-2" style="display: none;">
                                                 {{-- Preview button container --}}
                                             </div>
                                         </div>
 
-                                        {{-- 2. NIB/SIUP (REQUIRED - REVISI: Tambah Bintang & Required) --}}
+                                        {{-- 2. NIB/SIUP (REQUIRED) --}}
                                         <div class="col-md-3">
                                             <label class="form-label">Upload NIB/SIUP <span class="text-danger">*</span></label>
-                                            <input type="file" class="form-control" name="file_nib" required>
+                                            <input type="file" class="form-control" name="file_nib" accept=".jpeg,.jpg,.png" required>
+                                            <small class="text-muted f-s-11">Format: JPEG, JPG, PNG</small>
                                             <div id="preview_nib" class="mt-2" style="display: none;"></div>
                                         </div>
 
-                                        {{-- 3. KTP (REQUIRED - REVISI: Tambah Bintang & Required) --}}
+                                        {{-- 3. KTP (REQUIRED) --}}
                                         <div class="col-md-3">
                                             <label class="form-label">Upload KTP <span class="text-danger">*</span></label>
-                                            <input type="file" class="form-control" name="file_ktp" required>
+                                            <input type="file" class="form-control" name="file_ktp" accept=".jpeg,.jpg,.png" required>
+                                            <small class="text-muted f-s-11">Format: JPEG, JPG, PNG</small>
                                             <div id="preview_ktp" class="mt-2" style="display: none;"></div>
                                         </div>
 
-                                        {{-- 4. AKTE (NULLABLE - REVISI: Hapus Bintang & Hapus Required) --}}
+                                        {{-- 4. AKTE (OPTIONAL - PDF ONLY) --}}
                                         <div class="col-md-3">
-                                            <label class="form-label">Upload Akte Pendirian</label> {{-- Hapus span text-danger --}}
-                                            <input type="file" class="form-control" name="file_akte"> {{-- Hapus required --}}
+                                            <label class="form-label">Upload Akte Pendirian</label>
+                                            <input type="file" class="form-control" name="file_akte" accept=".pdf">
+                                            <small class="text-muted f-s-11">Format: PDF saja</small>
                                             <div id="preview_akte" class="mt-2" style="display: none;"></div>
                                         </div>
                                     </div>
