@@ -1530,7 +1530,7 @@
                                             showConfirmButton: false
                                         }).then(() => {
                                             $('#recallCustomerModal').modal('hide');
-                                            $('#sampleTable').DataTable().ajax.reload();
+                                            if (typeof table !== 'undefined') { table.ajax.reload(null, false); } else { $('#sampleTable').DataTable().ajax.reload(); }
                                         });
                                     } else {
                                         Swal.fire('Gagal!', response.message, 'error');
@@ -1599,7 +1599,7 @@
                                             showConfirmButton: false
                                         }).then(() => {
                                             $('#customerModal').modal('hide');
-                                            $('#sampleTable').DataTable().ajax.reload();
+                                            if (typeof table !== 'undefined') { table.ajax.reload(null, false); } else { $('#sampleTable').DataTable().ajax.reload(); }
                                         });
                                     } else {
                                         Swal.fire('Gagal!', response.message, 'error');

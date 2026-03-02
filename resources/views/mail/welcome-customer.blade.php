@@ -69,7 +69,8 @@
 
                             <p style="margin: 30px 0; font-weight: bold; font-family: Arial, sans-serif; font-size: 26px; color: #a68831;">Welcome to Sinar Meadow</p>
 
-                            <p class="body-text" style="margin: 0 0 20px; font-family: Arial, sans-serif; font-size: 18px;">Dear Sirs,</p>
+                            <p class="body-text" style="margin: 0 0 20px; font-family: Arial, sans-serif; font-size: 18px;">Dear Mr. / Ms. {{ $customer->name }},</p>
+
 
                             <p class="body-text" style="margin: 0 0 20px; font-family: Arial, sans-serif; font-size: 18px;">On behalf of everyone at PT Sinar Meadow International Indonesia, we want to extend a warm welcome. We are so glad to have you as a new customer and are thrilled you've chosen us for your material needs.</p>
 
