@@ -8,7 +8,7 @@
     <link href="../assets/images/logo/favicon.png" rel="icon" type="image/x-icon">
     <link href="../assets/images/logo/favicon.png" rel="shortcut icon" type="image/x-icon">
 
-    <title>BG &amp; Customer Management</title>
+    <title>Portal Finance &amp; Admin</title>
 
     <!--font-awesome-css-->
     <link href="../assets/vendor/fontawesome/css/all.css" rel="stylesheet">

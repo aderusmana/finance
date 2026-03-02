@@ -7,7 +7,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="icon" href="{{ url('assets/images/logo/logors.png') }}">
 
-    <title>{{ 'Bank Garansi | Customer' }} - @yield('title')</title>
+    <title>{{ 'Portal Finance & Admin' }} - @yield('title')</title>
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">

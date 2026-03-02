@@ -5,7 +5,7 @@
                 <ul class="footer-text">
                     <li>
                         &copy;
-                        <span id="currentYear"></span> Bank Garansi | Create Customer | SINARMEADOW | MIS. All Rights
+                        <span id="currentYear"></span> Portal Finance & Admin | SINARMEADOW | MIS. All Rights
                         Reserved.
                     </li>
                 </ul>

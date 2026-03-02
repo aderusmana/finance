@@ -76,7 +76,7 @@
                             @endif
                         </a>
 
-                        <div aria-labelledby="profilecanvasRight" class="offcanvas offcanvas-end header-profile-canvas"
+                        <div aria-labelledby="profilecanvasRight" class="offcanvas offcanvas-end header-profile-canvas" style="max-height: 200px"
                             id="profilecanvasRight" tabindex="-1">
                             <div class="offcanvas-body app-scroll">
                                 <ul class="">

@@ -44,12 +44,14 @@ class CustomerController extends Controller
         // $this->middleware('permission:view approval', ['only' => ['approvalPage', 'getApprovalData', 'viewApprovalPage']]);
     }
 
-    private function getRomanMonth($month) {
-        $map = [1=>'I', 2=>'II', 3=>'III', 4=>'IV', 5=>'V', 6=>'VI', 7=>'VII', 8=>'VIII', 9=>'IX', 10=>'X', 11=>'XI', 12=>'XII'];
+    private function getRomanMonth($month)
+    {
+        $map = [1 => 'I', 2 => 'II', 3 => 'III', 4 => 'IV', 5 => 'V', 6 => 'VI', 7 => 'VII', 8 => 'VIII', 9 => 'IX', 10 => 'X', 11 => 'XI', 12 => 'XII'];
         return $map[$month] ?? 'I';
     }
 
-    private function generateInitials($string) {
+    private function generateInitials($string)
+    {
         $string = strtoupper(preg_replace('/[^A-Z0-9\s]/', '', $string));
         $words = explode(' ', $string);
         $initials = '';
@@ -488,7 +490,7 @@ class CustomerController extends Controller
     public function show(Customer $customer)
     {
         $user = Auth::user();
-        $canAdjustFinance = $user->hasRole('manager-finance') || $user->hasRole('head-finance')|| $user->hasRole('super-admin');
+        $canAdjustFinance = $user->hasRole('manager-finance') || $user->hasRole('head-finance') || $user->hasRole('super-admin');
 
         $baseTotalAmount = 0;
         foreach ($customer->items as $item) {
@@ -548,7 +550,6 @@ class CustomerController extends Controller
                 'message' => 'Customer created successfully!',
                 'data' => $customer
             ], 201);
-
         } catch (\Exception $e) {
             Log::error("Error create customer: " . $e->getMessage());
             return response()->json([

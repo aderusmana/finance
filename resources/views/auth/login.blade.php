@@ -45,8 +45,8 @@
                         <div class="row">
                             <div class="col-12">
                                 <div class="mb-5 text-center">
-                                    <h2 class="text-primary-dark f-w-600">Selamat Datang di Portal Bank Garansi & Customer</h2>
-                                    <p>Masuk menggunakan akun yang terdaftar untuk mengelola Bank Garansi dan pembuatan Customer.</p>
+                                    <h2 class="text-primary-dark f-w-600">Portal Finance & Admin</h2>
+                                    <p>Kelola Bank Garansi dan Data Customer dengan mudah</p>
                                 </div>
                             </div>
                             <div class="col-12">
