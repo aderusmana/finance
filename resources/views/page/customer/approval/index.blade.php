@@ -517,6 +517,49 @@
                     $('#approvalStatusFilter').val('all').trigger('change');
                 });
 
+                // Resend approval email handler
+                $(document).on('click', '.btn-resend-email', function(e) {
+                    e.preventDefault();
+                    const button = $(this);
+                    const token = button.data('token');
+                    const approverName = button.data('approver-name') || 'Approver';
+
+                    Swal.fire({
+                        title: 'Resend Approval Email?',
+                        text: `Resend approval link to ${approverName}?`,
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonText: 'Yes, Resend',
+                        confirmButtonColor: '#3085d6'
+                    }).then((result) => {
+                        if (!result.isConfirmed) return;
+
+                        const originalHtml = button.html();
+                        button.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span>');
+
+                        const url = "{{ route('approvals.resend', ':token') }}".replace(':token', token);
+                        const csrf = $('meta[name="csrf-token"]').attr('content');
+
+                        $.ajax({
+                            url: url,
+                            method: 'POST',
+                            headers: { 'X-CSRF-TOKEN': csrf },
+                            data: {},
+                            success: function(res) {
+                                Swal.fire('Sent', res.message || 'Approval email resent.', 'success');
+                                if (typeof table !== 'undefined' && table.ajax) table.ajax.reload(null, false);
+                            },
+                            error: function(xhr) {
+                                const msg = xhr.responseJSON?.message || 'Failed to resend approval email.';
+                                Swal.fire('Error', msg, 'error');
+                            },
+                            complete: function() {
+                                button.prop('disabled', false).html(originalHtml);
+                            }
+                        });
+                    });
+                });
+
                 window.populateViewForm = function(data) {
                     console.log('Populate View Form Data:', data);
 
