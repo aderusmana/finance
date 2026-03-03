@@ -106,6 +106,7 @@ class CustomerService
                 'nib_siup_file' => $request->hasFile('file_nib') ? $request->file('file_nib')->store($storageFolder, 'public') : null,
                 'ktp_file' => $request->hasFile('file_ktp') ? $request->file('file_ktp')->store($storageFolder, 'public') : null,
                 'akte_file' => $request->hasFile('file_akte') ? $request->file('file_akte')->store($storageFolder, 'public') : null,
+                'company_profile_file' => $request->hasFile('file_company_profile') ? $request->file('file_company_profile')->store($storageFolder, 'public') : null,
             ];
             CustomerFile::create($fileData);
 

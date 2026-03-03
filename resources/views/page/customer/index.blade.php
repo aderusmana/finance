@@ -27,13 +27,13 @@
                 <div class="d-none d-md-flex align-items-center gap-2 mb-3">
                     <span class="text-muted fw-bold me-1"><i class="ph-bold ph-funnel"></i> Filter:</span>
 
-                    <select id="statusFilter" class="form-select select2" style="width: 150px;">
+                    <select id="statusFilter" class="form-select select2" style="width: 9.375rem;">
                         <option value="all">All Account</option>
                         <option value="Active">Active (BG)</option>
                         <option value="Inactive">Inactive (BG)</option>
                     </select>
 
-                    <select id="approvalStatusFilter" class="form-select select2" style="width: 175px;">
+                    <select id="approvalStatusFilter" class="form-select select2" style="width: 10.9375rem;">
                         <option value="all">All Approval</option>
                         @foreach($approvalStatuses as $status)
                             <option value="{{ $status }}">{{ $status }}</option>
@@ -68,7 +68,7 @@
 
                     <div class="d-none d-md-flex gap-4 text-white align-items-center pe-2">
                         <div class="d-flex align-items-center gap-2" data-bs-toggle="tooltip" title="Waiting for Approval">
-                            <div class="bg-white bg-opacity-25 rounded-circle p-1 d-flex justify-content-center align-items-center" style="width: 32px; height: 32px;">
+                            <div class="bg-white bg-opacity-25 rounded-circle p-1 d-flex justify-content-center align-items-center" style="width: 2rem; height: 2rem;">
                                 <i class="ph-fill ph-clock-countdown text-warning f-s-18"></i>
                             </div>
                             <div class="d-flex flex-column line-height-sm">
@@ -78,7 +78,7 @@
                         </div>
 
                         <div class="d-flex align-items-center gap-2" data-bs-toggle="tooltip" title="Processing">
-                            <div class="bg-white bg-opacity-25 rounded-circle p-1 d-flex justify-content-center align-items-center" style="width: 32px; height: 32px;">
+                            <div class="bg-white bg-opacity-25 rounded-circle p-1 d-flex justify-content-center align-items-center" style="width: 2rem; height: 2rem;">
                                 <i class="ph-fill ph-gear text-info f-s-18"></i>
                             </div>
                             <div class="d-flex flex-column line-height-sm">
@@ -88,7 +88,7 @@
                         </div>
 
                         <div class="d-flex align-items-center gap-2" data-bs-toggle="tooltip" title="Approved (Administrative)">
-                             <div class="bg-white bg-opacity-25 rounded-circle p-1 d-flex justify-content-center align-items-center" style="width: 32px; height: 32px;">
+                             <div class="bg-white bg-opacity-25 rounded-circle p-1 d-flex justify-content-center align-items-center" style="width: 2rem; height: 2rem;">
                                 <i class="ph-fill ph-seal-check text-success f-s-18"></i>
                             </div>
                             <div class="d-flex flex-column line-height-sm">
@@ -97,13 +97,13 @@
                             </div>
                         </div>
 
-                        <div class="vr opacity-100 bg-white" style="height: 50px;"></div>
+                        <div class="vr opacity-100 bg-white" style="height: 3.125rem;"></div>
 
                         {{-- Stat 3: BG Status --}}
                         <div class="d-flex align-items-center gap-4">
 
                             <div class="d-flex align-items-center gap-2" data-bs-toggle="tooltip" title="Customers with Bank Garansi">
-                                <div class="bg-white bg-opacity-10 rounded-circle p-1 d-flex justify-content-center align-items-center" style="width: 32px; height: 32px;">
+                                <div class="bg-white bg-opacity-10 rounded-circle p-1 d-flex justify-content-center align-items-center" style="width: 2rem; height: 2rem;">
                                     <i class="ph-fill ph-file-text text-success f-s-18"></i>
                                 </div>
                                 <div class="d-flex flex-column line-height-sm">
@@ -113,7 +113,7 @@
                             </div>
 
                             <div class="d-flex align-items-center gap-2" data-bs-toggle="tooltip" title="Customers without Bank Garansi">
-                                <div class="bg-white bg-opacity-10 rounded-circle p-1 d-flex justify-content-center align-items-center" style="width: 32px; height: 32px;">
+                                <div class="bg-white bg-opacity-10 rounded-circle p-1 d-flex justify-content-center align-items-center" style="width: 2rem; height: 2rem;">
                                     <i class="ph-fill ph-prohibit text-danger f-s-18"></i>
                                 </div>
                                 <div class="d-flex flex-column line-height-sm">
@@ -256,22 +256,23 @@
                                 {{-- D. Documents Upload --}}
                                 <div class="card-body bg-opacity-10">
                                     <div class="row g-3 mb-4">
-                                        <h6 class="fw-bold text-secondary">
-                                            <i class="ph-bold ph-upload-simple"></i> Document Uploads (Auto-fill Support)
-                                        </h6>
+                                        {{-- Header takes full width --}}
+                                        <div class="col-12">
+                                            <h6 class="fw-bold text-secondary mb-0">
+                                                <i class="ph-bold ph-upload-simple"></i> Document Uploads (Auto-fill Support)
+                                            </h6>
+                                        </div>
 
                                         {{-- 1. NPWP (REQUIRED) --}}
-                                        <div class="col-md-3">
+                                        <div class="col-md">
                                             <label class="form-label">Upload NPWP <span class="text-danger">*</span></label>
                                             <input type="file" class="form-control" name="file_npwp" accept=".jpeg,.jpg,.png" required>
                                             <small class="text-muted f-s-11">Format: JPEG, JPG, PNG. Upload untuk auto-fill nama & alamat.</small>
-                                            <div id="preview_npwp" class="mt-2" style="display: none;">
-                                                {{-- Preview button container --}}
-                                            </div>
+                                            <div id="preview_npwp" class="mt-2" style="display: none;"></div>
                                         </div>
 
                                         {{-- 2. NIB/SIUP (REQUIRED) --}}
-                                        <div class="col-md-3">
+                                        <div class="col-md">
                                             <label class="form-label">Upload NIB/SIUP <span class="text-danger">*</span></label>
                                             <input type="file" class="form-control" name="file_nib" accept=".jpeg,.jpg,.png" required>
                                             <small class="text-muted f-s-11">Format: JPEG, JPG, PNG</small>
@@ -279,7 +280,7 @@
                                         </div>
 
                                         {{-- 3. KTP (REQUIRED) --}}
-                                        <div class="col-md-3">
+                                        <div class="col-md">
                                             <label class="form-label">Upload KTP <span class="text-danger">*</span></label>
                                             <input type="file" class="form-control" name="file_ktp" accept=".jpeg,.jpg,.png" required>
                                             <small class="text-muted f-s-11">Format: JPEG, JPG, PNG</small>
@@ -287,11 +288,19 @@
                                         </div>
 
                                         {{-- 4. AKTE (OPTIONAL - PDF ONLY) --}}
-                                        <div class="col-md-3">
+                                        <div class="col-md">
                                             <label class="form-label">Upload Akte Pendirian</label>
                                             <input type="file" class="form-control" name="file_akte" accept=".pdf">
                                             <small class="text-muted f-s-11">Format: PDF saja</small>
                                             <div id="preview_akte" class="mt-2" style="display: none;"></div>
+                                        </div>
+
+                                        {{-- 5. COMPANY PROFILE (OPTIONAL - PDF ONLY) --}}
+                                        <div class="col-md">
+                                            <label class="form-label">Upload Company Profile</label>
+                                            <input type="file" class="form-control" name="company_profile_file" accept=".pdf">
+                                            <small class="text-muted f-s-11">Format: PDF saja</small>
+                                            <div id="preview_company_profile" class="mt-2" style="display: none;"></div>
                                         </div>
                                     </div>
                                 </div>
@@ -322,24 +331,28 @@
                                             <input type="text" class="form-control" name="address3" id="address3"
                                                 placeholder="Address Line 3 (Optional)">
                                         </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label">Postal Code <span class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" name="postal_code" id="postal_code" placeholder="e.g. 12345" required>
+                                        </div>
+
+                                        <div class="col-md-4">
+                                            <label class="form-label">City <span class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" name="city" id="city" placeholder="e.g. Jakarta Selatan" required>
+                                        </div>
+
+                                        <div class="col-md-4">
+                                            <label class="form-label">Country <span class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" name="country" id="country" value="Indonesia" placeholder="Country" required>
+                                        </div>
                                         <div class="col-md-6">
                                             <label class="form-label">Nomor PKD <span class="text-danger">*</span></label>
                                             <input type="text" class="form-control bg-light" name="no_pkd" id="no_pkd" placeholder="No PKD akan otomatis tergenerate oleh sistem" readonly>
                                         </div>
                                         <div class="col-md-6">
-                                            <label class="form-label">Postal Code <span class="text-danger">*</span></label>
-                                            <input type="text" class="form-control" name="postal_code"
-                                                id="postal_code" placeholder="e.g. 12345" required>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <label class="form-label">City <span class="text-danger">*</span></label>
-                                            <input type="text" class="form-control" name="city" id="city"
-                                                placeholder="e.g. Jakarta Selatan" required>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <label class="form-label">Area <span class="text-danger">*</span></label>
-                                            <input type="text" class="form-control" name="area" id="area"
-                                                placeholder="e.g. Jabodetabek" required>
+                                            <label class="form-label">Penanggung Jawab (PIC) <span class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" name="pic" id="pic"
+                                                placeholder="e.g. Ziddan Azzahra" required>
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label">Email (General) <span
@@ -348,10 +361,9 @@
                                                 placeholder="e.g. info@company.com" required>
                                         </div>
                                         <div class="col-md-6">
-                                            <label class="form-label">Country <span
-                                                    class="text-danger">*</span></label>
-                                            <input type="text" class="form-control" name="country" id="country"
-                                                value="Indonesia" placeholder="Country" required>
+                                            <label class="form-label">Area <span class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" name="area" id="area"
+                                                placeholder="e.g. Jabodetabek" required>
                                         </div>
                                     </div>
                                 </div>
@@ -553,8 +565,47 @@
                                         <div id="create_schedule_section">
                                             <div class="row g-4">
 
-                                                {{-- LEFT: PAYMENT --}}
+                                                {{-- LEFT: FAKTUR --}}
                                                 <div class="col-md-6 border-end">
+                                                    <h6 class="text-success fw-bold small text-uppercase mb-2">Billing Schedule</h6>
+
+                                                    {{-- Faktur Days --}}
+                                                    <div class="mb-3">
+                                                        <label class="form-label small fw-bold">Billing Days</label>
+                                                        <div class="schedule-selector" id="create_faktur_days_container">
+                                                            <div id="create_faktur_days_inputs"></div>
+
+                                                            <button type="button" class="btn btn-sm btn-outline-dark me-1 mb-1 btn-schedule" data-type="faktur_days" data-val="All">All Days</button>
+                                                            @foreach(['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'] as $day)
+                                                                <button type="button" class="btn btn-sm btn-outline-success mb-1 btn-schedule" data-type="faktur_days" data-val="{{ $day }}">{{ $day }}</button>
+                                                            @endforeach
+                                                        </div>
+                                                    </div>
+
+                                                    {{-- Faktur Date --}}
+                                                    <div>
+                                                        <label class="form-label small fw-bold">Billing Date</label>
+                                                        <div class="schedule-selector" id="create_faktur_date_container">
+                                                            <div id="create_faktur_date_inputs"></div>
+
+                                                            <button type="button" class="btn btn-sm btn-outline-dark me-1 mb-2 w-100 btn-schedule" data-type="faktur_date" data-val="All">All Dates (1-31)</button>
+                                                            <div class="d-flex flex-wrap gap-1">
+                                                                @for($i=1; $i<=31; $i++)
+                                                                    <button type="button"
+                                                                        class="btn btn-xs btn-outline-secondary btn-schedule btn-date-box"
+                                                                        style="width: 2.375rem !important; height: 2.375rem !important; padding: 0 !important; display: inline-flex !important; align-items: center; justify-content: center; font-size: 13.6px !important; font-weight: 600; line-height: 1 !important; white-space: nowrap !important;"
+                                                                        data-type="faktur_date"
+                                                                        data-val="{{ $i }}">
+                                                                        {{ $i }}
+                                                                    </button>
+                                                                @endfor
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {{-- RIGHT: PAYMENT --}}
+                                                <div class="col-md-6">
                                                     <h6 class="text-primary fw-bold small text-uppercase mb-2">Payment Schedule</h6>
 
                                                     {{-- Payment Days --}}
@@ -581,7 +632,7 @@
                                                                 @for($i=1; $i<=31; $i++)
                                                                     <button type="button"
                                                                         class="btn btn-xs btn-outline-secondary btn-schedule btn-date-box"
-                                                                        style="width: 38px !important; height: 38px !important; padding: 0 !important; display: inline-flex !important; align-items: center; justify-content: center; font-size: 0.85rem !important; font-weight: 600; line-height: 1 !important; white-space: nowrap !important;"
+                                                                        style="width: 2.375rem !important; height: 2.375rem !important; padding: 0 !important; display: inline-flex !important; align-items: center; justify-content: center; font-size: 13.6px !important; font-weight: 600; line-height: 1 !important; white-space: nowrap !important;"
                                                                         data-type="payment_date"
                                                                         data-val="{{ $i }}">
                                                                         {{ $i }}
@@ -592,44 +643,6 @@
                                                     </div>
                                                 </div>
 
-                                                {{-- RIGHT: FAKTUR --}}
-                                                <div class="col-md-6">
-                                                    <h6 class="text-success fw-bold small text-uppercase mb-2">Faktur Schedule</h6>
-
-                                                    {{-- Faktur Days --}}
-                                                    <div class="mb-3">
-                                                        <label class="form-label small fw-bold">Faktur Days</label>
-                                                        <div class="schedule-selector" id="create_faktur_days_container">
-                                                            <div id="create_faktur_days_inputs"></div>
-
-                                                            <button type="button" class="btn btn-sm btn-outline-dark me-1 mb-1 btn-schedule" data-type="faktur_days" data-val="All">All Days</button>
-                                                            @foreach(['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'] as $day)
-                                                                <button type="button" class="btn btn-sm btn-outline-success mb-1 btn-schedule" data-type="faktur_days" data-val="{{ $day }}">{{ $day }}</button>
-                                                            @endforeach
-                                                        </div>
-                                                    </div>
-
-                                                    {{-- Faktur Date --}}
-                                                    <div>
-                                                        <label class="form-label small fw-bold">Faktur Date</label>
-                                                        <div class="schedule-selector" id="create_faktur_date_container">
-                                                            <div id="create_faktur_date_inputs"></div>
-
-                                                            <button type="button" class="btn btn-sm btn-outline-dark me-1 mb-2 w-100 btn-schedule" data-type="faktur_date" data-val="All">All Dates (1-31)</button>
-                                                            <div class="d-flex flex-wrap gap-1">
-                                                                @for($i=1; $i<=31; $i++)
-                                                                    <button type="button"
-                                                                        class="btn btn-xs btn-outline-secondary btn-schedule btn-date-box"
-                                                                        style="width: 38px !important; height: 38px !important; padding: 0 !important; display: inline-flex !important; align-items: center; justify-content: center; font-size: 0.85rem !important; font-weight: 600; line-height: 1 !important; white-space: nowrap !important;"
-                                                                        data-type="faktur_date"
-                                                                        data-val="{{ $i }}">
-                                                                        {{ $i }}
-                                                                    </button>
-                                                                @endfor
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -677,7 +690,7 @@
                                         <label class="fw-bold text-dark text-uppercase f-s-12 mb-1">Account Status</label>
                                         <div><span id="view_status_badge" class="badge bg-secondary f-s-12 px-3 py-2">STATUS</span></div>
                                     </div>
-                                    <div class="vr" style="height: 40px; opacity: 0.1;"></div>
+                                    <div class="vr" style="height: 2.5rem; opacity: 0.1;"></div>
                                     <div>
                                         <label class="fw-bold text-dark text-uppercase f-s-12 mb-1">Approval Progress</label>
                                         <div id="view_approval_badge" class="fw-bold text-dark f-s-16">Pending</div>
@@ -704,12 +717,16 @@
                                             <div class="fw-bold text-dark f-s-14" id="view_sort_name">-</div>
                                         </div>
                                         <div class="col-md-6">
+                                            <label class="fw-bold text-secondary text-uppercase f-s-12 mb-1">Email Address</label>
+                                            <div class="fw-bold text-dark f-s-14" id="view_email">-</div>
+                                        </div>
+                                        <div class="col-md-6">
                                             <label class="fw-bold text-secondary text-uppercase f-s-12 mb-1">No. PKD</label>
                                             <div class="fw-bold text-dark f-s-14" id="view_no_pkd">-</div>
                                         </div>
-                                        <div class="col-md-12">
-                                            <label class="fw-bold text-secondary text-uppercase f-s-12 mb-1">Email Address</label>
-                                            <div class="fw-bold text-dark f-s-14" id="view_email">-</div>
+                                        <div class="col-md-6">
+                                            <label class="fw-bold text-secondary text-uppercase f-s-12 mb-1">PIC (Penanggung Jawab)</label>
+                                            <div class="fw-bold text-dark f-s-14" id="view_pic">-</div>
                                         </div>
                                     </div>
                                 </div>
@@ -891,7 +908,7 @@
                                                 @for($i=1; $i<=31; $i++)
                                                     <button type="button"
                                                         class="btn btn-xs btn-outline-secondary btn-schedule btn-date-box"
-                                                        style="width: 38px !important; height: 38px !important; padding: 0 !important; display: inline-flex !important; align-items: center; justify-content: center; font-size: 0.85rem !important; font-weight: 600; line-height: 1 !important; white-space: nowrap !important;"
+                                                        style="width: 2.375rem !important; height: 2.375rem !important; padding: 0 !important; display: inline-flex !important; align-items: center; justify-content: center; font-size: 13.6px !important; font-weight: 600; line-height: 1 !important; white-space: nowrap !important;"
                                                         data-type="payment_date"
                                                         data-val="{{ $i }}" disabled>
                                                         {{ $i }}
@@ -925,7 +942,7 @@
                                                 @for($i=1; $i<=31; $i++)
                                                     <button type="button"
                                                         class="btn btn-xs btn-outline-secondary btn-schedule btn-date-box"
-                                                        style="width: 38px !important; height: 38px !important; padding: 0 !important; display: inline-flex !important; align-items: center; justify-content: center; font-size: 0.85rem !important; font-weight: 600; line-height: 1 !important; white-space: nowrap !important;"
+                                                        style="width: 2.375rem !important; height: 2.375rem !important; padding: 0 !important; display: inline-flex !important; align-items: center; justify-content: center; font-size: 13.6px !important; font-weight: 600; line-height: 1 !important; white-space: nowrap !important;"
                                                         data-type="faktur_date"
                                                         data-val="{{ $i }}" disabled>
                                                         {{ $i }}
@@ -967,7 +984,7 @@
                     </h6>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body p-0 d-flex align-items-center justify-content-center" style="min-height: 500px; background-color: #1a1a1a;">
+                <div class="modal-body p-0 d-flex align-items-center justify-content-center" style="min-height: 31.25rem; background-color: #1a1a1a;">
                     <div id="fileContentArea" class="w-100 h-100 d-flex align-items-center justify-content-center">
                         </div>
                 </div>
@@ -1016,7 +1033,7 @@
                         </div>
 
                         <div class="d-flex align-items-start">
-                            <div class="nav flex-column nav-pills me-3 bg-white h-100 p-3 border-end" style="min-width: 200px;" id="v-pills-tab" role="tablist" aria-orientation="vertical">
+                            <div class="nav flex-column nav-pills me-3 bg-white h-100 p-3 border-end" style="min-width: 12.5rem;" id="v-pills-tab" role="tablist" aria-orientation="vertical">
                                 <button class="nav-link active text-start fw-bold mb-2" id="v-pills-home-tab" data-bs-toggle="pill" data-bs-target="#tab-recall-general" type="button" role="tab">
                                     <i class="ph-bold ph-user-circle me-2"></i> General Info
                                 </button>
@@ -1054,6 +1071,10 @@
                                         <div class="col-md-6">
                                             <label class="form-label small fw-bold text-dark">No PKD (Readonly)</label>
                                             <input type="text" class="form-control bg-light" name="no_pkd" id="recall_no_pkd" readonly>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-bold text-dark">PIC (Penanggung Jawab)</label>
+                                            <input type="text" class="form-control" name="pic" id="recall_pic" required>
                                         </div>
                                         <div class="col-12">
                                             <label class="form-label small fw-bold text-dark">Main Address</label>
@@ -1272,6 +1293,15 @@
                                         </div>
                                         <input type="file" class="form-control form-control-sm" name="file_ktp">
                                     </div>
+
+                                    <div class="mb-3 border rounded p-2 bg-white">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <label class="fw-bold small mb-0 text-dark">Company Profile</label>
+                                            <div id="recall_preview_company_profile"></div>
+                                        </div>
+                                        <input type="file" class="form-control form-control-sm" name="company_profile_file" accept=".pdf">
+                                        <small class="text-muted f-s-11">Format: PDF saja</small>
+                                    </div>
                                 </div>
 
                             </div>
@@ -1424,6 +1454,7 @@
                     $('#recall_sort_name').val(data.sort_name);
                     $('#recall_email').val(data.email);
                     $('#recall_no_pkd').val(data.no_pkd);
+                    $('#recall_pic').val(data.pic);
 
                     // Address Inputs
                     $('#recall_address1').val(data.address1);
@@ -1484,6 +1515,7 @@
                     $('#recall_preview_nib').html(createPreviewBtn(data.file_nib_path, 'NIB'));
                     $('#recall_preview_ktp').html(createPreviewBtn(data.file_ktp_path, 'KTP'));
                     $('#recall_preview_akte').html(createPreviewBtn(data.file_akte_path, 'Akte Pendirian'));
+                    $('#recall_preview_company_profile').html(createPreviewBtn(data.company_profile_file_path, 'Company Profile'));
 
                     $('#recallCustomerModal').modal('show');
                 });
@@ -2002,7 +2034,7 @@
                 });
 
             $(document).on('focus', '#credit_limit', function(e) {
-                    
+
                     const bgStatus = $('#bank_garansi').val();
                     const topVal = $('#term_of_payment').val();
                     const termString = $('#term_of_payment').val();
@@ -2189,6 +2221,7 @@
                     $('#view_sort_name').text(btn.data('sort_name') || '-');
                     $('#view_email').text(btn.data('email'));
                     $('#view_no_pkd').text(btn.data('no_pkd') || '-');
+                    $('#view_pic').text(btn.data('pic') || '-');
 
                     const addr1 = btn.data('address1') || '';
                     const addr2 = btn.data('address2') ? ', ' + btn.data('address2') : '';
@@ -2239,7 +2272,8 @@
                         { name: 'NPWP Document', path: btn.data('file_npwp_path'), icon: 'ph-file-text' },
                         { name: 'NIB / SIUP', path: btn.data('file_nib_path'), icon: 'ph-file-code' },
                         { name: 'KTP Penanggung Jawab', path: btn.data('file_ktp_path'), icon: 'ph-cardholder' },
-                        { name: 'Akte Pendirian', path: btn.data('file_akte_path'), icon: 'ph-scroll' }
+                        { name: 'Akte Pendirian', path: btn.data('file_akte_path'), icon: 'ph-scroll' },
+                        { name: 'Company Profile', path: btn.data('company_profile_file_path'), icon: 'ph-buildings' }
                     ];
 
                     let docHtml = '';
@@ -2410,7 +2444,7 @@
                                 container.html(`
                                     <img src="${filePath}"
                                         class="d-block shadow-lg rounded"
-                                        style="max-height: 85vh; max-width: 90vw; border: 1px solid #555;"
+                                        style="max-height: 85vh; max-width: 90vw; border: .0625rem solid #555;"
                                         alt="Preview"
                                         onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'text-center py-5\'><i class=\'ph-duotone ph-warning-circle text-danger f-s-48 mb-3\'></i><h5 class=\'text-white\'>Gagal Memuat Gambar</h5><p class=\'text-white-50 small\'>File tidak ditemukan di server.<br>Coba jalankan: <code>php artisan storage:link</code></p></div>';"
                                     >

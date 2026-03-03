@@ -78,6 +78,7 @@
         $nibPath  = ($doc && $doc->nib_siup_file) ? asset('storage/' . $doc->nib_siup_file) : null;
         $ktpPath  = ($doc && $doc->ktp_file) ? asset('storage/' . $doc->ktp_file) : null;
         $aktePath = ($doc && $doc->akte_file) ? asset('storage/' . $doc->akte_file) : null;
+        $companyProfilePath = ($doc && $doc->company_profile_file) ? asset('storage/' . $doc->company_profile_file) : null;
     @endphp
 
     <div class="main-container">
@@ -164,6 +165,10 @@
                                     <div class="col-md-6">
                                         <div class="info-label">No. PKD</div>
                                         <div class="info-value text-dark fw-bold">{{ $customer->no_pkd ?? '-' }}</div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="info-label">PIC (Penanggung Jawab)</div>
+                                        <div class="info-value text-dark fw-bold">{{ $customer->pic ?? '-' }}</div>
                                     </div>
                                     <div class="col-md-6">
                                         <div class="info-label">General Email</div>
@@ -341,8 +346,65 @@
                                     </div>
 
                                     <div class="row g-4">
-                                        {{-- LEFT: PAYMENT --}}
+                                        {{-- LEFT: BILLING (FAKTUR) --}}
                                         <div class="col-md-6 border-end">
+                                            <h6 class="text-success fw-bold mb-3 border-bottom pb-2">Billing Schedule</h6>
+
+                                            {{-- Billing Days --}}
+                                            <div class="mb-3">
+                                                <label class="info-label mb-2 d-block">Billing Days</label>
+                                                @if($canAdjust)
+                                                    <div class="schedule-selector" id="faktur_days_container">
+                                                        <div id="faktur_days_inputs"></div>
+                                                        <button type="button" class="btn btn-sm btn-outline-dark me-2 mb-1 btn-day" data-val="All" onclick="toggleSchedule(this, 'faktur_days')">All Days</button>
+                                                        @foreach(['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'] as $day)
+                                                            <button type="button" class="btn btn-sm btn-outline-success mb-1 btn-day" data-val="{{ $day }}" onclick="toggleSchedule(this, 'faktur_days')">{{ $day }}</button>
+                                                        @endforeach
+                                                    </div>
+                                                @else
+                                                    <div>
+                                                        @if(is_array($customer->faktur_days) && in_array('All', $customer->faktur_days))
+                                                            <span class="badge bg-dark">All Days</span>
+                                                        @elseif(!empty($customer->faktur_days))
+                                                            @foreach($customer->faktur_days as $d) <span class="badge bg-success">{{ $d }}</span> @endforeach
+                                                        @else <span class="text-muted">-</span> @endif
+                                                    </div>
+                                                @endif
+                                            </div>
+
+                                            {{-- Billing Date --}}
+                                            <div>
+                                                <label class="info-label mb-2 d-block">Billing Date</label>
+                                                @if($canAdjust)
+                                                    <div class="schedule-selector" id="faktur_date_container">
+                                                        <div id="faktur_date_inputs"></div>
+                                                        <button type="button" class="btn btn-sm btn-outline-dark me-2 mb-1 w-100" data-val="All" onclick="toggleSchedule(this, 'faktur_date')">All Dates (1-31)</button>
+                                                        <div class="d-flex flex-wrap gap-1 mt-2">
+                                                            @for($i=1; $i<=31; $i++)
+                                                                <button type="button"
+                                                                    class="btn btn-xs btn-outline-secondary btn-date"
+                                                                    style="width: 38px !important; height: 38px !important; padding: 0 !important; display: inline-flex !important; align-items: center; justify-content: center; font-size: 0.85rem !important; font-weight: 600; line-height: 1 !important; white-space: nowrap !important;"
+                                                                    data-val="{{ $i }}"
+                                                                    onclick="toggleSchedule(this, 'faktur_date')">
+                                                                    {{ $i }}
+                                                                </button>
+                                                            @endfor
+                                                        </div>
+                                                    </div>
+                                                @else
+                                                    <div>
+                                                        @if(is_array($customer->faktur_date) && in_array('All', $customer->faktur_date))
+                                                            <span class="badge bg-dark">All Dates</span>
+                                                        @elseif(!empty($customer->faktur_date))
+                                                            @foreach($customer->faktur_date as $d) <span class="badge bg-info text-dark">{{ $d }}</span> @endforeach
+                                                        @else <span class="text-muted">-</span> @endif
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        </div>
+
+                                        {{-- RIGHT: PAYMENT --}}
+                                        <div class="col-md-6">
                                             <h6 class="text-primary fw-bold mb-3 border-bottom pb-2">Payment Schedule</h6>
 
                                             {{-- Payment Days --}}
@@ -395,63 +457,6 @@
                                                             <span class="badge bg-dark">All Dates</span>
                                                         @elseif(!empty($customer->payment_date))
                                                             @foreach($customer->payment_date as $d) <span class="badge bg-info text-dark">{{ $d }}</span> @endforeach
-                                                        @else <span class="text-muted">-</span> @endif
-                                                    </div>
-                                                @endif
-                                            </div>
-                                        </div>
-
-                                        {{-- RIGHT: FAKTUR --}}
-                                        <div class="col-md-6">
-                                            <h6 class="text-success fw-bold mb-3 border-bottom pb-2">Faktur Schedule</h6>
-
-                                            {{-- Faktur Days --}}
-                                            <div class="mb-3">
-                                                <label class="info-label mb-2 d-block">Faktur Days</label>
-                                                @if($canAdjust)
-                                                    <div class="schedule-selector" id="faktur_days_container">
-                                                        <div id="faktur_days_inputs"></div>
-                                                        <button type="button" class="btn btn-sm btn-outline-dark me-2 mb-1 btn-day" data-val="All" onclick="toggleSchedule(this, 'faktur_days')">All Days</button>
-                                                        @foreach(['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'] as $day)
-                                                            <button type="button" class="btn btn-sm btn-outline-success mb-1 btn-day" data-val="{{ $day }}" onclick="toggleSchedule(this, 'faktur_days')">{{ $day }}</button>
-                                                        @endforeach
-                                                    </div>
-                                                @else
-                                                    <div>
-                                                        @if(is_array($customer->faktur_days) && in_array('All', $customer->faktur_days))
-                                                            <span class="badge bg-dark">All Days</span>
-                                                        @elseif(!empty($customer->faktur_days))
-                                                            @foreach($customer->faktur_days as $d) <span class="badge bg-success">{{ $d }}</span> @endforeach
-                                                        @else <span class="text-muted">-</span> @endif
-                                                    </div>
-                                                @endif
-                                            </div>
-
-                                            {{-- Faktur Date --}}
-                                            <div>
-                                                <label class="info-label mb-2 d-block">Faktur Date</label>
-                                                @if($canAdjust)
-                                                    <div class="schedule-selector" id="faktur_date_container">
-                                                        <div id="faktur_date_inputs"></div>
-                                                        <button type="button" class="btn btn-sm btn-outline-dark me-2 mb-1 w-100" data-val="All" onclick="toggleSchedule(this, 'faktur_date')">All Dates (1-31)</button>
-                                                        <div class="d-flex flex-wrap gap-1 mt-2">
-                                                            @for($i=1; $i<=31; $i++)
-                                                                <button type="button"
-                                                                    class="btn btn-xs btn-outline-secondary btn-date"
-                                                                    style="width: 38px !important; height: 38px !important; padding: 0 !important; display: inline-flex !important; align-items: center; justify-content: center; font-size: 0.85rem !important; font-weight: 600; line-height: 1 !important; white-space: nowrap !important;"
-                                                                    data-val="{{ $i }}"
-                                                                    onclick="toggleSchedule(this, 'faktur_date')">
-                                                                    {{ $i }}
-                                                                </button>
-                                                            @endfor
-                                                        </div>
-                                                    </div>
-                                                @else
-                                                    <div>
-                                                        @if(is_array($customer->faktur_date) && in_array('All', $customer->faktur_date))
-                                                            <span class="badge bg-dark">All Dates</span>
-                                                        @elseif(!empty($customer->faktur_date))
-                                                            @foreach($customer->faktur_date as $d) <span class="badge bg-info text-dark">{{ $d }}</span> @endforeach
                                                         @else <span class="text-muted">-</span> @endif
                                                     </div>
                                                 @endif
@@ -640,6 +645,24 @@
                                         <button type="button" class="btn btn-sm btn-outline-warning text-dark w-100 btn-preview-doc"
                                             data-file-url="{{ $aktePath }}"
                                             data-file-title="Akte Pendirian">
+                                            <i class="fas fa-eye me-1"></i> Preview
+                                        </button>
+                                    @else
+                                        <button disabled class="btn btn-sm btn-outline-secondary w-100">Not Uploaded</button>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                        {{-- 5. COMPANY PROFILE --}}
+                        <div class="col-md">
+                            <div class="card doc-card h-100 bg-light">
+                                <div class="card-body text-center p-3">
+                                    <i class="fas fa-building text-secondary fs-3 mb-2"></i>
+                                    <h6 class="fw-bold small text-muted text-uppercase mb-2">Company Profile</h6>
+                                    @if($companyProfilePath)
+                                        <button type="button" class="btn btn-sm btn-outline-secondary text-dark w-100 btn-preview-doc"
+                                            data-file-url="{{ $companyProfilePath }}"
+                                            data-file-title="Company Profile">
                                             <i class="fas fa-eye me-1"></i> Preview
                                         </button>
                                     @else

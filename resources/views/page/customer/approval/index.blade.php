@@ -156,6 +156,10 @@
                                             <div class="fw-bold text-dark f-s-14" id="view_no_pkd">-</div>
                                         </div>
                                         <div class="col-md-12">
+                                            <label class="fw-bold text-secondary text-uppercase f-s-11 mb-1">PIC (Penanggung Jawab)</label>
+                                            <div class="fw-bold text-dark f-s-14" id="view_pic">-</div>
+                                        </div>
+                                        <div class="col-md-12">
                                             <label class="fw-bold text-secondary text-uppercase f-s-11 mb-1">Email Address</label>
                                             <div class="fw-bold text-dark f-s-14" id="view_email">-</div>
                                         </div>
@@ -582,6 +586,7 @@
                     $('#view_name').text(data.name);
                     $('#view_sort_name').text(data.sort_name || '-');
                     $('#view_no_pkd').text(data.no_pkd || '-');
+                    $('#view_pic').text(data.pic || '-');
                     $('#view_email').text(data.email || '-');
                     const fullAddr = [data.address1, data.address2, data.address3].filter(Boolean).join(', ');
                     $('#view_full_address').text(fullAddr || '-');
@@ -864,10 +869,14 @@
                         appendFileCard('NPWP Document', f.npwp_file);
                         appendFileCard('NIB/SIUP Document', f.nib_siup_file);
                         appendFileCard('KTP Document', f.ktp_file);
+                        appendFileCard('Akte Pendirian', f.akte_file); // <-- Tambahan
+                        appendFileCard('Company Profile', f.company_profile_file); // <-- Tambahan
                     } else {
                         appendFileCard('NPWP Document', data.file_npwp);
                         appendFileCard('NIB/SIUP Document', data.file_nib);
                         appendFileCard('KTP Document', data.file_ktp);
+                        appendFileCard('Akte Pendirian', data.file_akte); // <-- Tambahan
+                        appendFileCard('Company Profile', data.file_company_profile); // <-- Tambahan
                     }
                     if(fileCount === 0) $('#no_documents').show();
                 };

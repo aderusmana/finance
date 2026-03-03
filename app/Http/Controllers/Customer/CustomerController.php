@@ -116,7 +116,8 @@ class CustomerController extends Controller
                     'customer_files.npwp_file as file_npwp',
                     'customer_files.nib_siup_file as file_nib',
                     'customer_files.ktp_file as file_ktp',
-                    'customer_files.akte_file as file_akte'
+                    'customer_files.akte_file as file_akte',
+                    'customer_files.company_profile_file as file_company_profile'
                 );
 
             if ($request->has('status') && $request->status !== 'all') {
@@ -155,7 +156,8 @@ class CustomerController extends Controller
                     $rowData['file_nib_path']  = $row->file_nib ? asset('storage/' . ltrim($row->file_nib, '/')) : null;
                     $rowData['file_ktp_path']  = $row->file_ktp ? asset('storage/' . ltrim($row->file_ktp, '/')) : null;
                     $rowData['file_akte_path'] = $row->file_akte ? asset('storage/' . ltrim($row->file_akte, '/')) : null;
-
+                    $rowData['file_company_profile_path'] = $row->file_company_profile ? asset('storage/' . ltrim($row->file_company_profile, '/')) : null;
+                    
                     $jsonRow = htmlspecialchars(json_encode($rowData), ENT_QUOTES, 'UTF-8');
 
                     $tglNpwp = $row->tanggal_npwp ? Carbon::parse($row->tanggal_npwp)->format('Y-m-d') : '';
@@ -185,6 +187,7 @@ class CustomerController extends Controller
                     $dataAttrs .= ' data-user_id="' . e($row->user_id) . '"';
                     $dataAttrs .= ' data-code="' . e($row->code) . '"';
                     $dataAttrs .= ' data-no_pkd="' . e($row->no_pkd) . '"';
+                    $dataAttrs .= ' data-pic="' . e($row->pic) . '"';
                     $dataAttrs .= ' data-name="' . e($row->name) . '"';
                     $dataAttrs .= ' data-sort_name="' . e($row->sort_name) . '"';
                     $dataAttrs .= ' data-customer_class="' . e($row->customer_class) . '"';
@@ -230,6 +233,7 @@ class CustomerController extends Controller
                     $dataAttrs .= ' data-file_nib_path="' . $rowData['file_nib_path'] . '"';
                     $dataAttrs .= ' data-file_ktp_path="' . $rowData['file_ktp_path'] . '"';
                     $dataAttrs .= ' data-file_akte_path="' . $rowData['file_akte_path'] . '"';
+                    $dataAttrs .= ' data-file_company_profile_path="' . $rowData['file_company_profile_path'] . '"';
                     $dataAttrs .= ' data-payment_days="' . e($paymentDaysVal) . '"';
                     $dataAttrs .= ' data-payment_date="' . e($paymentDateVal) . '"';
                     $dataAttrs .= ' data-faktur_days="' . e($fakturDaysVal) . '"';
@@ -377,6 +381,7 @@ class CustomerController extends Controller
             'file_nib'  => ['nullable', 'file', $dynamicFileRule],
             'file_ktp'  => ['nullable', 'file', $dynamicFileRule],
             'file_akte' => ['nullable', 'file', 'mimes:pdf', 'max:5120'],
+            'file_company_profile' => ['nullable', 'file', 'mimes:pdf', 'max:5120'],
         ]);
 
         $newLogs = null;
@@ -422,6 +427,9 @@ class CustomerController extends Controller
             }
             if ($request->hasFile('file_ktp')) {
                 $fileData['ktp_file'] = $request->file('file_ktp')->store($storageFolder, 'public');
+            }
+            if ($request->hasFile('file_company_profile')) {
+                $fileData['company_profile_file'] = $request->file('file_company_profile')->store($storageFolder, 'public');
             }
 
             if (!empty($fileData)) {
