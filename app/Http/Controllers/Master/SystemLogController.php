@@ -28,8 +28,18 @@ class SystemLogController extends Controller
                 })
                 ->addColumn('causer_name', function ($row) {
                     $name = $row->causer->name ?? 'System';
-                    $role = $row->causer ? ($row->causer->roles->first()->name ?? 'User') : 'Bot';
-                    
+
+                    // Safely determine role name without assuming relations exist
+                    $role = 'Bot';
+                    if ($row->causer) {
+                        if (method_exists($row->causer, 'getRoleNames')) {
+                            $roles = $row->causer->getRoleNames();
+                            $role = $roles->isNotEmpty() ? $roles->first() : 'User';
+                        } else {
+                            $role = optional(optional($row->causer->roles)->first())->name ?? 'User';
+                        }
+                    }
+
                     // Buat Avatar Inisial Sederhana dengan Inline CSS
                     $initial = strtoupper(substr($name, 0, 1));
                     $bgColors = ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b'];
@@ -154,11 +164,12 @@ class SystemLogController extends Controller
         }
 
         // --- STATISTIK UNTUK WIDGET ATAS ---
+        $lastActivity = Activity::latest()->first();
         $stats = [
             'total_logs' => Activity::count(),
             'today_logs' => Activity::whereDate('created_at', Carbon::today())->count(),
             'unique_users' => Activity::distinct('causer_id')->count('causer_id'),
-            'last_activity' => Activity::latest()->first()->created_at->diffForHumans() ?? '-'
+            'last_activity' => $lastActivity ? $lastActivity->created_at->diffForHumans() : '-'
         ];
 
         return view('page.master.system_log.index', compact('stats'));
