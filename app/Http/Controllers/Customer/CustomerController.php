@@ -445,8 +445,9 @@ class CustomerController extends Controller
                 ->where('category', 'Customer')
                 ->update(['status' => 'Rejected']);
 
-            $subCategory = 'CBD';
-            $newLogs = $this->generateApprovalLogs($user, $customer->id, 'Customer', $subCategory);
+            $subCategory = ($request->term_of_payment === 'CBD') ? 'CBD' : null; 
+            $requesterUser = User::find($request->user_id) ?? $customer->user;
+            $newLogs = $this->generateApprovalLogs($requesterUser, $customer->id, 'Customer', $subCategory);
 
             $firstLog = ApprovalLog::where('category', 'Customer')
                 ->where('related_id', $customer->id)

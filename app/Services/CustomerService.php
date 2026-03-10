@@ -111,8 +111,8 @@ class CustomerService
             CustomerFile::create($fileData);
 
             $subCategory = ($data['term_of_payment'] === 'CBD') ? 'CBD' : null;
-
-            $this->generateApprovalLogs($user, $customer->id, 'Customer', $subCategory);
+            $requesterUser = User::find($data['user_id']) ?? $user;
+            $this->generateApprovalLogs($requesterUser, $customer->id, 'Customer', $subCategory);
 
             $firstLog = ApprovalLog::where('category', 'Customer')
                 ->where('related_id', $customer->id)

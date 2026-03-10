@@ -1526,6 +1526,9 @@
                     const formData = new FormData(this);
                     const url = `/customers/${id}/recall`;
 
+                    const currentStatusFilter = $('#statusFilter').val();
+                    const currentApprovalFilter = $('#approvalStatusFilter').val();
+
                     Swal.fire({
                         title: 'Konfirmasi Recall',
                         text: "Data akan diajukan ulang (Resubmit) dan status kembali Pending. Pastikan revisi sudah benar.",
@@ -1552,6 +1555,8 @@
                                 contentType: false,
                                 success: function(response) {
                                     Swal.close();
+                                    $('#statusFilter').val(currentStatusFilter).trigger('change.select2');
+                                    $('#approvalStatusFilter').val(currentApprovalFilter).trigger('change.select2');
                                     if(response.success) {
                                         Swal.fire({
                                             icon: 'success',
@@ -1595,6 +1600,8 @@
                     }
 
                     const url = "{{ route('customers.store') }}";
+                    const currentStatusFilter = $('#statusFilter').val();
+                    const currentApprovalFilter = $('#approvalStatusFilter').val();
 
                     Swal.fire({
                         title: 'Konfirmasi Penyimpanan',
@@ -1621,6 +1628,8 @@
                                 contentType: false,
                                 success: function(response) {
                                     Swal.close();
+                                    $('#statusFilter').val(currentStatusFilter).trigger('change.select2');
+                                    $('#approvalStatusFilter').val(currentApprovalFilter).trigger('change.select2');
                                     if(response.success) {
                                         Swal.fire({
                                             icon: 'success',
@@ -2135,29 +2144,42 @@
                 });
 
                 $('#btn-create-customer').on('click', function() {
-                    // 1. Reset Form Biasa
                     $('#customerForm')[0].reset();
                     $('.select2-styled').val(null).trigger('change');
 
-                    // 2. Reset Readonly & Disabled States
                     $('#customerForm').find('input, textarea, select').prop('disabled', false);
                     $('#credit_limit').prop('readonly', true);
                     $('#no_pkd').val('').prop('readonly', true);
 
-                    // 3. Reset Schedule Buttons (PENTING!)
+                    let currentUserId = $('#current_user_id').val();
+                    let isUserInList = $('#user_id option[value="' + currentUserId + '"]').length > 0;
+
+                    $('#hidden_user_id').remove();
+
+                    if (isUserInList) {
+                        $('#user_id').val(currentUserId).trigger('change');
+                        $('#user_id').prop('disabled', true);
+
+                        $('<input>').attr({
+                            type: 'hidden',
+                            id: 'hidden_user_id',
+                            name: 'user_id',
+                            value: currentUserId
+                        }).appendTo('#customerForm');
+                    } else {
+                        $('#user_id').prop('disabled', false);
+                    }
+                    
                     $('.btn-schedule').removeClass('active btn-dark btn-primary btn-success btn-info text-white');
 
-                    // Kembalikan ke Outline Default
                     $('.btn-schedule[data-val="All"]').addClass('btn-outline-dark');
                     $('.btn-date-box').addClass('btn-outline-secondary').removeClass('btn-info');
 
                     $('[data-type="payment_days"]').not('[data-val="All"]').addClass('btn-outline-primary');
                     $('[data-type="faktur_days"]').not('[data-val="All"]').addClass('btn-outline-success');
 
-                    // Kosongkan Hidden Inputs
                     $('#create_payment_days_inputs, #create_payment_date_inputs, #create_faktur_days_inputs, #create_faktur_date_inputs').empty();
 
-                    // 4. Setup Tampilan Awal
                     $('#customerModalLabel').text('Create New Customer');
                     $('#customerModal').modal('show');
                 });
