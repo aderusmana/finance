@@ -129,8 +129,7 @@
                     <table class="w-100 display" id="sampleTable">
                         <thead>
                             <tr>
-                                <th width="5%" class="text-center">No</th>
-                                <th>Code</th>
+                                <th width="5%">Code</th>
                                 <th>Customer</th>
                                 <th>Credit</th>
                                 <th>TOP</th>
@@ -292,7 +291,7 @@
                                             <label class="form-label">Upload Akte Pendirian</label>
                                             <input type="file" class="form-control" name="file_akte" accept=".pdf">
                                             <small class="text-muted f-s-11">Format: PDF saja</small>
-                                            <div id="preview_akte" class="mt-2" style="display: none;"></div>
+                                            <div id="preview_akte" class="mt-4" style="display: none; position:relative; z-index:2;"></div>
                                         </div>
 
                                         {{-- 5. COMPANY PROFILE (OPTIONAL - PDF ONLY) --}}
@@ -352,7 +351,7 @@
                                         <div class="col-md-6">
                                             <label class="form-label">Penanggung Jawab (PIC) <span class="text-danger">*</span></label>
                                             <input type="text" class="form-control" name="pic" id="pic"
-                                                placeholder="e.g. Ziddan Azzahra" required>
+                                                placeholder="e.g. John Doe" required>
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label">Email (General) <span
@@ -985,7 +984,7 @@
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-0 d-flex align-items-center justify-content-center" style="min-height: 31.25rem; background-color: #1a1a1a;">
-                    <div id="fileContentArea" class="w-100 h-100 d-flex align-items-center justify-content-center">
+                    <div id="fileContentArea" class="w-100 h-100 d-flex align-items-center justify-content-center" style="margin-top:80px;">
                         </div>
                 </div>
             </div>
@@ -1837,6 +1836,7 @@
                 const table = $('#sampleTable').DataTable({
                     processing: true,
                     serverSide: true,
+                    responsive: true,
                     ajax: {
                         url: "{{ route('customers.index') }}",
                         data: function(d) {
@@ -1844,15 +1844,8 @@
                             d.approval_status = $('#approvalStatusFilter').val();
                         }
                     },
-                    order: [[8, 'desc']],
+                    order: [[7, 'desc']],
                     columns: [
-                        {
-                            data: 'DT_RowIndex',
-                            name: 'DT_RowIndex',
-                            orderable: false,
-                            searchable: false,
-                            className: 'text-center dt-no-wrap'
-                        },
                         {
                             data: 'code',
                             name: 'customers.code',
@@ -2000,6 +1993,19 @@
 
                 $('#term_of_payment').on('change', function() {
                     checkCreditLimitAccess();
+                    const v = $(this).val();
+
+                    // If modal has calc_top, update it only when different (avoid infinite loop)
+                    if ($('#calc_top').length && $('#calc_top').val() !== v) {
+                        $('#calc_top').val(v).trigger('change');
+                    }
+
+                    // If calculator modal is open, always recompute preview dynamically
+                    const modalVisible = $('#creditCalcModal').hasClass('show') || $('#creditCalcModal').is(':visible');
+                    if ($('#calc_top').length && modalVisible) {
+                        const r = computeCreditValues();
+                        $('#calc_preview_formatted').val(formatRupiah(Math.round(r.valFinal || 0)));
+                    }
                 });
 
                 $('#bank_garansi').on('change', function() {
@@ -2082,12 +2088,8 @@
                         addCalcRow();
                     }
 
-                    let topDays = 0;
-                    const numberMatch = termString.match(/(\d+)/);
-                    if (numberMatch && numberMatch[0]) {
-                        topDays = parseInt(numberMatch[0]);
-                    }
-                    $('#calc_top').val(topDays);
+                    // Set calc_top select to match current term_of_payment (keep raw value like '30' or 'CBD')
+                    $('#calc_top').val(termString).trigger('change');
 
                     let ltVal = parseFloat($('#lead_time').val()) || 0;
                     $('#calc_lt').val(ltVal);
@@ -2325,9 +2327,19 @@
                 $(document).on('keyup', '.calc-price', function() {
                     let val = $(this).val();
                     $(this).val(formatRupiah(val));
-                    $('#calc_products').trigger('input');
+                    const r = computeCreditValues();
+                    $('#calc_preview_formatted').val(formatRupiah(Math.round(r.valFinal || 0)));
                 });
 
+                // Compute credit limit preview using formula provided:
+                // For payment X days:
+                //   Credit = ((TOP + LT) * sum(QTY * HARGA)) / DIVIDER
+                // Where DIVIDER =
+                //   45 -> 45
+                //   30 -> 30
+                //   7  -> 30/4 = 7.5
+                //   14 -> 30/2 = 15
+                // This matches the formulas: (TOP+LT)*(QTY*HARGA)*100%/DIVIDER
                 function computeCreditValues() {
                     let totalValue = 0;
                     $('#calc_products .calc-row').each(function() {
@@ -2337,7 +2349,11 @@
                         totalValue += (q * p);
                     });
 
-                    const top = parseFloat($('#calc_top').val()) || 0;
+                    // Extract numeric days from selected TOP (supports values like '30' or 'CBD')
+                    const calcTopRaw = $('#calc_top').val();
+                    let top = 0;
+                    const m = String(calcTopRaw).match(/(\d+)/);
+                    if (m && m[0]) top = parseFloat(m[0]) || 0;
                     const lt = parseFloat($('#calc_lt').val()) || 0;
                     const base = (top + lt) * totalValue;
 
@@ -2386,9 +2402,39 @@
                     $('#calc_products').append(row);
                 }
 
-                $(document).on('input', '#calc_products .calc-qty, #calc_products .calc-price, #calc_top, #calc_lt', function() {
+                $(document).on('input change', '#calc_products .calc-qty, #calc_products .calc-price, #calc_lt, #calc_top', function() {
                     const r = computeCreditValues();
                     $('#calc_preview_formatted').val(formatRupiah(Math.round(r.valFinal || 0)));
+                });
+
+                // When calc_top changes in modal, sync back to main TOP select and recalc
+                $(document).on('change', '#calc_top', function() {
+                    const v = $(this).val();
+                    if ($('#term_of_payment').val() !== v) {
+                        $('#term_of_payment').val(v).trigger('change');
+                    }
+
+                    const r = computeCreditValues();
+                    const computed = Math.round(r.valFinal || 0);
+                    $('#calc_preview_formatted').val(formatRupiah(computed));
+
+                    // If Bank Garansi active or TOP is CBD, credit limit stays 0
+                    const bgStatus = $('#bank_garansi').val();
+                    if (bgStatus === 'YA' || String(v).toUpperCase() === 'CBD') {
+                        $('#credit_limit').val(formatRupiah(0));
+                    } else {
+                        // Apply computed value directly to credit_limit field (dynamic behavior requested)
+                        $('#credit_limit').val(formatRupiah(computed));
+                    }
+
+                    // Update lead_time and hidden top_calc so main form reflects change
+                    const ltVal = $('#calc_lt').val() || 0;
+                    $('#lead_time').val(ltVal);
+
+                    if($('#top_calc_hidden').length === 0) {
+                        $('<input>').attr({type: 'hidden', id: 'top_calc_hidden', name: 'top_calc'}).appendTo('#customerForm');
+                    }
+                    $('#top_calc_hidden').val(v);
                 });
 
                 $(document).on('click', '#addCalcRow', function() {
@@ -2397,7 +2443,8 @@
 
                 $(document).on('click', '.btn-remove-row', function() {
                     $(this).closest('.calc-row').remove();
-                    $('#calc_products').trigger('input');
+                    const r = computeCreditValues();
+                    $('#calc_preview_formatted').val(formatRupiah(Math.round(r.valFinal || 0)));
                 });
 
                 $(document).ready(function() {
@@ -2679,7 +2726,12 @@
                         <div class="row g-2 mt-2">
                             <div class="col-md-6">
                                 <label class="form-label">TOP (days)</label>
-                                <input type="number" step="1" id="calc_top" class="form-control" readonly />
+                                <select id="calc_top" class="form-select">
+                                    <option></option>
+                                    @foreach ($top as $t)
+                                        <option value="{{ $t->name_top }}">{{ $t->desc_top }}</option>
+                                    @endforeach
+                                </select>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Lead Time (LT)</label>

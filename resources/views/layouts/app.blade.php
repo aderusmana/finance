@@ -63,6 +63,8 @@
     <link rel="stylesheet" type="text/css" href="//cdn.datatables.net/2.3.4/css/dataTables.dataTables.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.3/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/2.3.4/css/dataTables.bootstrap5.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.3.7/css/dataTables.bootstrap5.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/3.0.8/css/responsive.bootstrap5.css">
 
     <style>
         /* --- Definisi Warna Status --- */
@@ -476,6 +478,8 @@
     <script src="{{ asset('assets') }}/js/jquery-3.6.3.min.js"></script>
 
     <script src="//cdn.datatables.net/2.3.4/js/dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/3.0.8/js/dataTables.responsive.js"></script>
+    <script src="https://cdn.datatables.net/responsive/3.0.8/js/responsive.bootstrap5.js"></script>
 
     <!-- Simple bar js-->
     <script src="{{ asset('assets') }}/vendor/simplebar/simplebar.js"></script>
@@ -495,13 +499,21 @@
     {{-- SweetAlert2 --}}
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    <!-- latest jquery-->
-    <script src="{{ asset('assets') }}/vendor/datatable/jquery.dataTables.min.js"></script>
+    <!-- local DataTables core removed to avoid conflict with CDN version -->
 
     <!-- Select2 -->
     <script src="{{ asset('assets/vendor/select/select2.min.js') }}"></script>
     <!--js-->
     <script src="{{ asset('assets') }}/js/select.js"></script>
+
+    <script>
+        // Enable DataTables responsive by default across the app
+        if (typeof $.fn.dataTable !== 'undefined') {
+            $.extend( $.fn.dataTable.defaults, {
+                responsive: true
+            } );
+        }
+    </script>
 
 
     @stack('scripts')
