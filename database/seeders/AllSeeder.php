@@ -79,9 +79,12 @@ class AllSeeder extends Seeder
         $superAdminRole = Role::updateOrCreate(['name' => 'super-admin']);
         $superAdminRole->givePermissionTo(Permission::all());
 
-        // Atasan (Untuk User No 6 - Atasan Superadmin)
-        $directorRole = Role::updateOrCreate(['name' => 'director']);
-        $directorRole->givePermissionTo(Permission::all());
+        $atasanApprovalRole = Role::updateOrCreate(['name' => 'atasan']);
+        $atasanApprovalRole->syncPermissions([
+            'view dashboard', 'view customers menu', 'view customer',
+            'view bg-approval', 'approve bg', 'reject bg',
+            'view approval'
+        ]);
 
         // Finance Roles
         $financePerms = [
@@ -129,12 +132,12 @@ class AllSeeder extends Seeder
                 'department_id' => 10, // IT
                 'status' => 'active',
                 'atasan_nik' => 'AG2222', // Atasannya User No 6
-                'position_id' => $posManager->id,
+                'position_id' => $posDirector->id,
             ]
         );
         $superAdmin->assignRole($superAdminRole);
 
-        $superAdmin = User::updateOrCreate(
+        $atasanApprovalUser = User::updateOrCreate(
             ['email' => 'userapproval@example.com'],
             [
                 'name' => 'User Approval',
@@ -148,7 +151,7 @@ class AllSeeder extends Seeder
                 'position_id' => $posManager->id,
             ]
         );
-        $superAdmin->assignRole($superAdminRole);
+        $atasanApprovalUser->assignRole($atasanApprovalRole);
 
         // 3. Head Finance (Atasannya Manager Finance)
         $headFinance = User::updateOrCreate(
