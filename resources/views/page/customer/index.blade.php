@@ -299,7 +299,7 @@
                                             <label class="form-label">Upload Company Profile</label>
                                             <input type="file" class="form-control" name="company_profile_file" accept=".pdf">
                                             <small class="text-muted f-s-11">Format: PDF saja</small>
-                                            <div id="preview_company_profile" class="mt-2" style="display: none;"></div>
+                                            <div id="preview_company_profile" class="mt-2" style="display: none; position:relative; z-index:2;"></div>
                                         </div>
                                     </div>
                                 </div>
@@ -1836,7 +1836,7 @@
                 const table = $('#sampleTable').DataTable({
                     processing: true,
                     serverSide: true,
-                    responsive: true,
+                    // responsive: true,
                     ajax: {
                         url: "{{ route('customers.index') }}",
                         data: function(d) {
@@ -1897,6 +1897,39 @@
                     ],
                     autoWidth: false
                 });
+
+                // Preserve top filters & search when opening create/edit modals
+                (function() {
+                    const modalSelector = '#customerModal, #recallCustomerModal';
+
+                    $(document).on('show.bs.modal', modalSelector, function() {
+                        const saved = {
+                            status: $('#statusFilter').val(),
+                            approval: $('#approvalStatusFilter').val(),
+                            search: (typeof table !== 'undefined') ? table.search() : ($('#sampleTable_filter input').val() || '')
+                        };
+                        $(this).data('savedFilters', saved);
+                    });
+
+                    $(document).on('shown.bs.modal', modalSelector, function() {
+                        const saved = $(this).data('savedFilters');
+                        if (!saved) return;
+
+                        // Restore filters and search (this will revert any automatic changes)
+                        $('#statusFilter').val(saved.status).trigger('change');
+                        $('#approvalStatusFilter').val(saved.approval).trigger('change');
+
+                        try {
+                            if (typeof table !== 'undefined') {
+                                table.search(saved.search).draw(false);
+                            } else if ($('#sampleTable').length) {
+                                $('#sampleTable').DataTable().search(saved.search).draw(false);
+                            }
+                        } catch (e) {
+                            console.warn('Restore search failed', e);
+                        }
+                    });
+                })();
 
                 $('#statusFilter, #approvalStatusFilter').on('change', function() {
                     table.draw();

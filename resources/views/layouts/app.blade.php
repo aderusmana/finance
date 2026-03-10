@@ -60,7 +60,7 @@
     <link href="{{ asset('assets') }}/vendor/datatable/datatable2/buttons.dataTables.min.css" rel="stylesheet"
         type="text/css">
 
-    <link rel="stylesheet" type="text/css" href="//cdn.datatables.net/2.3.4/css/dataTables.dataTables.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/2.3.4/css/dataTables.dataTables.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.3/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/2.3.4/css/dataTables.bootstrap5.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/2.3.7/css/dataTables.bootstrap5.css">
@@ -359,125 +359,12 @@
         </div>
     </div>
 
-    <!--customizer-->
-    {{-- <button class="customizer-btn" type="button" data-bs-toggle="offcanvas" data-bs-target="#customizerOptions"
-        aria-controls="customizerOptions">
-        <i class="ti ti-settings-2"></i>
-    </button>
-
-    <div class="offcanvas offcanvas-end app-customizer" data-bs-scroll="true" tabindex="-1" id="customizerOptions"
-        aria-labelledby="customizerOptionsLabel">
-
-        <div class="offcanvas-header flex-wrap bg-primary">
-            <h5 class="offcanvas-title text-white" id="customizerOptionsLabel"> Admin Customizer </h5>
-            <p class="d-block text-white opacity-75">its time to style according to your choice ..!</p>
-            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-        </div>
-
-        <div class="offcanvas-body">
-            <div class="app-divider-v secondary py-3">
-                <h6 class="mt-2">Sidebar option</h6>
-            </div>
-            <ul class="sidebar-option">
-                <li class="vertical-sidebar">
-                    <ul>
-                        <li class="header"></li>
-                        <li class="sidebar"></li>
-                        <li class="body"> <span class="badge text-bg-secondary b-r-6"> Vertical</span> </li>
-                    </ul>
-                </li>
-                <li class="horizontal-sidebar">
-                    <ul>
-                        <li class="header h-20"><span class="badge text-bg-secondary b-r-6"> Horizontal</span></li>
-                        <li class="body w-100"></li>
-                    </ul>
-                </li>
-                <li class="dark-sidebar">
-                    <ul>
-                        <li class="header"></li>
-                        <li class="sidebar bg-dark-600"></li>
-                        <li class="body"><span class="badge text-bg-secondary b-r-6"> Dark </span></li>
-                    </ul>
-                </li>
-            </ul>
-
-            <div class="app-divider-v secondary py-3">
-                <h6 class="mt-2">Layout option</h6>
-            </div>
-            <ul class="layout-option">
-                <li class="ltr">
-                    <ul>
-                        <li class="header"></li>
-                        <li class="sidebar"></li>
-                        <li class="body"><span class="badge text-bg-secondary b-r-6"> LTR </span></li>
-                    </ul>
-                </li>
-                <li class="rtl">
-                    <ul>
-                        <li class="header"></li>
-                        <li class="body"> <span class="badge text-bg-secondary b-r-6"> RTL </span> </li>
-                        <li class="sidebar"></li>
-                    </ul>
-                </li>
-                <li class="box-layout">
-                    <ul>
-                        <li class="header"></li>
-                        <li class="sidebar"></li>
-                        <li class="body"> <span class="badge text-bg-secondary b-r-6"> Box </span> </li>
-                    </ul>
-                </li>
-            </ul>
-            <h6 class="mt-3">Color Hint</h6>
-            <ul class="color-hint p-0">
-                <li class="default">
-                    <div></div>
-                </li>
-                <li class="gold">
-                    <div></div>
-                </li>
-                <li class="warm">
-                    <div></div>
-                </li>
-                <li class="happy">
-                    <div></div>
-                </li>
-                <li class="nature">
-                    <div></div>
-                </li>
-                <li class="hot">
-                    <div></div>
-                </li>
-            </ul>
-            <div class="app-divider-v secondary py-3">
-                <h6 class="mt-2 font-primary">Text size</h6>
-            </div>
-            <ul class="text-size">
-                <li class="small-text"> sm </li>
-                <li class="medium-text"> md </li>
-                <li class="large-text"> lg </li>
-            </ul>
-        </div>
-
-        <div class="offcanvas-footer">
-            <div class="d-flex gap-2">
-                <button type="button" class="btn btn-danger w-100" onclick="resetCustomizer()">Reset</button>
-                <a type="button" class="btn btn-success w-100"
-                    href="https://themeforest.net/user/la-themes/portfolio" target="_blank">Buy Now</a>
-            </div>
-            <div class="d-flex gap-2 mt-2">
-                <a type="button" class="btn btn-primary w-100" href="mailto:teqlathemes@gmail.com"
-                    target="_blank">Support</a>
-                <a type="button" class="btn btn-dark w-100" href="document.html" target="_blank">Document</a>
-            </div>
-
-        </div>
-
-    </div> --}}
-
     <!-- latest jquery-->
     <script src="{{ asset('assets') }}/js/jquery-3.6.3.min.js"></script>
 
-    <script src="//cdn.datatables.net/2.3.4/js/dataTables.min.js"></script>
+
+    <script src="https://cdn.datatables.net/2.3.4/js/dataTables.min.js"></script>
+    <script src="{{ asset('assets') }}/vendor/datatable/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/responsive/3.0.8/js/dataTables.responsive.js"></script>
     <script src="https://cdn.datatables.net/responsive/3.0.8/js/responsive.bootstrap5.js"></script>
 
@@ -506,66 +393,10 @@
     <!--js-->
     <script src="{{ asset('assets') }}/js/select.js"></script>
 
-    <script>
-        // Enable DataTables responsive by default across the app
-        if (typeof $.fn.dataTable !== 'undefined') {
-            $.extend( $.fn.dataTable.defaults, {
-                responsive: true
-            } );
-        }
-    </script>
+
 
 
     @stack('scripts')
-
-    {{-- // weather js --}}
-    {{-- <script>
-        $.ajaxSetup({
-            headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-            }
-        });
-        navigator.geolocation.getCurrentPosition(function(position) {
-            let lat = position.coords.latitude;
-            let lon = position.coords.longitude;
-
-            fetch(
-                    `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,precipitation_probability_mean&timezone=auto`
-                )
-                .then(res => res.json())
-                .then(data => {
-                    // === tampilkan suhu sekarang di header ===
-                    document.getElementById("current-temp").innerHTML =
-                        `${data.current_weather.temperature} <sup class="f-s-10">°C</sup>`;
-
-                    // === tampilkan forecast harian ===
-                    let forecast = data.daily;
-                    let container = document.getElementById("forecast-box");
-                    container.innerHTML = ""; // reset isi dulu
-
-                    forecast.time.forEach((date, i) => {
-                        let day = new Date(date).toLocaleDateString('en-US', {
-                            weekday: 'short'
-                        });
-                        let temp = forecast.temperature_2m_max[i];
-                        let rain = forecast.precipitation_probability_mean[i];
-
-                        container.innerHTML += `
-                    <div class="cloud-box bg-primary-${900 - (i*100)}">
-                        <p class="mb-3">${day}</p>
-                        <h6 class="mt-4 f-s-13">+${temp}°C</h6>
-                        <span>
-                            <i class="ph-duotone ph-sun-dim text-white f-s-25"></i>
-                        </span>
-                        <p class="f-s-13 mt-3"><i class="wi wi-raindrop"></i> ${rain}%</p>
-                    </div>
-                `;
-                    });
-                });
-        }, function(error) {
-            console.error("Geolocation error:", error);
-        });
-    </script> --}}
 </body>
 
 </html>

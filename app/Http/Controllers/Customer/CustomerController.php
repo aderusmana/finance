@@ -370,7 +370,7 @@ class CustomerController extends Controller
             if (in_array($extension, ['jpg', 'jpeg', 'png'])) {
                 if ($sizeInKb > 1024) $fail("File {$attribute} (Gambar) maks 1MB.");
             } elseif ($extension === 'pdf') {
-                if ($sizeInKb > 5120) $fail("File {$attribute} (PDF) maks 5MB.");
+                if ($sizeInKb > 10240) $fail("File {$attribute} (PDF) maks 10MB.");
             } else {
                 $fail("Format {$attribute} salah.");
             }
@@ -380,8 +380,8 @@ class CustomerController extends Controller
             'file_npwp' => ['nullable', 'file', $dynamicFileRule],
             'file_nib'  => ['nullable', 'file', $dynamicFileRule],
             'file_ktp'  => ['nullable', 'file', $dynamicFileRule],
-            'file_akte' => ['nullable', 'file', 'mimes:pdf', 'max:5120'],
-            'file_company_profile' => ['nullable', 'file', 'mimes:pdf', 'max:5120'],
+            'file_akte' => ['nullable', 'file', 'mimes:pdf', 'max:10240'],
+            'file_company_profile' => ['nullable', 'file', 'mimes:pdf', 'max:10240'],
         ]);
 
         $newLogs = null;
@@ -538,6 +538,7 @@ class CustomerController extends Controller
 
     public function store(CustomerRequest $request)
     {
+        // dd($request->all());
         $category = 'Customer';
         $subCategory = ($request->term_of_payment === 'CBD') ? 'CBD' : null;
 
