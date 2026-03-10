@@ -297,7 +297,7 @@
                                         {{-- 5. COMPANY PROFILE (OPTIONAL - PDF ONLY) --}}
                                         <div class="col-md">
                                             <label class="form-label">Upload Company Profile</label>
-                                            <input type="file" class="form-control" name="company_profile_file" accept=".pdf">
+                                            <input type="file" class="form-control" name="file_company_profile" accept=".pdf">
                                             <small class="text-muted f-s-11">Format: PDF saja</small>
                                             <div id="preview_company_profile" class="mt-2" style="display: none; position:relative; z-index:2;"></div>
                                         </div>
@@ -1298,7 +1298,7 @@
                                             <label class="fw-bold small mb-0 text-dark">Company Profile</label>
                                             <div id="recall_preview_company_profile"></div>
                                         </div>
-                                        <input type="file" class="form-control form-control-sm" name="company_profile_file" accept=".pdf">
+                                        <input type="file" class="form-control form-control-sm" name="file_company_profile" accept=".pdf">
                                         <small class="text-muted f-s-11">Format: PDF saja</small>
                                     </div>
                                 </div>
