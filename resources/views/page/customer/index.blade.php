@@ -46,7 +46,11 @@
                 </div>
 
                 @can('create customer')
-                <div class="ms-auto d-flex">
+                <div class="ms-auto d-flex gap-2">
+                    <button class="btn btn-success" type="button" data-bs-toggle="modal" data-bs-target="#importModal">
+                        <i class="ph-bold ph-file-csv"></i>
+                        <span class="d-none d-sm-inline">Import CSV</span>
+                    </button>
                     <button class="btn btn-primary" type="button" id="btn-create-customer">
                         <i class="ph-bold ph-plus"></i>
                         <span>New Customer</span>
@@ -1318,6 +1322,40 @@
         </div>
     </div>
 
+    <div class="modal fade" id="importModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white py-3">
+                    <h5 class="modal-title fw-bold"><i class="ph-bold ph-upload-simple me-2"></i> Import Data Customers</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="importForm" enctype="multipart/form-data">
+                    @csrf
+                    <div class="card modal-body p-4">
+                        <div class="alert alert-info border-0 shadow-sm f-s-13">
+                            <i class="ph-fill ph-info me-2"></i> Gunakan format CSV standar untuk memigrasi data. Data yang di-import akan langsung masuk sebagai <strong>Active</strong> & <strong>Approved</strong>.
+                        </div>
+                        
+                        <div class="mb-4 text-center">
+                            <a href="{{ route('customers.template') }}" class="btn btn-sm btn-outline-primary rounded-pill px-4">
+                                <i class="ph-bold ph-download-simple me-1"></i> Download Template CSV
+                            </a>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Pilih File CSV <span class="text-danger">*</span></label>
+                            <input type="file" class="form-control" name="file" accept=".csv" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-white">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-success fw-bold"><i class="ph-bold ph-check me-1"></i> Mulai Import</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     @push('scripts')
         <script src="{{ asset('assets/vendor/select/select2.min.js') }}"></script>
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -1555,8 +1593,7 @@
                                 contentType: false,
                                 success: function(response) {
                                     Swal.close();
-                                    $('#statusFilter').val(currentStatusFilter).trigger('change.select2');
-                                    $('#approvalStatusFilter').val(currentApprovalFilter).trigger('change.select2');
+
                                     if(response.success) {
                                         Swal.fire({
                                             icon: 'success',
@@ -1566,9 +1603,18 @@
                                             showConfirmButton: false
                                         }).then(() => {
                                             $('#recallCustomerModal').modal('hide');
-                                            if (typeof table !== 'undefined') { table.ajax.reload(null, false); } else { $('#sampleTable').DataTable().ajax.reload(); }
+                                            $('#statusFilter').val('all').trigger('change.select2');
+                                            $('#approvalStatusFilter').val('all').trigger('change.select2');
+
+                                            if (typeof table !== 'undefined') {
+                                                table.search('').ajax.reload(null, true);
+                                            } else {
+                                                $('#sampleTable').DataTable().search('').ajax.reload(null, true);
+                                            }
                                         });
                                     } else {
+                                        $('#statusFilter').val(currentStatusFilter).trigger('change.select2');
+                                        $('#approvalStatusFilter').val(currentApprovalFilter).trigger('change.select2');
                                         Swal.fire('Gagal!', response.message, 'error');
                                     }
                                 },
@@ -1628,8 +1674,7 @@
                                 contentType: false,
                                 success: function(response) {
                                     Swal.close();
-                                    $('#statusFilter').val(currentStatusFilter).trigger('change.select2');
-                                    $('#approvalStatusFilter').val(currentApprovalFilter).trigger('change.select2');
+
                                     if(response.success) {
                                         Swal.fire({
                                             icon: 'success',
@@ -1639,9 +1684,18 @@
                                             showConfirmButton: false
                                         }).then(() => {
                                             $('#customerModal').modal('hide');
-                                            if (typeof table !== 'undefined') { table.ajax.reload(null, false); } else { $('#sampleTable').DataTable().ajax.reload(); }
+                                            $('#statusFilter').val('all').trigger('change.select2');
+                                            $('#approvalStatusFilter').val('all').trigger('change.select2');
+
+                                            if (typeof table !== 'undefined') {
+                                                table.search('').ajax.reload(null, true);
+                                            } else {
+                                                $('#sampleTable').DataTable().search('').ajax.reload(null, true);
+                                            }
                                         });
                                     } else {
+                                        $('#statusFilter').val(currentStatusFilter).trigger('change.select2');
+                                        $('#approvalStatusFilter').val(currentApprovalFilter).trigger('change.select2');
                                         Swal.fire('Gagal!', response.message, 'error');
                                     }
                                 },
@@ -2169,7 +2223,7 @@
                     } else {
                         $('#user_id').prop('disabled', false);
                     }
-                    
+
                     $('.btn-schedule').removeClass('active btn-dark btn-primary btn-success btn-info text-white');
 
                     $('.btn-schedule[data-val="All"]').addClass('btn-outline-dark');
@@ -2751,6 +2805,49 @@
                 document.getElementById('creditCalcModal').addEventListener('hidden.bs.modal', function() {
                     $('.modal-backdrop').remove();
                     $('body').removeClass('modal-open');
+                });
+
+                $('#importForm').on('submit', function(e) {
+                    e.preventDefault();
+                    const formData = new FormData(this);
+                    
+                    Swal.fire({
+                        title: 'Mengimpor Data...',
+                        html: 'Mohon jangan tutup halaman ini.',
+                        allowOutsideClick: false,
+                        didOpen: () => { Swal.showLoading(); }
+                    });
+
+                    $.ajax({
+                        url: "{{ route('customers.import') }}",
+                        method: 'POST',
+                        data: formData,
+                        processData: false,
+                        contentType: false,
+                        success: function(response) {
+                            if(response.success) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Import Selesai!',
+                                    text: response.message,
+                                    timer: 2500,
+                                    showConfirmButton: false
+                                }).then(() => {
+                                    $('#importModal').modal('hide');
+                                    $('#importForm')[0].reset();
+                                    // Reset filter dan reload tabel agar data baru muncul
+                                    $('#statusFilter').val('all').trigger('change.select2');
+                                    $('#approvalStatusFilter').val('all').trigger('change.select2');
+                                    if (typeof table !== 'undefined') table.search('').ajax.reload(null, true);
+                                });
+                            }
+                        },
+                        error: function(xhr) {
+                            let msg = 'Gagal mengimpor file. Pastikan formatnya .csv dan tidak ada data yang corrupt.';
+                            if(xhr.responseJSON && xhr.responseJSON.message) msg = xhr.responseJSON.message;
+                            Swal.fire('Error!', msg, 'error');
+                        }
+                    });
                 });
             });
         </script>

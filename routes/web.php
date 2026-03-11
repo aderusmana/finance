@@ -81,7 +81,8 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::post('/customers/{customer}/recall', [CustomerController::class, 'recall'])->name('customers.recall');
-    
+    Route::get('customers-template/download', [CustomerController::class, 'downloadTemplate'])->name('customers.template');
+    Route::post('customers/import', [CustomerController::class, 'import'])->name('customers.import');
     Route::get('/customers/approval', [CustomerController::class, 'approvalPage'])->name('customers.approval');
     Route::get('/customers-approval/data', [CustomerController::class, 'getApprovalData'])->name('customers.approval.data');
     Route::post('/approvals/resend/{token}', [CustomerController::class, 'resendApprovalEmail'])->name('approvals.resend');
