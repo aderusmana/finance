@@ -41,6 +41,7 @@ class AllSeeder extends Seeder
             'view bg-approval', 'approve bg', 'reject bg',
             'view log', 'view report', 'view approval',
             'view approval-path', 'view revision',
+            'view customer dashboard', 'view bg dashboard', 'view dashboard area',
         ];
 
         foreach ($permissions as $perm) {
@@ -114,6 +115,19 @@ class AllSeeder extends Seeder
             'view customers menu', 'view customer', 'update customer',
             'view role', 'view permission', 'view user',
             'view log', 'view approval-path'
+        ]);
+
+        // Staff Sales
+        $staffSalesRole = Role::updateOrCreate(['name' => 'staff-sales']);
+        $staffSalesRole->syncPermissions([
+            'view dashboard', 'view customers menu', 'view customer', 'view customer dashboard'
+        ]);
+
+        // Staff Finance
+        $staffFinanceRole = Role::updateOrCreate(['name' => 'staff-finance']);
+        $staffFinanceRole->syncPermissions([
+            'view dashboard', 'view bg dashboard', 'view bank garansi menu', 
+            'view bg', 'create bg', 'update bg', 'delete bg',
         ]);
 
         // ==========================================
@@ -222,6 +236,40 @@ class AllSeeder extends Seeder
             ]
         );
         $itUser->assignRole($itRole);
+
+        // Staff Sales
+        $staffSales = User::updateOrCreate(
+            ['email' => 'staff.sales@example.com'],
+            [
+                'name' => 'Staff Sales',
+                'nik' => 'SS001',
+                'username' => 'staff.sales',
+                'password' => Hash::make('password'),
+                'email_verified_at' => now(),
+                'department_id' => 7,
+                'status' => 'active',
+                'atasan_nik' => 'HDSNM01', // Lapor ke Head SNM
+                'position_id' => $posStaff->id,
+            ]
+        );
+        $staffSales->assignRole($staffSalesRole);
+
+        // Staff Finance
+        $staffFinance = User::updateOrCreate(
+            ['email' => 'staff.finance@example.com'],
+            [
+                'name' => 'Staff Finance',
+                'nik' => 'SF001',
+                'username' => 'staff.finance',
+                'password' => Hash::make('password'),
+                'email_verified_at' => now(),
+                'department_id' => 2,
+                'status' => 'active',
+                'atasan_nik' => 'MF001', // Lapor ke Manager Finance
+                'position_id' => $posStaff->id,
+            ]
+        );
+        $staffFinance->assignRole($staffFinanceRole);
 
         Schema::enableForeignKeyConstraints();
     }

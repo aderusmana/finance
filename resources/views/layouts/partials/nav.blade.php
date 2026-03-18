@@ -8,9 +8,28 @@
     </div>
     <div class="app-nav" id="app-simple-bar">
         <ul class="main-nav p-0 mt-2">
+            @canany(['view dashboard', 'view customer dashboard', 'view bg dashboard'])
+            <li class="menu-title text-white"><span>Dashboards</span></li>
+
+            <li class="no-sub">
+                <a href="{{ route('dashboard') }}">
+                    <i class="iconoir-home"></i> Main Dashboard
+                </a>
+            </li>
+            @endcanany
+
+            @can('view dashboard area')
+            <li>
+                <a aria-expanded="false" data-bs-toggle="collapse" href="#dashboards-menu">
+                    <i class="iconoir-graph-up"></i> Dashboards Area
+                </a>
+                <ul class="collapse" id="dashboards-menu">
+                    <li><a href="{{ route('dashboard.customer') }}">Customer Dashboard</a></li>
+                    <li><a href="{{ route('dashboard.bg') }}">Bank Garansi Dashboard</a></li>
+                </ul>
+            </li>
+            @endcan
             @can('view master data menu')
-                
-            
             <li class="menu-title text-white"><span>Master Data</span></li>
             <li>
                 <a aria-expanded="false" data-bs-toggle="collapse" href="#master-data">

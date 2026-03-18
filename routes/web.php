@@ -37,7 +37,11 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
-Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard/customer', [DashboardController::class, 'customerIndex'])->name('dashboard.customer');
+    Route::get('/dashboard/bank-garansi', [DashboardController::class, 'bgIndex'])->name('dashboard.bg');
+});
 
 Route::get('/tes-404', function () {
     abort(404); // Menampilkan halaman resources/views/errors/404.blade.php
@@ -89,7 +93,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/customers/log', [CustomerController::class, 'logPage'])->name('customers.log');
     Route::get('/customers-log/data', [CustomerController::class, 'getLogData'])->name('customers.log.data');
-    
+
     Route::resource('customers', CustomerController::class);
 
     Route::resource('revision', RevisionController::class);

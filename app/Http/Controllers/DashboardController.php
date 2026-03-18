@@ -14,7 +14,43 @@ class DashboardController extends Controller
 {
     public function index()
     {
+        $user = Auth::user();
+
+        if ($user->hasRole('super-admin')) {
+            return view('dashboard');
+        }
+
+        if ($user->hasRole(['staff-finance', 'manager-finance', 'head-finance']) || $user->can('view bg dashboard')) {
+            return view('dashboard.bg');
+        }
+
+        if ($user->hasRole(['staff-sales', 'head-SNM', 'atasan']) || $user->can('view customer dashboard')) {
+            return view('dashboard.customer');
+        }
+
         return view('dashboard');
+    }
+
+    public function customerIndex()
+    {
+        $user = Auth::user();
+        
+        if (!$user->hasRole(['super-admin', 'staff-sales', 'head-SNM', 'atasan'])) {
+            abort(403, 'Anda tidak memiliki akses ke Dashboard Customer');
+        }
+
+        return view('dashboard.customer');
+    }
+
+    public function bgIndex()
+    {
+        $user = Auth::user();
+        
+        if (!$user->hasRole(['super-admin', 'staff-finance', 'manager-finance', 'head-finance'])) {
+            abort(403, 'Anda tidak memiliki akses ke Dashboard Bank Garansi');
+        }
+
+        return view('dashboard.bg');
     }
 
     /**
@@ -22,7 +58,6 @@ class DashboardController extends Controller
      */
     private function parseDateRange($dateString)
     {
-        // JIKA KOSONG -> DEFAULT KE TAHUN INI SAMPAI HARI INI (REALTIME)
         if (empty($dateString)) {
             return [
                 Carbon::now()->startOfYear(), // 1 Jan Tahun ini
@@ -38,7 +73,6 @@ class DashboardController extends Controller
             ];
         }
 
-        // Single Date
         return [
             Carbon::parse($dateString)->startOfDay(),
             Carbon::parse($dateString)->endOfDay()
@@ -180,42 +214,61 @@ class DashboardController extends Controller
 
         $query = BankGaransi::whereBetween('created_at', [$startDate, $endDate]);
 
-        // Expiring selalu melihat masa depan (H+60 hari), tidak terpengaruh filter tanggal "created_at"
+        $totalValue = (clone $query)->whereIn('status', ['approved', 'active'])->sum('bg_nominal');
+        $activeCount = (clone $query)->whereIn('status', ['approved', 'active'])->count();
         $expiringCount = BankGaransi::whereBetween('exp_date', [now(), now()->addDays(60)])
-                                    ->whereNotIn('status', ['expired', 'returned'])
+                                    ->whereNotIn('status', ['expired', 'returned', 'rejected'])
                                     ->count();
 
+        $largestBg = (clone $query)->whereIn('status', ['approved', 'active'])
+                                   ->orderBy('bg_nominal', 'desc')
+                                   ->first();
+
         return response()->json([
-            'total_value' => $query->sum('bg_nominal'),
+            'total_value' => $totalValue,
+            'active_count' => $activeCount,
             'expiring' => $expiringCount,
+            'largest_bg_nominal' => $largestBg ? $largestBg->bg_nominal : 0,
+            'largest_bg_customer' => $largestBg && $largestBg->customer ? $largestBg->customer->name : '-',
         ]);
     }
 
     /**
      * STAT 4: Customer Metrics Card (Total & Overlimit)
      */
-    public function customerMetrics()
+    public function customerMetrics(Request $request)
     {
-        // Total Customer Global
         $total = Customer::count();
 
-        // Credit Exceeded (Global Check)
-        $creditExceeded = 0;
-        // Optimization: Gunakan raw query atau chunk jika data customer ribuan
-        $customers = Customer::whereNotNull('credit_limit')->where('credit_limit', '>', 0)->get(['id','credit_limit']);
+        $withBg = BankGaransi::whereIn('status', ['approved', 'active', 'completed'])
+                    ->distinct('customer_id')
+                    ->count('customer_id');
 
+        $withoutBg = $total - $withBg;
+
+        $creditExceeded = 0;
+        $customers = Customer::whereNotNull('credit_limit')->where('credit_limit', '>', 0)->get(['id','credit_limit']);
         foreach ($customers as $c) {
             $sumBg = BankGaransi::where('customer_id', $c->id)
-                                ->where('status', 'approved') // Hanya BG aktif
+                                ->whereIn('status', ['approved', 'active'])
                                 ->sum('bg_nominal');
             if ($sumBg > $c->credit_limit) {
                 $creditExceeded++;
             }
         }
 
+        $highestLimit = Customer::orderBy('credit_limit', 'desc')->first(['name', 'credit_limit']);
+
+        $longestJoined = Customer::orderBy('join_date', 'asc')->first() ?? Customer::orderBy('created_at', 'asc')->first();
+
         return response()->json([
             'total' => $total,
+            'with_bg' => $withBg,
+            'without_bg' => $withoutBg,
             'credit_exceeded' => $creditExceeded,
+            'highest_limit_name' => $highestLimit ? $highestLimit->name : '-',
+            'highest_limit_amount' => $highestLimit ? $highestLimit->credit_limit : 0,
+            'longest_joined_name' => $longestJoined ? $longestJoined->name : '-',
         ]);
     }
 

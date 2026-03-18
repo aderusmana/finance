@@ -1552,7 +1552,7 @@
                     $('#recall_preview_nib').html(createPreviewBtn(data.file_nib_path, 'NIB'));
                     $('#recall_preview_ktp').html(createPreviewBtn(data.file_ktp_path, 'KTP'));
                     $('#recall_preview_akte').html(createPreviewBtn(data.file_akte_path, 'Akte Pendirian'));
-                    $('#recall_preview_company_profile').html(createPreviewBtn(data.company_profile_file_path, 'Company Profile'));
+                    $('#recall_preview_company_profile').html(createPreviewBtn(data.file_company_profile_path, 'Company Profile'));
 
                     $('#recallCustomerModal').modal('show');
                 });
@@ -2384,7 +2384,7 @@
                         { name: 'NIB / SIUP', path: btn.data('file_nib_path'), icon: 'ph-file-code' },
                         { name: 'KTP Penanggung Jawab', path: btn.data('file_ktp_path'), icon: 'ph-cardholder' },
                         { name: 'Akte Pendirian', path: btn.data('file_akte_path'), icon: 'ph-scroll' },
-                        { name: 'Company Profile', path: btn.data('company_profile_file_path'), icon: 'ph-buildings' }
+                        { name: 'Company Profile', path: btn.data('file_company_profile_path'), icon: 'ph-buildings' }
                     ];
 
                     let docHtml = '';
