@@ -65,6 +65,8 @@
                     <li><a href="{{ route('customer-classes.index') }}">Customer Class</a></li>
                     <li><a href="{{ route('tax.index') }}">BG Tax</a></li>
                     <li><a href="{{ route('limit-rules.index') }}">BG Limit Rules</a></li>
+                    <li><a href="{{ route('logistic-fees.index') }}">Logistic Fee</a></li>
+                    <li><a href="{{ route('distributors.index') }}">Distributor</a></li>
                 </ul>
             </li>
 

@@ -23,12 +23,13 @@ use App\Http\Controllers\Master\PositionController;
 use App\Http\Controllers\Master\BgTaxController;
 use App\Http\Controllers\Master\BgLimitRuleController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\Requisition\ItemController;
+use App\Http\Controllers\Master\LogisticFeeController;
 use App\Http\Controllers\BG\CustomerBgPortalController;
 use App\Http\Controllers\BG\ApprovalProcessController;
 use App\Http\Controllers\BG\BgApprovalInboxController;
 use App\Http\Controllers\BG\BgReportController;
 use App\Http\Controllers\BG\LampiranDController;
+use App\Http\Controllers\Master\DistributorController;
 use App\Http\Controllers\Master\SystemLogController;
 use Illuminate\Support\Facades\Route;
 
@@ -54,6 +55,9 @@ Route::get('/tes-500', function () {
 Route::get('/tes-403', function () {
     abort(403, 'Akses Ditolak'); // Menampilkan halaman 403 dengan pesan kustom
 });
+
+Route::get('/logistic-fees/approval/form/{token}/{action}', [LogisticFeeController::class, 'showApprovalForm'])->name('logistic-fees.approval.form');
+Route::post('/logistic-fees/approval/process/{token}/{action}', [LogisticFeeController::class, 'processApproval'])->name('logistic-fees.approval.process');
 
 Route::get('/customers/approval/{token}', [CustomerController::class, 'viewApprovalPage'])->name('customers.view_approval');
 Route::post('/customers/{customer}/approval-action', [CustomerController::class, 'approvalAction'])->name('customers.approval_action');
@@ -105,6 +109,10 @@ Route::middleware('auth')->group(function () {
     Route::resource('customer-classes', CustomerClassController::class);
     Route::resource('tax', BgTaxController::class);
     Route::resource('limit-rules', BgLimitRuleController::class);
+    Route::resource('logistic-fees', LogisticFeeController::class);
+    Route::resource('distributors', DistributorController::class);
+
+    Route::get('/get-customers-by-distributor/{distributor_id}', [DistributorController::class, 'getCustomersByDistributor']);
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

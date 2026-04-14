@@ -75,6 +75,7 @@ trait ApprovalTrait
             if ($approverNik) {
                 $logs->push([
                     'category'       => $category,
+                    'sub_category'   => $pathSubCategory,
                     'related_id'     => $relatedId,
                     'approver_nik'   => $approverNik,
                     'status'         => 'Pending',

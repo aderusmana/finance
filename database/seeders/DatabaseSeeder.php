@@ -19,5 +19,6 @@ class DatabaseSeeder extends Seeder
         $this->call(BGLimitRulesSeeder::class);
         $this->call(BgLampiranDApprovalSeeder::class);
         $this->call(CustomerApprovalSeeder::class);
+        $this->call(DistributorSeeder::class);
     }
 }
