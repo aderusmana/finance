@@ -67,6 +67,7 @@
                     <li><a href="{{ route('limit-rules.index') }}">BG Limit Rules</a></li>
                     <li><a href="{{ route('logistic-fees.index') }}">Logistic Fee</a></li>
                     <li><a href="{{ route('distributors.index') }}">Distributor</a></li>
+                    <li><a href="{{ route('customer-ship-tos.index') }}">Customer Ship To</a></li>
                 </ul>
             </li>
 

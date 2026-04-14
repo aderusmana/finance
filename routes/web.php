@@ -29,6 +29,7 @@ use App\Http\Controllers\BG\ApprovalProcessController;
 use App\Http\Controllers\BG\BgApprovalInboxController;
 use App\Http\Controllers\BG\BgReportController;
 use App\Http\Controllers\BG\LampiranDController;
+use App\Http\Controllers\Master\CustomerShipToController;
 use App\Http\Controllers\Master\DistributorController;
 use App\Http\Controllers\Master\SystemLogController;
 use Illuminate\Support\Facades\Route;
@@ -111,6 +112,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('limit-rules', BgLimitRuleController::class);
     Route::resource('logistic-fees', LogisticFeeController::class);
     Route::resource('distributors', DistributorController::class);
+    Route::resource('customer-ship-tos', CustomerShipToController::class);
 
     Route::get('/get-customers-by-distributor/{distributor_id}', [DistributorController::class, 'getCustomersByDistributor']);
 
