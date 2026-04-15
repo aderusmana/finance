@@ -94,24 +94,30 @@ class LogisticFeeController extends Controller
         $logs = $this->generateApprovalLogs(Auth::user(), $record->id, 'Customer', 'Logistic Fee');
 
         if ($logs->isNotEmpty()) {
-            // PASTIKAN MENGAMBIL LOG YANG PENDING & TERBARU
             $firstApproverLog = ApprovalLog::where('related_id', $record->id)
-                                           ->where('category', 'Customer')
-                                           ->where('sub_category', 'Logistic Fee')
-                                           ->where('level', 1)
-                                           ->where('status', 'Pending') // Tambahan filter ini
-                                           ->latest() // Ambil yang paling baru dibuat
-                                           ->first();
+                                        ->where('category', 'Customer')
+                                        ->where('sub_category', 'Logistic Fee')
+                                        ->where('level', 1)
+                                        ->where('status', 'Pending')
+                                        ->latest()
+                                        ->first();
 
             if ($firstApproverLog) {
                 $firstApproverUser = User::where('nik', $firstApproverLog->approver_nik)->first();
+                $approverName = $firstApproverUser ? $firstApproverUser->name : 'Atasan';
 
-                // Update route_to dengan nama Approver pertama
                 $record->update([
-                    'route_to' => $firstApproverUser ? $firstApproverUser->name : 'Unknown Approver'
+                    'route_to' => $approverName
                 ]);
 
                 dispatch(new SendLogisticFee($firstApproverLog, $record));
+
+                // PERBAIKAN: Sertakan nama approver dalam response JSON
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Pengajuan berhasil dikirim ke <b>' . $approverName . '</b>',
+                    'approver' => $approverName
+                ]);
             }
         } else {
             // Jika gagal generate (misal path belum disetting), kembalikan status
@@ -133,36 +139,44 @@ class LogisticFeeController extends Controller
 
         $record = DistributorCustomer::findOrFail($id);
 
+        // Update data ke status Pending
         $record->update([
             'status' => 'Pending',
             'proposed_fee' => $request->logistic_fee
         ]);
 
+        // Generate logs approval baru
         $logs = $this->generateApprovalLogs(Auth::user(), $record->id, 'Customer', 'Logistic Fee');
 
         if ($logs->isNotEmpty()) {
-            // PASTIKAN MENGAMBIL LOG YANG PENDING & TERBARU
             $firstApproverLog = ApprovalLog::where('related_id', $record->id)
-                                           ->where('category', 'Customer')
-                                           ->where('sub_category', 'Logistic Fee')
-                                           ->where('level', 1)
-                                           ->where('status', 'Pending') // Tambahan filter ini
-                                           ->latest() // Ambil yang paling baru dibuat
-                                           ->first();
+                                        ->where('category', 'Customer')
+                                        ->where('sub_category', 'Logistic Fee')
+                                        ->where('level', 1)
+                                        ->where('status', 'Pending')
+                                        ->latest()
+                                        ->first();
 
             if ($firstApproverLog) {
                 $firstApproverUser = User::where('nik', $firstApproverLog->approver_nik)->first();
+                $approverName = $firstApproverUser ? $firstApproverUser->name : 'Atasan';
 
-                // Update route_to dengan nama Approver pertama
                 $record->update([
-                    'route_to' => $firstApproverUser ? $firstApproverUser->name : 'Unknown Approver'
+                    'route_to' => $approverName
                 ]);
 
                 dispatch(new SendLogisticFee($firstApproverLog, $record));
+
+                // PERBAIKAN: Kembalikan nama approver agar bisa muncul di dialog sukses
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Perubahan harga berhasil dikirim ke <b>' . $approverName . '</b>',
+                    'approver' => $approverName
+                ]);
             }
         }
 
-        return response()->json(['success' => true, 'message' => 'Pengajuan perubahan harga berhasil dikirim ke Approver!']);
+        return response()->json(['success' => true, 'message' => 'Perubahan harga berhasil disimpan.']);
     }
 
     public function show($id)
@@ -256,13 +270,17 @@ class LogisticFeeController extends Controller
                     ->with('successMessage', 'Berhasil Disetujui. Pengajuan telah diteruskan ke Approver selanjutnya: ' . ($nextApproverUser->name ?? 'Unknown'));
             } else {
                 // JIKA FINAL APPROVER (Selesai)
+
+                // 1. Tangkap harga lama sebelum di-update untuk ditampilkan di email
+                $oldFee = $logisticData->logistic_fee;
                 $newFee = $logisticData->proposed_fee;
-                
+
+                // 2. Update Data (proposed_fee dan route_to TIDAK NULL)
                 $logisticData->update([
                     'logistic_fee' => $newFee,
-                    'proposed_fee' => null,
+                    'proposed_fee' => $newFee,   // Tetap simpan history harga yang diajukan
                     'status'       => 'Approved',
-                    'route_to'     => null
+                    'route_to'     => 'Selesai'  // Menandakan tidak ada approval lagi
                 ]);
 
                 // Ambil Email Requester
@@ -279,17 +297,16 @@ class LogisticFeeController extends Controller
                                     ->filter()
                                     ->toArray();
 
-                // PERBAIKAN: Filter array agar tidak ada data [null] yang masuk
                 $allRecipients = array_filter(array_unique(array_merge([$requesterEmail], $approverEmails)));
 
-                // PERBAIKAN: Gunakan Try-Catch agar tidak crash walau SMTP gangguan
                 if (!empty($allRecipients)) {
                     try {
                         Mail::to($allRecipients)->queue(new LogisticFeeMail(
-                            'completed', 
-                            $logisticData, 
+                            'completed',
+                            $logisticData,
                             [
-                                'newFee' => $newFee, 
+                                'oldFee' => $oldFee, // Kirim harga lama ke email
+                                'newFee' => $newFee,
                                 'notes' => $notes
                             ]
                         ));
@@ -310,20 +327,19 @@ class LogisticFeeController extends Controller
                 'notes' => $notes
             ]);
 
+            // UPDATE DATA REJECT: route_to diubah menjadi Selesai, jangan null
             $logisticData->update([
                 'status'   => 'Rejected',
-                'route_to' => null
+                'route_to' => 'Selesai (Ditolak)'
             ]);
 
-            // Ambil Email Requester
             $requesterEmail = User::where('nik', $logisticData->created_by)->value('email');
 
-            // PERBAIKAN: Cek email ada atau tidak, dan gunakan Try-Catch
             if (!empty($requesterEmail)) {
                 try {
                     Mail::to($requesterEmail)->queue(new LogisticFeeMail(
-                        'rejected', 
-                        $logisticData, 
+                        'rejected',
+                        $logisticData,
                         [
                             'notes' => $notes
                         ]

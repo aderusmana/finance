@@ -2,6 +2,9 @@
     @section('title', 'Master Logistic Fee')
     @include('components.sample-table-styles')
 
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+
     <div class="row m-1">
         <div class="col-12 ">
             <h4 class="main-title">Logistic Fee</h4>
@@ -37,7 +40,8 @@
                                     <th>Customer Code</th>
                                     <th>Customer Name</th>
                                     <th class="bg-warning text-dark">Logistic Fee / ctn</th>
-                                    <th>Route To</th> <th>Action</th>
+                                    <th>Route To</th>
+                                    <th>Action</th>
                                 </tr>
                             </thead>
                         </table>
@@ -58,13 +62,14 @@
                 <form id="mainForm">
                     @csrf
                     <input type="hidden" name="id" id="dataId">
+                    <input type="hidden" id="old_logistic_fee" value="0">
 
                     <div class="modal-body">
                         {{-- Wrapper untuk Form Tambah (Dropdown) --}}
                         <div id="createModeWrapper">
                             <div class="mb-3">
                                 <label class="form-label">Distributor <span class="text-danger">*</span></label>
-                                <select name="distributor_id" id="distributor_id" class="form-select">
+                                <select name="distributor_id" id="distributor_id" class="form-select select2-custom" style="width: 100%;">
                                     <option value="">-- Pilih Distributor --</option>
                                     @foreach($distributors as $distributor)
                                         <option value="{{ $distributor->id }}">{{ $distributor->code }} - {{ $distributor->name }}</option>
@@ -73,10 +78,9 @@
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Customer <span class="text-danger">*</span></label>
-                                <select name="customer_id" id="customer_id" class="form-select">
+                                <select name="customer_id" id="customer_id" class="form-select select2-custom" style="width: 100%;">
                                     <option value="">-- Pilih Customer --</option>
                                     @foreach($customers as $customer)
-                                        {{-- Sesuaikan properti code customer jika namanya berbeda --}}
                                         <option value="{{ $customer->id }}">{{ $customer->customer_code ?? $customer->code ?? '-' }} - {{ $customer->name }}</option>
                                     @endforeach
                                 </select>
@@ -93,14 +97,23 @@
                                 <label class="form-label text-muted">Customer</label>
                                 <input type="text" id="customer_info" class="form-control bg-light" readonly>
                             </div>
+
+                            <div class="mb-4 pb-3 border-bottom">
+                                <label class="form-label text-muted fw-bold">Harga Saat Ini</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light text-muted">Rp</span>
+                                    <input type="text" id="current_logistic_fee" class="form-control bg-light text-secondary fw-bold" readonly>
+                                </div>
+                                <div class="form-text"><i class="ph-fill ph-info"></i> Ini adalah harga yang sedang aktif di sistem.</div>
+                            </div>
                         </div>
 
-                        {{-- Input Harga (Ditampilkan di kedua mode) --}}
+                        {{-- Input Harga Baru (Dinamis: Create / Edit) --}}
                         <div class="mb-3">
-                            <label class="form-label">Logistic Fee / ctn <span class="text-danger">*</span></label>
+                            <label class="form-label fw-bold" id="label_logistic_fee">Logistic Fee / ctn <span class="text-danger">*</span></label>
                             <div class="input-group">
-                                <span class="input-group-text">Rp</span>
-                                <input type="text" name="logistic_fee" id="logistic_fee" class="form-control" required>
+                                <span class="input-group-text bg-white">Rp</span>
+                                <input type="text" name="logistic_fee" id="logistic_fee" class="form-control text-primary fw-bold" required placeholder="Ketik nominal...">
                             </div>
                         </div>
                     </div>
@@ -115,10 +128,11 @@
     </div>
 
     @push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
     <script>
         let table;
 
-        // --- FUNGSI FORMAT RUPIAH ---
         function formatRupiah(angka) {
             let number_string = angka.replace(/[^,\d]/g, '').toString(),
                 split = number_string.split(','),
@@ -136,6 +150,26 @@
         }
 
         $(document).ready(function() {
+            // Setup CSRF
+            $.ajaxSetup({
+                headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') }
+            });
+
+            // 3. INISIALISASI SELECT2
+            $('#distributor_id').select2({
+                theme: 'bootstrap-5',
+                dropdownParent: $('#modalForm'), // Wajib ada agar search bisa diklik di dalam modal
+                placeholder: "-- Pilih Distributor --",
+                allowClear: true
+            });
+
+            $('#customer_id').select2({
+                theme: 'bootstrap-5',
+                dropdownParent: $('#modalForm'),
+                placeholder: "-- Pilih Customer --",
+                allowClear: true
+            });
+
             // Inisialisasi DataTables
             table = $('#sampleTable').DataTable({
                 processing: true,
@@ -148,23 +182,24 @@
                     { data: 'customer_code', name: 'customer.customer_code' },
                     { data: 'customer_name', name: 'customer.name' },
                     { data: 'logistic_fee', name: 'logistic_fee' },
-                    { data: 'route_to', name: 'route_to' }, // Tambahkan ini
+                    { data: 'route_to', name: 'route_to' },
                     { data: 'action', name: 'action', orderable: false, searchable: false }
                 ],
                 order: [[2, 'asc']]
             });
 
-            // Event listener untuk memformat input menjadi Rupiah saat diketik
+            // Format input menjadi Rupiah
             $('#logistic_fee').on('keyup', function() {
                 $(this).val(formatRupiah($(this).val()));
             });
 
-            // Load Customer by Distributor (AJAX Dropdown)
+            // 4. Load Customer by Distributor (AJAX Dropdown) + SELECT2 REFRESH
             $('#distributor_id').on('change', function() {
                 let distributorId = $(this).val();
                 let customerSelect = $('#customer_id');
 
-                customerSelect.empty().append('<option value="">-- Loading... --</option>');
+                // Set ke loading dan paksa Select2 merender ulang (.trigger('change'))
+                customerSelect.empty().append('<option value="">-- Loading... --</option>').trigger('change');
 
                 if(distributorId) {
                     $.get("{{ url('/get-customers-by-distributor') }}/" + distributorId, function(data) {
@@ -173,9 +208,11 @@
                             let kode = customer.customer_code ? customer.customer_code : customer.code;
                             customerSelect.append('<option value="'+ customer.id +'">'+ kode +' - '+ customer.name +'</option>');
                         });
+                        // Refresh UI Select2 setelah semua option dimasukkan
+                        customerSelect.trigger('change');
                     });
                 } else {
-                    customerSelect.empty().append('<option value="">-- Pilih Customer --</option>');
+                    customerSelect.empty().append('<option value="">-- Pilih Customer --</option>').trigger('change');
                 }
             });
 
@@ -183,35 +220,86 @@
             $('#mainForm').on('submit', function(e){
                 e.preventDefault();
                 let id = $('#dataId').val();
-                let url = "{{ route('logistic-fees.store') }}";
-                let method = "POST";
+                let url = id ? "{{ url('/logistic-fees') }}/" + id : "{{ route('logistic-fees.store') }}";
+                let method = id ? "PUT" : "POST";
 
+                // Ambil teks Distributor & Customer berdasarkan mode (Edit atau Create)
+                let distributorName, customerName;
                 if(id) {
-                    url = "{{ url('/logistic-fees') }}/" + id;
-                    method = "PUT";
+                    // Mode Edit: ambil dari input text readonly
+                    distributorName = $('#distributor_info').val();
+                    customerName = $('#customer_info').val();
+                } else {
+                    // Mode Create: ambil dari select option yang dipilih
+                    distributorName = $('#distributor_id option:selected').text();
+                    customerName = $('#customer_id option:selected').text();
                 }
 
-                // CLEANING DATA: Hapus titik sebelum dikirim ke backend
-                // Menggunakan serializeArray agar mudah dimanipulasi
-                let rawData = $(this).serializeArray();
-                $.each(rawData, function(i, field){
-                    if (field.name === 'logistic_fee') {
-                        field.value = field.value.replace(/\./g, ''); // Hapus semua titik
-                    }
-                });
-                let formData = $.param(rawData); // Ubah kembali ke format URL encoded
+                let newFeeVal = $('#logistic_fee').val();
 
-                $.ajax({
-                    url: url,
-                    method: method,
-                    data: formData, // Kirim data yang sudah dibersihkan
-                    success: function(res) {
-                        $('#modalForm').modal('hide');
-                        table.ajax.reload();
-                        Swal.fire('Success', res.message, 'success');
-                    },
-                    error: function(err) {
-                        Swal.fire('Error', 'Gagal menyimpan data.', 'error');
+                // Dialog Konfirmasi (Dinamis untuk Create/Update)
+                Swal.fire({
+                    title: id ? 'Konfirmasi Perubahan Harga' : 'Konfirmasi Pengajuan Baru',
+                    html: `
+                        <div class="text-start" style="font-size: 0.95rem;">
+                            <p>Anda akan memproses data berikut:</p>
+                            <table class="table table-sm table-borderless">
+                                <tr><td width="35%">Distributor</td><td>: <b>${distributorName}</b></td></tr>
+                                <tr><td>Customer</td><td>: <b>${customerName}</b></td></tr>
+                                <tr><td>Harga Diajukan</td><td>: <b class="text-primary">Rp ${newFeeVal}</b></td></tr>
+                            </table>
+                            <hr>
+                            <p class="mb-0 text-muted" style="font-style: italic;">
+                                <i class="ph-bold ph-info-circle"></i>
+                                Sistem akan mengirimkan notifikasi <b>Approval kepada Atasan</b> untuk diverifikasi.
+                            </p>
+                        </div>
+                    `,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#2563eb',
+                    cancelButtonColor: '#94a3b8',
+                    confirmButtonText: 'Ya, Kirim Pengajuan',
+                    cancelButtonText: 'Batal',
+                    reverseButtons: true
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Bersihkan format rupiah
+                        let rawData = $(this).serializeArray();
+                        $.each(rawData, function(i, field){
+                            if (field.name === 'logistic_fee') {
+                                field.value = field.value.replace(/\./g, '');
+                            }
+                        });
+                        let formData = $.param(rawData);
+
+                        // Loading state
+                        Swal.fire({
+                            title: 'Sedang Mengirim...',
+                            allowOutsideClick: false,
+                            didOpen: () => { Swal.showLoading(); }
+                        });
+
+                        $.ajax({
+                            url: url,
+                            method: method,
+                            data: formData,
+                            success: function(res) {
+                                $('#modalForm').modal('hide');
+                                table.ajax.reload();
+
+                                // Dialog Berhasil dengan Nama Approver dari Backend
+                                Swal.fire({
+                                    title: 'Pengajuan Terkirim!',
+                                    html: res.message, // Pesan berisi nama approver
+                                    icon: 'success',
+                                    confirmButtonColor: '#10b981'
+                                });
+                            },
+                            error: function(err) {
+                                Swal.fire('Gagal', 'Terjadi kesalahan sistem, silakan hubungi admin.', 'error');
+                            }
+                        });
                     }
                 });
             });
@@ -227,15 +315,18 @@
                     $('#distributor_info').val(data.distributor_info);
                     $('#customer_info').val(data.customer_info);
 
-                    // Set nilai harga dan langsung format ke Rupiah
-                    $('#logistic_fee').val(formatRupiah(data.logistic_fee.toString()));
+                    $('#old_logistic_fee').val(data.logistic_fee);
+                    $('#current_logistic_fee').val(formatRupiah(data.logistic_fee.toString()));
+
+                    $('#logistic_fee').val('');
+                    $('#label_logistic_fee').html('Harga Baru / Diajukan <span class="text-danger">*</span>');
 
                     $('#createModeWrapper').hide();
                     $('#distributor_id').prop('required', false);
                     $('#customer_id').prop('required', false);
 
                     $('#editModeWrapper').show();
-                    $('#modalTitle').text('Edit Harga Logistic Fee');
+                    $('#modalTitle').text('Pengajuan Perubahan Harga');
                     $('#modalForm').modal('show');
                 }).fail(function() {
                     Swal.fire('Error', 'Data tidak ditemukan.', 'error');
@@ -243,10 +334,17 @@
             });
         });
 
-        // Fungsi untuk membuka Modal Create
+        // 5. Reset Select2 saat membuka Modal Create
         function openModal() {
             $('#mainForm')[0].reset();
             $('#dataId').val('');
+            $('#old_logistic_fee').val(0);
+
+            // Reset Select2 ke pilihan kosong
+            $('#distributor_id').val('').trigger('change');
+            $('#customer_id').empty().append('<option value="">-- Pilih Customer --</option>').trigger('change');
+
+            $('#label_logistic_fee').html('Logistic Fee / ctn <span class="text-danger">*</span>');
 
             $('#createModeWrapper').show();
             $('#distributor_id').prop('required', true);

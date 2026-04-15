@@ -16,7 +16,7 @@
 <div class="container" style="padding-top: 1.5rem; padding-bottom: 1.5rem;">
     <div class="row justify-content-center">
         <div class="col-xl-10 col-lg-11">
-            
+
             <div style="text-align: center; margin-bottom: 1.5rem;">
                 <div style="display: inline-flex; align-items: center; justify-content: center; width: 42px; height: 42px; background: linear-gradient(135deg, #2563eb, #1d4ed8); border-radius: 12px; margin-bottom: 0.75rem; box-shadow: 0 10px 20px rgba(37, 99, 235, 0.2);">
                     <i class="ph-bold ph-shield-check" style="font-size: 1.25rem; color: #ffffff;"></i>
@@ -27,7 +27,7 @@
 
             <div style="background-color: #ffffff; border-radius: 24px; box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.15); overflow: hidden; border: 1px solid #cbd5e1;">
                 <div class="row g-0">
-                    
+
                     <div class="col-md-5" style="background: linear-gradient(145deg, #f8fafc 0%, #eff6ff 100%); border-right: 1px solid #e2e8f0; padding: 2rem 2.5rem;">
                         <div style="display: flex; align-items: center; margin-bottom: 1.5rem;">
                             <div style="background-color: #e0e7ff; padding: 8px; border-radius: 10px; margin-right: 0.75rem;">
@@ -48,12 +48,12 @@
 
                         <div style="background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 1.25rem; box-shadow: 0 8px 20px rgba(0,0,0,0.02); position: relative; overflow: hidden;">
                             <div style="position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: linear-gradient(to bottom, #cbd5e1, #f97316);"></div>
-                            
+
                             <div style="margin-bottom: 1rem;">
                                 <div style="font-size: 0.7rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.2rem;">Harga Saat Ini</div>
                                 <div style="font-size: 1.1rem; font-weight: 700; color: #64748b; text-decoration: line-through decoration-color: #cbd5e1 decoration-thickness: 2px;">Rp {{ number_format($logisticData->logistic_fee ?? 0, 0, ',', '.') }}</div>
                             </div>
-                            
+
                             <div>
                                 <div style="font-size: 0.7rem; font-weight: 800; color: #ea580c; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.2rem; display: flex; align-items: center; gap: 4px;">
                                     Harga Diajukan <i class="ph-bold ph-trend-up"></i>
@@ -66,8 +66,8 @@
                     </div>
 
                     <div class="col-md-7" style="padding: 2rem 2.5rem; background-color: #ffffff;">
-                        <form id="approvalForm" action="{{ route('logistic-fees.approval.process', ['token' => $log->token, 'action' => $action]) }}" 
-                            data-base-url="{{ url('/logistic-fees/approval/process/' . $log->token) }}" 
+                        <form id="approvalForm" action="{{ route('logistic-fees.approval.process', ['token' => $log->token, 'action' => $action]) }}"
+                            data-base-url="{{ url('/logistic-fees/approval/process/' . $log->token) }}"
                             method="POST">
                             @csrf
 
@@ -136,7 +136,7 @@
         const notesError = document.getElementById('notesError');
         const requiredStar = document.getElementById('required-star');
         const helpText = document.getElementById('form-help-text');
-        
+
         const labelApprove = document.getElementById('label-approve');
         const labelReject = document.getElementById('label-reject');
 
@@ -180,11 +180,11 @@
                 labelApprove.style.backgroundColor = '#ecfdf5';
                 labelApprove.style.color = '#059669';
                 labelApprove.style.boxShadow = '0 8px 15px rgba(16, 185, 129, 0.1)';
-                
+
                 submitBtn.style.background = 'linear-gradient(135deg, #10b981, #059669)';
                 submitBtn.style.boxShadow = '0 8px 15px rgba(16, 185, 129, 0.25)';
                 submitText.innerText = 'Submit Approve';
-                
+
                 requiredStar.style.display = 'none';
                 helpText.innerText = "Opsional";
                 helpText.style.color = "#64748b";
@@ -194,11 +194,11 @@
                 labelReject.style.backgroundColor = '#fef2f2';
                 labelReject.style.color = '#dc2626';
                 labelReject.style.boxShadow = '0 8px 15px rgba(239, 68, 68, 0.1)';
-                
+
                 submitBtn.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
                 submitBtn.style.boxShadow = '0 8px 15px rgba(239, 68, 68, 0.25)';
                 submitText.innerText = 'Submit Reject';
-                
+
                 requiredStar.style.display = 'inline';
                 helpText.innerText = "Wajib Diisi";
                 helpText.style.color = "#dc2626";
@@ -234,7 +234,7 @@
 
             const hasAlphabet = /[a-zA-Z]/.test(notesVal);
             const isAllSameChar = /^(.)\1+$/.test(notesVal);
-            const hasLongRepeatingChars = /(.)\1{4,}/.test(notesVal); 
+            const hasLongRepeatingChars = /(.)\1{4,}/.test(notesVal);
 
             if (selectedAction === 'reject' && notesVal === '') {
                 errorMessage = 'Catatan wajib diisi sebagai alasan penolakan.';
@@ -249,7 +249,7 @@
             if (errorMessage !== '') {
                 notesError.innerHTML = `<i class="ph-bold ph-warning-circle" style="font-size:1.1rem;"></i> <span>${errorMessage}</span>`;
                 notesError.style.display = 'flex';
-                
+
                 notesInput.style.transform = 'translateX(-5px)';
                 setTimeout(() => notesInput.style.transform = 'translateX(5px)', 100);
                 setTimeout(() => notesInput.style.transform = 'translateX(0)', 200);
@@ -259,17 +259,34 @@
             }
 
             // Jika lulus validasi, tampilkan SweetAlert
+            // Jika lulus validasi, tampilkan SweetAlert
             const isApprove = selectedAction === 'approve_with_review';
+
+            // Ambil data harga dari variabel PHP Blade
+            const oldFee = "{{ number_format($logisticData->logistic_fee ?? 0, 0, ',', '.') }}";
+            const newFee = "{{ number_format($logisticData->proposed_fee, 0, ',', '.') }}";
+
             const swalTitle = isApprove ? 'Konfirmasi Persetujuan' : 'Konfirmasi Penolakan';
-            const swalText = isApprove 
-                ? 'Apakah Anda yakin ingin memproses dan menyetujui pengajuan ini? Data akan langsung diteruskan ke sistem.' 
-                : 'Apakah Anda sudah yakin dengan catatan penolakan yang diberikan? Pengajuan akan dikembalikan ke pemohon.';
+
+            // Susun kalimat HTML yang elegan untuk SweetAlert
+            let swalHtml = '';
+            if (isApprove) {
+                swalHtml = `Anda akan <b>Menyetujui</b> perubahan harga dari:<br><br>
+                            <span style="color: #64748b; font-size: 1.1rem; text-decoration: line-through;">Rp ${oldFee}</span>
+                            <i class="ph-bold ph-arrow-right mx-2" style="color: #94a3b8;"></i>
+                            <b style="color: #10b981; font-size: 1.5rem;">Rp ${newFee}</b><br><br>
+                            <span style="font-size: 0.95rem; color: #475569;">Keputusan ini akan direkam dan data akan diteruskan ke sistem.</span>`;
+            } else {
+                swalHtml = `Anda akan <b>Menolak</b> pengajuan harga sebesar <b style="color: #ef4444; font-size: 1.2rem;">Rp ${newFee}</b>.<br><br>
+                            <span style="font-size: 0.95rem; color: #475569;">Apakah catatan alasan penolakan Anda sudah benar? Pengajuan akan dikembalikan ke pemohon.</span>`;
+            }
+
             const confirmColor = isApprove ? '#10b981' : '#ef4444';
             const confirmText = isApprove ? 'Ya, Setujui Sekarang' : 'Ya, Tolak Pengajuan';
 
             Swal.fire({
                 title: swalTitle,
-                text: swalText,
+                html: swalHtml, // Menggunakan properti HTML agar bisa dicustom warnanya
                 icon: 'question',
                 showCancelButton: true,
                 confirmButtonColor: confirmColor,
@@ -278,18 +295,18 @@
                 cancelButtonText: 'Batal',
                 reverseButtons: true, // Tombol Batal di kiri
                 customClass: {
-                    title: 'fs-4 fw-bold font-monospace', // Font sizing
-                    popup: 'rounded-4' // Rounded corners
+                    title: 'fs-4 fw-bold font-monospace',
+                    popup: 'rounded-4'
                 }
             }).then((result) => {
                 if (result.isConfirmed) {
-                    // Animasi Loading pada Tombol
+                    // Animasi Loading pada Tombol Submit Asli
                     submitBtn.disabled = true;
                     submitBtn.style.opacity = '0.8';
                     submitIcon.className = 'spinner-border spinner-border-sm';
                     submitText.innerText = 'Memproses Data...';
-                    
-                    // Submit form secara programatis
+
+                    // Submit form secara programatis ke server
                     form.submit();
                 }
             });

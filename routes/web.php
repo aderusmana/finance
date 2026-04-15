@@ -29,6 +29,7 @@ use App\Http\Controllers\BG\ApprovalProcessController;
 use App\Http\Controllers\BG\BgApprovalInboxController;
 use App\Http\Controllers\BG\BgReportController;
 use App\Http\Controllers\BG\LampiranDController;
+use App\Http\Controllers\LogisticOrder\LogisticOrderController;
 use App\Http\Controllers\Master\CustomerShipToController;
 use App\Http\Controllers\Master\DistributorController;
 use App\Http\Controllers\Master\SystemLogController;
@@ -100,6 +101,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/customers-log/data', [CustomerController::class, 'getLogData'])->name('customers.log.data');
 
     Route::resource('customers', CustomerController::class);
+
+    Route::resource('logistic-orders', LogisticOrderController::class);
+    Route::get('/logistic-orders/customer-dependencies/{customer}', [LogisticOrderController::class, 'getCustomerDependencies']);
+    Route::get('/logistic-orders/fee/{distributor}/{customer}', [LogisticOrderController::class, 'getLogisticFee']);
 
     Route::resource('revision', RevisionController::class);
     Route::resource('account-groups', AccountGroupController::class);

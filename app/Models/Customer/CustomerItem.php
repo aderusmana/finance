@@ -10,6 +10,7 @@ class CustomerItem extends Model
 
     protected $fillable = [
         'customer_id',
+        'item_code',
         'item_name',
         'item_description',
         'quantity',
