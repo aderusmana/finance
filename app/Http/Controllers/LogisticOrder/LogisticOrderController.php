@@ -98,8 +98,6 @@ class LogisticOrderController extends Controller
         return view('page.logistic_order.index', compact('customers'));
     }
 
-    // ... (Fungsi getCustomerDependencies dan getLogisticFee biarkan sama) ...
-
     public function store(Request $request)
     {
         $request->validate([
@@ -139,8 +137,15 @@ class LogisticOrderController extends Controller
                 ]);
             }
 
-            // 3. Buat Delivery Order Notes (Default Pending Download)
-            $doNo = 'DO-' . date('Ym') . '-' . str_pad($order->id, 4, '0', STR_PAD_LEFT);
+            $distributor = Distributor::find($request->distributor_id);
+            $distCode = $distributor ? $distributor->code : 'XXX';
+
+            $year = date('Y');
+            $month = date('m');
+            $increment = str_pad($order->id, 4, '0', STR_PAD_LEFT);
+
+            $doNo = "{$distCode}-{$year}-{$month}-{$increment}";
+
             DeliveryOrderNote::create([
                 'logistic_order_id' => $order->id,
                 'delivery_order_no' => $doNo,
@@ -148,8 +153,6 @@ class LogisticOrderController extends Controller
                 'download_count'    => 0,
             ]);
 
-            // 4. Kirim Email Ke Distributor via Antrean (Queue)
-            $distributor = Distributor::find($request->distributor_id);
             if($distributor && $distributor->email) {
                 // Tarik ulang order dengan relasi lengkap untuk email
                 $orderEmail = LogisticOrder::with(['distributor', 'customer', 'customerShipTo', 'note', 'items'])->find($order->id);
@@ -207,13 +210,11 @@ class LogisticOrderController extends Controller
             }
         }
 
-        // Tambah Count Download
         $note->increment('download_count');
 
-        // Render PDF dari file view blade
-        $pdf = Pdf::loadView('pdf.delivery_order', compact('order'));
+        $pdf = Pdf::loadView('pdf.delivery_order', compact('order'))
+                  ->setPaper('a5', 'landscape');
 
-        // Kembalikan stream file untuk langsung di-download oleh browser
-        return $pdf->download($note->delivery_order_no . '.pdf');
+        return $pdf->stream($note->delivery_order_no . '.pdf');
     }
 }

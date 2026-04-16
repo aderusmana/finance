@@ -220,8 +220,8 @@
                         <h4 class="fw-bold mb-2 text-dark">Siap memproses pengiriman?</h4>
                         <p class="text-muted mb-4 mx-auto" style="max-width: 500px;">Unduh dokumen Delivery Order (DO) resmi di bawah ini untuk dibawa oleh pengemudi menuju lokasi Customer.</p>
 
-                        <a href="{{ \Illuminate\Support\Facades\URL::signedRoute('public.lo.download', ['id' => $order->id, 'fromEmail' => 0]) }}" class="btn btn-download btn-lg text-white rounded-pill px-5 py-3 fw-bold shadow">
-                            <i class="ph-bold ph-download-simple me-2"></i> Download Dokumen DO
+                        <a href="{{ \Illuminate\Support\Facades\URL::signedRoute('public.lo.download', ['id' => $order->id, 'fromEmail' => 0]) }}" target="_blank" class="btn btn-download btn-lg text-white rounded-pill px-5 py-3 fw-bold shadow">
+                            <i class="ph-bold ph-printer me-2"></i> Print / Preview Dokumen DO
                         </a>
                     </div>
 
