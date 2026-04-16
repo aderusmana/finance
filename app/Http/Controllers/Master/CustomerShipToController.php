@@ -25,7 +25,8 @@ class CustomerShipToController extends Controller
                     return $row->user->name ?? '-';
                 })
                 ->addColumn('action', function($row){
-                    $btn = '<button class="btn btn-sm btn-primary btn-edit me-1" data-id="'.$row->id.'"><i class="ph-bold ph-pencil"></i> Edit</button>';
+                    $btn = '<button class="btn btn-sm btn-info text-white btn-detail me-1" data-id="'.$row->id.'"><i class="ph-bold ph-eye"></i> Detail</button>';
+                    $btn .= '<button class="btn btn-sm btn-primary btn-edit me-1" data-id="'.$row->id.'"><i class="ph-bold ph-pencil"></i> Edit</button>';
                     $btn .= '<button class="btn btn-sm btn-danger btn-delete" data-id="'.$row->id.'"><i class="ph-bold ph-trash"></i> Delete</button>';
                     return $btn;
                 })
@@ -59,7 +60,7 @@ class CustomerShipToController extends Controller
 
     public function show($id)
     {
-        $shipTo = CustomerShipTo::findOrFail($id);
+        $shipTo = CustomerShipTo::with(['customer', 'user'])->findOrFail($id);
         return response()->json($shipTo);
     }
 

@@ -61,6 +61,9 @@ Route::get('/tes-403', function () {
 Route::get('/logistic-fees/approval/form/{token}/{action}', [LogisticFeeController::class, 'showApprovalForm'])->name('logistic-fees.approval.form');
 Route::post('/logistic-fees/approval/process/{token}/{action}', [LogisticFeeController::class, 'processApproval'])->name('logistic-fees.approval.process');
 
+Route::get('/public/logistic-order/{id}/detail', [LogisticOrderController::class, 'publicDetail'])->name('public.lo.detail')->middleware('signed');
+Route::get('/public/logistic-order/{id}/download/{fromEmail?}', [LogisticOrderController::class, 'publicDownload'])->name('public.lo.download')->middleware('signed');
+
 Route::get('/customers/approval/{token}', [CustomerController::class, 'viewApprovalPage'])->name('customers.view_approval');
 Route::post('/customers/{customer}/approval-action', [CustomerController::class, 'approvalAction'])->name('customers.approval_action');
 Route::get('/approval/process/{token}/{action}', [ApprovalProcessController::class, 'process'])->name('approval.process');

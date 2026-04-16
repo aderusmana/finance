@@ -10,51 +10,18 @@ use App\Models\Customer\CustomerShipTo;
 use App\Models\Customer\DistributorCustomer;
 use App\Models\Customer\LogisticOrder;
 use App\Models\Customer\LogisticOrderItem;
+use App\Models\Customer\DeliveryOrderNote; // Tambahkan ini
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\URL;
+use App\Mail\LogisticOrderDistributorMail; // Mailer baru
+use App\Notifications\SystemNotification; // Notifikasi ke Sales
+use Illuminate\Support\Facades\Notification;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class LogisticOrderController extends Controller
 {
-    public function index(Request $request)
-    {
-        if ($request->ajax()) {
-            $data = LogisticOrder::with(['distributor', 'customer', 'customerShipTo'])->select('logistic_orders.*');
-
-            return DataTables::of($data)
-                ->addIndexColumn()
-                ->editColumn('logistic_order_no', function($row) {
-                    // Format otomatis ID menjadi LO-0001, dst saat ditampilkan
-                    return 'LO-' . str_pad($row->id, 4, '0', STR_PAD_LEFT);
-                })
-                ->addColumn('distributor_name', function($row) {
-                    return $row->distributor->name ?? '-';
-                })
-                ->addColumn('customer_name', function($row) {
-                    return $row->customer->name ?? '-';
-                })
-                ->addColumn('ship_to', function($row) {
-                    return $row->customerShipTo->ship_to_name ?? '-';
-                })
-                ->addColumn('status_badge', function($row) {
-                    if($row->status == 'Pending') return '<span class="badge bg-warning text-dark">Pending</span>';
-                    return '<span class="badge bg-success">'.$row->status.'</span>';
-                })
-                ->addColumn('action', function($row){
-                    return '<button class="btn btn-sm btn-info text-white"><i class="ph-bold ph-eye"></i> Detail</button>';
-                })
-                ->rawColumns(['status_badge', 'action'])
-                ->make(true);
-        }
-
-        // Tampilkan Customer pertama kali
-        $customers = Customer::orderBy('name', 'asc')->get();
-
-        return view('page.logistic_order.index', compact('customers'));
-    }
-
-    /**
-     * API 1: Saat Customer dipilih -> Tarik Distributor, Ship To, dan Items
-     */
     public function getCustomerDependencies($customerId)
     {
         $distributors = DistributorCustomer::with('distributor')
@@ -66,6 +33,7 @@ class LogisticOrderController extends Controller
 
         $shipToLocations = CustomerShipTo::with('user')->where('customer_id', $customerId)->get();
 
+        // Jika model Customer kamu punya relasi ke items barang, tarik di sini
         $customer = Customer::with('items')->find($customerId);
 
         return response()->json([
@@ -84,10 +52,53 @@ class LogisticOrderController extends Controller
                         ->where('customer_id', $customerId)
                         ->first();
 
+        // Cek apakah sedang ada pengajuan harga pending. Jika ya, pakai harga yang diajukan
+        $fee = 0;
+        if ($logisticFee) {
+            $fee = ($logisticFee->status === 'Pending') ? $logisticFee->proposed_fee : $logisticFee->logistic_fee;
+        }
+
         return response()->json([
-            'logistic_fee' => $logisticFee ? ($logisticFee->status === 'Pending' ? $logisticFee->proposed_fee : $logisticFee->logistic_fee) : 0,
+            'logistic_fee' => $fee,
         ]);
     }
+
+    public function index(Request $request)
+    {
+        if ($request->ajax()) {
+            // Tarik relasi 'note' juga
+            $data = LogisticOrder::with(['distributor', 'customer', 'customerShipTo', 'note'])->select('logistic_orders.*');
+
+            return DataTables::of($data)
+                ->addIndexColumn()
+                ->editColumn('logistic_order_no', function($row) {
+                    return 'LO-' . str_pad($row->id, 4, '0', STR_PAD_LEFT);
+                })
+                ->addColumn('distributor_name', function($row) { return $row->distributor->name ?? '-'; })
+                ->addColumn('customer_name', function($row) { return $row->customer->name ?? '-'; })
+                ->addColumn('ship_to', function($row) { return $row->customerShipTo->ship_to_name ?? '-'; })
+                ->addColumn('status_badge', function($row) {
+                    // Logika Status Berdasarkan Notes Sesuai Permintaan
+                    $status = $row->note->status ?? 'Pending Download';
+                    $count = $row->note->download_count ?? 0;
+
+                    if ($status === 'Downloaded') {
+                        return '<span class="badge bg-success">Downloaded | +'.$count.'</span>';
+                    }
+                    return '<span class="badge bg-warning text-dark">Pending Download</span>';
+                })
+                ->addColumn('action', function($row){
+                    return '<button class="btn btn-sm btn-info text-white"><i class="ph-bold ph-eye"></i> Detail</button>';
+                })
+                ->rawColumns(['status_badge', 'action'])
+                ->make(true);
+        }
+
+        $customers = Customer::orderBy('name', 'asc')->get();
+        return view('page.logistic_order.index', compact('customers'));
+    }
+
+    // ... (Fungsi getCustomerDependencies dan getLogisticFee biarkan sama) ...
 
     public function store(Request $request)
     {
@@ -102,21 +113,17 @@ class LogisticOrderController extends Controller
         try {
             DB::beginTransaction();
 
-            // 1. Simpan Header
+            // 1. Simpan Header (Hapus period & delivery_to & route_to & status)
             $order = LogisticOrder::create([
                 'distributor_id'      => $request->distributor_id,
                 'customer_id'         => $request->customer_id,
                 'customer_ship_to_id' => $request->customer_ship_to_id,
-                'logistic_order_no'   => 0, // Akan diupdate di bawah
+                'logistic_order_no'   => 0,
                 'delivery_date'       => $request->delivery_date,
-                'delivery_to'         => $request->delivery_to, // Hidden field
-                'period'              => $request->period,      // Hidden field
-                'status'              => 'Pending',
-                'route_to'            => 'Atasan Terkait',
             ]);
 
-            // Set nomor LO menggunakan ID integer
             $order->update(['logistic_order_no' => $order->id]);
+            $loNo = 'LO-' . str_pad($order->id, 4, '0', STR_PAD_LEFT);
 
             // 2. Simpan Item
             foreach ($request->items as $item) {
@@ -132,12 +139,81 @@ class LogisticOrderController extends Controller
                 ]);
             }
 
+            // 3. Buat Delivery Order Notes (Default Pending Download)
+            $doNo = 'DO-' . date('Ym') . '-' . str_pad($order->id, 4, '0', STR_PAD_LEFT);
+            DeliveryOrderNote::create([
+                'logistic_order_id' => $order->id,
+                'delivery_order_no' => $doNo,
+                'status'            => 'Pending Download',
+                'download_count'    => 0,
+            ]);
+
+            // 4. Kirim Email Ke Distributor via Antrean (Queue)
+            $distributor = Distributor::find($request->distributor_id);
+            if($distributor && $distributor->email) {
+                // Tarik ulang order dengan relasi lengkap untuk email
+                $orderEmail = LogisticOrder::with(['distributor', 'customer', 'customerShipTo', 'note', 'items'])->find($order->id);
+                Mail::to($distributor->email)->queue(new LogisticOrderDistributorMail($orderEmail));
+            }
+
             DB::commit();
-            return response()->json(['success' => true, 'message' => 'Logistic Order (LO-'.str_pad($order->id, 4, '0', STR_PAD_LEFT).') berhasil diajukan untuk persetujuan!']);
+            return response()->json(['success' => true, 'message' => "Order ($loNo) & Note ($doNo) berhasil dibuat! Email dikirim ke Distributor."]);
 
         } catch (\Exception $e) {
             DB::rollback();
-            return response()->json(['success' => false, 'message' => 'Gagal menyimpan data: ' . $e->getMessage()], 500);
+            return response()->json(['success' => false, 'message' => 'Gagal menyimpan: ' . $e->getMessage()], 500);
         }
+    }
+
+    // ==========================================
+    // FUNGSI UNTUK PORTAL PUBLIK DISTRIBUTOR
+    // ==========================================
+
+    /**
+     * Halaman Detail Publik untuk Distributor
+     */
+    public function publicDetail($id)
+    {
+        $order = LogisticOrder::with(['distributor', 'customer', 'customerShipTo.user', 'items', 'note'])->findOrFail($id);
+        return view('page.logistic_order.links.public_detail', compact('order'));
+    }
+
+    /**
+     * Fungsi Smart Download (Direct Link Email / Tombol Detail)
+     */
+    public function publicDownload($id, $fromEmail = false)
+    {
+        // Pastikan relasi 'items' ikut ditarik agar bisa ditampilkan di PDF
+        $order = LogisticOrder::with(['note', 'customerShipTo.user', 'customer', 'distributor', 'items'])->findOrFail($id);
+        $note = $order->note;
+
+        if ($fromEmail && $note->status === 'Pending Download') {
+            return redirect(URL::signedRoute('public.lo.detail', ['id' => $id]))
+                   ->with('warning', 'Harap periksa detail pesanan terlebih dahulu sebelum mengunduh Dokumen DO untuk pertama kali.');
+        }
+
+        if ($note->status === 'Pending Download' && $note->download_count == 0) {
+            $note->update(['status' => 'Downloaded']);
+
+            $salesUser = $order->customerShipTo->user ?? null;
+            if ($salesUser) {
+                Notification::send($salesUser, new SystemNotification(
+                    "DO Telah Di-download",
+                    "Distributor <b>{$order->distributor->name}</b> telah mencetak DO untuk Customer {$order->customer->name}.",
+                    "#",
+                    "ph-printer",
+                    "info"
+                ));
+            }
+        }
+
+        // Tambah Count Download
+        $note->increment('download_count');
+
+        // Render PDF dari file view blade
+        $pdf = Pdf::loadView('pdf.delivery_order', compact('order'));
+
+        // Kembalikan stream file untuk langsung di-download oleh browser
+        return $pdf->download($note->delivery_order_no . '.pdf');
     }
 }

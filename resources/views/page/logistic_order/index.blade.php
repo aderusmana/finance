@@ -33,8 +33,7 @@
                                     <th>Customer</th>
                                     <th>Distributor</th>
                                     <th>Ship To</th>
-                                    <th>Period</th>
-                                    <th>Status</th>
+                                    <th>Status (Download)</th>
                                     <th>Action</th>
                                 </tr>
                             </thead>
@@ -48,7 +47,10 @@
     {{-- MODAL CREATE LOGISTIC ORDER --}}
     <div class="modal fade" id="modalForm" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog modal-xl modal-dialog-scrollable">
-            <div class="modal-content border-0 rounded-4 shadow">
+
+            {{-- 1. Ganti div modal-content menjadi tag form --}}
+            <form id="mainForm" class="modal-content border-0 rounded-4 shadow">
+
                 <div class="modal-header bg-primary text-white pb-3">
                     <div>
                         <h5 class="modal-title fw-bold mb-0" id="modalTitle">Create Logistic Order</h5>
@@ -56,118 +58,89 @@
                     </div>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <form id="mainForm">
-                    @csrf
 
-                    <input type="hidden" name="period" id="hidden_period">
-                    <input type="hidden" name="delivery_to" id="hidden_delivery_to">
+                {{-- 2. Letakkan input hidden tepat di bawah header --}}
+                @csrf
+                <input type="hidden" name="period" id="hidden_period">
+                <input type="hidden" name="delivery_to" id="hidden_delivery_to">
 
-                    <div class="modal-body p-4">
-                        <div class="row">
-                            <div class="col-lg-4">
-                                <div class="card border-0 shadow-sm rounded-3 h-100">
-                                    <div class="card-body">
-                                        <h6 class="fw-bold text-primary mb-3 border-bottom pb-2"><i class="ph-bold ph-info"></i> Informasi Order</h6>
+                <div class="modal-body p-4">
+                    {{-- BARIS ATAS: Informasi Order & Customer Ship To (Dibagi 2 Kolom) --}}
+                    <div class="row g-4">
+                        {{-- KIRI: Informasi Order --}}
+                        <div class="col-lg-6">
+                            <div class="card border-0 shadow-sm rounded-3 h-100">
+                                <div class="card-body">
+                                    <h6 class="fw-bold text-primary mb-3 border-bottom pb-2"><i class="ph-bold ph-info"></i> Informasi Order</h6>
 
-                                        <div class="mb-3">
-                                            <label class="form-label fw-semibold">Customer <span class="text-danger">*</span></label>
-                                            <select name="customer_id" id="customer_id" class="form-select select2-custom" style="width: 100%;" required>
-                                                <option value="">-- Pilih Customer --</option>
-                                                @foreach($customers as $c)
-                                                    <option value="{{ $c->id }}">{{ $c->customer_code ?? $c->code ?? '-' }} - {{ $c->name }}</option>
-                                                @endforeach
-                                            </select>
-                                        </div>
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold">Customer <span class="text-danger">*</span></label>
+                                        <select name="customer_id" id="customer_id" class="form-select select2-custom" style="width: 100%;" required>
+                                            <option value="">-- Pilih Customer --</option>
+                                            @foreach($customers as $c)
+                                                <option value="{{ $c->id }}">{{ $c->customer_code ?? $c->code ?? '-' }} - {{ $c->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
 
-                                        <div class="mb-3">
-                                            <label class="form-label fw-semibold">Distributor <span class="text-danger">*</span></label>
-                                            <select name="distributor_id" id="distributor_id" class="form-select select2-custom" style="width: 100%;" disabled required>
-                                                <option value="">-- Pilih Distributor --</option>
-                                            </select>
-                                        </div>
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold">Distributor <span class="text-danger">*</span></label>
+                                        <select name="distributor_id" id="distributor_id" class="form-select select2-custom" style="width: 100%;" disabled required>
+                                            <option value="">-- Pilih Distributor --</option>
+                                        </select>
+                                    </div>
 
-                                        <div class="mb-4">
-                                            <label class="form-label fw-semibold">Delivery Date <span class="text-danger">*</span></label>
-                                            <input type="date" name="delivery_date" id="delivery_date" class="form-control" required>
-                                        </div>
-
-                                        <h6 class="fw-bold text-primary mb-3 border-bottom pb-2"><i class="ph-bold ph-map-pin"></i> Customer Ship To</h6>
-
-                                        <div class="mb-3">
-                                            <select name="customer_ship_to_id" id="customer_ship_to_id" class="form-select select2-custom" style="width: 100%;" disabled required>
-                                                <option value="">-- Pilih Alamat Pengiriman --</option>
-                                            </select>
-                                            <input type="hidden" name="ship_to_code_header" id="ship_to_code_header">
-                                        </div>
-
-                                        <div id="shipToDetailBox" class="bg-white border rounded-3 p-3 mt-2 shadow-sm" style="display: none; border-left: 4px solid #3b82f6 !important;">
-
-                                            <div class="row mb-2">
-                                                <div class="col-5">
-                                                    <span class="text-muted small fw-bold d-block">Ship To Code:</span>
-                                                    <span class="text-dark fw-bold" id="txt_ship_code">-</span>
-                                                </div>
-                                                <div class="col-7">
-                                                    <span class="text-muted small fw-bold d-block">Ship To Name:</span>
-                                                    <span class="text-dark fw-bold" id="txt_ship_name">-</span>
-                                                </div>
-                                            </div>
-
-                                            <div class="row mb-2">
-                                                <div class="col-12">
-                                                    <span class="text-muted small fw-bold d-block">Alamat Lengkap:</span>
-                                                    <span class="text-dark small d-block" id="txt_address_1">-</span>
-                                                    <span class="text-dark small d-block" id="txt_address_2">-</span>
-                                                    <span class="text-dark small d-block" id="txt_address_3">-</span>
-                                                </div>
-                                            </div>
-
-                                            <div class="row border-top pt-2">
-                                                <div class="col-5">
-                                                    <span class="text-muted small fw-bold d-block">Kota:</span>
-                                                    <span class="text-dark small fw-semibold" id="txt_city">-</span>
-                                                </div>
-                                                <div class="col-7">
-                                                    <span class="text-muted small fw-bold d-block">Sales PIC:</span>
-                                                    <span class="text-dark small" id="txt_sales_name">-</span>
-                                                </div>
-                                            </div>
-
-                                        </div>
+                                    <div class="mb-2">
+                                        <label class="form-label fw-semibold">Delivery Date <span class="text-danger">*</span></label>
+                                        <input type="date" name="delivery_date" id="delivery_date" class="form-control" required>
                                     </div>
                                 </div>
                             </div>
+                        </div>
 
-                            <div class="col-lg-8">
-                                <div class="card border-0 shadow-sm rounded-3 h-100">
-                                    <div class="card-body d-flex flex-column">
-                                        <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
-                                            <div class="d-flex align-items-center gap-3">
-                                                <h6 class="fw-bold text-primary mb-0"><i class="ph-bold ph-package"></i> Order Items</h6>
-                                                <span class="badge bg-warning text-dark py-2 px-3 border rounded-3">
-                                                    Logistic Fee: <b id="active_fee_display">Rp 0 / ctn</b>
-                                                </span>
+                        {{-- KANAN: Customer Ship To --}}
+                        <div class="col-lg-6">
+                            <div class="card border-0 shadow-sm rounded-3 h-100">
+                                <div class="card-body">
+                                    <h6 class="fw-bold text-primary mb-3 border-bottom pb-2"><i class="ph-bold ph-map-pin"></i> Customer Ship To</h6>
+
+                                    <div class="mb-3">
+                                        <select name="customer_ship_to_id" id="customer_ship_to_id" class="form-select select2-custom" style="width: 100%;" disabled required>
+                                            <option value="">-- Pilih Alamat Pengiriman --</option>
+                                        </select>
+                                        <input type="hidden" name="ship_to_code_header" id="ship_to_code_header">
+                                    </div>
+
+                                    <div id="shipToDetailBox" class="bg-white border rounded-3 p-3 shadow-sm" style="display: none; border-left: 4px solid #3b82f6 !important;">
+                                        <div class="row mb-2">
+                                            <div class="col-5">
+                                                <span class="text-muted small fw-bold d-block">Ship To Code:</span>
+                                                <span class="text-dark fw-bold" id="txt_ship_code">-</span>
                                             </div>
-                                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="addRow()">
-                                                <i class="ph-bold ph-plus"></i> Tambah Manual
-                                            </button>
+                                            <div class="col-7">
+                                                <span class="text-muted small fw-bold d-block">Ship To Name:</span>
+                                                <span class="text-dark fw-bold" id="txt_ship_name">-</span>
+                                            </div>
                                         </div>
 
-                                        <div class="table-responsive flex-grow-1" style="max-height: 600px; overflow-y: auto;">
-                                            <table class="table table-bordered table-hover align-middle mb-0" id="itemTable">
-                                                <thead class="table-light position-sticky top-0 shadow-sm" style="z-index: 10;">
-                                                    <tr>
-                                                        <th width="20%">Item Code</th>
-                                                        <th width="35%">Item Name <span class="text-danger">*</span></th>
-                                                        <th width="15%">Qty <span class="text-danger">*</span></th>
-                                                        <th width="20%">Amount</th>
-                                                        <th width="10%" class="text-center"><i class="ph-bold ph-gear"></i></th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    <tr id="emptyRow"><td colspan="5" class="text-center text-muted py-5">Pilih Customer untuk memuat item otomatis...</td></tr>
-                                                </tbody>
-                                            </table>
+                                        <div class="row mb-2">
+                                            <div class="col-12">
+                                                <span class="text-muted small fw-bold d-block">Alamat Lengkap:</span>
+                                                <span class="text-dark small d-block" id="txt_address_1">-</span>
+                                                <span class="text-dark small d-block" id="txt_address_2">-</span>
+                                                <span class="text-dark small d-block" id="txt_address_3">-</span>
+                                            </div>
+                                        </div>
+
+                                        <div class="row border-top pt-2">
+                                            <div class="col-5">
+                                                <span class="text-muted small fw-bold d-block">Kota:</span>
+                                                <span class="text-dark small fw-semibold" id="txt_city">-</span>
+                                            </div>
+                                            <div class="col-7">
+                                                <span class="text-muted small fw-bold d-block">Sales PIC:</span>
+                                                <span class="text-dark small" id="txt_sales_name">-</span>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -175,12 +148,51 @@
                         </div>
                     </div>
 
-                    <div class="modal-footer bg-white border-top-0 pt-0 pb-3 pe-4">
-                        <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">Batal</button>
-                        <button type="submit" class="btn btn-primary px-5" id="btnSubmit">Submit Order</button>
+                    {{-- BARIS BAWAH: Order Items (Full Width) --}}
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="card border-0 shadow-sm rounded-3">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <h6 class="fw-bold text-primary mb-0"><i class="ph-bold ph-package"></i> Order Items</h6>
+                                            <span class="badge bg-warning text-dark py-2 px-3 border rounded-3">
+                                                Logistic Fee: <b id="active_fee_display">Rp 0 / ctn</b>
+                                            </span>
+                                        </div>
+                                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="addRow()">
+                                            <i class="ph-bold ph-plus"></i> Tambah Manual
+                                        </button>
+                                    </div>
+
+                                    {{-- Max-height disesuaikan agar tidak terlalu panjang ke bawah --}}
+                                    <div class="table-responsive" style="max-height: 350px; overflow-y: auto;">
+                                        <table class="table table-bordered table-hover align-middle mb-0" id="itemTable">
+                                            <thead class="table-light position-sticky top-0 shadow-sm" style="z-index: 10;">
+                                                <tr>
+                                                    <th width="20%">Item Code</th>
+                                                    <th width="35%">Item Name <span class="text-danger">*</span></th>
+                                                    <th width="15%">Qty <span class="text-danger">*</span></th>
+                                                    <th width="20%">Amount</th>
+                                                    <th width="10%" class="text-center"><i class="ph-bold ph-gear"></i></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr id="emptyRow"><td colspan="5" class="text-center text-muted py-5">Pilih Customer untuk memuat item otomatis...</td></tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                </form>
-            </div>
+                </div>
+
+                <div class="modal-footer bg-white border-top-0 pt-0 pb-3 pe-4">
+                    <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary px-5" id="btnSubmit">Submit Order</button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -220,8 +232,7 @@
                     { data: 'customer_name', name: 'customer.name' },
                     { data: 'distributor_name', name: 'distributor.name' },
                     { data: 'ship_to', name: 'customerShipTo.ship_to_name' },
-                    { data: 'period', name: 'period' },
-                    { data: 'status_badge', name: 'status' },
+                    { data: 'status_badge', name: 'note.status' },
                     { data: 'action', name: 'action', orderable: false, searchable: false }
                 ]
             });

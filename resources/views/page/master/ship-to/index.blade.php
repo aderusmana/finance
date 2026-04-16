@@ -97,20 +97,19 @@
 
                         <div class="mb-3">
                             <label class="form-label">Alamat 1 <span class="text-danger">*</span></label>
-                            <input type="text" name="ship_to_address_1" id="ship_to_address_1" class="form-control" placeholder="Contoh: Jl. Jend. Sudirman Kav. 21, Gedung X" required>
+                            <textarea name="ship_to_address_1" id="ship_to_address_1" class="form-control" rows="3" placeholder="Contoh: Jl. Jend. Sudirman Kav. 21, Gedung X" required></textarea>
                         </div>
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Alamat 2</label>
-                                <input type="text" name="ship_to_address_2" id="ship_to_address_2" class="form-control" placeholder="Gedung / Lantai / Blok (Opsional)">
+                                <textarea name="ship_to_address_2" id="ship_to_address_2" class="form-control" rows="2" placeholder="Gedung / Lantai / Blok (Opsional)"></textarea>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Alamat 3</label>
-                                <input type="text" name="ship_to_address_3" id="ship_to_address_3" class="form-control" placeholder="Patokan / Keterangan Lain (Opsional)">
+                                <textarea name="ship_to_address_3" id="ship_to_address_3" class="form-control" rows="2" placeholder="Patokan / Keterangan Lain (Opsional)"></textarea>
                             </div>
                         </div>
-
                         <div class="mb-3">
                             <label class="form-label">Kota <span class="text-danger">*</span></label>
                             <input type="text" name="ship_to_city" id="ship_to_city" class="form-control" placeholder="Contoh: Jakarta Selatan" required>
@@ -122,6 +121,52 @@
                         <button type="submit" class="btn btn-primary" id="btnSubmit">Simpan</button>
                     </div>
                 </form>
+            </div>
+        </div>
+    </div>
+
+    {{-- MODAL DETAIL CUSTOMER SHIP TO --}}
+    <div class="modal fade" id="modalDetail" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title"><i class="ph-bold ph-info me-2"></i>Detail Customer Ship To</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="row mb-3">
+                        <div class="col-md-6 mb-3 mb-md-0">
+                            <span class="text-muted d-block text-uppercase" style="font-size: 0.8rem; font-weight: 600; letter-spacing: 0.5px;">Customer</span>
+                            <span id="detail_customer" class="fw-bold fs-6 text-dark"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <span class="text-muted d-block text-uppercase" style="font-size: 0.8rem; font-weight: 600; letter-spacing: 0.5px;">Sales / PIC</span>
+                            <span id="detail_sales" class="fw-bold fs-6 text-dark"></span>
+                        </div>
+                    </div>
+                    <hr class="text-muted">
+                    <div class="row mb-3 mt-3">
+                        <div class="col-md-6 mb-3 mb-md-0">
+                            <span class="text-muted d-block text-uppercase" style="font-size: 0.8rem; font-weight: 600; letter-spacing: 0.5px;">Kode Ship To</span>
+                            <span id="detail_ship_to_code" class="fs-6 text-dark"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <span class="text-muted d-block text-uppercase" style="font-size: 0.8rem; font-weight: 600; letter-spacing: 0.5px;">Nama Ship To</span>
+                            <span id="detail_ship_to_name" class="fs-6 text-dark"></span>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <span class="text-muted d-block text-uppercase" style="font-size: 0.8rem; font-weight: 600; letter-spacing: 0.5px;">Alamat Lengkap</span>
+                        <div id="detail_address" class="p-3 bg-light rounded mt-1 fs-6 text-dark border"></div>
+                    </div>
+                    <div class="mb-2">
+                        <span class="text-muted d-block text-uppercase" style="font-size: 0.8rem; font-weight: 600; letter-spacing: 0.5px;">Kota</span>
+                        <span id="detail_city" class="fs-6 fw-semibold text-dark"></span>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                </div>
             </div>
         </div>
     </div>
@@ -157,6 +202,7 @@
             table = $('#sampleTable').DataTable({
                 processing: true,
                 serverSide: true,
+                autoWidth: false, // WAJIB dimatikan agar width custom kita bisa berjalan
                 ajax: "{{ route('customer-ship-tos.index') }}",
                 columns: [
                     { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
@@ -166,6 +212,16 @@
                     { data: 'ship_to_city', name: 'ship_to_city' },
                     { data: 'user_name', name: 'user.name' },
                     { data: 'action', name: 'action', orderable: false, searchable: false }
+                ],
+                // MENGATUR LEBAR KOLOM DI SINI
+                columnDefs: [
+                    { targets: 0, width: "5%" },   // No
+                    { targets: 1, width: "12%" },  // Customer Code (Dikecilkan)
+                    { targets: 2, width: "12%" },  // Kode Ship To (Dikecilkan)
+                    { targets: 3, width: "36%" },  // Nama Ship To (Dibuat Paling Panjang)
+                    { targets: 4, width: "12%" },  // Kota
+                    { targets: 5, width: "15%" },  // Sales Name
+                    { targets: 6, width: "8%", className: "text-center" }   // Action
                 ],
                 order: [[1, 'asc']] // Urutkan berdasarkan Customer secara default
             });
@@ -255,6 +311,39 @@
                             }
                         });
                     }
+                });
+            });
+
+            // Tampilkan Modal Detail
+            $(document).on('click', '.btn-detail', function() {
+                let id = $(this).data('id');
+
+                $.get("{{ url('/customer-ship-tos') }}/" + id, function(data) {
+                    // Gabungkan Format Data Relasi
+                    let custCode = data.customer && data.customer.code ? data.customer.code : '-';
+                    let custName = data.customer && data.customer.name ? data.customer.name : '-';
+                    $('#detail_customer').text(custCode + ' - ' + custName);
+
+                    let salesNik = data.user && data.user.nik ? data.user.nik : '-';
+                    let salesName = data.user && data.user.name ? data.user.name : '-';
+                    $('#detail_sales').text(salesNik + ' - ' + salesName);
+
+                    // Isi Data Utama
+                    $('#detail_ship_to_code').text(data.ship_to_code || '-');
+                    $('#detail_ship_to_name').text(data.ship_to_name || '-');
+                    $('#detail_city').text(data.ship_to_city || '-');
+
+                    // Gabungkan Alamat 1, 2, dan 3 jika tersedia
+                    let fullAddress = data.ship_to_address_1 || '';
+                    if (data.ship_to_address_2) fullAddress += '<br>' + data.ship_to_address_2;
+                    if (data.ship_to_address_3) fullAddress += '<br>' + data.ship_to_address_3;
+
+                    $('#detail_address').html(fullAddress || '<span class="text-muted">Alamat tidak tersedia</span>');
+
+                    // Tampilkan Modal
+                    $('#modalDetail').modal('show');
+                }).fail(function() {
+                    Swal.fire('Error', 'Data detail tidak ditemukan.', 'error');
                 });
             });
         });
