@@ -86,15 +86,13 @@
             @endcan
 
             @can('view logistic-orders menu')
-            <li class="menu-title text-white"><span>    </span></li>
+            <li class="menu-title text-white"><span>Logistic Orders</span></li>
             <li>
                 <a aria-expanded="false" data-bs-toggle="collapse" href="#logistic-orders-menu">
                     <i class="iconoir-community"></i> Logistic Orders
                 </a>
                 <ul class="collapse" id="logistic-orders-menu">
                     <li><a href="{{ route('logistic-orders.index') }}">Logistic Order List</a></li>
-                    <li><a href="">Approvals List</a></li>
-                    <li><a href="">Logistic Order Logs</a></li>
                 </ul>
             </li>
             @endcan
