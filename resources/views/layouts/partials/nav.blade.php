@@ -26,6 +26,7 @@
                 <ul class="collapse" id="dashboards-menu">
                     <li><a href="{{ route('dashboard.customer') }}">Customer Dashboard</a></li>
                     <li><a href="{{ route('dashboard.bg') }}">Bank Garansi Dashboard</a></li>
+                    <li><a href="{{ route('dashboard.logistic') }}">Logistic Dashboard</a></li>
                 </ul>
             </li>
             @endcan

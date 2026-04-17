@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
+use App\Models\Customer\LogisticOrder;
+use App\Models\Customer\DeliveryOrderNote;
+use App\Models\Customer\DistributorCustomer;
+use App\Models\Master\LogisticFeeLog;
 use App\Models\BG\BankGaransi;
 use App\Models\Customer\Customer;
 use Illuminate\Http\Request;
@@ -345,6 +348,88 @@ class DashboardController extends Controller
         return response()->json([
             'count' => $user->unreadNotifications->count(),
             'notifications' => $notifications
+        ]);
+    }
+
+    public function logisticIndex()
+    {
+        $user = Auth::user();
+        // Beri proteksi (opsional, sesuaikan dengan role kamu)
+        if (!$user->hasRole(['super-admin', 'staff-sales', 'head-SNM', 'atasan'])) {
+            // abort(403, 'Anda tidak memiliki akses ke Dashboard Logistic');
+        }
+
+        return view('dashboard.logistic');
+    }
+
+    /**
+     * API Data untuk Dashboard Logistic (Statistik, Chart, dan Tabel)
+     */
+    public function getLogisticStats(Request $request)
+    {
+        // 1. TOP CARDS (Summary)
+        $totalOrders = LogisticOrder::count();
+        $pendingDownloads = DeliveryOrderNote::where('status', 'Pending Download')->count();
+        
+        $activeFees = DistributorCustomer::where('status', 'Approved')->count();
+        $pendingFees = DistributorCustomer::where('status', 'Pending')->count();
+
+        // 2. CHART DATA (Logistic Orders 6 Bulan Terakhir)
+        $chartLabels = [];
+        $chartData = [];
+        for ($i = 5; $i >= 0; $i--) {
+            $month = Carbon::now()->subMonths($i);
+            $chartLabels[] = $month->translatedFormat('M Y');
+            $chartData[] = LogisticOrder::whereMonth('created_at', $month->month)
+                                        ->whereYear('created_at', $month->year)
+                                        ->count();
+        }
+
+        // 3. RECENT LOGISTIC ORDERS
+        $recentOrders = LogisticOrder::with(['distributor', 'customer', 'note'])
+            ->orderBy('created_at', 'desc')
+            ->limit(5)
+            ->get()
+            ->map(function ($order) {
+                return [
+                    'lo_no' => 'LO-' . str_pad($order->id, 4, '0', STR_PAD_LEFT),
+                    'do_no' => $order->note->delivery_order_no ?? '-',
+                    'customer' => $order->customer->name ?? 'N/A',
+                    'distributor' => $order->distributor->name ?? 'N/A',
+                    'status' => $order->note->status ?? 'Pending',
+                    'date' => $order->created_at->format('d M Y')
+                ];
+            });
+
+        // 4. RECENT FEE LOGS
+        $recentFeeLogs = LogisticFeeLog::with(['distributorCustomer.customer', 'distributorCustomer.distributor', 'user'])
+            ->orderBy('created_at', 'desc')
+            ->limit(5)
+            ->get()
+            ->map(function ($log) {
+                return [
+                    'customer' => $log->distributorCustomer->customer->name ?? 'N/A',
+                    'distributor' => $log->distributorCustomer->distributor->name ?? 'N/A',
+                    'new_fee' => 'Rp ' . number_format($log->new_fee, 0, ',', '.'),
+                    'status' => $log->status,
+                    'action_by' => $log->user->name ?? $log->action_by ?? 'System',
+                    'time' => $log->created_at->diffForHumans()
+                ];
+            });
+
+        return response()->json([
+            'summary' => [
+                'total_orders' => $totalOrders,
+                'pending_downloads' => $pendingDownloads,
+                'active_fees' => $activeFees,
+                'pending_fees' => $pendingFees,
+            ],
+            'chart' => [
+                'labels' => $chartLabels,
+                'data' => $chartData
+            ],
+            'recent_orders' => $recentOrders,
+            'recent_fee_logs' => $recentFeeLogs
         ]);
     }
 }

@@ -44,6 +44,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard/customer', [DashboardController::class, 'customerIndex'])->name('dashboard.customer');
     Route::get('/dashboard/bank-garansi', [DashboardController::class, 'bgIndex'])->name('dashboard.bg');
+    Route::get('/dashboard/logistic', [DashboardController::class, 'logisticIndex'])->name('dashboard.logistic');
 });
 
 Route::get('/tes-404', function () {
@@ -85,12 +86,13 @@ Route::middleware('auth')->group(function () {
         Route::prefix('dashboard/data')->name('dashboard.data.')->group(function () {
         Route::get('/available-years', [DashboardController::class, 'getAvailableYearsApi'])->name('available-years');
         Route::get('/monthly-stats', [DashboardController::class, 'getMonthlyStats'])->name('monthly-stats');
-        Route::get('/advanced-stats', [DashboardController::class, 'getAdvancedStats'])->name('advanced-stats'); // Route baru
+        Route::get('/advanced-stats', [DashboardController::class, 'getAdvancedStats'])->name('advanced-stats');
         Route::get('/bg-metrics', [DashboardController::class, 'bgMetrics'])->name('bg-metrics');
         Route::get('/customer-metrics', [DashboardController::class, 'customerMetrics'])->name('customer-metrics');
         Route::get('/top-customers-bg', [DashboardController::class, 'topCustomersByBg'])->name('top-customers-bg');
         Route::get('/recent-activities', [DashboardController::class, 'getRecentActivities'])->name('recent-activities');
         Route::get('/my-actions', [DashboardController::class, 'getMyActions'])->name('my-actions');
+        Route::get('/logistic-stats', [DashboardController::class, 'getLogisticStats'])->name('logistic-stats');
     });
 
     Route::post('/customers/{customer}/recall', [CustomerController::class, 'recall'])->name('customers.recall');
