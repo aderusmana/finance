@@ -13,7 +13,9 @@ use App\Mail\LogisticFeeMail;
 use App\Jobs\SendLogisticFee;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Master\ApprovalLog;
+use App\Models\Master\LogisticFeeLog;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
@@ -84,10 +86,18 @@ class LogisticFeeController extends Controller
             ['logistic_fee' => 0]
         );
 
-        // Update status menjadi Pending dan isi proposed_fee
-        $record->update([
-            'status' => 'Pending',
-            'proposed_fee' => $request->logistic_fee
+        $oldFee = $record->logistic_fee;
+        $newFee = $request->logistic_fee;
+
+        $record->update(['status' => 'Pending', 'proposed_fee' => $newFee]);
+
+        LogisticFeeLog::create([
+            'distributor_customer_id' => $record->id,
+            'old_fee'   => $oldFee,
+            'new_fee'   => $newFee,
+            'status'    => 'Requested',
+            'action_by' => Auth::user()->nik,
+            'notes'     => 'Pengajuan harga baru'
         ]);
 
         // Generate Approval Logs
@@ -120,9 +130,18 @@ class LogisticFeeController extends Controller
                 ]);
             }
         } else {
-            // Jika gagal generate (misal path belum disetting), kembalikan status
-            $record->update(['status' => 'Approved', 'logistic_fee' => $request->logistic_fee, 'proposed_fee' => null]);
-            return response()->json(['success' => true, 'message' => 'Path approval belum disetting, data langsung tersimpan.']);
+            $record->update(['status' => 'Approved', 'logistic_fee' => $newFee, 'route_to' => 'Selesai']);
+            
+            LogisticFeeLog::create([
+                'distributor_customer_id' => $record->id,
+                'old_fee'   => $oldFee,
+                'new_fee'   => $newFee,
+                'status'    => 'Approved',
+                'action_by' => 'System',
+                'notes'     => 'Auto-approved (Approval path tidak ditemukan)'
+            ]);
+
+            return response()->json(['success' => true, 'message' => 'Path approval belum disetting, data otomatis disetujui.']);
         }
 
         return response()->json(['success' => true, 'message' => 'Pengajuan Logistic Fee berhasil dikirim ke Approver!']);
@@ -133,49 +152,55 @@ class LogisticFeeController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $request->validate([
-            'logistic_fee' => 'required|numeric|min:0',
-        ]);
-
+        $request->validate(['logistic_fee' => 'required|numeric|min:0']);
         $record = DistributorCustomer::findOrFail($id);
 
-        // Update data ke status Pending
-        $record->update([
-            'status' => 'Pending',
-            'proposed_fee' => $request->logistic_fee
+        $oldFee = $record->logistic_fee;
+        $newFee = $request->logistic_fee;
+
+        if ($oldFee == $newFee) {
+            return response()->json(['success' => true, 'message' => 'Tidak ada perubahan harga.']);
+        }
+
+        $record->update(['status' => 'Pending', 'proposed_fee' => $newFee]);
+
+        // CATAT KE LOG HISTORY SEBAGAI "REQUESTED"
+        LogisticFeeLog::create([
+            'distributor_customer_id' => $record->id,
+            'old_fee'   => $oldFee,
+            'new_fee'   => $newFee,
+            'status'    => 'Requested',
+            'action_by' => Auth::user()->nik,
+            'notes'     => 'Pengajuan perubahan harga'
         ]);
 
-        // Generate logs approval baru
         $logs = $this->generateApprovalLogs(Auth::user(), $record->id, 'Customer', 'Logistic Fee');
 
         if ($logs->isNotEmpty()) {
-            $firstApproverLog = ApprovalLog::where('related_id', $record->id)
-                                        ->where('category', 'Customer')
-                                        ->where('sub_category', 'Logistic Fee')
-                                        ->where('level', 1)
-                                        ->where('status', 'Pending')
-                                        ->latest()
-                                        ->first();
-
+            $firstApproverLog = ApprovalLog::where('related_id', $record->id)->where('category', 'Customer')->where('sub_category', 'Logistic Fee')->where('level', 1)->where('status', 'Pending')->latest()->first();
             if ($firstApproverLog) {
                 $firstApproverUser = User::where('nik', $firstApproverLog->approver_nik)->first();
                 $approverName = $firstApproverUser ? $firstApproverUser->name : 'Atasan';
-
-                $record->update([
-                    'route_to' => $approverName
-                ]);
-
+                $record->update(['route_to' => $approverName]);
                 dispatch(new SendLogisticFee($firstApproverLog, $record));
 
-                // PERBAIKAN: Kembalikan nama approver agar bisa muncul di dialog sukses
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Perubahan harga berhasil dikirim ke <b>' . $approverName . '</b>',
-                    'approver' => $approverName
-                ]);
+                return response()->json(['success' => true, 'message' => 'Perubahan harga berhasil dikirim ke <b>' . $approverName . '</b>']);
             }
-        }
+        } else {
+            // Auto Approve jika tidak ada rule
+            $record->update(['status' => 'Approved', 'logistic_fee' => $newFee, 'route_to' => 'Selesai']);
+            
+            LogisticFeeLog::create([
+                'distributor_customer_id' => $record->id,
+                'old_fee'   => $oldFee,
+                'new_fee'   => $newFee,
+                'status'    => 'Approved',
+                'action_by' => 'System',
+                'notes'     => 'Auto-approved (Approval path tidak ditemukan)'
+            ]);
 
+            return response()->json(['success' => true, 'message' => 'Path approval belum disetting, harga otomatis disetujui.']);
+        }
         return response()->json(['success' => true, 'message' => 'Perubahan harga berhasil disimpan.']);
     }
 
@@ -269,8 +294,6 @@ class LogisticFeeController extends Controller
                 return view('page.master.logistic-fee.links.success-approval')
                     ->with('successMessage', 'Berhasil Disetujui. Pengajuan telah diteruskan ke Approver selanjutnya: ' . ($nextApproverUser->name ?? 'Unknown'));
             } else {
-                // JIKA FINAL APPROVER (Selesai)
-
                 // 1. Tangkap harga lama sebelum di-update untuk ditampilkan di email
                 $oldFee = $logisticData->logistic_fee;
                 $newFee = $logisticData->proposed_fee;
@@ -281,6 +304,15 @@ class LogisticFeeController extends Controller
                     'proposed_fee' => $newFee,   // Tetap simpan history harga yang diajukan
                     'status'       => 'Approved',
                     'route_to'     => 'Selesai'  // Menandakan tidak ada approval lagi
+                ]);
+
+                LogisticFeeLog::create([
+                    'distributor_customer_id' => $logisticData->id,
+                    'old_fee' => $oldFee,
+                    'new_fee' => $newFee,
+                    'status' => 'Approved',
+                    'action_by' => $log->approver_nik, // Diambil dari log (siapa yg approve)
+                    'notes' => $notes
                 ]);
 
                 // Ambil Email Requester
@@ -327,10 +359,22 @@ class LogisticFeeController extends Controller
                 'notes' => $notes
             ]);
 
+            $oldFee = $logisticData->logistic_fee;
+            $newFee = $logisticData->proposed_fee;
+
             // UPDATE DATA REJECT: route_to diubah menjadi Selesai, jangan null
             $logisticData->update([
                 'status'   => 'Rejected',
                 'route_to' => 'Selesai (Ditolak)'
+            ]);
+
+            LogisticFeeLog::create([
+                'distributor_customer_id' => $logisticData->id,
+                'old_fee'   => $oldFee,
+                'new_fee'   => $newFee,
+                'status'    => 'Rejected',
+                'action_by' => $log->approver_nik,
+                'notes'     => $notes
             ]);
 
             $requesterEmail = User::where('nik', $logisticData->created_by)->value('email');
@@ -354,5 +398,180 @@ class LogisticFeeController extends Controller
         }
 
         abort(404);
+    }
+
+    public function approvalList(Request $request)
+    {
+        if ($request->ajax()) {
+            $data = ApprovalLog::where('category', 'Customer')
+                               ->where('sub_category', 'Logistic Fee')
+                               ->where('status', 'Pending')
+                               ->orderBy('created_at', 'desc');
+
+            return DataTables::of($data)
+                ->addIndexColumn()
+                ->addColumn('date', function($row) { return $row->created_at->format('d M Y H:i'); })
+                ->addColumn('distributor', function($row) {
+                    $dc = DistributorCustomer::find($row->related_id);
+                    return $dc->distributor->name ?? '-';
+                })
+                ->addColumn('customer', function($row) {
+                    $dc = DistributorCustomer::find($row->related_id);
+                    return $dc->customer->name ?? '-';
+                })
+                ->addColumn('old_fee', function($row) {
+                    $dc = DistributorCustomer::find($row->related_id);
+                    return 'Rp ' . number_format($dc->logistic_fee ?? 0, 0, ',', '.');
+                })
+                ->addColumn('new_fee', function($row) {
+                    $dc = DistributorCustomer::find($row->related_id);
+                    return '<span class="text-primary fw-bold">Rp ' . number_format($dc->proposed_fee ?? 0, 0, ',', '.') . '</span>';
+                })
+                ->addColumn('action', function($row) {
+                    $btn = '<button class="btn btn-sm btn-primary btn-detail me-1 shadow-sm" data-id="'.$row->id.'"><i class="ph-bold ph-eye"></i> Tinjau</button>';
+                    $btn .= '<button class="btn btn-sm btn-outline-secondary btn-resend shadow-sm" data-id="'.$row->id.'"><i class="ph-bold ph-paper-plane-right"></i> Resend Email</button>';
+                    return $btn;
+                })
+                ->rawColumns(['new_fee', 'action'])
+                ->make(true);
+        }
+        return view('page.master.logistic-fee.approval');
+    }
+
+    public function approvalDetail($id)
+    {
+        $log = ApprovalLog::findOrFail($id);
+        $data = DistributorCustomer::with(['distributor', 'customer'])->findOrFail($log->related_id);
+        
+        return response()->json([
+            'log_id' => $log->id,
+            'distributor' => $data->distributor->name ?? '-',
+            'customer' => $data->customer->name ?? '-',
+            'old_fee' => 'Rp ' . number_format($data->logistic_fee, 0, ',', '.'),
+            'new_fee' => 'Rp ' . number_format($data->proposed_fee, 0, ',', '.'),
+        ]);
+    }
+
+    public function systemProcessApproval(Request $request, $id)
+    {
+        // --- TAMBAHAN VALIDASI BACKEND ---
+        $request->validate([
+            'action' => 'required|in:approve,reject',
+            'notes'  => 'required_if:action,reject|nullable|string'
+        ], [
+            'notes.required_if' => 'Catatan / Alasan wajib diisi apabila Anda menolak pengajuan.'
+        ]);
+        // ---------------------------------
+        
+        $log = ApprovalLog::findOrFail($id);
+        $action = $request->action; // 'approve' atau 'reject'
+        $logisticData = DistributorCustomer::find($log->related_id);
+
+        try {
+            DB::beginTransaction();
+
+            if ($action === 'approve') {
+                $log->update(['status' => 'Approved', 'token' => null, 'notes' => $request->notes]);
+
+                $nextLevel = $log->level + 1;
+                $nextLog = ApprovalLog::where('related_id', $log->related_id)->where('sub_category', 'Logistic Fee')->where('level', $nextLevel)->first();
+
+                if ($nextLog) {
+                    $nextApproverUser = User::where('nik', $nextLog->approver_nik)->first();
+                    $logisticData->update(['route_to' => $nextApproverUser ? $nextApproverUser->name : 'Unknown Approver']);
+                    dispatch(new SendLogisticFee($nextLog, $logisticData));
+                    $message = 'Berhasil disetujui. Diteruskan ke: ' . ($nextApproverUser->name ?? '-');
+                } else {
+                    $oldFee = $logisticData->logistic_fee;
+                    $newFee = $logisticData->proposed_fee;
+
+                    $logisticData->update(['logistic_fee' => $newFee, 'status' => 'Approved', 'route_to' => 'Selesai']);
+
+                    // Catat ke History Log
+                    LogisticFeeLog::create([
+                        'distributor_customer_id' => $logisticData->id,
+                        'old_fee'   => $oldFee,
+                        'new_fee'   => $newFee,
+                        'status'    => 'Approved',
+                        'action_by' => Auth::user()->nik,
+                        'notes'     => $request->notes
+                    ]);
+                    $message = 'Final Approval Berhasil! Harga telah diperbarui.';
+                }
+            } elseif ($action === 'reject') {
+                $log->update(['status' => 'Rejected', 'token' => null, 'notes' => $request->notes]);
+                
+                $oldFee = $logisticData->logistic_fee;
+                $newFee = $logisticData->proposed_fee;
+
+                $logisticData->update(['status' => 'Rejected', 'route_to' => 'Selesai (Ditolak)']);
+
+                // Catat ke History Log
+                LogisticFeeLog::create([
+                    'distributor_customer_id' => $logisticData->id,
+                    'old_fee'   => $oldFee,
+                    'new_fee'   => $newFee,
+                    'status'    => 'Rejected',
+                    'action_by' => Auth::user()->nik,
+                    'notes'     => $request->notes
+                ]);
+                $message = 'Pengajuan berhasil ditolak.';
+            }
+
+            DB::commit();
+            return response()->json(['success' => true, 'message' => $message]);
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            return response()->json(['success' => false, 'message' => 'Error: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function resendEmail($id)
+    {
+        $log = ApprovalLog::findOrFail($id);
+        $logisticData = DistributorCustomer::find($log->related_id);
+        
+        if($log->status === 'Pending' && $logisticData) {
+            dispatch(new SendLogisticFee($log, $logisticData));
+            return response()->json(['success' => true, 'message' => 'Email Approval berhasil dikirim ulang ke Approver!']);
+        }
+        return response()->json(['success' => false, 'message' => 'Data tidak valid untuk dikirim email.'], 400);
+    }
+
+
+    // ==============================================================
+    // 4. FITUR LOG HISTORY (HISTORI PERUBAHAN HARGA)
+    // ==============================================================
+
+    public function logList(Request $request)
+    {
+        if ($request->ajax()) {
+            $data = LogisticFeeLog::with(['distributorCustomer.distributor', 'distributorCustomer.customer', 'user'])
+                                  ->orderBy('created_at', 'desc');
+
+            return DataTables::of($data)
+                ->addIndexColumn()
+                ->addColumn('date', function($row) { return $row->created_at->format('d M Y H:i'); })
+                ->addColumn('distributor', function($row) { return $row->distributorCustomer->distributor->name ?? '-'; })
+                ->addColumn('customer', function($row) { return $row->distributorCustomer->customer->name ?? '-'; })
+                ->addColumn('old_fee', function($row) { return 'Rp ' . number_format($row->old_fee, 0, ',', '.'); })
+                ->addColumn('new_fee', function($row) { return '<span class="text-dark fw-bold">Rp ' . number_format($row->new_fee, 0, ',', '.') . '</span>'; })
+                ->addColumn('status_badge', function($row) {
+                    if($row->status == 'Requested') {
+                        return '<span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 shadow-none"><i class="ph-bold ph-paper-plane-tilt me-1"></i>Requested</span>';
+                    } 
+                    elseif ($row->status == 'Approved') {
+                        return '<span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 shadow-none"><i class="ph-bold ph-check-circle me-1"></i>Approved</span>';
+                    } 
+                    else {
+                        return '<span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 shadow-none"><i class="ph-bold ph-x-circle me-1"></i>Rejected</span>';
+                    }
+                })
+                ->addColumn('action_by', function($row) { return $row->user->name ?? $row->action_by ?? 'System'; })
+                ->rawColumns(['new_fee', 'status_badge'])
+                ->make(true);
+        }
+        return view('page.master.logistic-fee.log');
     }
 }

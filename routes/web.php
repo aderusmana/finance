@@ -122,6 +122,12 @@ Route::middleware('auth')->group(function () {
     Route::resource('distributors', DistributorController::class);
     Route::resource('customer-ship-tos', CustomerShipToController::class);
 
+    Route::get('/logistic-fees-approval', [LogisticFeeController::class, 'approvalList'])->name('logistic-fees.approval.list');
+    Route::get('/logistic-fees-approval/{id}', [LogisticFeeController::class, 'approvalDetail']);
+    Route::post('/logistic-fees-approval/process/{id}', [LogisticFeeController::class, 'systemProcessApproval']);
+    Route::post('/logistic-fees-approval/resend/{id}', [LogisticFeeController::class, 'resendEmail']);
+    Route::get('/logistic-fees-log', [LogisticFeeController::class, 'logList'])->name('logistic-fees.log');
+
     Route::get('/get-customers-by-distributor/{distributor_id}', [DistributorController::class, 'getCustomersByDistributor']);
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

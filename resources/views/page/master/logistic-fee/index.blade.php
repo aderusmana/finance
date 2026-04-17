@@ -235,7 +235,12 @@
                     customerName = $('#customer_id option:selected').text();
                 }
 
+                // Ambil nominal Harga Baru dan Harga Lama
                 let newFeeVal = $('#logistic_fee').val();
+                let oldFeeVal = formatRupiah($('#old_logistic_fee').val().toString());
+
+                // Row Harga Lama: Hanya dimunculkan kalau ini adalah Mode Edit (bukan data baru)
+                let oldFeeRow = id ? `<tr><td class="text-muted">Harga Saat Ini</td><td>: <span class="text-secondary text-decoration-line-through">Rp ${oldFeeVal}</span></td></tr>` : '';
 
                 // Dialog Konfirmasi (Dinamis untuk Create/Update)
                 Swal.fire({
@@ -243,14 +248,15 @@
                     html: `
                         <div class="text-start" style="font-size: 0.95rem;">
                             <p>Anda akan memproses data berikut:</p>
-                            <table class="table table-sm table-borderless">
+                            <table class="table table-sm table-borderless mb-2">
                                 <tr><td width="35%">Distributor</td><td>: <b>${distributorName}</b></td></tr>
                                 <tr><td>Customer</td><td>: <b>${customerName}</b></td></tr>
-                                <tr><td>Harga Diajukan</td><td>: <b class="text-primary">Rp ${newFeeVal}</b></td></tr>
+                                ${oldFeeRow}
+                                <tr><td>Harga Diajukan</td><td>: <b class="text-primary fs-6">Rp ${newFeeVal}</b></td></tr>
                             </table>
-                            <hr>
-                            <p class="mb-0 text-muted" style="font-style: italic;">
-                                <i class="ph-bold ph-info-circle"></i>
+                            <hr class="my-2">
+                            <p class="mb-0 text-muted" style="font-size: 0.85rem; font-style: italic;">
+                                <i class="ph-bold ph-info-circle text-primary"></i>
                                 Sistem akan mengirimkan notifikasi <b>Approval kepada Atasan</b> untuk diverifikasi.
                             </p>
                         </div>
@@ -264,7 +270,7 @@
                     reverseButtons: true
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        // Bersihkan format rupiah
+                        // Bersihkan format rupiah sebelum dikirim ke database
                         let rawData = $(this).serializeArray();
                         $.each(rawData, function(i, field){
                             if (field.name === 'logistic_fee') {
@@ -288,10 +294,10 @@
                                 $('#modalForm').modal('hide');
                                 table.ajax.reload();
 
-                                // Dialog Berhasil dengan Nama Approver dari Backend
+                                // Dialog Berhasil
                                 Swal.fire({
                                     title: 'Pengajuan Terkirim!',
-                                    html: res.message, // Pesan berisi nama approver
+                                    html: res.message, 
                                     icon: 'success',
                                     confirmButtonColor: '#10b981'
                                 });

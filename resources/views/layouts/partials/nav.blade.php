@@ -79,8 +79,8 @@
                 </a>
                 <ul class="collapse" id="logistic-fees-menu">
                     <li><a href="{{ route('logistic-fees.index') }}">Logistic Fee List</a></li>
-                    <li><a href="">Approvals List</a></li>
-                    <li><a href="">Logistic Fee Logs</a></li>
+                    <li><a href="{{ route('logistic-fees.approval.list') }}">Approvals List</a></li>
+                    <li><a href="{{ route('logistic-fees.log') }}">Logistic Fee Logs</a></li>
                 </ul>
             </li>
             @endcan

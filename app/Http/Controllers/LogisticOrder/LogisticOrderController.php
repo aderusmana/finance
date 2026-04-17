@@ -88,7 +88,7 @@ class LogisticOrderController extends Controller
                     return '<span class="badge bg-warning text-dark">Pending Download</span>';
                 })
                 ->addColumn('action', function($row){
-                    return '<button class="btn btn-sm btn-info text-white"><i class="ph-bold ph-eye"></i> Detail</button>';
+                    return '<button class="btn btn-sm btn-info text-white btn-detail shadow-sm" data-id="'.$row->id.'"><i class="ph-bold ph-eye"></i> Detail</button>';
                 })
                 ->rawColumns(['status_badge', 'action'])
                 ->make(true);
@@ -166,6 +166,13 @@ class LogisticOrderController extends Controller
             DB::rollback();
             return response()->json(['success' => false, 'message' => 'Gagal menyimpan: ' . $e->getMessage()], 500);
         }
+    }
+
+    public function show($id)
+    {
+        $order = LogisticOrder::with(['distributor', 'customer', 'customerShipTo.user', 'items', 'note'])->findOrFail($id);
+
+        return response()->json($order);
     }
 
     // ==========================================
