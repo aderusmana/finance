@@ -16,9 +16,11 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
 use App\Mail\LogisticOrderDistributorMail; // Mailer baru
+use App\Models\Customer\DeliveryOrderDownloadLog;
 use App\Notifications\SystemNotification; // Notifikasi ke Sales
 use Illuminate\Support\Facades\Notification;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Auth;
 
 class LogisticOrderController extends Controller
 {
@@ -89,10 +91,28 @@ class LogisticOrderController extends Controller
             return DataTables::of($data)
                 ->addIndexColumn()
                 ->editColumn('logistic_order_no', function($row) {
-                    return 'LO-' . str_pad($row->id, 4, '0', STR_PAD_LEFT);
+                    $loNo = 'LO-' . str_pad($row->id, 4, '0', STR_PAD_LEFT);
+                    $createdAt = $row->created_at->format('d M Y, H:i');
+                    
+                    // Format HTML Cantik untuk Kolom Order Info (Pending)
+                    return '
+                        <div class="d-flex flex-column gap-1">
+                            <span class="fw-bolder text-primary" style="font-size: 0.95rem;">' . $loNo . '</span>
+                            <span class="text-secondary" style="font-size: 0.75rem;"><i class="ph-fill ph-calendar-blank text-primary opacity-75"></i> Dibuat: ' . $createdAt . '</span>
+                        </div>
+                    ';
                 })
                 ->addColumn('do_no', function($row) {
-                    return $row->note->delivery_order_no ?? '-';
+                    $doNo = $row->note->delivery_order_no ?? '-';
+                    $createdAt = $row->created_at->format('d M Y, H:i');
+                    
+                    // Format HTML Cantik untuk Kolom DN Info (Hanya Dibuat)
+                    return '
+                        <div class="d-flex flex-column gap-1">
+                            <span class="fw-bolder text-success" style="font-size: 0.95rem;">' . $doNo . '</span>
+                            <span class="text-secondary" style="font-size: 0.75rem;"><i class="ph-fill ph-calendar-plus text-primary opacity-50"></i> Dibuat: ' . $createdAt . '</span>
+                        </div>
+                    ';
                 })
                 ->addColumn('distributor_name', function($row) { return $row->distributor->name ?? '-'; })
                 ->addColumn('customer_name', function($row) { return $row->customer->name ?? '-'; })
@@ -100,17 +120,34 @@ class LogisticOrderController extends Controller
                 ->addColumn('status_badge', function($row) use ($tab) {
                     if ($tab === 'downloaded') {
                         $count = $row->note->download_count ?? 0;
-                        return '<span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-1 rounded-pill"><i class="ph-bold ph-check-circle me-1"></i> Downloaded ('.$count.'x)</span>';
+                        $updatedAt = $row->updated_at->format('d M Y, H:i'); // Tarik waktu diunduh
+                        
+                        // Tampilkan Badge Selesai + Waktu Diunduh di bawahnya
+                        return '
+                            <div class="d-flex flex-column gap-1 align-items-start">
+                                <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-1 rounded-pill">
+                                    <i class="ph-bold ph-check-circle me-1"></i> Downloaded ('.$count.'x)
+                                </span>
+                                <span class="text-secondary mt-1" style="font-size: 0.75rem;">
+                                    <i class="ph-fill ph-download-simple text-success opacity-75"></i> Diunduh: ' . $updatedAt . '
+                                </span>
+                            </div>
+                        ';
                     }
+                    // Untuk tab pending, cukup tampilkan badge pending
                     return '<span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-3 py-1 rounded-pill"><i class="ph-bold ph-clock me-1"></i> Pending</span>';
                 })
                 ->addColumn('action', function($row) use ($tab) {
                     if ($tab === 'downloaded') {
-                        return '<button class="btn btn-sm btn-info text-white btn-detail shadow-sm px-3 rounded-pill" data-id="'.$row->id.'"><i class="ph-bold ph-eye"></i> Lihat DN</button>';
+                        $btnDetail = '<button class="btn btn-sm btn-info text-white btn-detail shadow-sm px-3 rounded-pill w-100" data-id="'.$row->id.'"><i class="ph-bold ph-eye"></i> Lihat DN</button>';
+                        $btnDownload = '<a href="'.URL::signedRoute('public.lo.download', ['id' => $row->id, 'fromEmail' => 0]).'" target="_blank" class="btn btn-sm btn-success text-white shadow-sm px-3 rounded-pill w-100"><i class="ph-bold ph-download-simple"></i> Download</a>';
+
+                        return '<div class="d-flex flex-column gap-2 align-items-center">'. $btnDetail . $btnDownload .'</div>';
                     }
+                    
                     return '<button class="btn btn-sm btn-primary text-white btn-detail shadow-sm px-3 rounded-pill" data-id="'.$row->id.'"><i class="ph-bold ph-eye"></i> Tinjau Order</button>';
                 })
-                ->rawColumns(['status_badge', 'action'])
+                ->rawColumns(['logistic_order_no', 'do_no', 'status_badge', 'action'])
                 ->make(true);
         }
 
@@ -191,8 +228,19 @@ class LogisticOrderController extends Controller
     public function show($id)
     {
         $order = LogisticOrder::with(['distributor', 'customer', 'customerShipTo.user', 'items', 'note'])->findOrFail($id);
+        
+        $downloadLogs = [];
+        if ($order->note) {
+            $downloadLogs = DeliveryOrderDownloadLog::where('delivery_order_note_id', $order->note->id)
+                            ->orderBy('created_at', 'desc')
+                            ->get();
+        }
 
-        return response()->json($order);
+        $responseData = $order->toArray();
+        $responseData['download_logs'] = $downloadLogs;
+        $responseData['download_url'] = URL::signedRoute('public.lo.download', ['id' => $id, 'fromEmail' => 0]);
+
+        return response()->json($responseData);
     }
 
     // ==========================================
@@ -213,7 +261,6 @@ class LogisticOrderController extends Controller
      */
     public function publicDownload($id, $fromEmail = false)
     {
-        // Pastikan relasi 'items' ikut ditarik agar bisa ditampilkan di PDF
         $order = LogisticOrder::with(['note', 'customerShipTo.user', 'customer', 'distributor', 'items'])->findOrFail($id);
         $note = $order->note;
 
@@ -238,6 +285,17 @@ class LogisticOrderController extends Controller
         }
 
         $note->increment('download_count');
+
+        $downloadedBy = 'Distributor (Public Link)';
+        if (Auth::check()) {
+            $downloadedBy = Auth::user()->name . ' (Admin)';
+        }
+
+        DeliveryOrderDownloadLog::create([
+            'delivery_order_note_id' => $note->id,
+            'downloaded_by' => $downloadedBy
+        ]);
+        // ----------------------------------------------
 
         $pdf = Pdf::loadView('pdf.delivery_order', compact('order'))
                   ->setPaper('a5', 'landscape');

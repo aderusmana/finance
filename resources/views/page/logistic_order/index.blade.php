@@ -76,15 +76,15 @@
                 {{-- Tabel Pending --}}
                 <div id="wrapper-pending" class="table-responsive">
                     <table class="table table-hover w-100 align-middle" id="sampleTable">
-                        <thead class="table-light">
+                        <thead>
                             <tr>
-                                <th>No</th>
-                                <th>Order No</th>
-                                <th>Customer</th>
-                                <th>Distributor</th>
-                                <th>Ship To</th>
-                                <th>Status</th>
-                                <th class="text-center">Action</th>
+                                <th width="5%">No</th>
+                                <th width="18%">Order Info</th>
+                                <th width="20%">Customer</th>
+                                <th width="20%">Distributor</th>
+                                <th width="17%">Ship To</th>
+                                <th width="10%">Status</th>
+                                <th width="10%" class="text-center">Action</th>
                             </tr>
                         </thead>
                     </table>
@@ -93,15 +93,15 @@
                 {{-- Tabel Downloaded (Sembunyikan via d-none default) --}}
                 <div id="wrapper-downloaded" class="table-responsive d-none">
                     <table class="table table-hover w-100 align-middle" id="historyTable">
-                        <thead class="table-light">
+                        <thead>
                             <tr>
-                                <th>No</th>
-                                <th>DN Number</th>
-                                <th>Customer</th>
-                                <th>Distributor</th>
-                                <th>Tujuan Pengiriman</th>
-                                <th>Status</th>
-                                <th class="text-center">Action</th>
+                                <th width="5%">No</th>
+                                <th width="15%">DN Info</th>
+                                <th width="20%">Customer</th>
+                                <th width="20%">Distributor</th>
+                                <th width="15%">Ship To</th>
+                                <th width="15%">Status</th>
+                                <th width="10%" class="text-center">Action</th>
                             </tr>
                         </thead>
                     </table>
@@ -223,43 +223,39 @@
     </div>
 
     {{-- ================================================================= --}}
-    {{-- MODAL DETAIL PESANAN  --}}
+    {{-- MODAL DETAIL PESANAN (WIDE LAYOUT - SIDE BY SIDE) --}}
     {{-- ================================================================= --}}
     <div class="modal fade" id="modalDetail" tabindex="-1">
-        {{-- Mengubah modal-xl menjadi modal-lg agar lebarnya lebih pas & proporsional --}}
-        <div class="modal-dialog modal-lg modal-dialog-centered">
+        {{-- Gunakan modal-xl untuk memberikan ruang lebar ke samping --}}
+        <div class="modal-dialog modal-xl modal-dialog-centered">
             <div class="modal-content border-0 rounded-4 shadow-lg">
                 
-                {{-- Header --}}
+                {{-- Header: Blue Gradient Theme --}}
                 <div class="modal-header border-bottom-0 p-4">
                     <div class="d-flex align-items-center gap-3">
-                        {{-- Kotak Ikon Transparan (Glassmorphism) --}}
                         <div class="bg-white bg-opacity-25 text-white border border-white border-opacity-25 d-flex align-items-center justify-content-center rounded-3 shadow-sm" style="width: 50px; height: 50px; backdrop-filter: blur(4px);">
                             <i class="ph-bold ph-receipt fs-3"></i>
                         </div>
                         <div>
-                            {{-- Judul diubah ke Putih --}}
-                            <h5 class="fw-bolder text-white mb-1">Detail Pesanan Logistik</h5>
+                            <h5 class="fw-bolder text-white mb-1">Detail Dokumen Logistik</h5>
                             <div class="d-flex align-items-center gap-2">
-                                {{-- Badge Nomor Order dibalik warnanya (Bg Putih, Teks Biru) --}}
-                                <span class="badge bg-white text-primary rounded-pill px-3 py-1 fw-bold shadow-sm" id="detail_lo_no" style="letter-spacing: 0.5px;">LO-0000</span>
+                                <span class="badge bg-white text-primary rounded-pill px-3 py-1 fw-bold shadow-sm" id="detail_lo_no">LO-0000</span>
                                 <span id="detail_status"></span>
                             </div>
                         </div>
                     </div>
-                    {{-- Tombol Close diubah jadi putih (btn-close-white) --}}
                     <button type="button" class="btn-close btn-close-white shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
 
-                {{-- Body --}}
+                {{-- Body: Background soft gray --}}
                 <div class="modal-body p-4" style="background-color: #f8fafc;">
                     
-                    {{-- Row 1: Info Dokumen & Tujuan --}}
-                    <div class="row g-4 mb-4">
-                        {{-- Kiri: Info Dokumen --}}
-                        <div class="col-md-6">
+                    {{-- SEKSI ATAS: Info Dokumen & Tujuan (Tetap Berdampingan) --}}
+                    <div class="row g-3 mb-4">
+                        {{-- Kiri: Info Utama --}}
+                        <div class="col-md-5">
                             <div class="bg-white border rounded-4 p-4 h-100 shadow-sm">
-                                <h6 class="fw-bold text-secondary text-uppercase mb-3" style="font-size: 0.85rem; letter-spacing: 1px;">
+                                <h6 class="fw-bold text-secondary text-uppercase mb-3" style="font-size: 0.8rem; letter-spacing: 1px;">
                                     <i class="ph-bold ph-info me-2"></i>Informasi Dokumen
                                 </h6>
                                 <table class="table table-sm table-borderless mb-0">
@@ -283,58 +279,87 @@
                             </div>
                         </div>
 
-                        {{-- Kanan: Tujuan Pengiriman --}}
-                        <div class="col-md-6">
+                        {{-- Kanan: Ship To --}}
+                        <div class="col-md-7">
                             <div class="bg-white border rounded-4 p-4 h-100 shadow-sm" style="border-top: 4px solid #3b82f6 !important;">
                                 <div class="d-flex justify-content-between align-items-start mb-2">
-                                    <h6 class="fw-bold text-primary text-uppercase mb-0" style="font-size: 0.85rem; letter-spacing: 1px;">
+                                    <h6 class="fw-bold text-primary text-uppercase mb-0" style="font-size: 0.8rem; letter-spacing: 1px;">
                                         <i class="ph-bold ph-map-pin me-2"></i>Tujuan Pengiriman
                                     </h6>
                                     <span class="badge bg-light text-primary border border-primary border-opacity-25 px-2 py-1 rounded" id="detail_ship_to_code">-</span>
                                 </div>
-                                <div class="mt-3">
-                                    <h6 class="fw-bold text-dark mb-1 fs-6" id="detail_ship_to_name">-</h6>
-                                    <p class="text-secondary mb-3" style="font-size: 0.9rem; line-height: 1.5;" id="detail_ship_to_address">-</p>
-                                </div>
+                                <h6 class="fw-bold text-dark mb-1 mt-2 fs-6" id="detail_ship_to_name">-</h6>
+                                <p class="text-secondary mb-3 small text-truncate" id="detail_ship_to_address">-</p>
+                                
                                 <div class="d-flex align-items-center gap-4 mt-auto border-top pt-3">
                                     <div>
-                                        <span class="text-muted d-block fw-semibold" style="font-size: 0.75rem;">KOTA</span>
-                                        <span class="fw-bold text-dark fs-6" id="detail_ship_to_city">-</span>
+                                        <span class="text-muted d-block fw-semibold" style="font-size: 0.7rem;">KOTA</span>
+                                        <span class="fw-bold text-dark" id="detail_ship_to_city">-</span>
                                     </div>
                                     <div class="border-start ps-4">
-                                        <span class="text-muted d-block fw-semibold" style="font-size: 0.75rem;">SALES PIC</span>
-                                        <span class="fw-bold text-dark fs-6" id="detail_sales_pic">-</span>
+                                        <span class="text-muted d-block fw-semibold" style="font-size: 0.7rem;">SALES PIC</span>
+                                        <span class="fw-bold text-dark" id="detail_sales_pic">-</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    {{-- Row 2: Tabel Barang --}}
-                    <div class="bg-white border rounded-4 p-4 shadow-sm">
-                        <h6 class="fw-bold text-secondary text-uppercase mb-3" style="font-size: 0.85rem; letter-spacing: 1px;">
-                            <i class="ph-bold ph-package me-2"></i>Rincian Barang
-                        </h6>
-                        <div class="table-responsive border rounded-3">
-                            <table class="table table-hover align-middle mb-0">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th width="5%" class="text-center text-muted py-3">NO</th>
-                                        <th width="20%" class="text-muted py-3">KODE ITEM</th>
-                                        <th width="60%" class="text-muted py-3">NAMA / DESKRIPSI BARANG</th>
-                                        <th width="15%" class="text-center text-muted py-3">QTY</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="detail_items_table">
-                                    {{-- Data Items di-inject via JS --}}
-                                </tbody>
-                            </table>
+                    {{-- SEKSI BAWAH: Rincian Barang & Tracking (BERDAMPINGAN) --}}
+                    <div class="row g-3">
+                        {{-- Samping Kiri: Rincian Barang (7/12 area) --}}
+                        <div class="col-lg-7">
+                            <div class="bg-white border rounded-4 p-4 shadow-sm h-100">
+                                <h6 class="fw-bold text-secondary text-uppercase mb-3" style="font-size: 0.8rem; letter-spacing: 1px;">
+                                    <i class="ph-bold ph-package me-2"></i>Daftar Item Barang
+                                </h6>
+                                <div class="table-responsive border rounded-3 overflow-hidden">
+                                    <table class="table table-hover align-middle mb-0">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th width="10%" class="text-center text-muted py-3">NO</th>
+                                                <th width="70%" class="text-muted py-3">NAMA BARANG</th>
+                                                <th width="20%" class="text-center text-muted py-3">QTY</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="detail_items_table">
+                                            {{-- Data di-inject via JS --}}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Samping Kanan: Riwayat Tracking (5/12 area) --}}
+                        <div class="col-lg-5">
+                            <div class="bg-white border rounded-4 p-4 shadow-sm h-100">
+                                <h6 class="fw-bold text-secondary text-uppercase mb-3" style="font-size: 0.8rem; letter-spacing: 1px;">
+                                    <i class="ph-bold ph-clock-counter-clockwise me-2"></i>Tracking Aktivitas Unduhan
+                                </h6>
+                                <div class="table-responsive border rounded-3 overflow-hidden">
+                                    <table class="table table-hover align-middle mb-0">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th width="50%" class="text-muted py-3 px-3">WAKTU</th>
+                                                <th width="50%" class="text-muted py-3">EKSEKUTOR</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="detail_download_logs_table" style="font-size: 0.85rem;">
+                                            {{-- Data di-inject via JS --}}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
                 
                 {{-- Footer --}}
-                <div class="modal-footer border-top p-3 bg-white rounded-bottom-4">
+                <div class="modal-footer border-top p-3 bg-white rounded-bottom-4 d-flex justify-content-between">
+                    {{-- Tombol Download Admin yang akan muncul di modal detail --}}
+                    <div id="admin-download-wrapper">
+                        {{-- Akan diisi via Javascript --}}
+                    </div>
                     <button type="button" class="btn btn-secondary px-5 py-2 rounded-pill fw-semibold shadow-sm" data-bs-dismiss="modal">Tutup</button>
                 </div>
             </div>
@@ -363,7 +388,7 @@
 
             // Inisialisasi DataTable 1: PENDING
             sampleTable = $('#sampleTable').DataTable({
-                processing: true, serverSide: true,
+                processing: true, serverSide: true, autoWidth: false,
                 ajax: { url: "{{ route('logistic-orders.index') }}", data: { tab: 'pending' } },
                 columns: [
                     { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
@@ -378,7 +403,7 @@
 
             // Inisialisasi DataTable 2: DOWNLOADED
             historyTable = $('#historyTable').DataTable({
-                processing: true, serverSide: true,
+                processing: true, serverSide: true, autoWidth: false,
                 ajax: { url: "{{ route('logistic-orders.index') }}", data: { tab: 'downloaded' } },
                 columns: [
                     { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
@@ -506,21 +531,65 @@
                         $('#detail_sales_pic').text(st.user ? st.user.name : '-');
                     }
 
-                    // UPDATE: Tabel Data diperbesar padding dan font size-nya (fs-6, fs-5)
-                    let tbody = $('#detail_items_table'); tbody.empty();
+                    // --- RENDER TABEL ITEM BARANG ---
+                    let tbody = $('#detail_items_table'); 
+                    tbody.empty();
                     if(data.items && data.items.length > 0) {
                         $.each(data.items, function(index, item) {
                             tbody.append(`
                                 <tr>
-                                    <td class="text-center text-muted py-3">${index + 1}</td>
-                                    <td class="py-3"><span class="badge bg-light text-secondary border px-2 py-1 fs-6 fw-normal">${item.order_item_code || '-'}</span></td>
-                                    <td class="fw-semibold text-dark py-3 fs-6">${item.order_item_name}</td>
-                                    <td class="text-center fw-bold text-primary py-3 fs-5">${item.order_quantity}</td>
+                                    <td class="text-center text-muted py-2">${index + 1}</td>
+                                    <td class="py-2">
+                                        <div class="fw-bold text-dark">${item.order_item_name}</div>
+                                        <small class="text-muted">${item.order_item_code || '-'}</small>
+                                    </td>
+                                    <td class="text-center fw-bold text-primary py-2">${item.order_quantity}</td>
                                 </tr>
                             `);
                         });
                     } else {
-                        tbody.append('<tr><td colspan="4" class="text-center text-muted py-4">Tidak ada rincian barang.</td></tr>');
+                        tbody.append('<tr><td colspan="3" class="text-center text-muted py-4">Tidak ada rincian barang.</td></tr>');
+                    }
+
+                    // --- RENDER TABEL RIWAYAT UNDUHAN (TRACKING) ---
+                    let logTbody = $('#detail_download_logs_table'); 
+                    logTbody.empty();
+                    if(data.download_logs && data.download_logs.length > 0) {
+                        $.each(data.download_logs, function(index, log) {
+                            // Format Tanggal
+                            let d = new Date(log.created_at);
+                            let dateStr = d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+                            let timeStr = d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+
+                            let badgeClass = log.downloaded_by.includes('Admin') ? 'bg-primary' : 'bg-success';
+
+                            logTbody.append(`
+                                <tr>
+                                    <td class="py-2 px-3">
+                                        <div class="fw-bold text-dark">${dateStr}</div>
+                                        <div class="text-muted small">${timeStr}</div>
+                                    </td>
+                                    <td class="py-2">
+                                        <span class="badge ${badgeClass} bg-opacity-10 ${badgeClass.replace('bg-', 'text-')} border-0 px-2 py-1 rounded-pill fw-semibold" style="font-size: 0.75rem;">
+                                            <i class="ph-fill ph-user-circle me-1"></i> ${log.downloaded_by}
+                                        </span>
+                                    </td>
+                                </tr>
+                            `);
+                        });
+                    } else {
+                        logTbody.append('<tr><td colspan="2" class="text-center text-muted py-4 small italic">Belum ada aktivitas unduhan.</td></tr>');
+                    }
+
+                    let downloadUrl = "{{ url('/public/lo/download') }}/" + data.id + "/0"; // Sesuaikan base URL nya
+                    if(data.note && data.note.status === 'Downloaded') {
+                        $('#admin-download-wrapper').html(`
+                            <a href="${data.download_url}" target="_blank" class="btn btn-success px-4 py-2 rounded-pill fw-bold shadow-sm">
+                                <i class="ph-bold ph-download-simple me-2"></i> Download DN (Admin)
+                            </a>
+                        `);
+                    } else {
+                        $('#admin-download-wrapper').empty();
                     }
                     
                     $('#modalDetail').modal('show');
