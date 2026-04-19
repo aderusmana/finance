@@ -95,13 +95,13 @@
                     <table class="table table-hover w-100 align-middle" id="historyTable">
                         <thead>
                             <tr>
-                                <th width="5%">No</th>
+                                <th>No</th>
                                 <th width="15%">DN Info</th>
                                 <th width="20%">Customer</th>
                                 <th width="20%">Distributor</th>
                                 <th width="15%">Ship To</th>
                                 <th width="15%">Status</th>
-                                <th width="10%" class="text-center">Action</th>
+                                <th width="12%" class="text-center">Action</th>
                             </tr>
                         </thead>
                     </table>
@@ -513,7 +513,7 @@
                     if(data.note) {
                         $('#detail_do_no').text(data.note.delivery_order_no || '-');
                         let statusHtml = data.note.status === 'Downloaded'
-                            ? `<span class="badge bg-success text-white border border-success px-3 py-1 rounded-pill fw-bold shadow-sm"><i class="ph-bold ph-check-circle me-1"></i> Downloaded</span>`
+                            ? `<span class="badge bg-success text-white border border-success px-3 py-1 rounded-pill fw-bold shadow-sm"><i class="ph-bold ph-check-circle me-1"></i> Diakses</span>`
                             : `<span class="badge bg-warning text-dark border border-warning px-3 py-1 rounded-pill fw-bold shadow-sm"><i class="ph-bold ph-clock me-1"></i> Pending</span>`;
                         $('#detail_status').html(statusHtml);
                     }
@@ -578,14 +578,14 @@
                             `);
                         });
                     } else {
-                        logTbody.append('<tr><td colspan="2" class="text-center text-muted py-4 small italic">Belum ada aktivitas unduhan.</td></tr>');
+                        logTbody.append('<tr><td colspan="2" class="text-center text-muted py-4 small italic">Belum ada aktivitas akses dokumen.</td></tr>');
                     }
 
                     let downloadUrl = "{{ url('/public/lo/download') }}/" + data.id + "/0"; // Sesuaikan base URL nya
                     if(data.note && data.note.status === 'Downloaded') {
                         $('#admin-download-wrapper').html(`
                             <a href="${data.download_url}" target="_blank" class="btn btn-success px-4 py-2 rounded-pill fw-bold shadow-sm">
-                                <i class="ph-bold ph-download-simple me-2"></i> Download DN (Admin)
+                                <i class="ph-bold ph-printer me-2"></i> Akses / Cetak DN (Admin)
                             </a>
                         `);
                     } else {

@@ -125,14 +125,14 @@
                         <div class="text-md-end">
                             @if($order->note->status == 'Downloaded')
                                 <span class="badge badge-custom bg-success text-white">
-                                    <i class="ph-bold ph-check-circle me-1"></i> Downloaded
+                                    <i class="ph-bold ph-check-circle me-1"></i> Telah Diakses
                                     @if($order->note->download_count > 0)
                                         <span class="opacity-75 ms-1 fw-normal">({{ $order->note->download_count }}x)</span>
                                     @endif
                                 </span>
                             @else
                                 <span class="badge badge-custom bg-warning text-dark">
-                                    <i class="ph-bold ph-clock me-1"></i> Pending Download
+                                    <i class="ph-bold ph-clock me-1"></i> Belum Diakses
                                 </span>
                             @endif
                             <p class="text-muted small mt-2 mb-0">Tgl. Kirim: <strong class="text-dark">{{ \Carbon\Carbon::parse($order->delivery_date)->format('d F Y') }}</strong></p>

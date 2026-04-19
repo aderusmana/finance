@@ -120,28 +120,26 @@ class LogisticOrderController extends Controller
                 ->addColumn('status_badge', function($row) use ($tab) {
                     if ($tab === 'downloaded') {
                         $count = $row->note->download_count ?? 0;
-                        $updatedAt = $row->updated_at->format('d M Y, H:i'); // Tarik waktu diunduh
+                        $updatedAt = $row->updated_at->format('d M Y, H:i'); 
                         
-                        // Tampilkan Badge Selesai + Waktu Diunduh di bawahnya
                         return '
-                            <div class="d-flex flex-column gap-1 align-items-start">
+                            <div class="d-flex flex-column align-items-start">
                                 <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-1 rounded-pill">
-                                    <i class="ph-bold ph-check-circle me-1"></i> Downloaded ('.$count.'x)
+                                    <i class="ph-bold ph-check-circle me-1"></i> Diakses ('.$count.'x)
                                 </span>
-                                <span class="text-secondary mt-1" style="font-size: 0.75rem;">
-                                    <i class="ph-fill ph-download-simple text-success opacity-75"></i> Diunduh: ' . $updatedAt . '
+                                <span class="text-secondary" style="font-size: 0.72rem; margin-top: 4px; padding-left: 4px;">
+                                    <i class="ph-fill ph-eye text-success opacity-75"></i> Terakhir: ' . $updatedAt . '
                                 </span>
                             </div>
                         ';
                     }
-                    // Untuk tab pending, cukup tampilkan badge pending
                     return '<span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-3 py-1 rounded-pill"><i class="ph-bold ph-clock me-1"></i> Pending</span>';
                 })
                 ->addColumn('action', function($row) use ($tab) {
                     if ($tab === 'downloaded') {
                         $btnDetail = '<button class="btn btn-sm btn-info text-white btn-detail shadow-sm px-3 rounded-pill w-100" data-id="'.$row->id.'"><i class="ph-bold ph-eye"></i> Lihat DN</button>';
-                        $btnDownload = '<a href="'.URL::signedRoute('public.lo.download', ['id' => $row->id, 'fromEmail' => 0]).'" target="_blank" class="btn btn-sm btn-success text-white shadow-sm px-3 rounded-pill w-100"><i class="ph-bold ph-download-simple"></i> Download</a>';
-
+                        $btnDownload = '<a href="'.URL::signedRoute('public.lo.download', ['id' => $row->id, 'fromEmail' => 0]).'" target="_blank" class="btn btn-sm btn-success text-white shadow-sm px-3 rounded-pill w-100"><i class="ph-bold ph-printer"></i> Akses DN</a>';
+                        
                         return '<div class="d-flex flex-column gap-2 align-items-center">'. $btnDetail . $btnDownload .'</div>';
                     }
                     
@@ -275,8 +273,8 @@ class LogisticOrderController extends Controller
             $salesUser = $order->customerShipTo->user ?? null;
             if ($salesUser) {
                 Notification::send($salesUser, new SystemNotification(
-                    "DN Telah Di-download",
-                    "Distributor <b>{$order->distributor->name}</b> telah mencetak DN untuk Customer {$order->customer->name}.",
+                    "Dokumen DN Telah Diakses",
+                    "Distributor <b>{$order->distributor->name}</b> telah mengakses/mencetak DN untuk Customer {$order->customer->name}.",
                     "#",
                     "ph-printer",
                     "info"
