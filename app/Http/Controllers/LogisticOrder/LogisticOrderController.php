@@ -66,29 +66,49 @@ class LogisticOrderController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            // Tarik relasi 'note' juga
-            $data = LogisticOrder::with(['distributor', 'customer', 'customerShipTo', 'note'])->select('logistic_orders.*');
+            // Ambil parameter tab dari AJAX, default 'pending'
+            $tab = $request->get('tab', 'pending');
+
+            $data = LogisticOrder::with(['distributor', 'customer', 'customerShipTo', 'note'])
+                ->whereHas('note', function($q) use ($tab) {
+                    if ($tab === 'downloaded') {
+                        $q->where('status', 'Downloaded');
+                    } else {
+                        $q->where('status', 'Pending Download');
+                    }
+                })
+                ->select('logistic_orders.*');
+
+            // Urutkan data berdasarkan status
+            if ($tab === 'downloaded') {
+                $data->orderBy('updated_at', 'desc'); // Selesai terbaru
+            } else {
+                $data->orderBy('created_at', 'desc'); // Pending order terbaru
+            }
 
             return DataTables::of($data)
                 ->addIndexColumn()
                 ->editColumn('logistic_order_no', function($row) {
                     return 'LO-' . str_pad($row->id, 4, '0', STR_PAD_LEFT);
                 })
+                ->addColumn('do_no', function($row) {
+                    return $row->note->delivery_order_no ?? '-';
+                })
                 ->addColumn('distributor_name', function($row) { return $row->distributor->name ?? '-'; })
                 ->addColumn('customer_name', function($row) { return $row->customer->name ?? '-'; })
                 ->addColumn('ship_to', function($row) { return $row->customerShipTo->ship_to_name ?? '-'; })
-                ->addColumn('status_badge', function($row) {
-                    // Logika Status Berdasarkan Notes Sesuai Permintaan
-                    $status = $row->note->status ?? 'Pending Download';
-                    $count = $row->note->download_count ?? 0;
-
-                    if ($status === 'Downloaded') {
-                        return '<span class="badge bg-success">Downloaded | +'.$count.'</span>';
+                ->addColumn('status_badge', function($row) use ($tab) {
+                    if ($tab === 'downloaded') {
+                        $count = $row->note->download_count ?? 0;
+                        return '<span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-1 rounded-pill"><i class="ph-bold ph-check-circle me-1"></i> Downloaded ('.$count.'x)</span>';
                     }
-                    return '<span class="badge bg-warning text-dark">Pending Download</span>';
+                    return '<span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-3 py-1 rounded-pill"><i class="ph-bold ph-clock me-1"></i> Pending</span>';
                 })
-                ->addColumn('action', function($row){
-                    return '<button class="btn btn-sm btn-info text-white btn-detail shadow-sm" data-id="'.$row->id.'"><i class="ph-bold ph-eye"></i> Detail</button>';
+                ->addColumn('action', function($row) use ($tab) {
+                    if ($tab === 'downloaded') {
+                        return '<button class="btn btn-sm btn-info text-white btn-detail shadow-sm px-3 rounded-pill" data-id="'.$row->id.'"><i class="ph-bold ph-eye"></i> Lihat DN</button>';
+                    }
+                    return '<button class="btn btn-sm btn-primary text-white btn-detail shadow-sm px-3 rounded-pill" data-id="'.$row->id.'"><i class="ph-bold ph-eye"></i> Tinjau Order</button>';
                 })
                 ->rawColumns(['status_badge', 'action'])
                 ->make(true);
@@ -199,7 +219,7 @@ class LogisticOrderController extends Controller
 
         if ($fromEmail && $note->status === 'Pending Download') {
             return redirect(URL::signedRoute('public.lo.detail', ['id' => $id]))
-                   ->with('warning', 'Harap periksa detail pesanan terlebih dahulu sebelum mengunduh Dokumen DO untuk pertama kali.');
+                   ->with('warning', 'Harap periksa detail pesanan terlebih dahulu sebelum mengunduh Dokumen DN untuk pertama kali.');
         }
 
         if ($note->status === 'Pending Download' && $note->download_count == 0) {
@@ -208,8 +228,8 @@ class LogisticOrderController extends Controller
             $salesUser = $order->customerShipTo->user ?? null;
             if ($salesUser) {
                 Notification::send($salesUser, new SystemNotification(
-                    "DO Telah Di-download",
-                    "Distributor <b>{$order->distributor->name}</b> telah mencetak DO untuk Customer {$order->customer->name}.",
+                    "DN Telah Di-download",
+                    "Distributor <b>{$order->distributor->name}</b> telah mencetak DN untuk Customer {$order->customer->name}.",
                     "#",
                     "ph-printer",
                     "info"

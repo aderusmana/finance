@@ -1949,3 +1949,91 @@ STYLES MOVED FROM index.blade.php
     margin-right: 10px;
     border-radius: 8px;
 }
+
+/* =========================================
+   LOGISTIC CENTER STYLES (BANNER & TOGGLE CARDS)
+   ========================================= */
+
+/* Banner Card */
+.info-banner {
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+.info-banner-icon {
+    width: 60px;
+    height: 60px;
+    background-color: #ffffff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+    color: #3b82f6;
+    font-size: 2rem;
+}
+
+/* Toggle Cards */
+.toggle-card {
+    cursor: pointer;
+    border-radius: 16px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid #e2e8f0;
+    padding: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background-color: #ffffff;
+    height: 100%;
+}
+.toggle-card.active {
+    background-color: #2563eb;
+    border-color: #2563eb;
+    color: #ffffff !important;
+    box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3);
+    transform: translateY(-2px);
+}
+.toggle-card:not(.active):hover {
+    border-color: #cbd5e1;
+    background-color: #f8fafc;
+}
+
+/* Icon Box di dalam Toggle Card */
+.toggle-card .icon-box {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    transition: all 0.3s ease;
+}
+.toggle-card.active .icon-box {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+}
+.toggle-card:not(.active) .icon-box {
+    background-color: #eff6ff;
+    color: #2563eb;
+}
+
+/* Text inside card */
+.toggle-card .title { font-weight: 800; margin: 0; font-size: 1.1rem; }
+.toggle-card .subtitle { font-size: 0.8rem; margin: 0; opacity: 0.8; }
+.toggle-card:not(.active) .title { color: #1e293b; }
+.toggle-card:not(.active) .subtitle { color: #64748b; }
+
+/* Panel Tabel */
+.table-panel {
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    border: 1px solid #f1f5f9;
+    padding: 1.5rem;
+}
