@@ -20,6 +20,7 @@ use App\Models\Customer\DeliveryOrderDownloadLog;
 use App\Notifications\SystemNotification;
 use Illuminate\Support\Facades\Notification;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
@@ -122,7 +123,12 @@ class LogisticOrderController extends Controller
                 ->addColumn('status_badge', function($row) use ($tab) {
                     if ($tab === 'downloaded') {
                         $count = $row->note->download_count ?? 0;
-                        $updatedAt = $row->updated_at->format('d M Y, H:i');
+                        $lastDownloadAt = DeliveryOrderDownloadLog::where('delivery_order_note_id', $row->note->id)
+                            ->latest('created_at')
+                            ->value('created_at');
+                        $updatedAt = $lastDownloadAt
+                            ? Carbon::parse($lastDownloadAt)->format('d M Y, H:i')
+                            : $row->updated_at->format('d M Y, H:i');
 
                         return '
                             <div class="d-flex flex-column align-items-start">
@@ -306,11 +312,15 @@ class LogisticOrderController extends Controller
         $pdfFileName = $note->delivery_order_no . '.pdf';
         $cacheKey    = 'delivery_order_pdf_' . $order->id;
 
-        $pdfContent = Cache::remember($cacheKey, now()->addHours(24), function () use ($order) {
-            return Pdf::loadView('pdf.delivery_order', compact('order'))
+        $pdfBase64 = Cache::remember($cacheKey, now()->addHours(24), function () use ($order) {
+            $pdf = Pdf::loadView('pdf.delivery_order', compact('order'))
                       ->setPaper('a5', 'landscape')
                       ->output();
+
+            return base64_encode($pdf);
         });
+
+        $pdfContent = base64_decode($pdfBase64);
 
         return response()->streamDownload(function () use ($pdfContent) {
             echo $pdfContent;

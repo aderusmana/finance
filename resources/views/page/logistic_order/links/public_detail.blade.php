@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Detail Logistic Order | LO-{{ str_pad($order->logistic_order_no, 4, '0', STR_PAD_LEFT) }}</title>
+    <title>Detail Logistic Notes | LO-{{ str_pad($order->logistic_order_no, 4, '0', STR_PAD_LEFT) }}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -115,7 +115,7 @@
 
                     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center border-bottom pb-4 mb-4 gap-3">
                         <div>
-                            <h3 class="fw-bold text-dark mb-1">Delivery Order Details</h3>
+                            <h3 class="fw-bold text-dark mb-1">Delivery Notes Details</h3>
                             <p class="text-muted mb-0 fs-6">
                                 <i class="ph-bold ph-receipt text-primary"></i> LO-{{ str_pad($order->logistic_order_no, 4, '0', STR_PAD_LEFT) }}
                                 <span class="mx-2 text-light-subtle">|</span>
@@ -218,10 +218,10 @@
                             <i class="ph-duotone ph-printer text-success opacity-75" style="font-size: 3rem;"></i>
                         </div>
                         <h4 class="fw-bold mb-2 text-dark">Siap memproses pengiriman?</h4>
-                        <p class="text-muted mb-4 mx-auto" style="max-width: 500px;">Unduh dokumen Delivery Order (DO) resmi di bawah ini untuk dibawa oleh pengemudi menuju lokasi Customer.</p>
+                        <p class="text-muted mb-4 mx-auto" style="max-width: 500px;">Unduh dokumen Delivery Notes (DO) resmi di bawah ini untuk dibawa oleh pengemudi menuju lokasi Customer.</p>
 
                         <a href="{{ \Illuminate\Support\Facades\URL::signedRoute('public.lo.download', ['id' => $order->id, 'fromEmail' => 0]) }}" target="_blank" class="btn btn-download btn-lg text-white rounded-pill px-5 py-3 fw-bold shadow">
-                            <i class="ph-bold ph-printer me-2"></i> Print / Preview Dokumen DO
+                            <i class="ph-bold ph-printer me-2"></i> Download DN
                         </a>
                     </div>
 

@@ -229,7 +229,7 @@
         {{-- Gunakan modal-xl untuk memberikan ruang lebar ke samping --}}
         <div class="modal-dialog modal-xl modal-dialog-centered">
             <div class="modal-content border-0 rounded-4 shadow-lg">
-                
+
                 {{-- Header: Blue Gradient Theme --}}
                 <div class="modal-header border-bottom-0 p-4">
                     <div class="d-flex align-items-center gap-3">
@@ -249,7 +249,7 @@
 
                 {{-- Body: Background soft gray --}}
                 <div class="modal-body p-4" style="background-color: #f8fafc;">
-                    
+
                     {{-- SEKSI ATAS: Info Dokumen & Tujuan (Tetap Berdampingan) --}}
                     <div class="row g-3 mb-4">
                         {{-- Kiri: Info Utama --}}
@@ -290,7 +290,7 @@
                                 </div>
                                 <h6 class="fw-bold text-dark mb-1 mt-2 fs-6" id="detail_ship_to_name">-</h6>
                                 <p class="text-secondary mb-3 small text-truncate" id="detail_ship_to_address">-</p>
-                                
+
                                 <div class="d-flex align-items-center gap-4 mt-auto border-top pt-3">
                                     <div>
                                         <span class="text-muted d-block fw-semibold" style="font-size: 0.7rem;">KOTA</span>
@@ -353,7 +353,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 {{-- Footer --}}
                 <div class="modal-footer border-top p-3 bg-white rounded-bottom-4 d-flex justify-content-between">
                     {{-- Tombol Download Admin yang akan muncul di modal detail --}}
@@ -532,7 +532,7 @@
                     }
 
                     // --- RENDER TABEL ITEM BARANG ---
-                    let tbody = $('#detail_items_table'); 
+                    let tbody = $('#detail_items_table');
                     tbody.empty();
                     if(data.items && data.items.length > 0) {
                         $.each(data.items, function(index, item) {
@@ -552,7 +552,7 @@
                     }
 
                     // --- RENDER TABEL RIWAYAT UNDUHAN (TRACKING) ---
-                    let logTbody = $('#detail_download_logs_table'); 
+                    let logTbody = $('#detail_download_logs_table');
                     logTbody.empty();
                     if(data.download_logs && data.download_logs.length > 0) {
                         $.each(data.download_logs, function(index, log) {
@@ -585,13 +585,13 @@
                     if(data.note && data.note.status === 'Downloaded') {
                         $('#admin-download-wrapper').html(`
                             <a href="${data.download_url}" target="_blank" class="btn btn-success px-4 py-2 rounded-pill fw-bold shadow-sm">
-                                <i class="ph-bold ph-printer me-2"></i> Akses / Cetak DN (Admin)
+                                <i class="ph-bold ph-printer me-2"></i> Download DN (Admin)
                             </a>
                         `);
                     } else {
                         $('#admin-download-wrapper').empty();
                     }
-                    
+
                     $('#modalDetail').modal('show');
                 });
             });

@@ -31,10 +31,10 @@
                         <td style="padding: 40px 35px;">
                             @if($type === 'sales')
                                 <p style="margin: 0 0 20px 0; font-size: 16px; line-height: 1.6; color: #1e293b;">Halo <strong>{{ $order->customerShipTo->user->name ?? 'Tim Sales' }}</strong>,</p>
-                                <p style="margin: 0 0 30px 0; font-size: 15px; line-height: 1.6; color: #475569;">Kami informasikan bahwa dokumen pengiriman <b>Delivery Note (DO)</b> berikut <strong>telah diakses dan diunduh</strong> oleh pihak Distributor.</p>
+                                <p style="margin: 0 0 30px 0; font-size: 15px; line-height: 1.6; color: #475569;">Kami informasikan bahwa dokumen pengiriman <b>Delivery Note (DN)</b> berikut <strong>telah didownload</strong> oleh pihak Distributor.</p>
                             @else
                                 <p style="margin: 0 0 20px 0; font-size: 16px; line-height: 1.6; color: #1e293b;">Halo <strong>Tim {{ $order->distributor->name }}</strong>,</p>
-                                <p style="margin: 0 0 30px 0; font-size: 15px; line-height: 1.6; color: #475569;">Kami informasikan bahwa terdapat dokumen pengiriman <b>Delivery Note (DO)</b> baru yang siap untuk diproses. Berikut adalah rincian pesanan tersebut:</p>
+                                <p style="margin: 0 0 30px 0; font-size: 15px; line-height: 1.6; color: #475569;">Kami informasikan bahwa terdapat dokumen pengiriman <b>Delivery Note (DN)</b> baru yang siap untuk diproses. Berikut adalah rincian pesanan tersebut:</p>
                             @endif
 
                             <table width="100%" border="0" cellpadding="0" cellspacing="0" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 35px;">

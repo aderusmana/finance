@@ -28,7 +28,7 @@ class LogisticOrderDistributorMail extends Mailable
         $formattedLo = 'LO-' . str_pad($this->order->logistic_order_no, 4, '0', STR_PAD_LEFT);
 
         if ($this->type === 'sales') {
-            return $this->subject('Notifikasi Akses DO: ' . $formattedLo)
+            return $this->subject('Notifikasi Download Delivery Notes: ' . $formattedLo)
                         ->view('mail.distributor_order');
         }
 
