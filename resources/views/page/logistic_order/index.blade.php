@@ -197,7 +197,7 @@
                                         <table class="table table-bordered table-hover align-middle mb-0" id="itemTable">
                                             <thead class="table-light position-sticky top-0 shadow-sm" style="z-index: 10;">
                                                 <tr>
-                                                    <th width="20%">Item Code</th>
+                                                    <th width="20%">Item Code <span class="text-danger">*</span></th>
                                                     <th width="35%">Item Name <span class="text-danger">*</span></th>
                                                     <th width="15%">Qty <span class="text-danger">*</span></th>
                                                     <th width="20%">Amount</th>
@@ -636,7 +636,7 @@
             let initialTotal = (qty > 0) ? formatRupiah(qty * activeLogisticFee) : 'Rp 0';
             let row = `
                 <tr>
-                    <td><input type="text" name="items[${index}][item_code]" class="form-control form-control-sm" value="${code}" placeholder="Kode Item"></td>
+                    <td><input type="text" name="items[${index}][item_code]" class="form-control form-control-sm" value="${code}" placeholder="Kode Item" required></td>
                     <td><input type="text" name="items[${index}][item_name]" class="form-control form-control-sm" value="${name}" placeholder="Nama Item" required></td>
                     <td><input type="number" name="items[${index}][qty]" class="form-control form-control-sm qty-input" value="${qty}" placeholder="0" min="0" oninput="calculateRow(this)"></td>
                     <td><input type="text" name="items[${index}][amount]" class="form-control form-control-sm bg-light amount-display fw-bold text-primary" readonly value="${initialTotal}"></td>
@@ -645,6 +645,7 @@
             `;
             $('#itemTable tbody').append(row);
         }
+        
         function removeRow(btn) {
             $(btn).closest('tr').remove();
             if($('#itemTable tbody tr').length === 0) $('#itemTable tbody').append('<tr id="emptyRow"><td colspan="5" class="text-center text-muted py-5">Tabel kosong.</td></tr>');

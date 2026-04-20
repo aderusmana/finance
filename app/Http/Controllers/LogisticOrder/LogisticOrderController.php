@@ -169,6 +169,11 @@ class LogisticOrderController extends Controller
             'customer_ship_to_id' => 'required',
             'delivery_date'       => 'required|date',
             'items'               => 'required|array|min:1',
+            'items.*.item_code'   => 'required|string',
+            'items.*.item_name'   => 'required|string',
+        ], [
+            'items.*.item_code.required' => 'Semua kode item wajib diisi.',
+            'items.*.item_name.required' => 'Semua nama item wajib diisi.'
         ]);
 
         try {
