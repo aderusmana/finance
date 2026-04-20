@@ -513,7 +513,7 @@
                     if(data.note) {
                         $('#detail_do_no').text(data.note.delivery_order_no || '-');
                         let statusHtml = data.note.status === 'Downloaded'
-                            ? `<span class="badge bg-success text-white border border-success px-3 py-1 rounded-pill fw-bold shadow-sm"><i class="ph-bold ph-check-circle me-1"></i> Diakses</span>`
+                            ? `<span class="badge bg-success text-white border border-success px-3 py-1 rounded-pill fw-bold shadow-sm"><i class="ph-bold ph-check-circle me-1"></i> Download</span>`
                             : `<span class="badge bg-warning text-dark border border-warning px-3 py-1 rounded-pill fw-bold shadow-sm"><i class="ph-bold ph-clock me-1"></i> Pending</span>`;
                         $('#detail_status').html(statusHtml);
                     }
@@ -578,7 +578,7 @@
                             `);
                         });
                     } else {
-                        logTbody.append('<tr><td colspan="2" class="text-center text-muted py-4 small italic">Belum ada aktivitas akses dokumen.</td></tr>');
+                        logTbody.append('<tr><td colspan="2" class="text-center text-muted py-4 small italic">Belum ada aktivitas download dokumen.</td></tr>');
                     }
 
                     let downloadUrl = "{{ url('/public/lo/download') }}/" + data.id + "/0"; // Sesuaikan base URL nya

@@ -29,8 +29,13 @@
 
                     <tr>
                         <td style="padding: 40px 35px;">
-                            <p style="margin: 0 0 20px 0; font-size: 16px; line-height: 1.6; color: #1e293b;">Halo <strong>Tim {{ $order->distributor->name }}</strong>,</p>
-                            <p style="margin: 0 0 30px 0; font-size: 15px; line-height: 1.6; color: #475569;">Kami informasikan bahwa terdapat dokumen pengiriman <b>Delivery Note (DO)</b> baru yang siap untuk diproses. Berikut adalah rincian pesanan tersebut:</p>
+                            @if($type === 'sales')
+                                <p style="margin: 0 0 20px 0; font-size: 16px; line-height: 1.6; color: #1e293b;">Halo <strong>{{ $order->customerShipTo->user->name ?? 'Tim Sales' }}</strong>,</p>
+                                <p style="margin: 0 0 30px 0; font-size: 15px; line-height: 1.6; color: #475569;">Kami informasikan bahwa dokumen pengiriman <b>Delivery Note (DO)</b> berikut <strong>telah diakses dan diunduh</strong> oleh pihak Distributor.</p>
+                            @else
+                                <p style="margin: 0 0 20px 0; font-size: 16px; line-height: 1.6; color: #1e293b;">Halo <strong>Tim {{ $order->distributor->name }}</strong>,</p>
+                                <p style="margin: 0 0 30px 0; font-size: 15px; line-height: 1.6; color: #475569;">Kami informasikan bahwa terdapat dokumen pengiriman <b>Delivery Note (DO)</b> baru yang siap untuk diproses. Berikut adalah rincian pesanan tersebut:</p>
+                            @endif
 
                             <table width="100%" border="0" cellpadding="0" cellspacing="0" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 35px;">
                                 <tr>
@@ -61,21 +66,29 @@
                                 </tr>
                             </table>
 
-                            <p style="margin: 0 0 25px 0; font-size: 15px; text-align: center; color: #475569;">Silakan klik tombol di bawah ini untuk melihat detail lengkap:</p>
-
-                            <table width="100%" border="0" cellpadding="0" cellspacing="0" style="text-align: center;">
-                                <tr>
-                                    <td style="padding-bottom: 15px;">
-                                        <a href="{{ $urlDetail }}" style="display: inline-block; background-color: #a68831; color: #ffffff; text-decoration: none; padding: 14px 30px; border-radius: 6px; font-weight: 600; font-size: 15px; width: 80%; max-width: 300px; box-shadow: 0 4px 10px rgba(166, 136, 49, 0.3);">
-                                            &#x1F4CB; Tinjau Detail Pesanan
-                                        </a>
-                                    </td>
-                                </tr>
-                            </table>
-
-                            <p style="margin: 25px 0 0 0; font-size: 12px; text-align: center; color: #94a3b8; font-style: italic;">
-                                * Catatan: Tombol unduh dokumen hanya akan tersedia setelah Anda meninjau detail pesanan di portal.
-                            </p>
+                            @if($type === 'sales')
+                                <p style="margin: 0 0 25px 0; font-size: 15px; text-align: center; color: #475569;">Silakan masuk ke sistem untuk memantau status pesanan lebih lanjut:</p>
+                                <table width="100%" border="0" cellpadding="0" cellspacing="0" style="text-align: center;">
+                                    <tr>
+                                        <td style="padding-bottom: 15px;">
+                                            <a href="{{ route('login') }}" style="display: inline-block; background-color: #1e293b; color: #ffffff; text-decoration: none; padding: 14px 30px; border-radius: 6px; font-weight: 600; font-size: 15px; width: 80%; max-width: 300px; box-shadow: 0 4px 10px rgba(30, 41, 59, 0.3);">
+                                                &#x1F517; Buka Sistem / See More
+                                            </a>
+                                        </td>
+                                    </tr>
+                                </table>
+                            @else
+                                <p style="margin: 0 0 25px 0; font-size: 15px; text-align: center; color: #475569;">Silakan klik tombol di bawah ini untuk melihat detail lengkap:</p>
+                                <table width="100%" border="0" cellpadding="0" cellspacing="0" style="text-align: center;">
+                                    <tr>
+                                        <td style="padding-bottom: 15px;">
+                                            <a href="{{ $urlDetail }}" style="display: inline-block; background-color: #a68831; color: #ffffff; text-decoration: none; padding: 14px 30px; border-radius: 6px; font-weight: 600; font-size: 15px; width: 80%; max-width: 300px; box-shadow: 0 4px 10px rgba(166, 136, 49, 0.3);">
+                                                &#x1F4CB; Tinjau Detail Pesanan
+                                            </a>
+                                        </td>
+                                    </tr>
+                                </table>
+                            @endif
                         </td>
                     </tr>
 

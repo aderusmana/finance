@@ -13,11 +13,12 @@ class LogisticOrderDistributorMail extends Mailable
     public $order;
     public $urlDetail;
     public $urlDownload;
+    public $type;
 
-    public function __construct($order)
+    public function __construct($order, $type = 'distributor')
     {
         $this->order = $order;
-        // Generate Signed URL agar aman
+        $this->type = $type;
         $this->urlDetail = URL::signedRoute('public.lo.detail', ['id' => $order->id]);
         $this->urlDownload = URL::signedRoute('public.lo.download', ['id' => $order->id, 'fromEmail' => true]);
     }
@@ -25,6 +26,11 @@ class LogisticOrderDistributorMail extends Mailable
     public function build()
     {
         $formattedLo = 'LO-' . str_pad($this->order->logistic_order_no, 4, '0', STR_PAD_LEFT);
+
+        if ($this->type === 'sales') {
+            return $this->subject('Notifikasi Akses DO: ' . $formattedLo)
+                        ->view('mail.distributor_order');
+        }
 
         return $this->subject('Pemberitahuan Logistic Order Baru: ' . $formattedLo)
                     ->view('mail.distributor_order');

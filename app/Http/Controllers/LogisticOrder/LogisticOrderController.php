@@ -10,17 +10,19 @@ use App\Models\Customer\CustomerShipTo;
 use App\Models\Customer\DistributorCustomer;
 use App\Models\Customer\LogisticOrder;
 use App\Models\Customer\LogisticOrderItem;
-use App\Models\Customer\DeliveryOrderNote; // Tambahkan ini
+use App\Models\Customer\DeliveryOrderNote;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
-use App\Mail\LogisticOrderDistributorMail; // Mailer baru
+use App\Mail\LogisticOrderDistributorMail;
 use App\Models\Customer\DeliveryOrderDownloadLog;
-use App\Notifications\SystemNotification; // Notifikasi ke Sales
+use App\Notifications\SystemNotification;
 use Illuminate\Support\Facades\Notification;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 class LogisticOrderController extends Controller
 {
@@ -93,7 +95,7 @@ class LogisticOrderController extends Controller
                 ->editColumn('logistic_order_no', function($row) {
                     $loNo = 'LO-' . str_pad($row->id, 4, '0', STR_PAD_LEFT);
                     $createdAt = $row->created_at->format('d M Y, H:i');
-                    
+
                     // Format HTML Cantik untuk Kolom Order Info (Pending)
                     return '
                         <div class="d-flex flex-column gap-1">
@@ -105,7 +107,7 @@ class LogisticOrderController extends Controller
                 ->addColumn('do_no', function($row) {
                     $doNo = $row->note->delivery_order_no ?? '-';
                     $createdAt = $row->created_at->format('d M Y, H:i');
-                    
+
                     // Format HTML Cantik untuk Kolom DN Info (Hanya Dibuat)
                     return '
                         <div class="d-flex flex-column gap-1">
@@ -120,12 +122,12 @@ class LogisticOrderController extends Controller
                 ->addColumn('status_badge', function($row) use ($tab) {
                     if ($tab === 'downloaded') {
                         $count = $row->note->download_count ?? 0;
-                        $updatedAt = $row->updated_at->format('d M Y, H:i'); 
-                        
+                        $updatedAt = $row->updated_at->format('d M Y, H:i');
+
                         return '
                             <div class="d-flex flex-column align-items-start">
                                 <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-1 rounded-pill">
-                                    <i class="ph-bold ph-check-circle me-1"></i> Diakses ('.$count.'x)
+                                    <i class="ph-bold ph-check-circle me-1"></i> Download ('.$count.'x)
                                 </span>
                                 <span class="text-secondary" style="font-size: 0.72rem; margin-top: 4px; padding-left: 4px;">
                                     <i class="ph-fill ph-eye text-success opacity-75"></i> Terakhir: ' . $updatedAt . '
@@ -138,11 +140,11 @@ class LogisticOrderController extends Controller
                 ->addColumn('action', function($row) use ($tab) {
                     if ($tab === 'downloaded') {
                         $btnDetail = '<button class="btn btn-sm btn-info text-white btn-detail shadow-sm px-3 rounded-pill w-100" data-id="'.$row->id.'"><i class="ph-bold ph-eye"></i> Lihat DN</button>';
-                        $btnDownload = '<a href="'.URL::signedRoute('public.lo.download', ['id' => $row->id, 'fromEmail' => 0]).'" target="_blank" class="btn btn-sm btn-success text-white shadow-sm px-3 rounded-pill w-100"><i class="ph-bold ph-printer"></i> Akses DN</a>';
-                        
+                        $btnDownload = '<a href="'.URL::signedRoute('public.lo.download', ['id' => $row->id, 'fromEmail' => 0]).'" target="_blank" class="btn btn-sm btn-success text-white shadow-sm px-3 rounded-pill w-100"><i class="ph-bold ph-printer"></i> Download DN</a>';
+
                         return '<div class="d-flex flex-column gap-2 align-items-center">'. $btnDetail . $btnDownload .'</div>';
                     }
-                    
+
                     return '<button class="btn btn-sm btn-primary text-white btn-detail shadow-sm px-3 rounded-pill" data-id="'.$row->id.'"><i class="ph-bold ph-eye"></i> Tinjau Order</button>';
                 })
                 ->rawColumns(['logistic_order_no', 'do_no', 'status_badge', 'action'])
@@ -226,7 +228,7 @@ class LogisticOrderController extends Controller
     public function show($id)
     {
         $order = LogisticOrder::with(['distributor', 'customer', 'customerShipTo.user', 'items', 'note'])->findOrFail($id);
-        
+
         $downloadLogs = [];
         if ($order->note) {
             $downloadLogs = DeliveryOrderDownloadLog::where('delivery_order_note_id', $order->note->id)
@@ -273,12 +275,19 @@ class LogisticOrderController extends Controller
             $salesUser = $order->customerShipTo->user ?? null;
             if ($salesUser) {
                 Notification::send($salesUser, new SystemNotification(
-                    "Dokumen DN Telah Diakses",
-                    "Distributor <b>{$order->distributor->name}</b> telah mengakses/mencetak DN untuk Customer {$order->customer->name}.",
+                    "Dokumen DN Telah Di Download",
+                    "Distributor <b>{$order->distributor->name}</b> telah mencetak DN untuk Customer {$order->customer->name}.",
                     "#",
                     "ph-printer",
                     "info"
                 ));
+                if (!empty($salesUser->email)) {
+                    try {
+                        Mail::to($salesUser->email)->queue(new LogisticOrderDistributorMail($order, 'sales'));
+                    } catch (\Exception $e) {
+                        Log::error('Gagal kirim email ke Sales: ' . $e->getMessage());
+                    }
+                }
             }
         }
 
@@ -293,11 +302,20 @@ class LogisticOrderController extends Controller
             'delivery_order_note_id' => $note->id,
             'downloaded_by' => $downloadedBy
         ]);
-        // ----------------------------------------------
 
-        $pdf = Pdf::loadView('pdf.delivery_order', compact('order'))
-                  ->setPaper('a5', 'landscape');
+        $pdfFileName = $note->delivery_order_no . '.pdf';
+        $cacheKey    = 'delivery_order_pdf_' . $order->id;
 
-        return $pdf->stream($note->delivery_order_no . '.pdf');
+        $pdfContent = Cache::remember($cacheKey, now()->addHours(24), function () use ($order) {
+            return Pdf::loadView('pdf.delivery_order', compact('order'))
+                      ->setPaper('a5', 'landscape')
+                      ->output();
+        });
+
+        return response()->streamDownload(function () use ($pdfContent) {
+            echo $pdfContent;
+        }, $pdfFileName, [
+            'Content-Type' => 'application/pdf',
+        ]);
     }
 }

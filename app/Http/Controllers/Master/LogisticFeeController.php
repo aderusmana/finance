@@ -454,14 +454,13 @@ class LogisticFeeController extends Controller
 
     public function systemProcessApproval(Request $request, $id)
     {
-        // --- TAMBAHAN VALIDASI BACKEND ---
+        // --- VALIDASI BACKEND ---
         $request->validate([
             'action' => 'required|in:approve,reject',
             'notes'  => 'required_if:action,reject|nullable|string'
         ], [
             'notes.required_if' => 'Catatan / Alasan wajib diisi apabila Anda menolak pengajuan.'
         ]);
-        // ---------------------------------
         
         $log = ApprovalLog::findOrFail($id);
         $action = $request->action; // 'approve' atau 'reject'
@@ -496,6 +495,41 @@ class LogisticFeeController extends Controller
                         'action_by' => Auth::user()->nik,
                         'notes'     => $request->notes
                     ]);
+
+                    // =========================================================
+                    // TAMBAHAN: KIRIM EMAIL FINAL APPROVAL KE SEMUA PIHAK
+                    // =========================================================
+                    $requesterEmail = User::where('nik', $logisticData->created_by)->value('email');
+                    
+                    $approverEmails = ApprovalLog::where('related_id', $logisticData->id)
+                                        ->where('category', 'Customer')
+                                        ->where('sub_category', 'Logistic Fee')
+                                        ->get()
+                                        ->map(function($item) {
+                                            return User::where('nik', $item->approver_nik)->value('email');
+                                        })
+                                        ->filter()
+                                        ->toArray();
+
+                    $allRecipients = array_filter(array_unique(array_merge([$requesterEmail], $approverEmails)));
+
+                    if (!empty($allRecipients)) {
+                        try {
+                            Mail::to($allRecipients)->queue(new LogisticFeeMail(
+                                'completed',
+                                $logisticData,
+                                [
+                                    'oldFee' => $oldFee,
+                                    'newFee' => $newFee,
+                                    'notes' => $request->notes
+                                ]
+                            ));
+                        } catch (\Exception $e) {
+                            Log::error('Gagal kirim email Final Approval (System): ' . $e->getMessage());
+                        }
+                    }
+                    // =========================================================
+
                     $message = 'Final Approval Berhasil! Harga telah diperbarui.';
                 }
             } elseif ($action === 'reject') {
@@ -515,6 +549,27 @@ class LogisticFeeController extends Controller
                     'action_by' => Auth::user()->nik,
                     'notes'     => $request->notes
                 ]);
+
+                // =========================================================
+                // TAMBAHAN: KIRIM EMAIL REJECTED KE REQUESTER
+                // =========================================================
+                $requesterEmail = User::where('nik', $logisticData->created_by)->value('email');
+
+                if (!empty($requesterEmail)) {
+                    try {
+                        Mail::to($requesterEmail)->queue(new LogisticFeeMail(
+                            'rejected',
+                            $logisticData,
+                            [
+                                'notes' => $request->notes
+                            ]
+                        ));
+                    } catch (\Exception $e) {
+                        Log::error('Gagal kirim email Rejected (System): ' . $e->getMessage());
+                    }
+                }
+                // =========================================================
+
                 $message = 'Pengajuan berhasil ditolak.';
             }
 
