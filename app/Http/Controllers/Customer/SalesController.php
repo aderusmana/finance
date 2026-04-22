@@ -87,7 +87,8 @@ class SalesController extends Controller
         }
 
         // eager-load position so the view can show user position without extra queries
-        $users = User::role('staff-sales')->with('position')->get();
+        // include both 'sales-ka' and 'sales' roles
+        $users = User::role(['sales-ka', 'sales'])->with('position')->get();
         $accountGroups = AccountGroup::all();
         $branches = Branch::all();
         $regions = Regions::all();

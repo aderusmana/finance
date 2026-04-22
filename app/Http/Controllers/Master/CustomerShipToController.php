@@ -35,7 +35,7 @@ class CustomerShipToController extends Controller
         }
 
         $customers = Customer::all();
-        $users = User::role('staff-sales')->orderBy('name', 'asc')->get();
+        $users = User::role('sales-ka')->orderBy('name', 'asc')->get();
 
         return view('page.master.ship-to.index', compact('customers', 'users'));
     }
