@@ -7,7 +7,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="icon" href="{{ url('assets/images/logo/logors.png') }}">
 
-    <title>{{ 'Portal Finance & Admin' }} - @yield('title')</title>
+    <title>{{ 'Customer Portal' }} - @yield('title')</title>
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
@@ -20,11 +20,11 @@
     <link href="https://fonts.googleapis.com" rel="preconnect">
     <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
 
-    <!-- iconoir icon css  -->
+    {{-- <!-- iconoir icon css  -->
     <link href="{{ asset('assets') }}/vendor/ionio-icon/css/iconoir-1.css" rel="stylesheet">
 
     <!-- tabler icons-->
-    <link href="{{ asset('assets') }}/vendor/tabler-icons/tabler-icons-1.css" rel="stylesheet" type="text/css">
+    <link href="{{ asset('assets') }}/vendor/tabler-icons/tabler-icons-1.css" rel="stylesheet" type="text/css"> --}}
 
     <!-- Bootstrap css-->
     <link href="{{ asset('assets') }}/vendor/bootstrap/bootstrap.min-1.css" rel="stylesheet" type="text/css">
