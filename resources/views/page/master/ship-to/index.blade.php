@@ -218,10 +218,10 @@
                     { targets: 0, width: "5%" },   // No
                     { targets: 1, width: "12%" },  // Customer Code (Dikecilkan)
                     { targets: 2, width: "12%" },  // Kode Ship To (Dikecilkan)
-                    { targets: 3, width: "36%" },  // Nama Ship To (Dibuat Paling Panjang)
+                    { targets: 3, width: "26%" },  // Nama Ship To (Dibuat Paling Panjang)
                     { targets: 4, width: "12%" },  // Kota
                     { targets: 5, width: "15%" },  // Sales Name
-                    { targets: 6, width: "8%", className: "text-center" }   // Action
+                    { targets: 6, width: "18%", className: "text-center" }   // Action
                 ],
                 order: [[1, 'asc']] // Urutkan berdasarkan Customer secara default
             });

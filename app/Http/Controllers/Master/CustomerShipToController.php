@@ -25,9 +25,11 @@ class CustomerShipToController extends Controller
                     return $row->user->name ?? '-';
                 })
                 ->addColumn('action', function($row){
-                    $btn = '<button class="btn btn-sm btn-info text-white btn-detail me-1" data-id="'.$row->id.'"><i class="ph-bold ph-eye"></i> Detail</button>';
-                    $btn .= '<button class="btn btn-sm btn-primary btn-edit me-1" data-id="'.$row->id.'"><i class="ph-bold ph-pencil"></i> Edit</button>';
+                    $btn = '<div class="d-flex flex-row gap-2 flex-wrap">';
+                    $btn .= '<button class="btn btn-sm btn-info text-white btn-detail" data-id="'.$row->id.'"><i class="ph-bold ph-eye"></i> Detail</button>';
+                    $btn .= '<button class="btn btn-sm btn-primary btn-edit" data-id="'.$row->id.'"><i class="ph-bold ph-pencil"></i> Edit</button>';
                     $btn .= '<button class="btn btn-sm btn-danger btn-delete" data-id="'.$row->id.'"><i class="ph-bold ph-trash"></i> Delete</button>';
+                    $btn .= '</div>';
                     return $btn;
                 })
                 ->rawColumns(['action'])

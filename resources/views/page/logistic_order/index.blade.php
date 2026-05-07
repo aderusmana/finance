@@ -147,7 +147,7 @@
             <div class="toggle-card active" id="btn-tab-pending" onclick="switchTab('pending')">
                 <div class="icon-box"><i class="ph-bold ph-file-text"></i></div>
                 <div>
-                    <h6 class="title">Logistic Orders</h6>
+                    <h6 class="title text-black">Logistic Orders</h6>
                     <p class="subtitle">Pesanan baru yang menunggu proses cetak DN.</p>
                 </div>
             </div>
@@ -158,7 +158,7 @@
             <div class="toggle-card" id="btn-tab-downloaded" onclick="switchTab('downloaded')">
                 <div class="icon-box"><i class="ph-bold ph-check-circle"></i></div>
                 <div>
-                    <h6 class="title">Delivery Notes</h6>
+                    <h6 class="title text-black">Delivery Notes</h6>
                     <p class="subtitle">Arsip Surat Jalan yang telah diunduh (Selesai).</p>
                 </div>
             </div>
