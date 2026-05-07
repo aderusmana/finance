@@ -114,18 +114,18 @@
     <div class="row m-1">
         <div class="col-12 ">
             <h4 class="main-title">Logistic Center</h4>
-            <ul class="app-line-breadcrumbs mb-3">
+            {{-- <ul class="app-line-breadcrumbs mb-3">
                 <li><a class="f-s-14 f-w-500" href="#"><i class="ph-duotone ph ph-shopping-cart f-s-16"></i>
                         Transaction</a></li>
                 <li class="active"><a class="f-s-14 f-w-500" href="#">Logistic Center</a></li>
-            </ul>
+            </ul> --}}
         </div>
     </div>
 
     {{-- 1. INFO BANNER --}}
     <div class="row m-1">
-        <div class="col-12">
-            <div class="info-banner">
+        <div class="col-12 ">
+            <div class="info-banner bg-success bg-opacity-10 border border-success border-opacity-25 rounded-3 p-3 mb-4">
                 <div class="info-banner-icon">
                     <i class="ph-bold ph-printer"></i>
                 </div>
