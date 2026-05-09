@@ -156,11 +156,11 @@
             </td>
             <td width="56%" style="vertical-align: middle;">
                 <h1 class="company-name">PT Sinar Meadow International Indonesia</h1>
-                <p class="company-address">Jl. Pulo Ayang I No.2-3, Kawasan Industri Pulogadung<br>Jatinegara, Jakarta
-                    Timur, 13930 - Indonesia</p>
+                <p class="company-address">Jl. Pulo Ayang I No.6, Kawasan Industri Pulogadung<br>Jatinegara, Jakarta
+                    Timur, 13260 - Indonesia</p>
             </td>
             <td width="35%" style="vertical-align: middle;">
-                <h2 class="document-title">Delivery Note</h2>
+                <h2 class="document-title">Delivery Notes</h2>
             </td>
         </tr>
     </table>
