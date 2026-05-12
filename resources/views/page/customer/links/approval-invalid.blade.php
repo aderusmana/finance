@@ -25,8 +25,8 @@
         </div>
         <h1 class="error-title">Link No Longer Valid</h1>
         <p class="error-desc">
-            Maaf, tautan approval ini tidak valid atau sudah kadaluarsa.
-            Hal ini mungkin terjadi karena permintaan ini sudah diproses (disetujui/ditolak) sebelumnya.
+            Sorry, this approval link is no longer valid or has expired.
+            This may have happened because the request has already been processed (approved/rejected) previously.
         </p>
         <div>
             <button onclick="window.close()" class="btn-home">

@@ -14,15 +14,15 @@
     <!-- Breadcrumb -->
     <div class="row m-1">
         <div class="col-12 ">
-            <h4 class="main-title">Approval Report</h4>
+            <h4 class="main-title">Requisition Report</h4>
             <ul class="app-line-breadcrumbs mb-3">
                 <li>
                     <a class="f-s-14 f-w-500" href="#">
-                        <i class="ph-duotone ph ph-address-book f-s-16"></i> Requisition Slip form
+                        <i class="ph-duotone ph ph-address-book f-s-16"></i> Customer Data
                     </a>
                 </li>
                 <li class="active">
-                    <a class="f-s-14 f-w-500" href="#">Approval Report</a>
+                    <a class="f-s-14 f-w-500" href="#">Requisition Report</a>
                 </li>
             </ul>
         </div>
@@ -43,7 +43,6 @@
                             <option value="last_30_days">Last 30 days</option>
                             <option value="custom">Custom range</option>
                         </select>
-                        <!-- Hidden inputs keep selected custom dates persistent outside the Select2 dropdown -->
                         <input type="hidden" id="startDate" name="startDate" />
                         <input type="hidden" id="endDate" name="endDate" />
 
@@ -698,7 +697,7 @@
                             return `
                                 <div class="action-btn-group">
                                     <button type="button" class="status-badge-lg btn-info btn-view-requisition" data-id="${row.id}" title="Show Detail">
-                                        <i class="ph-duotone ph-eye"></i>
+                                        <i class="ph-duotone ph-eye"></i> View Details
                                     </button>
                                 </div>
                             `;

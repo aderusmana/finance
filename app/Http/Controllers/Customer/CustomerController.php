@@ -147,7 +147,7 @@ class CustomerController extends Controller
                         ->latest('updated_at')
                         ->first();
 
-                    $rowData['reject_note'] = $lastRejectLog ? $lastRejectLog->notes : 'Tidak ada catatan rejection.';
+                    $rowData['reject_note'] = $lastRejectLog ? $lastRejectLog->notes : 'No rejection notes available.';
 
                     $rowData['tanggal_npwp']  = $row->tanggal_npwp ? Carbon::parse($row->tanggal_npwp)->format('Y-m-d') : null;
                     $rowData['tanggal_nppkp'] = $row->tanggal_nppkp ? Carbon::parse($row->tanggal_nppkp)->format('Y-m-d') : null;
@@ -163,7 +163,6 @@ class CustomerController extends Controller
                     $tglNpwp = $row->tanggal_npwp ? Carbon::parse($row->tanggal_npwp)->format('Y-m-d') : '';
                     $tglNppkp = $row->tanggal_nppkp ? Carbon::parse($row->tanggal_nppkp)->format('Y-m-d') : '';
 
-                    // Ensure payment / faktur fields are strings (DB may store JSON/array in longtext)
                     $paymentDaysVal = $row->payment_days ?? '';
                     $paymentDateVal = $row->payment_date ?? '';
                     $fakturDaysVal = $row->faktur_days ?? '';
@@ -239,51 +238,82 @@ class CustomerController extends Controller
                     $dataAttrs .= ' data-faktur_days="' . e($fakturDaysVal) . '"';
                     $dataAttrs .= ' data-faktur_date="' . e($fakturDateVal) . '"';
 
-                    $btn = '<div class="d-flex gap-2">';
+                    $btnStyle = 'style="font-size: 14px; padding: 4px 10px; min-height: 22px;"';
+                    $btn = '<div class="d-flex flex-column gap-1 justify-content-center align-items-center" style="min-width: 75px;">';
 
                     if ($row->status_approval === 'Rejected' && $user->can('update customer')) {
-                        $btn .= '<button type="button" class="btn btn-warning btn-recall-customer shadow-sm"
+                        $btn .= '<button type="button" class="btn btn-warning btn-xs rounded-pill fw-bold btn-recall-customer shadow-sm w-100"
+                                ' . $btnStyle . '
                                 data-json="' . $jsonRow . '"
-                                data-bs-toggle="tooltip"
-                                title="Recall / Revisi Pengajuan">
-                                <i class="ph-bold ph-arrow-u-up-left text-white"></i> Recall
-                             </button>';
+                                data-bs-toggle="tooltip" title="Recall">
+                                <i class="ph-bold ph-arrow-u-up-left me-1"></i> Recall
+                            </button>';
                     }
 
-                    $btn .= '<button type="button" class="btn btn-info btn-show-customer" ' . $dataAttrs . ' title="Lihat Detail">
-                            <i class="fa-solid fa-eye text-white"></i> View
+                    $btn .= '<button type="button" class="btn btn-primary btn-xs rounded-pill fw-bold btn-show-customer shadow-sm w-100" 
+                            ' . $btnStyle . '
+                            ' . $dataAttrs . ' title="View Detail">
+                            <i class="ph-bold ph-eye me-1"></i> View
                         </button>';
 
                     if ($row->status_approval === 'Pending' || $row->status_approval === 'Rejected' && $user->can('delete customer')) {
-                        $btn .= '<form action="' . route('customers.destroy', $row->id) . '" method="POST" class="delete-form delete-customer-btn" style="display:inline;">
+                        $btn .= '<form action="' . route('customers.destroy', $row->id) . '" method="POST" class="delete-form delete-customer-btn m-0 w-100">
                                 ' . csrf_field() . method_field('DELETE') . '
-                                <button type="submit" class="btn btn-danger" title="Hapus Data">
-                                    <i class="fas fa-trash-alt text-white"></i> Delete
+                                <button type="submit" class="btn btn-danger btn-xs rounded-pill fw-bold shadow-sm w-100" ' . $btnStyle . '>
+                                    <i class="ph-bold ph-trash me-1"></i> Delete
                                 </button>
                             </form>';
                     } else {
-                        $btn .= '<button type="button" class="btn btn-secondary" title="Tidak bisa dihapus (Approval sedang berjalan/selesai)" onclick="Swal.fire(\'Action Locked\', \'Data tidak dapat dihapus karena proses approval sudah berjalan (Status: ' . $row->status_approval . ').\', \'info\')">
-                                <i class="fas fa-lock text-white"></i> Lock
-                             </button>';
+                        $btn .= '<button type="button" class="btn btn-dark btn-xs rounded-pill fw-bold shadow-sm w-100" 
+                                ' . $btnStyle . ' 
+                                onclick="Swal.fire(\'Locked\', \'Approval is in progress.\', \'info\')">
+                                <i class="ph-bold ph-lock-key me-1"></i> Locked
+                            </button>';
                     }
 
                     $btn .= '</div>';
                     return $btn;
                 })
-                ->addColumn('credit_limit', function ($row) {
-                    return '<div class="badge status-badge-lg bg-warning">
-                            IDR ' . number_format($row->credit_limit, 0, ',', '.') . '
-                        </div>';
+                ->editColumn('code', function ($row) {
+                    if (empty($row->code)) {
+                        return '<span class="badge bg-light text-muted border fst-italic"><i class="ph-bold ph-spinner-gap ph-spin me-1"></i> Generating</span>';
+                    }
+                    return '<div class="bg-primary bg-opacity-10 text-primary fw-bold rounded px-2 py-1 border border-primary border-opacity-25 d-inline-block" style="font-family: monospace; letter-spacing: 0.5px; font-size: 13px;">
+                                <i class="ph-bold ph-hash me-1"></i>' . e($row->code) . '
+                            </div>';
+                })
+                ->editColumn('name', function ($row) {
+                    $words = explode(' ', trim($row->name));
+                    $initials = strtoupper(substr($words[0] ?? 'C', 0, 1) . substr($words[1] ?? '', 0, 1));
+                    $pic = $row->pic ?? 'No PIC';
+                    
+                    return '<div class="d-flex align-items-center">
+                                <div class="bg-gradient bg-primary text-white d-flex justify-content-center align-items-center rounded-circle me-3 shadow-sm flex-shrink-0" style="width: 38px; height: 38px; font-weight: 600; font-size: 14px;">
+                                    ' . $initials . '
+                                </div>
+                                <div class="d-flex flex-column text-start">
+                                    <span class="fw-bold text-dark" style="line-height: 1.2; font-size: 14px;">' . e($row->name) . '</span>
+                                    <span class="text-muted mt-1" style="font-size: 11px;"><i class="ph-fill ph-user-circle me-1"></i>PIC: ' . e($pic) . '</span>
+                                </div>
+                            </div>';
+                })
+                ->editColumn('credit_limit', function ($row) {
+                    $amount = number_format($row->credit_limit, 0, ',', '.');
+                    return '<div class="d-flex flex-column text-start">
+                                <span class="fw-bold text-success" style="font-size: 14px;">
+                                    <span class="text-muted fw-normal me-1" style="font-size: 10px;">IDR</span>' . $amount . '
+                                </span>
+                            </div>';
                 })
                 ->editColumn('financial_info', function ($row) {
                     if ($row->bank_garansi === 'YA') {
-                        $bgBadge = '<span class="srs-badge"><i class="fas fa-file-contract me-1"></i> BG: YES</span>';
+                        $bgBadge = '<span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 mt-1" style="font-size: 10px;"><i class="ph-bold ph-shield-check me-1"></i>BG: YES</span>';
                     } else {
-                        $bgBadge = '<span class="badge bg-secondary opacity-50" style="font-size: 0.75em;">BG: NO</span>';
+                        $bgBadge = '<span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 mt-1" style="font-size: 10px;"><i class="ph-bold ph-shield-slash me-1"></i>BG: NO</span>';
                     }
 
-                    return '<div class="d-flex flex-column">
-                            <span class="fw-bold text-primary mb-1" style="font-size: 0.95em;">' . $row->term_of_payment . '</span>
+                    return '<div class="d-flex flex-column text-start">
+                            <div class="fw-bold text-dark" style="font-size: 13px;"><i class="ph-bold ph-calendar-blank text-primary me-1"></i> ' . e($row->term_of_payment) . '</div>
                             <div>' . $bgBadge . '</div>
                         </div>';
                 })
@@ -307,18 +337,19 @@ class CustomerController extends Controller
                 })
                 ->editColumn('route_to', function ($row) {
                     if ($row->status_approval === 'Approved' || $row->status_approval === 'Completed') {
-                        return '<span class="badge route-to-badge-lg bg-info text-white"><i class="ph-bold ph-check-circle me-1 text-white"></i>-</span>';
+                        return '<span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1"><i class="ph-bold ph-check-all me-1"></i>Done</span>';
                     }
 
-                    return '<span class="badge route-to-badge-lg bg-info text-white">
-                            <i class="ph-bold ph-user me-1"></i> ' . strtoupper($row->route_to ?? '-') . '
-                        </span>';
+                    return '<div class="d-inline-flex align-items-center bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 rounded-pill px-3 py-1 shadow-sm">
+                                <i class="ph-fill ph-user-circle text-primary f-s-16 me-2"></i>
+                                <span class="fw-bold text-dark" style="font-size: 12px;">' . strtoupper($row->route_to ?? '-') . '</span>
+                            </div>';
                 })
                 ->editColumn('status', function ($row) {
                     $badge = $row->status === 'Active' ? 'bg-success' : 'bg-secondary';
                     return '<span class="badge status-badge-lg ' . $badge . '">' . strtoupper($row->status) . '</span>';
                 })
-                ->rawColumns(['credit_limit', 'financial_info', 'status_approval', 'route_to', 'status', 'action'])
+                ->rawColumns(['code', 'name', 'credit_limit', 'financial_info', 'status_approval', 'route_to', 'status', 'action'])
                 ->make(true);
         }
 
@@ -359,7 +390,7 @@ class CustomerController extends Controller
         $customer = Customer::findOrFail($id);
 
         if ($customer->status_approval !== 'Rejected') {
-            return response()->json(['success' => false, 'message' => 'Hanya data dengan status Rejected yang bisa diajukan ulang (Recall).'], 403);
+            return response()->json(['success' => false, 'message' => 'Only data with status Rejected can be recalled.'], 403);
         }
 
         $dynamicFileRule = function ($attribute, $value, $fail) {
@@ -368,11 +399,11 @@ class CustomerController extends Controller
             $sizeInKb = $value->getSize() / 1024;
 
             if (in_array($extension, ['jpg', 'jpeg', 'png'])) {
-                if ($sizeInKb > 1024) $fail("File {$attribute} (Gambar) maks 1MB.");
+                if ($sizeInKb > 1024) $fail("File {$attribute} (Image) maks 1MB.");
             } elseif ($extension === 'pdf') {
                 if ($sizeInKb > 10240) $fail("File {$attribute} (PDF) maks 10MB.");
             } else {
-                $fail("Format {$attribute} salah.");
+                $fail("File {$attribute} harus berupa gambar (jpg, jpeg, png) atau PDF.");
             }
         };
 
@@ -463,14 +494,14 @@ class CustomerController extends Controller
                     try {
                         $admins = User::role('super-admin')->get();
                         Notification::send($firstApprover, new SystemNotification(
-                            'Butuh Persetujuan (Revisi)',
-                            "Customer <b>{$customer->name}</b> telah direvisi dan diajukan ulang oleh user.",
+                            'Need Approval (Recall)',
+                            "Customer <b>{$customer->name}</b> has been revised and resubmitted by the user.",
                             route('customers.approval'),
                             'ph-arrow-u-up-left',
                             'warning'
                         ));
                     } catch (\Exception $e) {
-                        Log::error("Gagal kirim notif sistem recall: " . $e->getMessage());
+                        Log::error("Error sending recall notification: " . $e->getMessage());
                     }
                 }
             } else {
@@ -508,15 +539,15 @@ class CustomerController extends Controller
                         ];
 
                         CustomerJob::dispatch($customer->id, $recipients, $token, 'approval');
-                        Log::info("Email recall (Level 1) dikirim ke: " . $approverUser->email);
+                        Log::info("Recall email sent to: " . $approverUser->email);
                     }
                 }
             }
         } catch (\Exception $e) {
-            Log::error('Gagal mengirim email recall: ' . $e->getMessage());
+            Log::error('Error sending recall email: ' . $e->getMessage());
         }
 
-        return response()->json(['success' => true, 'message' => 'Data berhasil diajukan ulang! Status kembali ke Pending.']);
+        return response()->json(['success' => true, 'message' => 'Data successfully recalled! Status reverted to Pending.']);
     }
 
     public function show(Customer $customer)
@@ -529,7 +560,6 @@ class CustomerController extends Controller
             $baseTotalAmount += ($item->quantity * $item->price);
         }
 
-        // Perbaikan: Tambahkan 'user' ke dalam array load agar terbaca oleh Javascript
         $data = $customer->load(['user', 'sales.user', 'files', 'bankGaransis', 'bgRecommendations', 'creditLimits', 'items'])->toArray();
 
         $data['can_adjust_finance'] = $canAdjustFinance;
@@ -555,9 +585,10 @@ class CustomerController extends Controller
 
         if (!$pathExists) {
             $pathName = $subCategory ? "Customer - $subCategory" : "Customer - General (Non-CBD)";
+            $subCategoryDisplay = $subCategory ?? 'None';
             return response()->json([
                 'success' => false,
-                'message' => "GAGAL: Alur Approval untuk '$pathName' tidak ditemukan. Hubungi IT/Admin."
+                'message' => "Approval path for category <b>{$category}</b> with sub-category <b>{$subCategoryDisplay}</b> not found. Please contact the administrator to set up the approval path: <b>{$pathName}</b>."
             ], 422);
         }
 
@@ -569,14 +600,14 @@ class CustomerController extends Controller
                 if ($admins->count() > 0) {
                     Notification::send($admins, new SystemNotification(
                         'New Customer Created',
-                        "Customer <b>{$customer->name}</b> telah dibuat (Monitoring).",
+                        "Customer <b>{$customer->name}</b> has been created (Monitoring).",
                         route('customers.index'),
                         'ph-eye',
                         'info'
                     ));
                 }
             } catch (\Exception $e) {
-                Log::error("Gagal kirim notif sistem pembuatan customer: " . $e->getMessage());
+                Log::error("Error sending system notification for new customer: " . $e->getMessage());
             }
 
             return response()->json([
@@ -588,7 +619,7 @@ class CustomerController extends Controller
             Log::error("Error create customer: " . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Terjadi kesalahan sistem: ' . $e->getMessage()
+                'message' => 'Error creating customer: ' . $e->getMessage()
             ], 500);
         }
     }
@@ -614,11 +645,11 @@ class CustomerController extends Controller
                     ]];
 
                     CustomerJob::dispatch($customer->id, $recipients, $firstLog->token, 'approval');
-                    Log::info("Job Email Approval dikirim ke antrian untuk: " . $approverUser->email);
+                    Log::info("Email approval dispatched to: " . $approverUser->email);
                 }
             }
         } catch (\Exception $e) {
-            Log::error('Gagal dispatch email job: ' . $e->getMessage());
+            Log::error('Error dispatching email job: ' . $e->getMessage());
         }
     }
 
@@ -740,7 +771,7 @@ class CustomerController extends Controller
 
             if ($isTopChanged) {
                 if (empty($cleanNotes)) {
-                    return back()->withInput()->withErrors(['notes' => 'Notes wajib diisi karena Anda mengubah Term of Payment (TOP).']);
+                    return back()->withInput()->withErrors(['notes' => 'Notes are required when changing Term of Payment.']);
                 }
             }
         } else {
@@ -748,11 +779,11 @@ class CustomerController extends Controller
 
                 if (!$isIT) {
                     if (empty($cleanNotes)) {
-                        return back()->withInput()->withErrors(['notes' => 'Notes wajib diisi untuk keputusan Review/Reject.']);
+                        return back()->withInput()->withErrors(['notes' => 'Notes are required for review or reject actions.']);
                     }
 
                     if (!preg_match('/[a-zA-Z]{2,}/', $cleanNotes)) {
-                        return back()->withInput()->withErrors(['notes' => 'Notes harus berisi kalimat yang jelas.']);
+                        return back()->withInput()->withErrors(['notes' => 'Notes must contain clear sentences.']);
                     }
                 }
             }
@@ -811,14 +842,14 @@ class CustomerController extends Controller
 
                     if (!empty($changesLog)) {
                         $prefix = !empty($notes) ? "\n" : "";
-                        $notes .= $prefix . "[System - Finance]: Data Finance (VA/Payment/Faktur) diperbarui.";
+                        $notes .= $prefix . "[Finance Adjustments]: " . implode('; ', $changesLog);
                     }
                 }
             }
             if (($action === 'approve' || $action === 'review') && $actor && $actor->hasRole('it')) {
 
                 if (!request()->filled('update_code') || !request()->filled('update_join_date')) {
-                    throw new \Exception("Sebagai IT, Anda wajib mengisi Customer Code dan Join Date.");
+                    throw new \Exception("Customer Code and Join Date are required for IT approval.");
                 }
 
                 $customer->update([
@@ -832,7 +863,6 @@ class CustomerController extends Controller
                 $notes .= "\n[System]: Customer Code & Join Date set by IT (" . $actor->name . ")";
             }
 
-            // --- 1. Tentukan Status & Notes ---
             $dbStatus = '';
             $dbNotes = '';
 
@@ -841,7 +871,7 @@ class CustomerController extends Controller
                 $dbNotes = empty($notes) ? 'Approve tanpa notes' : $notes;
             } elseif ($action === 'review') {
                 $dbStatus = 'Approved';
-                $dbNotes = $notes; // Gunakan notes dari inputan
+                $dbNotes = $notes;
             } elseif ($action === 'reject') {
                 $dbStatus = 'Rejected';
                 $dbNotes = $notes;
@@ -861,10 +891,10 @@ class CustomerController extends Controller
             }
 
             activity()
-                ->causedBy($actor) // Actor diambil dari user pemilik token (approver)
+                ->causedBy($actor) 
                 ->performedOn($customer)
                 ->useLog('customer')
-                ->event($action) // approve, review, atau reject
+                ->event($action) 
                 ->withProperties([
                     'level' => $currentLog->level,
                     'status' => $dbStatus,
@@ -884,12 +914,12 @@ class CustomerController extends Controller
 
             if ($action === 'approve' || $action === 'review') {
                 $adminTitle = "Approval Customer";
-                $adminMessage = "Customer <b>{$customer->name}</b> telah disetujui (Level {$currentLog->level}) oleh <b>{$actor->name}</b>. Status: " . ($dbStatus == 'Approved' ? 'Lanjut ke Level Berikutnya/Selesai' : 'Review');
+                $adminMessage = "Customer <b>{$customer->name}</b> approved oleh <b>{$actor->name}</b>." . ($action === 'review' ? " Notes: {$notes}" : "");
                 $adminIcon = "ph-check-circle";
                 $adminColor = "success";
             } elseif ($action === 'reject') {
                 $adminTitle = "Rejection Customer";
-                $adminMessage = "Customer <b>{$customer->name}</b> DITOLAK oleh <b>{$actor->name}</b> di Level {$currentLog->level}. Alasan: {$notes}";
+                $adminMessage = "Customer <b>{$customer->name}</b> rejected oleh <b>{$actor->name}</b>. Reason: {$notes}";
                 $adminIcon = "ph-x-circle";
                 $adminColor = "danger";
             }
@@ -937,14 +967,14 @@ class CustomerController extends Controller
                     if ($nextApproverUser) {
                         try {
                             Notification::send($nextApproverUser, new SystemNotification(
-                                "Butuh Persetujuan (Level {$nextLog->level})",
-                                "Customer <b>{$customer->name}</b> menunggu persetujuan Anda.",
+                                "Approval Required (Level {$nextLog->level})",
+                                "Customer <b>{$customer->name}</b> waiting for your approval at level {$nextLog->level}.",
                                 route('customers.approval'),
                                 'ph-signature',
                                 'warning'
                             ));
                         } catch (\Exception $e) {
-                            Log::error("Gagal kirim notif sistem ke next approver: " . $e->getMessage());
+                            Log::error("Failed to send system notification to next approver: " . $e->getMessage());
                         }
 
                         if ($nextApproverUser->email) {
@@ -960,7 +990,7 @@ class CustomerController extends Controller
                             CustomerJob::dispatch($customer->id, $recipients, $nextLog->token, 'approval');
                         }
                     } else {
-                        Log::warning("User/Email tidak ditemukan untuk NIK: {$nextLog->approver_nik}");
+                        Log::warning("Next approver user not found for NIK: {$nextLog->approver_nik}");
                     }
                 } else {
                     $customer->update([
@@ -976,8 +1006,8 @@ class CustomerController extends Controller
 
                             $notes .= "\n[System]: Welcome Email sent to Customer ($customer->email).";
                         } catch (\Exception $e) {
-                            Log::error("Gagal kirim Welcome Email ke Customer: " . $e->getMessage());
-                            $notes .= "\n[System Error]: Gagal kirim email ke customer.";
+                            Log::error("Failed to send welcome email to customer: " . $e->getMessage());
+                            $notes .= "\n[System Error]: Failed to send email to customer.";
                         }
                     }
 
@@ -1010,7 +1040,7 @@ class CustomerController extends Controller
                         'name' => $requester->name,
                     ]];
                     CustomerJob::dispatch($customer->id, $recipients, null, 'rejected');
-                    Log::info("APPROVAL FLOW: Customer #{$customer->id} REJECTED oleh {$actor->name}. Email rejection dikirim ke: {$requester->email}");
+                    Log::info("Rejection email dispatched to requester: " . $requester->email);
                 }
             }
 
@@ -1032,7 +1062,7 @@ class CustomerController extends Controller
             if (request()->ajax()) {
                 return response()->json(['success' => false, 'message' => 'Error: ' . $e->getMessage()], 500);
             }
-            return abort(500, 'Terjadi kesalahan saat memproses approval.');
+            return abort(500, 'An error occurred while processing the approval. Please try again later.');
         }
     }
 
@@ -1177,57 +1207,60 @@ class CustomerController extends Controller
                 }
 
                 if (!$canAction) {
-                    return '<button type="button" class="btn btn-sm btn-secondary" onclick="Swal.fire(\'Locked\', \'Menunggu approval level sebelumnya.\', \'warning\')">
-                            <i class="ph-bold ph-lock-key text-white"></i> Locked</button>';
+                    return '<div class="d-flex flex-column gap-1 justify-content-center align-items-center" style="min-width: 45px;">
+                        <button type="button" class="btn btn-secondary btn-xs rounded-pill fw-bold shadow-sm w-100" disabled
+                            data-bs-toggle="tooltip" title="Waiting for previous level approval">
+                            <i class="ph-bold ph-lock me-1"></i> Locked
+                        </button>
+                    </div>';
                 }
+
+                $btnStyle = 'style="font-size: 14px; padding: 5px 10px; min-height: 18px;"';
+                $btn = '<div class="d-flex flex-column gap-1 justify-content-center align-items-center" style="min-width: 75px;">';
 
                 $btnResend = '';
                 if ($row->status === 'Pending') {
                     $approverName = $row->approver ? $row->approver->name : $row->approver_nik;
-                    $btnResend = '<button type="button" class="btn btn-sm btn-warning btn-resend-email"
+                    $btnResend = '<button type="button" class="btn btn-warning btn-xs rounded-pill fw-bold btn-resend-email shadow-sm w-100" 
+                                    ' . $btnStyle . '
                                     data-token="' . $token . '"
                                     data-approver-name="' . e($approverName) . '"
-                                    data-bs-toggle="tooltip" title="Resend Email Notification">
-                                    <i class="ph-bold ph-paper-plane-tilt text-white"></i> Resend Email
+                                    data-bs-toggle="tooltip" title="Resend Notification">
+                                    <i class="ph-bold ph-paper-plane-tilt me-1"></i> Resend
                                 </button>';
                 }
 
-                $btnInputCode = '<button type="button" class="btn btn-sm btn-primary action-btn-modal"
-                                data-id="' . $customerId . '"
-                                data-token="' . $token . '"
-                                data-action="review"
-                                data-name="' . $customerName . '"
-                                data-bs-toggle="tooltip" title="Input Customer Code & Join Date">
-                                <i class="ph-bold ph-pencil-simple text-white me-1"></i> Input Code
-                            </button>';
-
-                $btnReview = '<button type="button" class="btn btn-sm btn-primary action-btn-modal"
+                $btnReview = '<button type="button" class="btn btn-primary btn-xs rounded-pill fw-bold action-btn-modal shadow-sm w-100" 
+                                ' . $btnStyle . '
                                 data-id="' . $customerId . '"
                                 data-token="' . $token . '"
                                 data-action="review"
                                 data-name="' . $customerName . '"
                                 data-bs-toggle="tooltip" title="Review Approval">
-                                <i class="ph-bold ph-clipboard-text text-white me-1"></i> Review Data
-                              </button>';
+                                <i class="ph-bold ph-clipboard-text me-1"></i> Review
+                            </button>';
+
+                $btnInputCode = '<button type="button" class="btn btn-info btn-xs rounded-pill fw-bold action-btn-modal shadow-sm w-100 text-white" 
+                                ' . $btnStyle . '
+                                data-id="' . $customerId . '"
+                                data-token="' . $token . '"
+                                data-action="review"
+                                data-name="' . $customerName . '"
+                                data-bs-toggle="tooltip" title="Input Code">
+                                <i class="ph-bold ph-pencil-simple me-1"></i> Input Code
+                            </button>';
 
                 if ($currentUser->hasRole(['it', 'IT'])) {
-                    return "<div class='d-flex gap-1 justify-content-center'>{$btnInputCode}</div>";
+                    $btn .= $btnInputCode;
+                } elseif ($currentUser->hasRole('super-admin')) {
+                    $targetIsIT = ($row->approver && $row->approver->hasRole(['it', 'IT']));
+                    $btn .= ($targetIsIT ? $btnInputCode : $btnReview) . $btnResend;
+                } else {
+                    $btn .= $btnReview . $btnResend;
                 }
 
-                if ($currentUser->hasRole('super-admin')) {
-                    $targetIsIT = false;
-                    if ($row->approver && $row->approver->hasRole(['it', 'IT'])) {
-                        $targetIsIT = true;
-                    }
-
-                    if ($targetIsIT) {
-                        return "<div class='d-flex gap-1 justify-content-center'>{$btnInputCode} {$btnResend}</div>";
-                    } else {
-                        return "<div class='d-flex gap-1 justify-content-center'>{$btnReview} {$btnResend}</div>";
-                    }
-                }
-
-                return "<div class='d-flex gap-1 justify-content-center'>{$btnReview} {$btnResend}</div>";
+                $btn .= '</div>';
+                return $btn;
             })
             ->rawColumns(['approver_nik', 'level', 'customer_name', 'status_approval', 'route_to', 'action'])
             ->make(true);
@@ -1292,7 +1325,7 @@ class CustomerController extends Controller
             ->where(function ($q) {
                 $q->where('log_name', 'like', '%customer%')
                     ->orWhere('log_name', 'like', 'sample%')
-                    ->orWhere('log_name', 'path%'); // Menangkap 'path - customer' dll
+                    ->orWhere('log_name', 'path%');
             })
             ->orderBy('created_at', 'desc');
 
@@ -1495,7 +1528,6 @@ class CustomerController extends Controller
             'Expires' => '0',
         ];
 
-        // Daftar semua header CSV
         $columns = [
             'user_id', 'code', 'no_pkd', 'pic', 'name', 'sort_name', 'customer_class', 'account_group',
             'address1', 'address2', 'address3', 'city', 'postal_code', 'country',
@@ -1648,7 +1680,7 @@ class CustomerController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => "Berhasil mengunggah $importedCount data pelanggan dengan lengkap."
+                'message' => "Successfully imported {$importedCount} customers."
             ]);
         } catch (\Exception $e) {
             DB::rollBack();

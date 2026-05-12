@@ -192,14 +192,12 @@
                     {{-- Financial & Tax --}}
                     <h5 class="fw-bold text-primary mb-3 d-flex align-items-center"><i class="ph-fill ph-currency-dollar me-2"></i> Financial & Tax</h5>
                     <div class="row g-3 mb-4">
-                        {{-- 1. Credit Limit & TOP (TARGET UTAMA UNTUK DITIMPA JIKA FINANCE) --}}
                         <div class="col-md-4">
                             <div class="card bg-primary text-white border-0 shadow-sm h-100">
                                 <div class="card-body p-4">
                                     <div class="d-flex justify-content-between align-items-start mb-3">
                                         <div>
                                             <label class="text-white text-opacity-75 text-uppercase f-s-12 fw-bold">Credit Limit</label>
-                                            {{-- Container Credit Limit --}}
                                             <div id="container_credit_limit">
                                                 <h3 class="mb-0 fw-bold mt-1" id="view_credit_limit">IDR 0</h3>
                                             </div>
@@ -208,14 +206,12 @@
                                     </div>
                                     <div class="mt-4 pt-3 border-top border-white border-opacity-25 d-flex justify-content-between align-items-center">
                                         <span class="f-s-13 opacity-75">Term of Payment</span>
-                                        {{-- Container TOP --}}
                                         <div id="container_top">
                                             <span class="fw-bold f-s-16 bg-warning bg-opacity-20 px-2 py-1 rounded" id="view_term_of_payment">-</span>
                                         </div>
                                     </div>
                                     <div class="mt-2 d-flex justify-content-between align-items-center">
                                         <span class="f-s-13 opacity-75">Lead Time</span>
-                                        {{-- Container Lead Time --}}
                                         <div id="container_lead_time">
                                             <span class="fw-bold f-s-14"><span id="view_lead_time">0</span> Days</span>
                                         </div>
@@ -229,7 +225,6 @@
                             <div class="card border-0 shadow-sm h-100">
                                 <div class="card-body p-4">
                                     <h6 class="fw-bold text-dark border-bottom pb-3 mb-3">Tax Information</h6>
-                                    {{-- Container NPWP --}}
                                     <div class="mb-3">
                                         <span class="fw-bold text-secondary f-s-13 d-block mb-1">NPWP No.</span>
                                         <div id="container_npwp">
@@ -276,7 +271,6 @@
 
                     {{-- NEW: Container Khusus Schedule (Hanya Muncul Jika Finance) --}}
                     <div id="finance_schedule_container" style="display: none;">
-                        {{-- JS akan mengisi ini jika user adalah Finance --}}
                     </div>
 
                     {{-- Management & Logistics --}}
@@ -398,24 +392,24 @@
                             </div>
 
                             <div class="col-lg-5 p-3 bg-white d-flex flex-column justify-content-center">
-                                <h6 class="fw-bold text-primary mb-2">Koreksi Nomor NPWP</h6>
+                                <h6 class="fw-bold text-primary mb-2">Verify NPWP Data</h6>
 
                                 <div class="alert alert-info small mb-3 border-info p-2">
                                     <div class="d-flex align-items-center">
                                         <i class="ph-fill ph-info f-s-16 me-2"></i>
-                                        <div style="line-height: 1.2;">Cocokkan dokumen kiri dengan input.</div>
+                                        <div style="line-height: 1.2;">Match the left document with the input.</div>
                                     </div>
                                 </div>
 
                                 <div class="mb-3">
-                                    <label class="form-label fw-bold text-muted small text-uppercase mb-1">Nomor NPWP (Sistem)</label>
+                                    <label class="form-label fw-bold text-muted small text-uppercase mb-1">No NPWP (System)</label>
                                     <input type="text" id="input_npwp_verification" class="form-control fw-bold text-dark border-primary"
-                                        placeholder="Nomor NPWP">
+                                        placeholder="No NPWP">
                                 </div>
 
                                 <div class="d-grid gap-2">
                                     <button type="button" class="btn btn-success shadow-sm" id="btn_save_npwp_verification">
-                                        <i class="ph-bold ph-check me-2"></i> Simpan
+                                        <i class="ph-bold ph-check me-2">s</i> Save
                                     </button>
                                     <button type="button" class="btn btn-sm btn-light border" data-bs-dismiss="modal">Batal</button>
                                 </div>
@@ -869,14 +863,14 @@
                         appendFileCard('NPWP Document', f.npwp_file);
                         appendFileCard('NIB/SIUP Document', f.nib_siup_file);
                         appendFileCard('KTP Document', f.ktp_file);
-                        appendFileCard('Akte Pendirian', f.akte_file); // <-- Tambahan
-                        appendFileCard('Company Profile', f.company_profile_file); // <-- Tambahan
+                        appendFileCard('Akte Pendirian', f.akte_file);
+                        appendFileCard('Company Profile', f.company_profile_file);
                     } else {
                         appendFileCard('NPWP Document', data.file_npwp);
                         appendFileCard('NIB/SIUP Document', data.file_nib);
                         appendFileCard('KTP Document', data.file_ktp);
-                        appendFileCard('Akte Pendirian', data.file_akte); // <-- Tambahan
-                        appendFileCard('Company Profile', data.file_company_profile); // <-- Tambahan
+                        appendFileCard('Akte Pendirian', data.file_akte);
+                        appendFileCard('Company Profile', data.file_company_profile);
                     }
                     if(fileCount === 0) $('#no_documents').show();
                 };
@@ -907,7 +901,7 @@
                         container.html(`
                             <div class="text-center text-white-50">
                                 <i class="ph-duotone ph-file-dashed f-s-64 mb-3"></i>
-                                <p class="h6">Tidak ada file NPWP yang diupload.</p>
+                                <p class="h6">No NPWP file uploaded.</p>
                             </div>
                         `);
                     }
@@ -1000,7 +994,7 @@
                                                 </div>
                                                 <div class="mb-0">
                                                     <label for="modal_notes" class="form-label fw-bold small text-dark">Notes (Optional)</label>
-                                                    <textarea class="form-control bg-light" id="modal_notes" name="notes" rows="2" placeholder="Catatan aktivasi..."></textarea>
+                                                    <textarea class="form-control bg-light" id="modal_notes" name="notes" rows="2" placeholder="Enter notes here..."></textarea>
                                                 </div>
                                             </form>
                                         </div>
@@ -1032,7 +1026,7 @@
                                                             <div class="bg-success text-white rounded p-2 me-3 d-flex align-items-center justify-content-center shadow-sm">
                                                                 <i class="ph-bold ph-check-circle f-s-20"></i>
                                                             </div>
-                                                            <div><h6 class="mb-0 fw-bold text-dark">Approve Tanpa Catatan</h6></div>
+                                                            <div><h6 class="mb-0 fw-bold text-dark">Approve Without Notes</h6></div>
                                                         </div>
                                                     </div>
                                                     <div class="card decision-btn flex-fill cursor-pointer shadow-sm border" data-select-action="review" style="cursor: pointer; transition: all 0.2s;">
@@ -1040,7 +1034,7 @@
                                                             <div class="bg-primary text-white rounded p-2 me-3 d-flex align-items-center justify-content-center shadow-sm">
                                                                 <i class="ph-bold ph-note-pencil f-s-20"></i>
                                                             </div>
-                                                            <div><h6 class="mb-0 fw-bold text-dark">Approve Dengan Catatan</h6></div>
+                                                            <div><h6 class="mb-0 fw-bold text-dark">Approve With Notes</h6></div>
                                                         </div>
                                                     </div>
                                                     <div class="card decision-btn flex-fill cursor-pointer shadow-sm border" data-select-action="reject" style="cursor: pointer; transition: all 0.2s;">
@@ -1048,13 +1042,13 @@
                                                             <div class="bg-danger text-white rounded p-2 me-3 d-flex align-items-center justify-content-center shadow-sm">
                                                                 <i class="ph-bold ph-x-circle f-s-20"></i>
                                                             </div>
-                                                            <div><h6 class="mb-0 fw-bold text-dark">Reject Tolak Pengajuan</h6></div>
+                                                            <div><h6 class="mb-0 fw-bold text-dark">Reject Without Notes</h6></div>
                                                         </div>
                                                     </div>
                                                 </div>
                                                 <div id="notes_container" style="display: none;" class="mb-2">
-                                                    <label for="modal_notes" class="form-label fw-bold small text-dark">Notes / Alasan <span class="text-danger">*</span></label>
-                                                    <textarea class="form-control bg-light border-secondary" id="modal_notes" name="notes" rows="3" placeholder="Ketik catatan Anda..."></textarea>
+                                                    <label for="modal_notes" class="form-label fw-bold small text-dark">Notes / Reason <span class="text-danger">*</span></label>
+                                                    <textarea class="form-control bg-light border-secondary" id="modal_notes" name="notes" rows="3" placeholder="Enter notes here..."></textarea>
                                                 </div>
                                             </form>
                                         </div>
@@ -1145,13 +1139,13 @@
                         const inputCode = customerCodeInput.val().trim();
 
                         if (!inputCode) {
-                            Swal.fire('Error', 'Customer Code wajib diisi!', 'error');
+                            Swal.fire('Error', 'Customer Code is required!', 'error');
                             return;
                         }
 
                         Swal.fire({
                             title: 'Confirm Activation?',
-                            html: `Pastikan Customer Code sudah benar:<br><br><h2 class="text-primary fw-bold mb-0">${inputCode}</h2>`,
+                            html: `Please confirm that the Customer Code is correct:<br><br><h2 class="text-primary fw-bold mb-0">${inputCode}</h2>`,
                             icon: 'question',
                             showCancelButton: true,
                             confirmButtonColor: '#059669',
@@ -1167,7 +1161,7 @@
                     }
                     else {
                         if (!action) {
-                            Swal.fire('Peringatan', 'Silakan pilih keputusan Anda (Approve / Reject) terlebih dahulu.', 'warning');
+                            Swal.fire('Warning', 'Please select your decision (Approve / Reject) first.', 'warning');
                             return;
                         }
 
@@ -1176,7 +1170,7 @@
 
                         if (isReject) {
                             if (!notesValue || !/[a-zA-Z]/.test(notesValue)) {
-                                Swal.fire('Warning', 'Alasan penolakan wajib diisi dengan jelas.', 'warning');
+                                Swal.fire('Warning', 'Reason for rejection is required and must be clear.', 'warning');
                                 return;
                             }
                         }
@@ -1187,14 +1181,14 @@
 
                                 if (currentTop !== originalTop) {
                                     if (!notesValue) {
-                                        Swal.fire('Warning', 'Notes wajib diisi karena Anda mengubah Term of Payment (TOP).', 'warning');
+                                        Swal.fire('Warning', 'Notes are required because you have changed the Term of Payment (TOP).', 'warning');
                                         return;
                                     }
                                 }
                             }
                             else {
                                 if (!notesValue) {
-                                    Swal.fire('Warning', 'Notes untuk approval ini wajib diisi.', 'warning');
+                                    Swal.fire('Warning', 'Notes are required for this approval.', 'warning');
                                     return;
                                 }
                             }
@@ -1207,16 +1201,16 @@
 
                         if (isReject) {
                             title = 'Confirm Rejection?';
-                            text = "Pengajuan ini akan ditolak dan dikembalikan.";
+                            text = "This application will be rejected and returned.";
                             icon = 'warning';
                             confirmColor = '#d33';
                         } else if (isApprove) {
                             title = 'Approve without Notes?';
-                            text = "Anda akan menyetujui pengajuan ini tanpa memberikan catatan.";
+                            text = "You will approve this application without providing any notes.";
                             confirmColor = '#28a745';
                         } else {
                             title = 'Submit Approval?';
-                            text = "Kirim persetujuan beserta catatan / perubahan data?";
+                            text = "Submit the approval along with any notes or data changes?";
                         }
 
                         Swal.fire({
@@ -1254,7 +1248,7 @@
                         },
                         error: function(xhr) {
                             $('#loading-overlay').hide();
-                            const errMsg = xhr.responseJSON?.message || 'Terjadi kesalahan saat memproses permintaan.';
+                            const errMsg = xhr.responseJSON?.message || 'An error occurred while processing the request.';
                             Swal.fire('Error!', errMsg, 'error');
                         }
                     });

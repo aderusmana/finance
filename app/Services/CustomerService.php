@@ -126,8 +126,8 @@ class CustomerService
 
                     try {
                         Notification::send($firstApprover, new SystemNotification(
-                            'Butuh Persetujuan',
-                            "Customer Baru <b>{$customer->name}</b> menunggu persetujuan Anda.",
+                            'Need Approval',
+                            "New Customer <b>{$customer->name}</b> is waiting for your approval.",
                             route('customers.approval'),
                             'ph-signature',
                             'warning'

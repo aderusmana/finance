@@ -622,7 +622,7 @@
                             <div class="card doc-card h-100 bg-light">
                                 <div class="card-body text-center p-3">
                                     <i class="fas fa-id-card text-info fs-3 mb-2"></i>
-                                    <h6 class="fw-bold small text-muted text-uppercase mb-2">KTP Penanggung Jawab</h6>
+                                    <h6 class="fw-bold small text-muted text-uppercase mb-2">Responsible Person's ID Card</h6>
                                     @if($ktpPath)
                                         <button type="button" class="btn btn-sm btn-outline-info w-100 btn-preview-doc"
                                             data-file-url="{{ $ktpPath }}"
@@ -640,11 +640,11 @@
                             <div class="card doc-card h-100 bg-light">
                                 <div class="card-body text-center p-3">
                                     <i class="fas fa-scroll text-warning fs-3 mb-2"></i>
-                                    <h6 class="fw-bold small text-muted text-uppercase mb-2">Akte Pendirian</h6>
+                                    <h6 class="fw-bold small text-muted text-uppercase mb-2">Articles of Incorporation</h6>
                                     @if($aktePath)
                                         <button type="button" class="btn btn-sm btn-outline-warning text-dark w-100 btn-preview-doc"
                                             data-file-url="{{ $aktePath }}"
-                                            data-file-title="Akte Pendirian">
+                                            data-file-title="Articles of Incorporation">
                                             <i class="fas fa-eye me-1"></i> Preview
                                         </button>
                                     @else
@@ -773,22 +773,22 @@
 
                             {{-- RIGHT: Input Form --}}
                             <div class="col-lg-5 p-4 bg-white d-flex flex-column justify-content-center">
-                                <h5 class="fw-bold text-primary mb-3">Koreksi Data NPWP</h5>
+                                <h5 class="fw-bold text-primary mb-3">Verify NPWP Data</h5>
                                 <div class="alert alert-info small mb-3">
-                                    <i class="fas fa-info-circle me-1"></i> Cocokkan data di kiri dengan input di bawah.
+                                    <i class="fas fa-info-circle me-1"></i> Please verify the NPWP number from the uploaded document. If the number is correct, simply click "Confirm & Save". If it needs correction, please edit the number in the input field and then confirm.
                                 </div>
 
                                 <div class="mb-4">
-                                    <label class="form-label fw-bold text-muted small">NOMOR NPWP (SISTEM)</label>
+                                    <label class="form-label fw-bold text-muted small">NPWP Number</label>
                                     <input type="text" id="modal_npwp_input" class="form-control form-control-lg fw-bold text-dark border-primary"
-                                        value="{{ $customer->npwp }}" placeholder="Masukkan Nomor NPWP yang benar">
+                                        value="{{ $customer->npwp }}" placeholder="Enter the correct NPWP number">
                                 </div>
 
                                 <div class="d-grid gap-2">
                                     <button type="button" class="btn btn-success btn-lg" id="btn-save-verify">
-                                        <i class="fas fa-check me-2"></i> Konfirmasi & Simpan
+                                        <i class="fas fa-check me-2"></i> Confirm & Save
                                     </button>
-                                    <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Batal</button>
+                                    <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Cancel</button>
                                 </div>
                             </div>
                         </div>
@@ -862,24 +862,19 @@
                 const value = btn.getAttribute('data-val');
                 const isAll = value === 'All';
 
-                // Tentukan Warna berdasarkan Tipe
-                const colorClass = type.includes('faktur') ? 'btn-success' : 'btn-primary'; // Hari (Payment/Faktur)
+                const colorClass = type.includes('faktur') ? 'btn-success' : 'btn-primary';
                 const dateColor = 'btn-info'; // Tanggal
 
                 if (isAll) {
-                    // === LOGIC TOMBOL ALL ===
-                    const isActive = btn.classList.contains('active'); // Status sebelum diklik
+                    const isActive = btn.classList.contains('active');
 
                     if (!isActive) {
-                        // AKTIFKAN ALL: Maka aktifkan juga semua anak-anaknya secara visual
-                        btn.classList.add('active', 'btn-dark'); // Tombol All jadi hitam
+                        btn.classList.add('active', 'btn-dark');
 
-                        // Loop semua tombol lain (selain tombol All)
                         container.querySelectorAll('button:not([data-val="All"])').forEach(b => {
-                            b.classList.add('active', 'text-white'); // Tambah flag active
-                            b.classList.remove('btn-outline-secondary', 'btn-outline-primary', 'btn-outline-success'); // Hapus outline
+                            b.classList.add('active', 'text-white');
+                            b.classList.remove('btn-outline-secondary', 'btn-outline-primary', 'btn-outline-success');
 
-                            // Tambahkan warna solid
                             if (b.classList.contains('btn-date')) {
                                 b.classList.add(dateColor);
                             } else {
@@ -887,35 +882,27 @@
                             }
                         });
                     } else {
-                        // MATIKAN ALL: Reset semua
                         container.querySelectorAll('button').forEach(b => {
                             b.classList.remove('active', 'btn-dark', colorClass, dateColor, 'text-white');
                             if (b.classList.contains('btn-date')) {
                                 b.classList.add('btn-outline-secondary');
                             } else if (b.getAttribute('data-val') !== 'All') {
-                                // Kembalikan outline sesuai tipe
                                 b.classList.add(type.includes('faktur') ? 'btn-outline-success' : 'btn-outline-primary');
                             }
                         });
-                        // Tambahkan outline lagi ke tombol All
                         btn.classList.add('btn-outline-dark');
                     }
 
                 } else {
-                    // === LOGIC TOMBOL SPESIFIK (Senin, 1, 2, dll) ===
-
-                    // 1. Matikan tombol 'All' dulu (karena kita mode manual selection)
                     const allBtn = container.querySelector('button[data-val="All"]');
                     if(allBtn) {
                         allBtn.classList.remove('active', 'btn-dark');
                         allBtn.classList.add('btn-outline-dark');
                     }
 
-                    // 2. Toggle tombol yang diklik
                     btn.classList.toggle('active');
 
                     if (btn.classList.contains('active')) {
-                        // STATE AKTIF (SOLID COLOR)
                         btn.classList.add('text-white');
                         if (btn.classList.contains('btn-date')) {
                             btn.classList.add(dateColor);
@@ -925,7 +912,6 @@
                             btn.classList.remove(type.includes('faktur') ? 'btn-outline-success' : 'btn-outline-primary');
                         }
                     } else {
-                        // STATE NON-AKTIF (OUTLINE)
                         btn.classList.remove('text-white', colorClass, dateColor);
                         if (btn.classList.contains('btn-date')) {
                             btn.classList.add('btn-outline-secondary');
@@ -943,11 +929,9 @@
                 const inputContainer = document.getElementById(type + '_inputs');
                 inputContainer.innerHTML = '';
 
-                // Cek apakah tombol "All" aktif?
                 const allBtn = container.querySelector('button[data-val="All"]');
 
                 if (allBtn && allBtn.classList.contains('active')) {
-                    // Jika All aktif, kirim value "All" saja ke backend
                     const input = document.createElement('input');
                     input.type = 'hidden';
                     input.name = `update_${type}[]`;
@@ -955,7 +939,6 @@
                     input.setAttribute('form', 'approvalForm');
                     inputContainer.appendChild(input);
                 } else {
-                    // Jika All tidak aktif, kirim item yang aktif satu per satu
                     const activeBtns = container.querySelectorAll('button.active:not([data-val="All"])');
                     activeBtns.forEach(btn => {
                         const val = btn.getAttribute('data-val');
@@ -978,9 +961,7 @@
                         data.forEach(val => {
                             const btn = document.querySelector(`#${type}_container button[data-val="${val}"]`);
                             if (btn) {
-                                // Trigger logic visual secara manual
                                 if (val === 'All') {
-                                    // Klik All akan men-trigger logic 'Select All'
                                     toggleSchedule(btn, type);
                                 } else {
                                     const colorClass = type.includes('faktur') ? 'btn-success' : 'btn-primary';
@@ -996,7 +977,7 @@
                                 }
                             }
                         });
-                        updateHiddenInputs(type); // Generate inputs awal
+                        updateHiddenInputs(type);
                     }
                 });
             }
@@ -1009,21 +990,18 @@
                 const actionReview = document.getElementById('action_review').checked;
                 const actionReject = document.getElementById('action_reject') ? document.getElementById('action_reject').checked : false;
 
-                // Reset states
                 notesField.required = false;
                 noteAsterisk.classList.add('d-none');
                 noteHelper.innerText = "";
                 noteHelper.className = "text-muted f-s-12";
                 if(topMsg) topMsg.classList.add('d-none');
 
-                // 1. REJECT
                 if (actionReject) {
                     notesField.required = true;
                     noteAsterisk.classList.remove('d-none');
-                    noteHelper.innerText = "Alasan penolakan wajib diisi dengan kalimat yang jelas.";
+                    noteHelper.innerText = "Reason is required for rejection and should clearly explain the issues.";
                     noteHelper.classList.add('text-danger');
                 }
-                // 2. REVIEW/APPROVE (Finance)
                 else if (actionReview && canAdjust) {
                     const currentTop = inputTop.value;
                     if (currentTop !== initialTop) {
@@ -1033,7 +1011,7 @@
                         noteHelper.classList.add('text-danger');
                         if(topMsg) topMsg.classList.remove('d-none');
                     } else {
-                        noteHelper.innerText = "Notes opsional untuk perubahan Lead Time / NPWP / Schedule.";
+                        noteHelper.innerText = "Notes are optional for changes to Lead Time / NPWP / Schedule.";
                         noteHelper.classList.add('text-success');
                     }
                 }
@@ -1041,7 +1019,7 @@
                 else if (actionReview && !canAdjust && !isITMode) {
                     notesField.required = true;
                     noteAsterisk.classList.remove('d-none');
-                    noteHelper.innerText = "Notes wajib diisi dengan kalimat yang jelas.";
+                    noteHelper.innerText = "Notes are required with clear explanations.";
                     noteHelper.classList.add('text-danger');
                 }
             }
@@ -1185,35 +1163,35 @@
 
                 if (selected === 'reject') {
                     if (!notesValue) {
-                        isValid = false; errorMsg = 'Alasan penolakan wajib diisi.';
+                        isValid = false; errorMsg = 'Reason for rejection is required.';
                     } else if (!meaningfulRegex.test(notesValue)) {
-                        isValid = false; errorMsg = 'Alasan penolakan harus jelas (minimal 2 huruf).';
+                        isValid = false; errorMsg = 'Reason for rejection must be clear (minimum 2 characters).';
                     }
                 }
                 else if (selected === 'review') {
                     if (canAdjust) {
                         if (inputTop.value !== initialTop) {
                             if (!notesValue) {
-                                isValid = false; errorMsg = 'Notes wajib diisi karena Term of Payment berubah.';
+                                isValid = false; errorMsg = 'Notes are required because the Term of Payment has changed.';
                             } else if (!meaningfulRegex.test(notesValue)) {
-                                isValid = false; errorMsg = 'Notes harus jelas (minimal 2 huruf).';
+                                isValid = false; errorMsg = 'Notes must be clear (minimum 2 characters).';
                             }
                         } else {
                             if (notesValue.length > 0 && !meaningfulRegex.test(notesValue)) {
-                                isValid = false; errorMsg = 'Jika mengisi notes, mohon gunakan kalimat yang jelas.';
+                                isValid = false; errorMsg = 'If filling out notes, please use clear sentences.';
                             }
                         }
                     } else if (!isITMode) {
                         if (!notesValue) {
-                            isValid = false; errorMsg = 'Notes wajib diisi untuk Review.';
+                            isValid = false; errorMsg = 'Notes are required for Review.';
                         } else if (!meaningfulRegex.test(notesValue)) {
-                            isValid = false; errorMsg = 'Notes harus jelas (minimal 2 huruf).';
+                            isValid = false; errorMsg = 'Notes must be clear (minimum 2 characters).';
                         }
                     }
                 }
 
                 if (!isValid) {
-                    Swal.fire({ icon: 'warning', title: 'Validasi Gagal', text: errorMsg });
+                    Swal.fire({ icon: 'warning', title: 'Validation Failed', text: errorMsg });
                     return;
                 }
 
@@ -1224,7 +1202,7 @@
 
                 Swal.fire({
                     title: 'Confirm Submission?',
-                    text: 'Pastikan data sudah benar sebelum mengirim.',
+                    text: 'Please ensure the data is correct before submitting.',
                     icon: 'question',
                     showCancelButton: true,
                     confirmButtonColor: '#3085d6',
