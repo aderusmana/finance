@@ -45,18 +45,20 @@
                     </button>
                 </div>
 
-                @can('create customer')
                 <div class="ms-auto d-flex gap-2">
+                    @can ('import customer')
                     <button class="btn btn-success" type="button" data-bs-toggle="modal" data-bs-target="#importModal">
                         <i class="ph-bold ph-file-csv"></i>
                         <span class="d-none d-sm-inline">Import CSV</span>
                     </button>
+                    @endcan
+                    @can('create customer')
                     <button class="btn btn-primary" type="button" id="btn-create-customer">
                         <i class="ph-bold ph-plus"></i>
                         <span>New Customer</span>
                     </button>
+                    @endcan
                 </div>
-                @endcan
             </div>
 
             <div class="main-table-container">
@@ -1959,6 +1961,75 @@
                         }
                     ],
                     autoWidth: false
+                });
+
+                // Delete customer (SweetAlert confirm + AJAX)
+                $(document).on('submit', 'form.delete-form.delete-customer-btn', function(e) {
+                    e.preventDefault();
+
+                    const form = this;
+                    const $form = $(form);
+
+                    Swal.fire({
+                        title: 'Hapus customer?',
+                        text: 'Data akan dihapus permanen dan tidak dapat dikembalikan.',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonText: 'Ya, hapus',
+                        cancelButtonText: 'Batal',
+                        reverseButtons: true
+                    }).then((result) => {
+                        if (!result.isConfirmed) return;
+
+                        Swal.fire({
+                            title: 'Menghapus... ',
+                            text: 'Mohon tunggu sebentar.',
+                            allowOutsideClick: false,
+                            allowEscapeKey: false,
+                            didOpen: () => { Swal.showLoading(); }
+                        });
+
+                        $.ajax({
+                            url: $form.attr('action'),
+                            method: 'POST',
+                            data: $form.serialize(),
+                            dataType: 'json'
+                        })
+                        .done(function(response) {
+                            Swal.close();
+
+                            if (response && response.success) {
+                                Swal.fire('Berhasil!', response.message || 'Customer berhasil dihapus.', 'success')
+                                    .then(() => {
+                                        try {
+                                            if (typeof table !== 'undefined') {
+                                                table.ajax.reload(null, false);
+                                            } else if ($('#sampleTable').length) {
+                                                $('#sampleTable').DataTable().ajax.reload(null, false);
+                                            }
+                                        } catch (err) {
+                                            console.warn('Reload DataTable failed', err);
+                                        }
+                                    });
+                                return;
+                            }
+
+                            Swal.fire('Gagal!', (response && response.message) ? response.message : 'Gagal menghapus customer.', 'error');
+                        })
+                        .fail(function(xhr) {
+                            Swal.close();
+
+                            let msg = 'Terjadi kesalahan saat menghapus data.';
+
+                            if (xhr && xhr.status === 419) {
+                                msg = 'Session Anda sudah habis (419). Silakan refresh halaman lalu coba lagi.';
+                            } else if (xhr && xhr.responseJSON && xhr.responseJSON.message) {
+                                msg = xhr.responseJSON.message;
+                            }
+
+                            Swal.fire('Error!', msg, 'error');
+                        });
+                    });
                 });
 
                 // Preserve top filters & search when opening create/edit modals

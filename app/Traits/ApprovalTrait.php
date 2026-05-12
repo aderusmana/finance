@@ -11,6 +11,13 @@ trait ApprovalTrait
 {
     public function generateApprovalLogs($requester, $relatedId, $category, $pathSubCategory = null)
     {
+        if (is_string($pathSubCategory)) {
+            $pathSubCategory = trim($pathSubCategory);
+            if ($pathSubCategory === '') {
+                $pathSubCategory = null;
+            }
+        }
+
         Log::info("START Approval Generation: Category: $category, ID: $relatedId, Sub: " . ($pathSubCategory ?? 'NULL'));
 
         // 1. CARI PATH YANG COCOK DI DATABASE
@@ -99,6 +106,7 @@ trait ApprovalTrait
             if ($approverNik) {
                 $logs->push([
                     'category'       => $category,
+                    'sub_category'   => $pathSubCategory,
                     'related_id'     => $relatedId,
                     'approver_nik'   => $approverNik,
                     'status'         => 'Pending',

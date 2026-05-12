@@ -5,9 +5,9 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <link rel="icon" href="{{ url('assets/images/logo/logors.png') }}">
+    <link rel="icon" href="{{ url('assets/images/logo/set-logo.png') }}">
 
-    <title>{{ 'Portal Finance & Admin' }} - @yield('title')</title>
+    <title>{{ 'Customer Portal' }} - @yield('title')</title>
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
@@ -19,12 +19,6 @@
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com" rel="preconnect">
     <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
-
-    <!-- iconoir icon css  -->
-    <link href="{{ asset('assets') }}/vendor/ionio-icon/css/iconoir-1.css" rel="stylesheet">
-
-    <!-- tabler icons-->
-    <link href="{{ asset('assets') }}/vendor/tabler-icons/tabler-icons-1.css" rel="stylesheet" type="text/css">
 
     <!-- Bootstrap css-->
     <link href="{{ asset('assets') }}/vendor/bootstrap/bootstrap.min-1.css" rel="stylesheet" type="text/css">
@@ -38,7 +32,9 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
-<body class="sign-in-bg">
+<body class="sign-in-bg"
+    style="background-image: url({{ asset('assets/images/logo/pic.webp') }}); background-size: 100% 100%; height: 100vh; width: 100vw;">
+    
     <div class="app-wrapper d-block">
         <div class="main-container">
             <!-- Body main section starts -->

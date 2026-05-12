@@ -131,13 +131,13 @@ class ApprovalPathController extends Controller
 
         $subCategories = [
             'BG' => ['Lampiran D'],
-            'Customer' => ['CBD'],
+            'Customer' => ['CBD', 'Logistic Fee'],
         ];
 
         $existingPaths = ApprovalPath::select('category', 'sub_category')->get();
 
         return response()->json([
-            'categories' => $categories, 
+            'categories' => $categories,
             'subCategories' => $subCategories,
             'existingPaths' => $existingPaths
         ]);

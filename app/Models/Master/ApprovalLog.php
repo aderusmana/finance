@@ -11,6 +11,7 @@ class ApprovalLog extends Model
 
     protected $fillable = [
         'category',
+        'sub_category',
         'related_id',
         'approver_nik',
         'status',

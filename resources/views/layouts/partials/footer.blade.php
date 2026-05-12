@@ -5,7 +5,7 @@
                 <ul class="footer-text">
                     <li>
                         &copy;
-                        <span id="currentYear"></span> Portal Finance & Admin | SINARMEADOW | MIS. All Rights
+                        <span id="currentYear"></span> Customer Portal | SINARMEADOW  All Rights
                         Reserved.
                     </li>
                 </ul>

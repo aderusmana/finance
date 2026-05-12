@@ -354,21 +354,21 @@
 
     {{-- Modal Preview File --}}
     <div class="modal fade" id="filePreviewModal" tabindex="-1" aria-labelledby="filePreviewModalLabel" aria-hidden="true" style="z-index: 1060;">
-        <div class="modal-dialog modal-dialog-centered modal-lg"> 
+        <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content border-0">
                 <div class="modal-header bg-dark text-white border-0 py-2">
                     <h6 class="modal-title text-white fw-bold f-s-14" id="filePreviewModalLabel">FILE PREVIEW</h6>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                
+
                 <div class="modal-body p-0 d-flex align-items-center justify-content-center bg-dark" style="min-height: 400px;">
-                    
-                    <img id="previewImageContent" src="" class="img-fluid" 
+
+                    <img id="previewImageContent" src="" class="img-fluid"
                         style="max-height: 60vh; max-width: 100%; display: none;" alt="File Preview">
-                    
-                    <iframe id="previewPdfContent" src="" 
+
+                    <iframe id="previewPdfContent" src=""
                             style="width: 100%; height: 60vh; border: none; display: none;"></iframe>
-                    
+
                     <div id="previewErrorMessage" class="text-white p-5 text-center" style="display: none;">
                         <i class="ph-bold ph-file-x f-s-30 mb-2"></i><br>
                         File type not supported for preview.<br>
@@ -382,7 +382,7 @@
     {{-- MODAL KHUSUS: VERIFY & EDIT NPWP --}}
     <div class="modal fade" id="modalVerifyNpwpSystem" tabindex="-1" aria-hidden="true" style="z-index: 1070;">
         <div class="modal-dialog modal-lg modal-dialog-centered">
-            
+
             <div class="modal-content" style="min-height: auto;">
                 <div class="modal-header bg-dark text-white py-2">
                     <h6 class="modal-title fw-bold"><i class="ph-bold ph-scan me-2"></i> Verify NPWP Data</h6>
@@ -391,7 +391,7 @@
                 <div class="modal-body p-0">
                     <div class="container-fluid">
                         <div class="row g-0">
-                            <div class="col-lg-7 d-flex align-items-center justify-content-center bg-secondary bg-opacity-25 border-end" 
+                            <div class="col-lg-7 d-flex align-items-center justify-content-center bg-secondary bg-opacity-25 border-end"
                                 style="background-color: #525252; min-height: 400px; max-height: 500px;">
                                 <div id="npwp_preview_container" class="w-100 h-100 d-flex align-items-center justify-content-center p-2">
                                 </div>
@@ -399,17 +399,17 @@
 
                             <div class="col-lg-5 p-3 bg-white d-flex flex-column justify-content-center">
                                 <h6 class="fw-bold text-primary mb-2">Koreksi Nomor NPWP</h6>
-                                
+
                                 <div class="alert alert-info small mb-3 border-info p-2">
                                     <div class="d-flex align-items-center">
                                         <i class="ph-fill ph-info f-s-16 me-2"></i>
                                         <div style="line-height: 1.2;">Cocokkan dokumen kiri dengan input.</div>
                                     </div>
                                 </div>
-                                
+
                                 <div class="mb-3">
                                     <label class="form-label fw-bold text-muted small text-uppercase mb-1">Nomor NPWP (Sistem)</label>
-                                    <input type="text" id="input_npwp_verification" class="form-control fw-bold text-dark border-primary" 
+                                    <input type="text" id="input_npwp_verification" class="form-control fw-bold text-dark border-primary"
                                         placeholder="Nomor NPWP">
                                 </div>
 
@@ -625,8 +625,8 @@
                         // Pastikan attribute data-original="${currentTop}" ADA DISINI
                         $('#container_top').html(`
                             <select class="form-select form-select-sm fw-bold text-primary border-primary"
-                                    name="update_top" 
-                                    id="input_top" 
+                                    name="update_top"
+                                    id="input_top"
                                     data-original="${currentTop}"
                                     form="modalResponseForm">
                                 ${topOptions}
@@ -639,8 +639,8 @@
                             <div class="input-group input-group-sm">
                                 <input type="number" class="form-control fw-bold text-primary border-primary"
                                     name="update_lead_time" id="input_lead_time"
-                                    value="${leadTimeValue}" 
-                                    placeholder="0" 
+                                    value="${leadTimeValue}"
+                                    placeholder="0"
                                     form="modalResponseForm">
                                 <span class="input-group-text bg-primary text-white border-primary">Days</span>
                             </div>
@@ -658,19 +658,19 @@
                                     npwpUrl = "{{ asset('storage') }}/" + file.npwp_file;
                                 }
                             }
-                            
+
                             if (!npwpUrl && data.file_npwp_path) npwpUrl = data.file_npwp_path;
 
                             $('#container_npwp').html(`
                                 <div class="input-group">
-                                    <input type="text" class="form-control form-control-sm fw-bold border-primary text-dark" 
+                                    <input type="text" class="form-control form-control-sm fw-bold border-primary text-dark"
                                         id="display_npwp_main" value="${data.npwp || ''}" readonly>
-                                    
-                                    <button type="button" class="btn btn-sm btn-outline-primary" 
+
+                                    <button type="button" class="btn btn-sm btn-outline-primary"
                                             onclick="openNpwpVerificationModal('${npwpUrl}', '${data.npwp || ''}')">
                                         <i class="ph-bold ph-pencil-simple me-1"></i> Verify
                                     </button>
-                                    <input type="hidden" name="update_npwp" id="real_update_npwp" 
+                                    <input type="hidden" name="update_npwp" id="real_update_npwp"
                                         value="${data.npwp || ''}" form="modalResponseForm">
                                 </div>
                             `);
@@ -889,7 +889,7 @@
 
                     if (fileUrl) {
                         const ext = fileUrl.split('.').pop().toLowerCase();
-                        
+
                         if (['jpg', 'jpeg', 'png', 'webp', 'bmp'].includes(ext)) {
                             container.html(`<img src="${fileUrl}" class="img-fluid shadow-sm" style="max-height: 400px; max-width: 100%;">`);
                         } else if (ext === 'pdf') {
@@ -920,7 +920,7 @@
                     const newVal = $('#input_npwp_verification').val();
                     $('#display_npwp_main').val(newVal);
                     $('#real_update_npwp').val(newVal);
-                    
+
                     const modalEl = document.getElementById('modalVerifyNpwpSystem');
                     const modal = bootstrap.Modal.getInstance(modalEl);
                     modal.hide();
@@ -953,17 +953,15 @@
                     fileModal.show();
                 });
 
-                // Modal Action Buttons
-                $(document).on('click', '.action-btn-modal, .action-btn', function() {
+                $(document).on('click', '.action-btn-modal', function() {
                     const button = $(this);
                     const customerId = button.data('id');
                     const token = button.data('token');
-                    let action = button.data('action');
-                    if(button.hasClass('action-btn')) action = 'approve';
 
                     const customerName = button.data('name');
                     const btnTitle = button.attr('title') || '';
                     const isITInput = btnTitle.includes('Input Customer Code');
+
                     const originalIcon = button.html();
                     button.html('<span class="spinner-border spinner-border-sm"></span>').prop('disabled', true);
 
@@ -972,145 +970,295 @@
                         type: 'GET',
                         success: function(response) {
                             populateViewForm(response);
-                            const isReject = action === 'reject';
-                            const isApprove = action === 'approve';
-                            const cardClass = isReject ? 'bg-danger bg-opacity-10 border-danger' : 'bg-success bg-opacity-10 border-success';
-                            const titleClass = isReject ? 'text-danger' : 'text-success';
-                            const btnClass = isReject ? 'btn-danger' : 'btn-success';
-                            const iconClass = isReject ? 'ph-x-circle' : 'ph-check-circle';
-                            let btnText = isReject ? 'Submit Reject' : 'Submit Approval';
-                            if (isITInput) btnText = 'Save & Activate';
-                            if (isApprove) btnText = 'Confirm Approve';
-                            let notesLabel = isReject ? 'Rejection Reason' : 'Review Notes';
-                            if (isITInput) notesLabel = 'Notes (Optional)';
-                            const notesDisplay = isApprove ? 'display:none;' : '';
-                            const notesRequired = isReject ? 'required' : '';
 
-                            let additionalInputs = '';
+                            let actionFormHtml = '';
+                            let submitBtnHtml = '';
+
                             if (isITInput) {
                                 let today = new Date().toISOString().split('T')[0];
                                 let joinVal = response.join_date ? response.join_date.split(' ')[0] : today;
                                 let codeVal = response.code || '';
-                                additionalInputs = `
-                                    <div class="alert alert-light border border-info border-start-4 shadow-sm py-2 small mb-3">
-                                        <div class="d-flex align-items-center text-info"><i class="ph-bold ph-info me-2 f-s-18"></i><span class="fw-bold">IT Approval:</span> Complete data to activate.</div>
+
+                                actionFormHtml = `
+                                    <div class="card shadow-sm border-info border-opacity-25 mt-3">
+                                        <div class="card-header bg-info bg-opacity-10 pt-3 pb-2 border-0">
+                                            <h6 class="mb-0 fw-bold text-info"><i class="ph-bold ph-pencil-simple me-2"></i>IT ACTIVATION: SET CUSTOMER CODE</h6>
+                                        </div>
+                                        <div class="card-body p-3">
+                                            <form id="modalResponseForm" action="{{ route('customers.approval_action', ':id') }}".replace(':id', customerId) method="POST">
+                                                @csrf
+                                                <input type="hidden" name="token" value="${token}">
+                                                <input type="hidden" name="action" id="final_action" value="review"> <div class="row mb-3">
+                                                    <div class="col-md-6">
+                                                        <label class="form-label fw-bold small">Customer Code <span class="text-danger">*</span></label>
+                                                        <input type="text" class="form-control fw-bold border-primary" id="it_update_code" name="update_code" value="${codeVal}" placeholder="e.g. CUST-001" required>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label fw-bold small">Join Date <span class="text-danger">*</span></label>
+                                                        <input type="date" class="form-control" name="update_join_date" value="${joinVal}" required>
+                                                    </div>
+                                                </div>
+                                                <div class="mb-0">
+                                                    <label for="modal_notes" class="form-label fw-bold small text-dark">Notes (Optional)</label>
+                                                    <textarea class="form-control bg-light" id="modal_notes" name="notes" rows="2" placeholder="Catatan aktivasi..."></textarea>
+                                                </div>
+                                            </form>
+                                        </div>
                                     </div>
-                                    <div class="row mb-3">
-                                        <div class="col-md-6"><label class="form-label fw-bold small">Code <span class="text-danger">*</span></label><input type="text" class="form-control fw-bold" name="update_code" value="${codeVal}" placeholder="e.g. ID-001" required></div>
-                                        <div class="col-md-6"><label class="form-label fw-bold small">Join Date <span class="text-danger">*</span></label><input type="date" class="form-control" name="update_join_date" value="${joinVal}" required></div>
-                                    </div>`;
+                                `;
+
+                                submitBtnHtml = `
+                                    <button type="submit" form="modalResponseForm" id="final_submit_btn" class="btn btn-primary px-4 rounded-pill fw-bold shadow-sm">
+                                        <i class="ph-bold ph-check-circle me-2"></i> Save & Activate
+                                    </button>
+                                `;
+
+                            } else {
+                                actionFormHtml = `
+                                    <div class="card shadow-sm border-primary border-opacity-25 mt-3">
+                                        <div class="card-header bg-primary bg-opacity-10 pt-3 pb-2 border-0">
+                                            <h6 class="mb-0 fw-bold text-primary"><i class="ph-bold ph-gavel me-2"></i>Decision: APPROVAL REVIEW</h6>
+                                        </div>
+                                        <div class="card-body p-3">
+                                            <form id="modalResponseForm" action="{{ route('customers.approval_action', ':id') }}".replace(':id', customerId) method="POST">
+                                                @csrf
+                                                <input type="hidden" name="token" value="${token}">
+                                                <input type="hidden" name="action" id="final_action" value="">
+
+                                                <label class="form-label fw-bold small text-dark mb-2">Select your decision <span class="text-danger">*</span></label>
+                                                <div class="d-flex flex-column flex-md-row gap-3 mb-4">
+                                                    <div class="card decision-btn flex-fill cursor-pointer shadow-sm border" data-select-action="approve" style="cursor: pointer; transition: all 0.2s;">
+                                                        <div class="card-body p-3 d-flex align-items-center">
+                                                            <div class="bg-success text-white rounded p-2 me-3 d-flex align-items-center justify-content-center shadow-sm">
+                                                                <i class="ph-bold ph-check-circle f-s-20"></i>
+                                                            </div>
+                                                            <div><h6 class="mb-0 fw-bold text-dark">Approve Tanpa Catatan</h6></div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="card decision-btn flex-fill cursor-pointer shadow-sm border" data-select-action="review" style="cursor: pointer; transition: all 0.2s;">
+                                                        <div class="card-body p-3 d-flex align-items-center">
+                                                            <div class="bg-primary text-white rounded p-2 me-3 d-flex align-items-center justify-content-center shadow-sm">
+                                                                <i class="ph-bold ph-note-pencil f-s-20"></i>
+                                                            </div>
+                                                            <div><h6 class="mb-0 fw-bold text-dark">Approve Dengan Catatan</h6></div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="card decision-btn flex-fill cursor-pointer shadow-sm border" data-select-action="reject" style="cursor: pointer; transition: all 0.2s;">
+                                                        <div class="card-body p-3 d-flex align-items-center">
+                                                            <div class="bg-danger text-white rounded p-2 me-3 d-flex align-items-center justify-content-center shadow-sm">
+                                                                <i class="ph-bold ph-x-circle f-s-20"></i>
+                                                            </div>
+                                                            <div><h6 class="mb-0 fw-bold text-dark">Reject Tolak Pengajuan</h6></div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div id="notes_container" style="display: none;" class="mb-2">
+                                                    <label for="modal_notes" class="form-label fw-bold small text-dark">Notes / Alasan <span class="text-danger">*</span></label>
+                                                    <textarea class="form-control bg-light border-secondary" id="modal_notes" name="notes" rows="3" placeholder="Ketik catatan Anda..."></textarea>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                `;
+
+                                submitBtnHtml = `
+                                    <button type="submit" form="modalResponseForm" id="final_submit_btn" class="btn px-4 rounded-pill fw-bold shadow-sm" style="display: none;">
+                                        Submit Decision
+                                    </button>
+                                `;
                             }
 
-                            const actionFormHtml = `
-                                <div class="card ${cardClass} shadow-sm">
-                                    <div class="card-header bg-transparent border-0 pt-3 pb-0">
-                                        <h6 class="mb-0 fw-bold ${titleClass}"><i class="ph-bold ${isReject ? 'ph-gavel' : 'ph-seal-check'} me-2"></i>Decision: ${isITInput ? 'ACTIVATE' : action.toUpperCase()}</h6>
-                                    </div>
-                                    <div class="card-body p-3">
-                                        <form id="modalResponseForm" action="{{ route('customers.approval_action', ':id') }}".replace(':id', customerId) method="POST">
-                                            @csrf
-                                            <input type="hidden" name="token" value="${token}">
-                                            <input type="hidden" name="action" value="${action}">
-                                            ${additionalInputs}
-                                            <div class="mb-2" style="${notesDisplay}">
-                                                <label for="modal_notes" class="form-label fw-bold small text-dark">${notesLabel} ${isReject ? '<span class="text-danger">*</span>' : ''}</label>
-                                                <textarea class="form-control bg-white" id="modal_notes" name="notes" rows="3" placeholder="Type your notes here..." ${notesRequired}></textarea>
-                                            </div>
-                                            ${isApprove ? '<p class="mb-0 text-success small fw-bold"><i class="ph-bold ph-info me-1"></i> You are approving this customer without notes.</p>' : ''}
-                                        </form>
-                                    </div>
-                                </div>
-                            `;
                             const submitUrl = "{{ route('customers.approval_action', ':id') }}".replace(':id', customerId);
                             $('#viewModalActionFormContainer').html(actionFormHtml);
                             $('#viewModalActionFormContainer form').attr('action', submitUrl);
-                            const submitBtnHtml = `
-                                <button type="submit" form="modalResponseForm" class="btn ${btnClass} px-4 rounded-pill fw-bold shadow-sm">
-                                    <i class="ph-bold ${iconClass} me-2"></i> ${btnText}
-                                </button>
-                            `;
+
                             $('#viewModalFooter button[type="submit"]').remove();
                             $('#viewModalFooter').prepend(submitBtnHtml);
                             $('#viewModal').modal('show');
                         },
-                        error: function() { Swal.fire('Error', 'Failed to fetch customer data.', 'error'); },
+                        error: function() { Swal.fire('Error', 'Failed to fetch data.', 'error'); },
                         complete: function() { button.html(originalIcon).prop('disabled', false); }
                     });
                 });
 
-                // Submit Handler
+                $(document).on('click', '.decision-btn', function() {
+
+                    $('.decision-btn')
+                        .removeClass('border-success border-primary border-danger bg-success bg-primary bg-danger bg-opacity-10')
+                        .addClass('opacity-50')
+                        .css('border-width', '1px');
+
+                    $('.decision-btn h6').removeClass('text-success text-primary text-danger');
+
+                    $(this).removeClass('opacity-50').css('border-width', '2px');
+
+                    const selectedAction = $(this).data('select-action');
+                    $('#final_action').val(selectedAction);
+
+                    if (selectedAction === 'approve') {
+                        $(this).addClass('border-success bg-success bg-opacity-10');
+                        $(this).find('h6').addClass('text-success');
+                    } else if (selectedAction === 'review') {
+                        $(this).addClass('border-primary bg-primary bg-opacity-10');
+                        $(this).find('h6').addClass('text-primary');
+                    } else if (selectedAction === 'reject') {
+                        $(this).addClass('border-danger bg-danger bg-opacity-10');
+                        $(this).find('h6').addClass('text-danger');
+                    }
+
+                    const notesContainer = $('#notes_container');
+                    const notesInput = $('#modal_notes');
+                    const submitBtn = $('#final_submit_btn');
+
+                    if(selectedAction === 'approve') {
+                        notesContainer.slideUp();
+                        notesInput.removeAttr('required').val('');
+                        submitBtn.removeClass('btn-primary btn-danger').addClass('btn-success')
+                                .html('<i class="ph-bold ph-check-circle me-2"></i> Submit Approve').fadeIn();
+                    } else if (selectedAction === 'review') {
+                        notesContainer.slideDown();
+                        notesInput.attr('required', 'required');
+                        submitBtn.removeClass('btn-success btn-danger').addClass('btn-primary')
+                                .html('<i class="ph-bold ph-paper-plane-tilt me-2"></i> Submit Approve with Notes').fadeIn();
+                    } else if (selectedAction === 'reject') {
+                        notesContainer.slideDown();
+                        notesInput.attr('required', 'required');
+                        submitBtn.removeClass('btn-success btn-primary').addClass('btn-danger')
+                                .html('<i class="ph-bold ph-x-circle me-2"></i> Submit Reject').fadeIn();
+                    }
+                });
+
                 $(document).on('submit', '#modalResponseForm', function(e) {
                     e.preventDefault();
+
                     const form = $(this);
-                    const notesValue = $('#modal_notes').val().trim();
-                    const action = form.find('input[name="action"]').val();
+                    const action = $('#final_action').val();
+                    const notesValue = $('#modal_notes').val() ? $('#modal_notes').val().trim() : '';
+
+                    const customerCodeInput = $('#it_update_code');
+                    const isITForm = customerCodeInput.length > 0;
+
                     const topInput = $('#input_top');
-                    const isITForm = form.find('input[name="update_code"]').length > 0;
-                    const isFinanceForm = topInput.length > 0; 
+                    const isFinanceForm = topInput.length > 0;
 
-                    const isReject = action === 'reject';
-                    const isApprove = action === 'approve';
+                    if (isITForm) {
+                        const inputCode = customerCodeInput.val().trim();
 
-                    if (isReject) {
-                        if (!notesValue || !/[a-zA-Z]/.test(notesValue)) {
-                            Swal.fire('Warning', 'Alasan penolakan wajib diisi dengan jelas.', 'warning');
+                        if (!inputCode) {
+                            Swal.fire('Error', 'Customer Code wajib diisi!', 'error');
                             return;
                         }
-                    } 
-                    else if (action === 'review') {
-                        if (isFinanceForm) {
-                            const currentTop = String(topInput.val() || '').trim();
-                            const originalTop = String(topInput.attr('data-original') || '').trim();
 
-                            if (currentTop !== originalTop) {
-                                if (!notesValue) {
-                                    Swal.fire('Warning', 'Notes wajib diisi karena Anda mengubah Term of Payment (TOP).', 'warning');
-                                    return;
-                                }
+                        Swal.fire({
+                            title: 'Confirm Activation?',
+                            html: `Pastikan Customer Code sudah benar:<br><br><h2 class="text-primary fw-bold mb-0">${inputCode}</h2>`,
+                            icon: 'question',
+                            showCancelButton: true,
+                            confirmButtonColor: '#059669',
+                            confirmButtonText: 'Yes, Activate Now!',
+                            cancelButtonText: 'Batal',
+                            target: document.getElementById('viewModal')
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                processApprovalAjax(form);
                             }
-                        } 
-                        else if (!isITForm) {
-                            if (!notesValue) {
-                                Swal.fire('Warning', 'Notes review wajib diisi.', 'warning');
+                        });
+
+                    }
+                    else {
+                        if (!action) {
+                            Swal.fire('Peringatan', 'Silakan pilih keputusan Anda (Approve / Reject) terlebih dahulu.', 'warning');
+                            return;
+                        }
+
+                        const isReject = action === 'reject';
+                        const isApprove = action === 'approve';
+
+                        if (isReject) {
+                            if (!notesValue || !/[a-zA-Z]/.test(notesValue)) {
+                                Swal.fire('Warning', 'Alasan penolakan wajib diisi dengan jelas.', 'warning');
                                 return;
                             }
                         }
-                    }
+                        else if (action === 'review') {
+                            if (isFinanceForm) {
+                                const currentTop = String(topInput.val() || '').trim();
+                                const originalTop = String(topInput.attr('data-original') || '').trim();
 
-                    let title = 'Confirm Action?';
-                    let text = 'Proceed with this decision?';
-                    let confirmColor = '#3085d6';
-                    let icon = 'question';
-                    
-                    if (isReject) {
-                        title = 'Confirm Rejection?'; text = "This request will be rejected."; icon = 'warning'; confirmColor = '#d33';
-                    } else if (isApprove) {
-                        title = 'Approve without Notes?'; text = "Are you sure you want to approve this customer immediately?"; confirmColor = '#28a745';
-                    } else {
-                            title = 'Submit Review?'; text = "Submit approval with notes/changes?";
-                    }
-
-                    Swal.fire({
-                        title: title, text: text, icon: icon, showCancelButton: true, confirmButtonColor: confirmColor, confirmButtonText: 'Yes, Submit!', target: document.getElementById('viewModal')
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            $('#loading-overlay').css('display', 'flex');
-                            $('#viewModal').modal('hide');
-                            $.ajax({
-                                url: form.attr('action'), method: 'POST', data: form.serialize(),
-                                success: function(res) {
-                                    $('#loading-overlay').hide();
-                                    Swal.fire('Success!', res.message, 'success');
-                                    table.ajax.reload(null, false);
-                                },
-                                error: function(xhr) {
-                                    $('#loading-overlay').hide();
-                                    Swal.fire('Error!', xhr.responseJSON?.message || 'Error processing request.', 'error');
+                                if (currentTop !== originalTop) {
+                                    if (!notesValue) {
+                                        Swal.fire('Warning', 'Notes wajib diisi karena Anda mengubah Term of Payment (TOP).', 'warning');
+                                        return;
+                                    }
                                 }
-                            });
+                            }
+                            else {
+                                if (!notesValue) {
+                                    Swal.fire('Warning', 'Notes untuk approval ini wajib diisi.', 'warning');
+                                    return;
+                                }
+                            }
+                        }
+
+                        let title = 'Confirm Action?';
+                        let text = 'Proceed with this decision?';
+                        let confirmColor = '#3085d6';
+                        let icon = 'question';
+
+                        if (isReject) {
+                            title = 'Confirm Rejection?';
+                            text = "Pengajuan ini akan ditolak dan dikembalikan.";
+                            icon = 'warning';
+                            confirmColor = '#d33';
+                        } else if (isApprove) {
+                            title = 'Approve without Notes?';
+                            text = "Anda akan menyetujui pengajuan ini tanpa memberikan catatan.";
+                            confirmColor = '#28a745';
+                        } else {
+                            title = 'Submit Approval?';
+                            text = "Kirim persetujuan beserta catatan / perubahan data?";
+                        }
+
+                        Swal.fire({
+                            title: title,
+                            text: text,
+                            icon: icon,
+                            showCancelButton: true,
+                            confirmButtonColor: confirmColor,
+                            confirmButtonText: 'Yes, Submit!',
+                            cancelButtonText: 'Batal',
+                            target: document.getElementById('viewModal')
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                processApprovalAjax(form);
+                            }
+                        });
+                    }
+                });
+
+                function processApprovalAjax(form) {
+                    $('#loading-overlay').css('display', 'flex');
+                    $('#viewModal').modal('hide');
+
+                    $.ajax({
+                        url: form.attr('action'),
+                        method: 'POST',
+                        data: form.serialize(),
+                        success: function(res) {
+                            $('#loading-overlay').hide();
+                            Swal.fire('Success!', res.message, 'success');
+
+                            if (typeof table !== 'undefined') {
+                                table.ajax.reload(null, false);
+                            }
+                        },
+                        error: function(xhr) {
+                            $('#loading-overlay').hide();
+                            const errMsg = xhr.responseJSON?.message || 'Terjadi kesalahan saat memproses permintaan.';
+                            Swal.fire('Error!', errMsg, 'error');
                         }
                     });
-                });
+                }
 
                 $('#viewModal').on('hidden.bs.modal', function () {
                     $('#viewModalActionFormContainer').empty();
