@@ -16,7 +16,7 @@
                             <table border="0" cellpadding="0" cellspacing="0" style="width: 100%;">
                                 <tr>
                                     <td width="60" style="text-align: right; padding-right: 15px;">
-                                        <img src="{{ url('assets/images/logo/logos.png') }}" alt="Logo SMII" width="55" height="55" style="display: block; width: 55px; height: 55px; border: 0; outline: none; text-decoration: none;">
+                                        <img src="{{ url('assets/images/logo/outline-smii.png') }}" alt="Logo SMII" width="65" height="65" style="display: block; width: 65px; height: 65px; border: 0; outline: none; text-decoration: none;">
                                     </td>
                                     <td style="text-align: left;">
                                         <h2 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 800; letter-spacing: 1px;">DELIVERY NOTE</h2>

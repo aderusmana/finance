@@ -91,25 +91,50 @@
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 15px;
+            table-layout: fixed;
         }
 
         /* Header border color changed to white for clarity */
         .item-table th {
             background-color: #a68831;
             color: #ffffff;
-            padding: 8px;
+            padding: 5px 6px;
             font-weight: 700;
             text-align: center;
-            font-size: 12px;
+            font-size: 10px;
+            line-height: 1.1;
             text-transform: uppercase;
             border: 1px solid #ffffff;
         }
 
-        /* Table font size increased to 12px */
         .item-table td {
-            padding: 6px 8px;
+            padding: 4px 6px;
             border: 1px solid #cbd5e1;
-            font-size: 12px;
+            font-size: 10px;
+            line-height: 1.15;
+            vertical-align: top;
+            word-break: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .item-table td:nth-child(1),
+        .item-table th:nth-child(1) {
+            width: 6%;
+        }
+
+        .item-table td:nth-child(2),
+        .item-table th:nth-child(2) {
+            width: 18%;
+        }
+
+        .item-table td:nth-child(3),
+        .item-table th:nth-child(3) {
+            width: 61%;
+        }
+
+        .item-table td:nth-child(4),
+        .item-table th:nth-child(4) {
+            width: 15%;
         }
 
         .item-table tr:nth-child(even) {
@@ -216,10 +241,10 @@
     <table class="item-table">
         <thead>
             <tr>
-                <th width="5%">No</th>
-                <th width="20%">Item Code</th>
-                <th width="60%">Item Description</th>
-                <th width="15%">Quantity</th>
+                <th>No</th>
+                <th>Item Code</th>
+                <th>Item Description</th>
+                <th>Quantity</th>
             </tr>
         </thead>
         <tbody>
@@ -228,7 +253,7 @@
                     <td class="text-center">{{ $index + 1 }}</td>
                     <td class="text-center">{{ $item->order_item_code }}</td>
                     <td>{{ $item->order_item_name }}</td>
-                    <td class="text-center text-bold" style="font-size: 14px;">{{ $item->order_quantity }}</td>
+                    <td class="text-center text-bold">{{ $item->order_quantity }}</td>
                 </tr>
             @endforeach
         </tbody>
