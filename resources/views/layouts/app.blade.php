@@ -7,17 +7,19 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
-    <link rel="icon" href="{{ url('assets/images/logo/logors.png') }}">
+    <link rel="icon" href="{{ url('assets/images/logo/set-logo.png') }}">
 
 
     <meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
     <meta content="IE=edge" http-equiv="X-UA-Compatible">
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
-    <meta content="Website untuk form pengeluaran barang di Sinarmeadow" name="description">
-    <meta content="requisition slip, sinarmeadow, pengeluaran barang, form, inventory, admin" name="keywords">
+    <meta
+        content="Portal pelanggan untuk manajemen customer, pembuatan customer baru, bank garansi, dan layanan terkait"
+        name="description">
+    <meta content="customer portal, customer create, bank garansi, manajemen pelanggan, admin, finance" name="keywords">
     <meta content="Sinarmeadow" name="author">
-    <link href="{{ asset('assets/') }}/images/logo/favicon.png" rel="icon" type="image/x-icon">
-    <link href="{{ asset('assets/') }}/images/logo/favicon.png" rel="shortcut icon" type="image/x-icon">
+    <link href="{{ asset('assets/') }}/images/logo/set-logo.png" rel="icon" type="image/x-icon">
+    <link href="{{ asset('assets/') }}/images/logo/set-logo.png" rel="shortcut icon" type="image/x-icon">
 
     <title>Customer Portal - @yield('title')</title>
 
