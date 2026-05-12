@@ -36,7 +36,7 @@ class AllSeeder extends Seeder
             'view user', 'create user', 'update user', 'delete user',
             'view department', 'create department', 'update department', 'delete department',
             'view item', 'create item', 'update item', 'delete item',
-            'view customer', 'create customer', 'update customer', 'delete customer',
+            'view customer', 'create customer', 'update customer', 'delete customer', 'import customer',
             'view bg', 'create bg', 'update bg', 'delete bg',
             'view bg-approval', 'approve bg', 'reject bg',
             'view log', 'view report', 'view approval',
@@ -84,14 +84,14 @@ class AllSeeder extends Seeder
 
         $atasanApprovalRole = Role::updateOrCreate(['name' => 'atasan']);
         $atasanApprovalRole->syncPermissions([
-            'view dashboard', 'view customers menu', 'view customer',
+            'view dashboard', 'view customers menu', 'view customer', 'create customer', 'update customer',
             'view bg-approval', 'approve bg', 'reject bg',
             'view approval'
         ]);
 
         // Finance Roles
         $financePerms = [
-            'view dashboard', 'view customers menu', 'view customer', 'update customer',
+            'view dashboard', 'view customers menu', 'view customer', 'create customer', 'update customer', 'delete customer',
             'view bank garansi menu', 'view bg', 'create bg', 'update bg', 'delete bg',
             'view bg-approval', 'approve bg', 'reject bg',
             'view log', 'view report', 'view approval'
@@ -107,14 +107,14 @@ class AllSeeder extends Seeder
         $headSnmRole = Role::updateOrCreate(['name' => 'head-SNM']);
         $headSnmRole->syncPermissions([
             'view dashboard', 'view customers menu', 'view customer',
-            'create customer', 'update customer', 'view report', 'view approval'
+            'create customer', 'update customer', 'delete customer', 'view report', 'view approval'
         ]);
 
         // IT Role
         $itRole = Role::updateOrCreate(['name' => 'it']);
         $itRole->syncPermissions([
             'view dashboard', 'view master data menu', 'view master management menu',
-            'view customers menu', 'view customer', 'update customer',
+            'view customers menu', 'view customer', 'update customer', 'delete customer',
             'view role', 'view permission', 'view user',
             'view log', 'view approval-path'
         ]);
@@ -122,7 +122,8 @@ class AllSeeder extends Seeder
         // Staff Sales
         $staffSalesRole = Role::updateOrCreate(['name' => 'staff-sales']);
         $staffSalesRole->syncPermissions([
-            'view dashboard', 'view customers menu', 'view customer', 'view customer dashboard'
+            'view dashboard', 'view customers menu', 'view customer', 'view customer dashboard',
+            'create customer', 'update customer', 'delete customer'
         ]);
 
         // Staff Finance

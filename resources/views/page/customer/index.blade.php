@@ -45,18 +45,20 @@
                     </button>
                 </div>
 
-                @can('create customer')
                 <div class="ms-auto d-flex gap-2">
+                    @can ('import customer')
                     <button class="btn btn-success" type="button" data-bs-toggle="modal" data-bs-target="#importModal">
                         <i class="ph-bold ph-file-csv"></i>
                         <span class="d-none d-sm-inline">Import CSV</span>
                     </button>
+                    @endcan
+                    @can('create customer')
                     <button class="btn btn-primary" type="button" id="btn-create-customer">
                         <i class="ph-bold ph-plus"></i>
                         <span>New Customer</span>
                     </button>
+                    @endcan
                 </div>
-                @endcan
             </div>
 
             <div class="main-table-container">
