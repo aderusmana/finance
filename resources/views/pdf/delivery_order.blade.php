@@ -13,12 +13,29 @@
             margin: 20px 30px;
         }
 
+        html,
+        body {
+            height: 100%;
+        }
+
         body {
             font-family: 'Helvetica', sans-serif;
             color: #2d3748;
             line-height: 1.3;
             margin: 0;
             padding: 0;
+        }
+
+        /* DomPDF: keep signature anchored at page bottom */
+        .content {
+            padding-bottom: 120px;
+        }
+
+        .signature-fixed {
+            position: fixed;
+            left: 30px;
+            right: 30px;
+            bottom: 20px;
         }
 
         /* Header styling */
@@ -90,7 +107,7 @@
         .item-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 15px;
+            margin-bottom: 5px;
             table-layout: fixed;
         }
 
@@ -108,7 +125,7 @@
         }
 
         .item-table td {
-            padding: 4px 6px;
+            padding: 2px 6px;
             border: 1px solid #cbd5e1;
             font-size: 10px;
             line-height: 1.15;
@@ -144,7 +161,7 @@
         /* Signature Area */
         .signature-table {
             width: 100%;
-            margin-top: 20px;
+            margin-top: 0;
             text-align: center;
             page-break-inside: avoid;
         }
@@ -172,6 +189,8 @@
 </head>
 
 <body>
+
+    <div class="content">
 
     <table class="header-table">
         <tr>
@@ -259,25 +278,29 @@
         </tbody>
     </table>
 
-    <table class="signature-table">
-        <tr>
-            <td>
-                <div class="text-bold">Sender (Distributor)</div>
-                <div class="sign-line"></div>
-                <div>Name & Signature</div>
-            </td>
-            <td>
-                <div class="text-bold">Driver / Courier</div>
-                <div class="sign-line"></div>
-                <div>Name & Signature</div>
-            </td>
-            <td>
-                <div class="text-bold">Recipient</div>
-                <div class="sign-line"></div>
-                <div>Name, Signature & Company Stamp</div>
-            </td>
-        </tr>
-    </table>
+    </div>
+
+    <div class="signature-fixed">
+        <table class="signature-table">
+            <tr>
+                <td>
+                    <div class="text-bold">Sender (Distributor)</div>
+                    <div class="sign-line"></div>
+                    <div>Name & Signature</div>
+                </td>
+                <td>
+                    <div class="text-bold">Driver / Courier</div>
+                    <div class="sign-line"></div>
+                    <div>Name & Signature</div>
+                </td>
+                <td>
+                    <div class="text-bold">Recipient</div>
+                    <div class="sign-line"></div>
+                    <div>Name, Signature & Company Stamp</div>
+                </td>
+            </tr>
+        </table>
+    </div>
 
 </body>
 
