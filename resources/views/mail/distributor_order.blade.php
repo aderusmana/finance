@@ -16,7 +16,7 @@
                             <table border="0" cellpadding="0" cellspacing="0" style="width: 100%;">
                                 <tr>
                                     <td width="60" style="text-align: right; padding-right: 15px;">
-                                        <img src="https://ui-avatars.com/api/?name=SM&background=ffffff&color=a68831&rounded=true&bold=true&size=100" alt="Logo SMII" style="display: block; width: 55px; height: 55px; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+                                        <img src="{{ url('assets/images/logo/logos.png') }}" alt="Logo SMII" width="55" height="55" style="display: block; width: 55px; height: 55px; border: 0; outline: none; text-decoration: none;">
                                     </td>
                                     <td style="text-align: left;">
                                         <h2 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 800; letter-spacing: 1px;">DELIVERY NOTE</h2>

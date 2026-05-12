@@ -34,7 +34,9 @@ class LogisticOrderController extends Controller
         $distributors = DistributorCustomer::with('distributor')
             ->where('customer_id', $customerId)
             ->get()
-            ->map(function($item) { return $item->distributor; })
+            ->map(function ($item) {
+                return $item->distributor;
+            })
             ->filter()
             ->unique('id');
 
@@ -56,8 +58,8 @@ class LogisticOrderController extends Controller
     public function getLogisticFee($distributorId, $customerId)
     {
         $logisticFee = DistributorCustomer::where('distributor_id', $distributorId)
-                        ->where('customer_id', $customerId)
-                        ->first();
+            ->where('customer_id', $customerId)
+            ->first();
 
         // Cek apakah sedang ada pengajuan harga pending. Jika ya, pakai harga yang diajukan
         $fee = 0;
@@ -80,7 +82,7 @@ class LogisticOrderController extends Controller
             $dateTo = $request->get('date_to');
 
             $data = LogisticOrder::with(['distributor', 'customer', 'customerShipTo', 'note'])
-                ->whereHas('note', function($q) use ($tab) {
+                ->whereHas('note', function ($q) use ($tab) {
                     if ($tab === 'downloaded') {
                         $q->where('status', 'Downloaded');
                     } else {
@@ -102,7 +104,7 @@ class LogisticOrderController extends Controller
 
             return DataTables::of($data)
                 ->addIndexColumn()
-                ->editColumn('logistic_order_no', function($row) {
+                ->editColumn('logistic_order_no', function ($row) {
                     $loNo = 'LO-' . str_pad($row->id, 4, '0', STR_PAD_LEFT);
                     $createdAt = $row->created_at->format('d M Y, H:i');
 
@@ -114,7 +116,7 @@ class LogisticOrderController extends Controller
                         </div>
                     ';
                 })
-                ->addColumn('do_no', function($row) {
+                ->addColumn('do_no', function ($row) {
                     $doNo = $row->note->delivery_order_no ?? '-';
                     $createdAt = $row->created_at->format('d M Y, H:i');
 
@@ -126,10 +128,16 @@ class LogisticOrderController extends Controller
                         </div>
                     ';
                 })
-                ->addColumn('distributor_name', function($row) { return $row->distributor->name ?? '-'; })
-                ->addColumn('customer_name', function($row) { return $row->customer->name ?? '-'; })
-                ->addColumn('ship_to', function($row) { return $row->customerShipTo->ship_to_name ?? '-'; })
-                ->addColumn('status_badge', function($row) use ($tab) {
+                ->addColumn('distributor_name', function ($row) {
+                    return $row->distributor->name ?? '-';
+                })
+                ->addColumn('customer_name', function ($row) {
+                    return $row->customer->name ?? '-';
+                })
+                ->addColumn('ship_to', function ($row) {
+                    return $row->customerShipTo->ship_to_name ?? '-';
+                })
+                ->addColumn('status_badge', function ($row) use ($tab) {
                     if ($tab === 'downloaded') {
                         $count = $row->note->download_count ?? 0;
                         $lastDownloadAt = DeliveryOrderDownloadLog::where('delivery_order_note_id', $row->note->id)
@@ -142,7 +150,7 @@ class LogisticOrderController extends Controller
                         return '
                             <div class="d-flex flex-column align-items-start">
                                 <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-1 rounded-pill">
-                                    <i class="ph-bold ph-check-circle me-1"></i> Download ('.$count.'x)
+                                    <i class="ph-bold ph-check-circle me-1"></i> Download (' . $count . 'x)
                                 </span>
                                 <span class="text-secondary" style="font-size: 0.72rem; margin-top: 4px; padding-left: 4px;">
                                     <i class="ph-fill ph-eye text-success opacity-75"></i> Terakhir: ' . $updatedAt . '
@@ -152,15 +160,22 @@ class LogisticOrderController extends Controller
                     }
                     return '<span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-3 py-1 rounded-pill"><i class="ph-bold ph-clock me-1"></i> Pending</span>';
                 })
-                ->addColumn('action', function($row) use ($tab) {
+                ->addColumn('action', function ($row) use ($tab) {
                     if ($tab === 'downloaded') {
-                        $btnDetail = '<button class="btn btn-md btn-info text-white btn-detail shadow-sm px-3 rounded-pill w-100" data-id="'.$row->id.'"><i class="ph-bold ph-eye"></i> Lihat DN</button>';
-                        $btnDownload = '<a href="'.URL::signedRoute('public.lo.download', ['id' => $row->id, 'fromEmail' => 0]).'" target="_blank" class="btn btn-sm btn-success text-white shadow-sm px-3 rounded-pill w-100"><i class="ph-bold ph-printer"></i> Download DN</a>';
+                        $btnDetail = '<button class="btn btn-md btn-info text-white btn-detail shadow-sm px-3 rounded-pill w-100" data-id="' . $row->id . '"><i class="ph-bold ph-eye"></i> Lihat DN</button>';
+                        $btnDownload = '<a href="' . URL::signedRoute('public.lo.download', ['id' => $row->id, 'fromEmail' => 0]) . '" target="_blank" class="btn btn-sm btn-success text-white shadow-sm px-3 rounded-pill w-100"><i class="ph-bold ph-printer"></i> Download DN</a>';
 
-                        return '<div class="d-flex flex-column gap-2 align-items-center">'. $btnDetail . $btnDownload .'</div>';
+                        return '<div class="d-flex flex-column gap-2 align-items-center">' . $btnDetail . $btnDownload . '</div>';
                     }
 
-                    return '<button class="btn btn-md btn-primary text-white btn-detail shadow-sm px-3 rounded-pill" data-id="'.$row->id.'"><i class="ph-bold ph-eye"></i> Details</button>';
+                    return '<button 
+                                class="btn btn-sm btn-primary text-white btn-detail shadow-sm px-3 rounded-pill" 
+                                data-id="' . $row->id . '" 
+                                data-bs-toggle="tooltip" 
+                                data-bs-placement="top" 
+                                title="Detail">
+                                <i class="ph-bold ph-eye"></i>
+                            </button>';
                 })
                 ->rawColumns(['logistic_order_no', 'do_no', 'status_badge', 'action'])
                 ->make(true);
@@ -204,7 +219,7 @@ class LogisticOrderController extends Controller
             $suffix = now()->format('Ymd_His');
         }
 
-        return Excel::download($export, 'delivery_note_export_' . $suffix . '.xlsx');
+        return Excel::download($export, 'delivery_no_export_' . $suffix . '.xlsx');
     }
 
     public function store(Request $request)
@@ -239,7 +254,7 @@ class LogisticOrderController extends Controller
 
             // 2. Simpan Item
             foreach ($request->items as $item) {
-                if(empty($item['qty']) || $item['qty'] <= 0) continue;
+                if (empty($item['qty']) || $item['qty'] <= 0) continue;
 
                 LogisticOrderItem::create([
                     'logistic_order_id' => $order->id,
@@ -267,7 +282,7 @@ class LogisticOrderController extends Controller
                 'download_count'    => 0,
             ]);
 
-            if($distributor && $distributor->email) {
+            if ($distributor && $distributor->email) {
                 // Tarik ulang order dengan relasi lengkap untuk email
                 $orderEmail = LogisticOrder::with(['distributor', 'customer', 'customerShipTo', 'note', 'items'])->find($order->id);
                 Mail::to($distributor->email)->queue(new LogisticOrderDistributorMail($orderEmail));
@@ -275,7 +290,6 @@ class LogisticOrderController extends Controller
 
             DB::commit();
             return response()->json(['success' => true, 'message' => "Order ($loNo) & Note ($doNo) berhasil dibuat! Email dikirim ke Distributor."]);
-
         } catch (\Exception $e) {
             DB::rollback();
             return response()->json(['success' => false, 'message' => 'Gagal menyimpan: ' . $e->getMessage()], 500);
@@ -289,8 +303,8 @@ class LogisticOrderController extends Controller
         $downloadLogs = [];
         if ($order->note) {
             $downloadLogs = DeliveryOrderDownloadLog::where('delivery_order_note_id', $order->note->id)
-                            ->orderBy('created_at', 'desc')
-                            ->get();
+                ->orderBy('created_at', 'desc')
+                ->get();
         }
 
         $responseData = $order->toArray();
@@ -323,7 +337,7 @@ class LogisticOrderController extends Controller
 
         if ($fromEmail && $note->status === 'Pending Download') {
             return redirect(URL::signedRoute('public.lo.detail', ['id' => $id]))
-                   ->with('warning', 'Harap periksa detail pesanan terlebih dahulu sebelum mengunduh Dokumen DN untuk pertama kali.');
+                ->with('warning', 'Harap periksa detail pesanan terlebih dahulu sebelum mengunduh Dokumen DN untuk pertama kali.');
         }
 
         if ($note->status === 'Pending Download' && $note->download_count == 0) {
@@ -365,8 +379,8 @@ class LogisticOrderController extends Controller
 
         $pdfBase64 = Cache::remember($cacheKey, now()->addHours(24), function () use ($order) {
             $pdf = Pdf::loadView('pdf.delivery_order', compact('order'))
-                      ->setPaper('a5', 'landscape')
-                      ->output();
+                ->setPaper('a5', 'landscape')
+                ->output();
 
             return base64_encode($pdf);
         });

@@ -64,9 +64,9 @@ class DeliveryNoteItemExport implements FromQuery, WithHeadings, WithMapping, Sh
             'DISTRIBUTOR NAME',
             'SHIP TO CODE',
             'SHIP TO NAME',
-            'PRICE ITEM',
             'ITEM CODE',
             'ITEM NAME',
+            'PRICE ITEM',
             'QTY',
             'TOTAL',
         ];
@@ -88,9 +88,9 @@ class DeliveryNoteItemExport implements FromQuery, WithHeadings, WithMapping, Sh
             $row->distributor_name ?? '-',
             $row->ship_to_code ?? '-',
             $row->ship_to ?? '-',
-            $priceItem,
             $row->item_code ?? '-',
             $row->item_name ?? '-',
+            $priceItem,
             $qty,
             $total,
         ];

@@ -196,10 +196,12 @@
                                 <label class="form-label small mb-1 text-muted">To</label>
                                 <input type="date" class="form-control form-control-sm" id="dn_date_to">
                             </div>
-                            <button class="btn btn-success px-2 py-2 rounded-pill fw-semibold shadow-sm" id="btn-export-dn">
+                            <button class="btn btn-success px-2 py-2 rounded-pill fw-semibold shadow-sm"
+                                id="btn-export-dn">
                                 <i class="ph-bold ph-file-xls me-1"></i> Export Excel
                             </button>
-                            <button type="button" class="btn btn-danger px-2 py-2 rounded-pill fw-semibold shadow-sm" id="btn-clear-dn-date">
+                            <button type="button" class="btn btn-danger px-2 py-2 rounded-pill fw-semibold shadow-sm"
+                                id="btn-clear-dn-date">
                                 <i class="ph-bold ph-x me-1"></i> Clear
                             </button>
                         </div>
@@ -348,8 +350,7 @@
                                         <div class="d-flex align-items-center gap-3">
                                             <h6 class="fw-bold text-primary mb-0"><i class="ph-bold ph-package"></i>
                                                 Order Items</h6>
-                                            <span
-                                                class="bg-success text-white py-2 px-3 border rounded-3">Logistic
+                                            <span class="bg-success text-white py-2 px-3 border rounded-3">Logistic
                                                 Fee: <b id="active_fee_display">Rp 0 / ctn</b></span>
                                         </div>
                                         <button type="button" class="btn btn-sm btn-outline-primary"
@@ -573,6 +574,13 @@
                 return rupiah ? 'Rp ' + rupiah : 'Rp 0';
             }
 
+            document.addEventListener("DOMContentLoaded", function() {
+                var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+                tooltipTriggerList.map(function(tooltipTriggerEl) {
+                    return new bootstrap.Tooltip(tooltipTriggerEl);
+                });
+            });
+
             $(document).ready(function() {
                 const exportDnBaseUrl = "{{ route('logistic-orders.export-dn') }}";
 
@@ -682,6 +690,10 @@
                     ]
                 });
 
+                $('#historyTable').on('draw.dt', function() {
+                    $('[data-bs-toggle="tooltip"]').tooltip();
+                });
+
                 // Reload tabel downloaded saat tanggal berubah (hanya jika tab downloaded aktif)
                 $('#dn_date_from, #dn_date_to').on('change', function() {
                     if (activeTab === 'downloaded') {
@@ -721,7 +733,8 @@
                         return;
                     }
 
-                    const url = exportDnBaseUrl + '?date_from=' + encodeURIComponent(from) + '&date_to=' + encodeURIComponent(to);
+                    const url = exportDnBaseUrl + '?date_from=' + encodeURIComponent(from) + '&date_to=' +
+                        encodeURIComponent(to);
                     window.location.href = url;
                 });
 
