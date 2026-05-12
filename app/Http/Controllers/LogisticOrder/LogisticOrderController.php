@@ -154,13 +154,13 @@ class LogisticOrderController extends Controller
                 })
                 ->addColumn('action', function($row) use ($tab) {
                     if ($tab === 'downloaded') {
-                        $btnDetail = '<button class="btn btn-sm btn-info text-white btn-detail shadow-sm px-3 rounded-pill w-100" data-id="'.$row->id.'"><i class="ph-bold ph-eye"></i> Lihat DN</button>';
+                        $btnDetail = '<button class="btn btn-md btn-info text-white btn-detail shadow-sm px-3 rounded-pill w-100" data-id="'.$row->id.'"><i class="ph-bold ph-eye"></i> Lihat DN</button>';
                         $btnDownload = '<a href="'.URL::signedRoute('public.lo.download', ['id' => $row->id, 'fromEmail' => 0]).'" target="_blank" class="btn btn-sm btn-success text-white shadow-sm px-3 rounded-pill w-100"><i class="ph-bold ph-printer"></i> Download DN</a>';
 
                         return '<div class="d-flex flex-column gap-2 align-items-center">'. $btnDetail . $btnDownload .'</div>';
                     }
 
-                    return '<button class="btn btn-sm btn-primary text-white btn-detail shadow-sm px-3 rounded-pill" data-id="'.$row->id.'"><i class="ph-bold ph-eye"></i> Tinjau Order</button>';
+                    return '<button class="btn btn-md btn-primary text-white btn-detail shadow-sm px-3 rounded-pill" data-id="'.$row->id.'"><i class="ph-bold ph-eye"></i> Details</button>';
                 })
                 ->rawColumns(['logistic_order_no', 'do_no', 'status_badge', 'action'])
                 ->make(true);

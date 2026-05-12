@@ -196,8 +196,11 @@
                                 <label class="form-label small mb-1 text-muted">To</label>
                                 <input type="date" class="form-control form-control-sm" id="dn_date_to">
                             </div>
-                            <button class="btn btn-success px-4 py-2 rounded-pill fw-semibold shadow-sm" id="btn-export-dn">
+                            <button class="btn btn-success px-2 py-2 rounded-pill fw-semibold shadow-sm" id="btn-export-dn">
                                 <i class="ph-bold ph-file-xls me-1"></i> Export Excel
+                            </button>
+                            <button type="button" class="btn btn-danger px-2 py-2 rounded-pill fw-semibold shadow-sm" id="btn-clear-dn-date">
+                                <i class="ph-bold ph-x me-1"></i> Clear
                             </button>
                         </div>
                     </div>
@@ -681,6 +684,16 @@
 
                 // Reload tabel downloaded saat tanggal berubah (hanya jika tab downloaded aktif)
                 $('#dn_date_from, #dn_date_to').on('change', function() {
+                    if (activeTab === 'downloaded') {
+                        historyTable.ajax.reload(null, false);
+                    }
+                });
+
+                // Clear date filter
+                $('#btn-clear-dn-date').on('click', function() {
+                    $('#dn_date_from').val('');
+                    $('#dn_date_to').val('');
+
                     if (activeTab === 'downloaded') {
                         historyTable.ajax.reload(null, false);
                     }
