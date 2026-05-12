@@ -157,7 +157,7 @@ class CustomerController extends Controller
                     $rowData['file_ktp_path']  = $row->file_ktp ? asset('storage/' . ltrim($row->file_ktp, '/')) : null;
                     $rowData['file_akte_path'] = $row->file_akte ? asset('storage/' . ltrim($row->file_akte, '/')) : null;
                     $rowData['file_company_profile_path'] = $row->file_company_profile ? asset('storage/' . ltrim($row->file_company_profile, '/')) : null;
-                    
+
                     $jsonRow = htmlspecialchars(json_encode($rowData), ENT_QUOTES, 'UTF-8');
 
                     $tglNpwp = $row->tanggal_npwp ? Carbon::parse($row->tanggal_npwp)->format('Y-m-d') : '';
@@ -246,24 +246,24 @@ class CustomerController extends Controller
                                 data-json="' . $jsonRow . '"
                                 data-bs-toggle="tooltip"
                                 title="Recall / Revisi Pengajuan">
-                                <i class="ph-bold ph-arrow-u-up-left text-white"></i>
+                                <i class="ph-bold ph-arrow-u-up-left text-white"></i> Recall
                              </button>';
                     }
 
                     $btn .= '<button type="button" class="btn btn-info btn-show-customer" ' . $dataAttrs . ' title="Lihat Detail">
-                            <i class="fa-solid fa-eye text-white"></i>
+                            <i class="fa-solid fa-eye text-white"></i> View
                         </button>';
 
                     if ($row->status_approval === 'Pending' || $row->status_approval === 'Rejected' && $user->can('delete customer')) {
                         $btn .= '<form action="' . route('customers.destroy', $row->id) . '" method="POST" class="delete-form delete-customer-btn" style="display:inline;">
                                 ' . csrf_field() . method_field('DELETE') . '
                                 <button type="submit" class="btn btn-danger" title="Hapus Data">
-                                <i class="fas fa-trash-alt text-white"></i>
+                                    <i class="fas fa-trash-alt text-white"></i> Delete
                                 </button>
                             </form>';
                     } else {
                         $btn .= '<button type="button" class="btn btn-secondary" title="Tidak bisa dihapus (Approval sedang berjalan/selesai)" onclick="Swal.fire(\'Action Locked\', \'Data tidak dapat dihapus karena proses approval sudah berjalan (Status: ' . $row->status_approval . ').\', \'info\')">
-                                <i class="fas fa-lock text-white"></i>
+                                <i class="fas fa-lock text-white"></i> Lock
                              </button>';
                     }
 
@@ -445,7 +445,7 @@ class CustomerController extends Controller
                 ->where('category', 'Customer')
                 ->update(['status' => 'Rejected']);
 
-            $subCategory = ($request->term_of_payment === 'CBD') ? 'CBD' : null; 
+            $subCategory = ($request->term_of_payment === 'CBD') ? 'CBD' : null;
             $requesterUser = User::find($request->user_id) ?? $customer->user;
             $newLogs = $this->generateApprovalLogs($requesterUser, $customer->id, 'Customer', $subCategory);
 
@@ -529,7 +529,8 @@ class CustomerController extends Controller
             $baseTotalAmount += ($item->quantity * $item->price);
         }
 
-        $data = $customer->load(['sales.user', 'files', 'bankGaransis', 'bgRecommendations', 'creditLimits', 'items'])->toArray();
+        // Perbaikan: Tambahkan 'user' ke dalam array load agar terbaca oleh Javascript
+        $data = $customer->load(['user', 'sales.user', 'files', 'bankGaransis', 'bgRecommendations', 'creditLimits', 'items'])->toArray();
 
         $data['can_adjust_finance'] = $canAdjustFinance;
         $data['base_total_amount']  = $baseTotalAmount;
@@ -1187,7 +1188,7 @@ class CustomerController extends Controller
                                     data-token="' . $token . '"
                                     data-approver-name="' . e($approverName) . '"
                                     data-bs-toggle="tooltip" title="Resend Email Notification">
-                                    <i class="ph-bold ph-paper-plane-tilt text-white"></i>
+                                    <i class="ph-bold ph-paper-plane-tilt text-white"></i> Resend Email
                                 </button>';
                 }
 
@@ -1197,33 +1198,17 @@ class CustomerController extends Controller
                                 data-action="review"
                                 data-name="' . $customerName . '"
                                 data-bs-toggle="tooltip" title="Input Customer Code & Join Date">
-                                <i class="ph-bold ph-pencil-simple text-white me-1"></i>
+                                <i class="ph-bold ph-pencil-simple text-white me-1"></i> Input Code
                             </button>';
-
-                // 4. Tombol Standard (Approve/Review/Reject)
-                $btnApprove = '<button type="button" class="btn btn-sm btn-success action-btn"
-                                data-id="' . $customerId . '"
-                                data-token="' . $token . '"
-                                data-action="approve"
-                                data-name="' . $customerName . '"
-                                data-bs-toggle="tooltip" title="Quick Approve">
-                                <i class="ph-bold ph-thumbs-up text-white"></i></button>';
 
                 $btnReview = '<button type="button" class="btn btn-sm btn-primary action-btn-modal"
                                 data-id="' . $customerId . '"
                                 data-token="' . $token . '"
                                 data-action="review"
                                 data-name="' . $customerName . '"
-                                data-bs-toggle="tooltip" title="Review with Notes">
-                                <i class="ph-bold ph-note-pencil text-white"></i></button>';
-
-                $btnReject = '<button type="button" class="btn btn-sm btn-danger action-btn-modal"
-                                data-id="' . $customerId . '"
-                                data-token="' . $token . '"
-                                data-action="reject"
-                                data-name="' . $customerName . '"
-                                data-bs-toggle="tooltip" title="Reject">
-                                <i class="ph-bold ph-thumbs-down text-white"></i></button>';
+                                data-bs-toggle="tooltip" title="Review Approval">
+                                <i class="ph-bold ph-clipboard-text text-white me-1"></i> Review Data
+                              </button>';
 
                 if ($currentUser->hasRole(['it', 'IT'])) {
                     return "<div class='d-flex gap-1 justify-content-center'>{$btnInputCode}</div>";
@@ -1238,11 +1223,11 @@ class CustomerController extends Controller
                     if ($targetIsIT) {
                         return "<div class='d-flex gap-1 justify-content-center'>{$btnInputCode} {$btnResend}</div>";
                     } else {
-                        return "<div class='d-flex gap-1 justify-content-center'>{$btnApprove} {$btnReview} {$btnReject} {$btnResend}</div>";
+                        return "<div class='d-flex gap-1 justify-content-center'>{$btnReview} {$btnResend}</div>";
                     }
                 }
 
-                return "<div class='d-flex gap-1 justify-content-center'>{$btnApprove} {$btnReview} {$btnReject} {$btnResend}</div>";
+                return "<div class='d-flex gap-1 justify-content-center'>{$btnReview} {$btnResend}</div>";
             })
             ->rawColumns(['approver_nik', 'level', 'customer_name', 'status_approval', 'route_to', 'action'])
             ->make(true);
@@ -1526,7 +1511,7 @@ class CustomerController extends Controller
         $callback = function () use ($columns) {
             $file = fopen('php://output', 'w');
             fputcsv($file, $columns, ';');
-            
+
             fputcsv($file, [
                 '1', 'CUST-001', 'NULL', 'Bapak Budi', 'PT Maju Jaya', 'MJY', '1', '1',
                 'Jl. Sudirman No 1', 'NULL', 'NULL', 'Jakarta', '12345', 'Indonesia',
@@ -1555,21 +1540,21 @@ class CustomerController extends Controller
         $delimiter = strpos(substr($content, 0, 500), ';') !== false ? ';' : ',';
 
         $handle = fopen($file->getPathname(), "r");
-        
+
         $header = fgetcsv($handle, 1000, $delimiter);
         $header[0] = preg_replace('/[\x00-\x1F\x80-\xFF]/', '', $header[0]);
         $header = array_map('trim', $header);
 
         $importedCount = 0;
-        
+
         DB::beginTransaction();
         try {
             while (($row = fgetcsv($handle, 1000, $delimiter)) !== FALSE) {
                 if (array_filter($row)) {
                     if (count($header) !== count($row)) {
-                        continue; 
+                        continue;
                     }
-                    
+
                     $data = array_combine($header, $row);
                     $clean = function($key, $default = null) use ($data) {
                         $val = isset($data[$key]) ? trim($data[$key]) : null;
@@ -1594,7 +1579,7 @@ class CustomerController extends Controller
                         'sort_name' => $clean('sort_name'),
                         'customer_class' => $clean('customer_class') ?? $clean('customer_class_id'),
                         'account_group' => $clean('account_group') ?? $clean('account_group_id'),
-                        
+
                         // Alamat & Area
                         'address1' => $clean('address1', '-'),
                         'address2' => $clean('address2'),
@@ -1603,24 +1588,24 @@ class CustomerController extends Controller
                         'postal_code' => $clean('postal_code', '-'),
                         'country' => $clean('country', 'Indonesia'),
                         'area' => $clean('area', '-'),
-                        
+
                         // Pengiriman
                         'shipping_to_name' => $clean('shipping_to_name'),
                         'shipping_to_address' => $clean('shipping_to_address'),
-                        
+
                         // Manajer
                         'purchasing_manager_name' => $clean('purchasing_manager_name'),
                         'purchasing_manager_email' => $clean('purchasing_manager_email'),
                         'finance_manager_name' => $clean('finance_manager_name'),
                         'finance_manager_email' => $clean('finance_manager_email'),
-                        
+
                         // Penagihan & Surat
                         'penagihan_nama_kontak' => $clean('penagihan_nama_kontak'),
                         'penagihan_telepon' => $clean('penagihan_telepon'),
                         'penagihan_address' => $clean('penagihan_address'),
                         'surat_menyurat_address' => $clean('surat_menyurat_address'),
                         'email' => $clean('email', '-'),
-                        
+
                         // Pajak
                         'tax_contact_name' => $clean('tax_contact_name'),
                         'tax_contact_email' => $clean('tax_contact_email'),
@@ -1631,7 +1616,7 @@ class CustomerController extends Controller
                         'tanggal_nppkp' => $tanggalNppkp ? Carbon::parse($tanggalNppkp) : null,
                         'no_pengukuhan_kaber' => $clean('no_pengukuhan_kaber'),
                         'output_tax' => $clean('output_tax', 'PPN'),
-                        
+
                         // Finansial
                         'term_of_payment' => $clean('term_of_payment', '0'),
                         'lead_time' => $clean('lead_time', 0),
@@ -1641,13 +1626,13 @@ class CustomerController extends Controller
                         'pembagian' => $clean('pembagian'),
                         'customer_total' => $clean('customer_total', 0),
                         'virtual_account' => $clean('virtual_account'),
-                        
+
                         // Jadwal (Tipe Array/JSON di Model)
                         'payment_days' => $clean('payment_days'),
                         'payment_date' => $clean('payment_date'),
                         'faktur_days' => $clean('faktur_days'),
                         'faktur_date' => $clean('faktur_date'),
-                        
+
                         // Status Sistem
                         'status' => $clean('status', 'Active'),
                         'status_approval' => $clean('status_approval', 'Approved'),
@@ -1662,15 +1647,15 @@ class CustomerController extends Controller
             DB::commit();
 
             return response()->json([
-                'success' => true, 
+                'success' => true,
                 'message' => "Berhasil mengunggah $importedCount data pelanggan dengan lengkap."
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error("Import Customer Error: " . $e->getMessage());
             return response()->json([
-                'success' => false, 
-                'message' => 'Gagal Import: ' . $e->getMessage() 
+                'success' => false,
+                'message' => 'Gagal Import: ' . $e->getMessage()
             ], 500);
         }
     }
