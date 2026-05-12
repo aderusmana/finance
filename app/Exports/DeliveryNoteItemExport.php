@@ -36,6 +36,7 @@ class DeliveryNoteItemExport implements FromQuery, WithHeadings, WithMapping, Sh
                 'customers.name as customer_name',
                 'distributors.code as distributor_code',
                 'distributors.name as distributor_name',
+                'customer_ship_toes.ship_to_code as ship_to_code',
                 'customer_ship_toes.ship_to_name as ship_to',
                 'logistic_order_items.order_item_code as item_code',
                 'logistic_order_items.order_item_name as item_name',
@@ -61,7 +62,8 @@ class DeliveryNoteItemExport implements FromQuery, WithHeadings, WithMapping, Sh
             'CUSTOMER NAME',
             'DISTRIBUTOR CODE',
             'DISTRIBUTOR NAME',
-            'SHIP TO',
+            'SHIP TO CODE',
+            'SHIP TO NAME',
             'PRICE ITEM',
             'ITEM CODE',
             'ITEM NAME',
@@ -84,6 +86,7 @@ class DeliveryNoteItemExport implements FromQuery, WithHeadings, WithMapping, Sh
             $row->customer_name ?? '-',
             $row->distributor_code ?? '-',
             $row->distributor_name ?? '-',
+            $row->ship_to_code ?? '-',
             $row->ship_to ?? '-',
             $priceItem,
             $row->item_code ?? '-',
@@ -103,7 +106,7 @@ class DeliveryNoteItemExport implements FromQuery, WithHeadings, WithMapping, Sh
                 $sheet->insertNewRowBefore(1, 2);
 
                 // Title row
-                $sheet->mergeCells('A1:K1');
+                $sheet->mergeCells('A1:L1');
                 $sheet->setCellValue('A1', 'Report Logistic Order');
                 $sheet->getStyle('A1')->applyFromArray([
                     'font' => ['bold' => true, 'size' => 14],
@@ -111,7 +114,7 @@ class DeliveryNoteItemExport implements FromQuery, WithHeadings, WithMapping, Sh
                 ]);
 
                 // Date range row
-                $sheet->mergeCells('A2:K2');
+                $sheet->mergeCells('A2:L2');
                 if (!empty($this->dateFrom) && !empty($this->dateTo)) {
                     $sheet->setCellValue('A2', 'From ' . $this->dateFrom . ' - To ' . $this->dateTo);
                 } else {
@@ -123,7 +126,7 @@ class DeliveryNoteItemExport implements FromQuery, WithHeadings, WithMapping, Sh
                 ]);
 
                 // Headings styling (now on row 3)
-                $sheet->getStyle('A3:K3')->applyFromArray([
+                $sheet->getStyle('A3:L3')->applyFromArray([
                     'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
                     'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => '166534']],
                 ]);
