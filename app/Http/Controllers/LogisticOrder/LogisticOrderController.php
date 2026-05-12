@@ -162,10 +162,10 @@ class LogisticOrderController extends Controller
                 })
                 ->addColumn('action', function ($row) use ($tab) {
                     if ($tab === 'downloaded') {
-                        $btnDetail = '<button class="btn btn-md btn-info text-white btn-detail shadow-sm px-3 rounded-pill w-100" data-id="' . $row->id . '"><i class="ph-bold ph-eye"></i> Lihat DN</button>';
-                        $btnDownload = '<a href="' . URL::signedRoute('public.lo.download', ['id' => $row->id, 'fromEmail' => 0]) . '" target="_blank" class="btn btn-sm btn-success text-white shadow-sm px-3 rounded-pill w-100"><i class="ph-bold ph-printer"></i> Download DN</a>';
+                        $btnDetail = '<button type="button" class="btn btn-md btn-primary text-white btn-detail shadow-sm px-3 rounded-pill flex-fill" data-id="' . $row->id . '" data-bs-toggle="tooltip" data-bs-placement="top" title="Detail DN" aria-label="Detail DN"><i class="ph-bold ph-eye"></i></button>';
+                        $btnDownload = '<a href="' . URL::signedRoute('public.lo.download', ['id' => $row->id, 'fromEmail' => 0]) . '" target="_blank" class="btn btn-sm btn-success text-white shadow-sm px-3 rounded-pill flex-fill" data-bs-toggle="tooltip" data-bs-placement="top" title="Download DN" aria-label="Download DN"><i class="ph-bold ph-printer"></i></a>';
 
-                        return '<div class="d-flex flex-column gap-2 align-items-center">' . $btnDetail . $btnDownload . '</div>';
+                        return '<div class="d-flex flex-row gap-2 align-items-center w-100">' . $btnDetail . $btnDownload . '</div>';
                     }
 
                     return '<button 
