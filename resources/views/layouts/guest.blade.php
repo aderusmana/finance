@@ -38,7 +38,9 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
-<body class="sign-in-bg">
+<body class="sign-in-bg"
+    style="background-image: url({{ asset('assets/images/logo/pic.webp') }}); background-size: 100% 100%; height: 100vh; width: 100vw;">
+    
     <div class="app-wrapper d-block">
         <div class="main-container">
             <!-- Body main section starts -->

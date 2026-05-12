@@ -12,7 +12,7 @@ class RevisionController extends Controller
     public function index()
     {
         $user = Auth::user();
-        if(!$user->can('view revision')){
+        if(!$user->can('view revision master management menu')){
             abort(403);
         }
         return view('page.master.revision.index');

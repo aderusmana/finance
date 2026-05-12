@@ -45,6 +45,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard/customer', [DashboardController::class, 'customerIndex'])->name('dashboard.customer');
     Route::get('/dashboard/bank-garansi', [DashboardController::class, 'bgIndex'])->name('dashboard.bg');
     Route::get('/dashboard/logistic', [DashboardController::class, 'logisticIndex'])->name('dashboard.logistic');
+    
 });
 
 Route::get('/tes-404', function () {
@@ -59,18 +60,7 @@ Route::get('/tes-403', function () {
     abort(403, 'Akses Ditolak'); // Menampilkan halaman 403 dengan pesan kustom
 });
 
-Route::get('/logistic-fees/approval/form/{token}/{action}', [LogisticFeeController::class, 'showApprovalForm'])->name('logistic-fees.approval.form');
-Route::post('/logistic-fees/approval/process/{token}/{action}', [LogisticFeeController::class, 'processApproval'])->name('logistic-fees.approval.process');
 
-Route::get('/public/logistic-order/{id}/detail', [LogisticOrderController::class, 'publicDetail'])->name('public.lo.detail')->middleware('signed');
-Route::get('/public/logistic-order/{id}/download/{fromEmail?}', [LogisticOrderController::class, 'publicDownload'])->name('public.lo.download')->middleware('signed');
-
-Route::get('/customers/approval/{token}', [CustomerController::class, 'viewApprovalPage'])->name('customers.view_approval');
-Route::post('/customers/{customer}/approval-action', [CustomerController::class, 'approvalAction'])->name('customers.approval_action');
-Route::get('/approval/process/{token}/{action}', [ApprovalProcessController::class, 'process'])->name('approval.process');
-Route::get('/approval/form/{token}/{action}', [ApprovalProcessController::class, 'showForm'])->name('approval.form');
-Route::post('/approval/submit/{token}', [ApprovalProcessController::class, 'submit'])->name('approval.submit');
-Route::get('/public/download-doc/{bg_id}/{type}', [CustomerBgPortalController::class, 'downloadExpiringPdf'])->name('public.bg.download')->middleware('signed');
 
 Route::prefix('customer-portal')->name('customer.portal.')->group(function () {
     Route::get('/form/{token}', [CustomerBgPortalController::class, 'showInputForm'])->name('input-form');
@@ -83,7 +73,17 @@ Route::prefix('customer-portal')->name('customer.portal.')->group(function () {
 
 Route::middleware('auth')->group(function () {
     Route::post('/customers/generate-pkd-preview', [CustomerController::class, 'generatePkdPreview'])->name('customers.generate-pkd-preview');
-        Route::prefix('dashboard/data')->name('dashboard.data.')->group(function () {
+    Route::get('/system-logs', [SystemLogController::class, 'index'])->name('system-logs.index');
+    Route::get('/approval/path', [ApprovalPathController::class, 'index'])->name('approval.path');
+    Route::get('/getapproverlist', [ApprovalPathController::class, 'approverList'])->name('get.approverlist');
+    Route::resource('/approvers', ApprovalPathController::class);
+    Route::get('/categories', [ApprovalPathController::class, 'categories'])->name('get.categories');
+    Route::get('/approver-name', [ApprovalPathController::class, 'approverName'])->name('get.approver.name');
+
+    Route::get('/master/revision', [RevisionController::class, 'index'])->name('master.revision.index');
+    Route::post('/master/revision/update', [RevisionController::class, 'update'])->name('master.revision.update');
+    Route::get('/master/revision/getdata', [RevisionController::class, 'getrevisiondata'])->name('master.revision.getdata');
+    Route::prefix('dashboard/data')->name('dashboard.data.')->group(function () {
         Route::get('/available-years', [DashboardController::class, 'getAvailableYearsApi'])->name('available-years');
         Route::get('/monthly-stats', [DashboardController::class, 'getMonthlyStats'])->name('monthly-stats');
         Route::get('/advanced-stats', [DashboardController::class, 'getAdvancedStats'])->name('advanced-stats');
@@ -108,6 +108,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('customers', CustomerController::class);
 
     Route::resource('logistic-orders', LogisticOrderController::class);
+    Route::get('/logistic-orders/export/delivery-notes', [LogisticOrderController::class, 'exportDeliveryNotes'])->name('logistic-orders.export-dn');
     Route::get('/logistic-orders/customer-dependencies/{customer}', [LogisticOrderController::class, 'getCustomerDependencies']);
     Route::get('/logistic-orders/fee/{distributor}/{customer}', [LogisticOrderController::class, 'getLogisticFee']);
 
@@ -180,21 +181,24 @@ Route::group(['middleware' => ['role:super-admin|admin']], function () {
     Route::resource('permissions', PermissionController::class);
     Route::resource('roles', RoleController::class);
     Route::resource('positions', PositionController::class);
-    Route::get('/system-logs', [SystemLogController::class, 'index'])->name('system-logs.index');
     Route::get('roles/{roleId}/give-permissions', [RoleController::class, 'addPermissionToRole'])->name('roles.give-permissions');
     Route::post('roles/{roleId}/give-permissions', [RoleController::class, 'givePermissionToRole'])->name('roles.give-permission');
-
-    // --- Requisition Path (Approvers) ---
-    Route::get('/approval/path', [ApprovalPathController::class, 'index'])->name('approval.path');
-    Route::get('/getapproverlist', [ApprovalPathController::class, 'approverList'])->name('get.approverlist');
-    Route::resource('/approvers', ApprovalPathController::class);
-    Route::get('/categories', [ApprovalPathController::class, 'categories'])->name('get.categories');
-    Route::get('/approver-name', [ApprovalPathController::class, 'approverName'])->name('get.approver.name');
-
-    Route::get('/master/revision', [RevisionController::class, 'index'])->name('master.revision.index');
-    Route::post('/master/revision/update', [RevisionController::class, 'update'])->name('master.revision.update');
-    Route::get('/master/revision/getdata', [RevisionController::class, 'getrevisiondata'])->name('master.revision.getdata');
 });
+
+
+// Route untuk halaman tanpa autentikasi, seperti halaman login, register, dll. (Jika menggunakan Laravel Breeze atau Jetstream, biasanya sudah otomatis mengatur ini)
+Route::get('/logistic-fees/approval/form/{token}/{action}', [LogisticFeeController::class, 'showApprovalForm'])->name('logistic-fees.approval.form');
+Route::post('/logistic-fees/approval/process/{token}/{action}', [LogisticFeeController::class, 'processApproval'])->name('logistic-fees.approval.process');
+
+Route::get('/public/logistic-order/{id}/detail', [LogisticOrderController::class, 'publicDetail'])->name('public.lo.detail')->middleware('signed');
+Route::get('/public/logistic-order/{id}/download/{fromEmail?}', [LogisticOrderController::class, 'publicDownload'])->name('public.lo.download')->middleware('signed');
+
+Route::get('/customers/approval/{token}', [CustomerController::class, 'viewApprovalPage'])->name('customers.view_approval');
+Route::post('/customers/{customer}/approval-action', [CustomerController::class, 'approvalAction'])->name('customers.approval_action');
+Route::get('/approval/process/{token}/{action}', [ApprovalProcessController::class, 'process'])->name('approval.process');
+Route::get('/approval/form/{token}/{action}', [ApprovalProcessController::class, 'showForm'])->name('approval.form');
+Route::post('/approval/submit/{token}', [ApprovalProcessController::class, 'submit'])->name('approval.submit');
+Route::get('/public/download-doc/{bg_id}/{type}', [CustomerBgPortalController::class, 'downloadExpiringPdf'])->name('public.bg.download')->middleware('signed');
 
 
 require __DIR__ . '/auth.php';

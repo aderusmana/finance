@@ -218,7 +218,7 @@
                         },
                         {
                             data: 'customer_code',
-                            name: 'customer.customer_code'
+                            name: 'customer.code'
                         },
                         {
                             data: 'customer_name',

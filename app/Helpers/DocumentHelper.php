@@ -18,48 +18,85 @@ class DocumentHelper
     }
 
     public static function terbilang($x) {
+        // Be defensive: this helper is used from views/PDF generation.
+        // In PHP, using `null` as an array key becomes "" and can raise notices.
+        if ($x === null) {
+            return ' nol';
+        }
+
+        if (is_string($x)) {
+            $x = trim($x);
+            if ($x === '') {
+                return ' nol';
+            }
+
+            // Common inputs are formatted numbers like "1.000.000" / "1,000,000".
+            // Keep digits and an optional minus sign, discard separators.
+            $x = preg_replace('/[^0-9\-]/', '', $x);
+            if ($x === '' || $x === '-') {
+                return ' nol';
+            }
+        }
+
+        if (!is_numeric($x)) {
+            return ' nol';
+        }
+
         // Normalize input and use integer arithmetic for stable recursion
         $x = (int) $x;
+
+        if ($x === 0) {
+            return ' nol';
+        }
+
+        if ($x < 0) {
+            return ' minus' . self::terbilangInternal(abs($x));
+        }
+
+        return self::terbilangInternal($x);
+    }
+
+    private static function terbilangInternal(int $x): string
+    {
+        if ($x === 0) {
+            return '';
+        }
 
         $angka = [
             0 => '', 1 => 'satu', 2 => 'dua', 3 => 'tiga', 4 => 'empat', 5 => 'lima',
             6 => 'enam', 7 => 'tujuh', 8 => 'delapan', 9 => 'sembilan', 10 => 'sepuluh', 11 => 'sebelas'
         ];
 
-        if ($x === 0) {
-            return ' nol';
-        }
-
         if ($x < 12) {
             return ' ' . ($angka[$x] ?? '');
         }
 
         if ($x < 20) {
-            return self::terbilang($x - 10) . ' belas';
+            return self::terbilangInternal($x - 10) . ' belas';
         }
 
         if ($x < 100) {
             $tens = intdiv($x, 10);
             $rest = $x % 10;
-            $res = self::terbilang($tens) . ' puluh';
-            if ($rest) $res .= self::terbilang($rest);
+            $res = self::terbilangInternal($tens) . ' puluh';
+            if ($rest) $res .= self::terbilangInternal($rest);
             return $res;
         }
 
         if ($x < 200) {
-            return ' seratus' . self::terbilang($x - 100);
+            return ' seratus' . self::terbilangInternal($x - 100);
         }
 
         if ($x < 1000) {
             $hundreds = intdiv($x, 100);
             $rest = $x % 100;
-            $res = self::terbilang($hundreds) . ' ratus';
-            if ($rest) $res .= self::terbilang($rest);
+            $res = self::terbilangInternal($hundreds) . ' ratus';
+            if ($rest) $res .= self::terbilangInternal($rest);
             return $res;
         }
 
         if ($x < 2000) {
-            return ' seribu' . self::terbilang($x - 1000);
+            return ' seribu' . self::terbilangInternal($x - 1000);
         }
 
         // Larger units
@@ -74,8 +111,8 @@ class DocumentHelper
             if ($x >= $div) {
                 $count = intdiv($x, $div);
                 $rest = $x % $div;
-                $res = self::terbilang($count) . $name;
-                if ($rest) $res .= self::terbilang($rest);
+                $res = self::terbilangInternal($count) . $name;
+                if ($rest) $res .= self::terbilangInternal($rest);
                 return $res;
             }
         }

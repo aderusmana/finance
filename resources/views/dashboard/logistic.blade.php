@@ -154,7 +154,7 @@
             <div class="dashboard-panel p-4">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h6 class="fw-bold text-dark mb-0"><i class="ph-duotone ph-shopping-bag text-primary me-2"></i>Transaksi Order Terbaru</h6>
-                    <a href="{{ route('logistic-orders.index') }}" class="btn btn-sm btn-light border fw-semibold text-secondary px-3 rounded-pill">Kelola Orders</a>
+                    <a href="{{ route('logistic-orders.index') }}" class="btn btn-sm btn-info text-white border fw-semibold text-secondary px-3 rounded-pill">Kelola Orders</a>
                 </div>
                 <div class="table-responsive rounded-3 border border-light">
                     <table class="table table-hover table-custom mb-0 align-middle">
@@ -163,7 +163,7 @@
                                 <th width="15%">Order No</th>
                                 <th width="20%">Customer</th>
                                 <th width="25%">Distributor</th>
-                                <th width="15%">DO No</th>
+                                <th width="15%">DN No</th>
                                 <th width="15%">Tanggal</th>
                                 <th width="10%" class="text-center">Status</th>
                             </tr>

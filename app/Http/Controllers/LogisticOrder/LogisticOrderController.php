@@ -24,6 +24,8 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use App\Exports\DeliveryNoteItemExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class LogisticOrderController extends Controller
 {
@@ -74,6 +76,9 @@ class LogisticOrderController extends Controller
             // Ambil parameter tab dari AJAX, default 'pending'
             $tab = $request->get('tab', 'pending');
 
+            $dateFrom = $request->get('date_from');
+            $dateTo = $request->get('date_to');
+
             $data = LogisticOrder::with(['distributor', 'customer', 'customerShipTo', 'note'])
                 ->whereHas('note', function($q) use ($tab) {
                     if ($tab === 'downloaded') {
@@ -83,6 +88,10 @@ class LogisticOrderController extends Controller
                     }
                 })
                 ->select('logistic_orders.*');
+
+            if ($tab === 'downloaded' && !empty($dateFrom) && !empty($dateTo)) {
+                $data->whereBetween('delivery_date', [$dateFrom, $dateTo]);
+            }
 
             // Urutkan data berdasarkan status
             if ($tab === 'downloaded') {
@@ -159,6 +168,43 @@ class LogisticOrderController extends Controller
 
         $customers = Customer::orderBy('name', 'asc')->get();
         return view('page.logistic_order.index', compact('customers'));
+    }
+
+    public function exportDeliveryNotes(Request $request)
+    {
+        $dateFrom = $request->query('date_from');
+        $dateTo = $request->query('date_to');
+
+        if ((!empty($dateFrom) && empty($dateTo)) || (empty($dateFrom) && !empty($dateTo))) {
+            return response()->json([
+                'message' => 'Filter tanggal harus diisi lengkap (From dan To).',
+            ], 422);
+        }
+
+        if (!empty($dateFrom) && !empty($dateTo)) {
+            try {
+                $from = Carbon::parse($dateFrom)->format('Y-m-d');
+                $to = Carbon::parse($dateTo)->format('Y-m-d');
+            } catch (\Exception $e) {
+                return response()->json([
+                    'message' => 'Format tanggal tidak valid.',
+                ], 422);
+            }
+
+            if ($from > $to) {
+                return response()->json([
+                    'message' => 'Tanggal From tidak boleh melebihi To.',
+                ], 422);
+            }
+
+            $export = new DeliveryNoteItemExport($from, $to);
+            $suffix = $from . '_to_' . $to;
+        } else {
+            $export = new DeliveryNoteItemExport();
+            $suffix = now()->format('Ymd_His');
+        }
+
+        return Excel::download($export, 'delivery_note_export_' . $suffix . '.xlsx');
     }
 
     public function store(Request $request)

@@ -19,17 +19,20 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
 
-        if ($user->hasRole('super-admin')) {
-            return view('dashboard');
-        }
+        // if ($user->hasRole('super-admin','manager-finance', 'head-finance')) {
+        //     return view('dashboard');
+        // }
 
-        if ($user->hasRole(['staff-finance', 'manager-finance', 'head-finance']) || $user->can('view bg dashboard')) {
-            return view('dashboard.bg');
-        }
+        // if ($user->hasRole(['staff-finance']) || $user->can('view bg dashboard')) {
+        //     return view('dashboard.bg');
+        // }
 
-        if ($user->hasRole(['staff-sales', 'head-SNM', 'atasan']) || $user->can('view customer dashboard')) {
-            return view('dashboard.customer');
-        }
+        // if ($user->hasRole(['staff-sales', 'head-SNM', 'atasan']) || $user->can('view customer dashboard')) {
+        //     return view('dashboard.customer');
+        // }
+        // if ($user->hasRole(['staff-sales', 'head-SNM', 'atasan']) || $user->can('view customer dashboard')) {
+        //     return view('dashboard.customer');
+        // }
 
         return view('dashboard');
     }
@@ -38,9 +41,9 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
         
-        if (!$user->hasRole(['super-admin', 'staff-sales', 'head-SNM', 'atasan'])) {
-            abort(403, 'Anda tidak memiliki akses ke Dashboard Customer');
-        }
+        // if (!$user->hasRole(['super-admin', 'staff-sales', 'head-SNM', 'atasan'])) {
+        //     abort(403, 'Anda tidak memiliki akses ke Dashboard Customer');
+        // }
 
         return view('dashboard.customer');
     }
@@ -49,9 +52,9 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
         
-        if (!$user->hasRole(['super-admin', 'staff-finance', 'manager-finance', 'head-finance'])) {
-            abort(403, 'Anda tidak memiliki akses ke Dashboard Bank Garansi');
-        }
+        // if (!$user->hasRole(['super-admin', 'staff-finance', 'manager-finance', 'head-finance'])) {
+        //     abort(403, 'Anda tidak memiliki akses ke Dashboard Bank Garansi');
+        // }
 
         return view('dashboard.bg');
     }

@@ -8,6 +8,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
 class SendLogisticFee implements ShouldQueue
@@ -27,17 +28,41 @@ class SendLogisticFee implements ShouldQueue
     {
         $approver = User::where('nik', $this->log->approver_nik)->first();
 
-        if ($approver && $approver->email) {
-            
+        if (!$approver) {
+            Log::warning('SendLogisticFee: approver user not found', [
+                'approver_nik' => $this->log->approver_nik,
+                'approval_log_id' => $this->log->id ?? null,
+            ]);
+            return;
+        }
+
+        if (empty($approver->email)) {
+            Log::warning('SendLogisticFee: approver email is empty', [
+                'approver_nik' => $approver->nik,
+                'approver_name' => $approver->name,
+                'approval_log_id' => $this->log->id ?? null,
+            ]);
+            return;
+        }
+
+        try {
             Mail::to($approver->email)->send(new LogisticFeeMail(
                 'request',
-                $this->logisticData, 
+                $this->logisticData,
                 [
-                    'log' => $this->log, 
+                    'log' => $this->log,
                     'approverName' => $approver->name
                 ]
             ));
-            
+        } catch (\Throwable $e) {
+            Log::error('SendLogisticFee: failed sending email', [
+                'approver_nik' => $approver->nik,
+                'approver_email' => $approver->email,
+                'approval_log_id' => $this->log->id ?? null,
+                'error' => $e->getMessage(),
+            ]);
+
+            throw $e;
         }
     }
 }

@@ -158,7 +158,7 @@
             <div class="toggle-card" id="btn-tab-downloaded" onclick="switchTab('downloaded')">
                 <div class="icon-box"><i class="ph-bold ph-check-circle"></i></div>
                 <div>
-                    <h6 class="title text-black">Delivery Notes</h6>
+                    <h6 class="title text-black">Delivery No</h6>
                     <p class="subtitle">Arsip Surat Jalan yang telah diunduh (Selesai).</p>
                 </div>
             </div>
@@ -184,6 +184,23 @@
                         onclick="openModal()">
                         <i class="ph-bold ph-plus me-1"></i> Buat Order Baru
                     </button>
+
+                    {{-- Filter + Export (Hanya tampil di tab Delivery No) --}}
+                    <div id="dn-export-area" class="d-none">
+                        <div class="d-flex flex-wrap justify-content-end align-items-end gap-2">
+                            <div>
+                                <label class="form-label small mb-1 text-muted">From</label>
+                                <input type="date" class="form-control form-control-sm" id="dn_date_from">
+                            </div>
+                            <div>
+                                <label class="form-label small mb-1 text-muted">To</label>
+                                <input type="date" class="form-control form-control-sm" id="dn_date_to">
+                            </div>
+                            <button class="btn btn-success px-4 py-2 rounded-pill fw-semibold shadow-sm" id="btn-export-dn">
+                                <i class="ph-bold ph-file-xls me-1"></i> Export Excel
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 {{-- Tabel Pending --}}
@@ -329,7 +346,7 @@
                                             <h6 class="fw-bold text-primary mb-0"><i class="ph-bold ph-package"></i>
                                                 Order Items</h6>
                                             <span
-                                                class="badge bg-warning text-dark py-2 px-3 border rounded-3">Logistic
+                                                class="bg-success text-white py-2 px-3 border rounded-3">Logistic
                                                 Fee: <b id="active_fee_display">Rp 0 / ctn</b></span>
                                         </div>
                                         <button type="button" class="btn btn-sm btn-outline-primary"
@@ -538,6 +555,7 @@
             let sampleTable, historyTable;
             let activeLogisticFee = 0;
             let cachedShipTos = [];
+            let activeTab = 'pending';
 
             function formatRupiah(angka) {
                 let number_string = angka.toString().replace(/[^,\d]/g, ''),
@@ -553,6 +571,8 @@
             }
 
             $(document).ready(function() {
+                const exportDnBaseUrl = "{{ route('logistic-orders.export-dn') }}";
+
                 $.ajaxSetup({
                     headers: {
                         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
@@ -615,8 +635,10 @@
                     autoWidth: false,
                     ajax: {
                         url: "{{ route('logistic-orders.index') }}",
-                        data: {
-                            tab: 'downloaded'
+                        data: function(d) {
+                            d.tab = 'downloaded';
+                            d.date_from = $('#dn_date_from').val();
+                            d.date_to = $('#dn_date_to').val();
                         }
                     },
                     columns: [{
@@ -655,6 +677,39 @@
                             className: 'text-center'
                         }
                     ]
+                });
+
+                // Reload tabel downloaded saat tanggal berubah (hanya jika tab downloaded aktif)
+                $('#dn_date_from, #dn_date_to').on('change', function() {
+                    if (activeTab === 'downloaded') {
+                        historyTable.ajax.reload(null, false);
+                    }
+                });
+
+                // Export Excel DN
+                $('#btn-export-dn').on('click', function() {
+                    const from = $('#dn_date_from').val();
+                    const to = $('#dn_date_to').val();
+
+                    // If user doesn't use date filter, export all dates
+                    if (!from && !to) {
+                        window.location.href = exportDnBaseUrl;
+                        return;
+                    }
+
+                    // Prevent partial range
+                    if (!from || !to) {
+                        Swal.fire('Peringatan', 'Filter tanggal harus diisi lengkap (From dan To).', 'warning');
+                        return;
+                    }
+
+                    if (from > to) {
+                        Swal.fire('Peringatan', 'Tanggal From tidak boleh melebihi To.', 'warning');
+                        return;
+                    }
+
+                    const url = exportDnBaseUrl + '?date_from=' + encodeURIComponent(from) + '&date_to=' + encodeURIComponent(to);
+                    window.location.href = url;
                 });
 
                 // Init Select2
@@ -921,6 +976,7 @@
 
             // --- FUNGSI GANTI TAB CARD ---
             function switchTab(tabName) {
+                activeTab = tabName;
                 // Ubah Warna Card
                 $('.toggle-card').removeClass('active');
                 $('#btn-tab-' + tabName).addClass('active');
@@ -934,6 +990,7 @@
                     $('#dynamic-table-title').html('<i class="ph-fill ph-stack text-primary me-2"></i> Daftar Logistic Order');
                     $('#dynamic-table-subtitle').text('Menampilkan data pesanan dengan status Pending.');
                     $('#btn-create-order').removeClass('d-none');
+                    $('#dn-export-area').addClass('d-none');
 
                     // Refresh Data
                     sampleTable.ajax.reload(null, false);
@@ -944,9 +1001,10 @@
 
                     // Ubah Judul & Sembunyikan Tombol Create
                     $('#dynamic-table-title').html(
-                        '<i class="ph-fill ph-check-circle text-success me-2"></i> Arsip Delivery Note');
+                        '<i class="ph-fill ph-check-circle text-success me-2"></i> Arsip Delivery No');
                     $('#dynamic-table-subtitle').text('Menampilkan Surat Jalan yang telah diunduh (Selesai).');
                     $('#btn-create-order').addClass('d-none');
+                    $('#dn-export-area').removeClass('d-none');
 
                     // Refresh Data
                     historyTable.ajax.reload(null, false);

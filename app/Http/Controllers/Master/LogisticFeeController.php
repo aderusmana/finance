@@ -104,13 +104,10 @@ class LogisticFeeController extends Controller
         $logs = $this->generateApprovalLogs(Auth::user(), $record->id, 'Customer', 'Logistic Fee');
 
         if ($logs->isNotEmpty()) {
-            $firstApproverLog = ApprovalLog::where('related_id', $record->id)
-                                        ->where('category', 'Customer')
-                                        ->where('sub_category', 'Logistic Fee')
-                                        ->where('level', 1)
-                                        ->where('status', 'Pending')
-                                        ->latest()
-                                        ->first();
+            $levelOne = $logs->firstWhere('level', 1) ?? $logs->first();
+            $firstApproverLog = (!empty($levelOne['token']))
+                ? ApprovalLog::where('token', $levelOne['token'])->where('status', 'Pending')->first()
+                : null;
 
             if ($firstApproverLog) {
                 $firstApproverUser = User::where('nik', $firstApproverLog->approver_nik)->first();
@@ -141,7 +138,7 @@ class LogisticFeeController extends Controller
                 'notes'     => 'Auto-approved (Approval path tidak ditemukan)'
             ]);
 
-            return response()->json(['success' => true, 'message' => 'Path approval belum disetting, data otomatis disetujui.']);
+            return response()->json(['success' => true, 'message' => 'Path approval belum disetting / approver tidak ditemukan, data otomatis disetujui.']);
         }
 
         return response()->json(['success' => true, 'message' => 'Pengajuan Logistic Fee berhasil dikirim ke Approver!']);
@@ -177,7 +174,10 @@ class LogisticFeeController extends Controller
         $logs = $this->generateApprovalLogs(Auth::user(), $record->id, 'Customer', 'Logistic Fee');
 
         if ($logs->isNotEmpty()) {
-            $firstApproverLog = ApprovalLog::where('related_id', $record->id)->where('category', 'Customer')->where('sub_category', 'Logistic Fee')->where('level', 1)->where('status', 'Pending')->latest()->first();
+            $levelOne = $logs->firstWhere('level', 1) ?? $logs->first();
+            $firstApproverLog = (!empty($levelOne['token']))
+                ? ApprovalLog::where('token', $levelOne['token'])->where('status', 'Pending')->first()
+                : null;
             if ($firstApproverLog) {
                 $firstApproverUser = User::where('nik', $firstApproverLog->approver_nik)->first();
                 $approverName = $firstApproverUser ? $firstApproverUser->name : 'Atasan';
@@ -199,7 +199,7 @@ class LogisticFeeController extends Controller
                 'notes'     => 'Auto-approved (Approval path tidak ditemukan)'
             ]);
 
-            return response()->json(['success' => true, 'message' => 'Path approval belum disetting, harga otomatis disetujui.']);
+            return response()->json(['success' => true, 'message' => 'Path approval belum disetting / approver tidak ditemukan, harga otomatis disetujui.']);
         }
         return response()->json(['success' => true, 'message' => 'Perubahan harga berhasil disimpan.']);
     }
