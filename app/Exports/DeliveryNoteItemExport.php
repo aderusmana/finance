@@ -3,6 +3,7 @@
 namespace App\Exports;
 
 use App\Models\Customer\LogisticOrderItem;
+use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
@@ -14,11 +15,13 @@ class DeliveryNoteItemExport implements FromQuery, WithHeadings, WithMapping, Sh
 {
     private ?string $dateFrom;
     private ?string $dateTo;
+    private ?string $distributors;
 
-    public function __construct(?string $dateFrom = null, ?string $dateTo = null)
+    public function __construct(?string $dateFrom = null, ?string $dateTo = null, ?string $distributors = null)
     {
         $this->dateFrom = $dateFrom;
         $this->dateTo = $dateTo;
+        $this->distributors = $distributors;
     }
 
     public function query()
@@ -42,13 +45,25 @@ class DeliveryNoteItemExport implements FromQuery, WithHeadings, WithMapping, Sh
                 'logistic_order_items.order_item_name as item_name',
                 'logistic_order_items.order_quantity as qty',
                 'logistic_order_items.order_amount as total',
+                'logistic_order_items.price_list as price_list',
                 'logistic_orders.delivery_date as delivery_date',
+                'logistic_orders.distributor_id as distributor_id',
             ])
             ->orderBy('logistic_orders.delivery_date', 'desc')
             ->orderBy('delivery_order_notes.delivery_order_no', 'desc');
 
-        if (!empty($this->dateFrom) && !empty($this->dateTo)) {
+        $user = Auth::user();
+        if (!$user->hasRole(['super-admin', 'sales-ka-approver'])) {
+            $query->where('logistic_orders.created_by', $user->id);
+        }
+
+            if ($this->dateFrom && $this->dateTo) {
             $query->whereBetween('logistic_orders.delivery_date', [$this->dateFrom, $this->dateTo]);
+        }
+
+        if (!empty($this->distributors)) {
+            $distArray = is_array($this->distributors) ? $this->distributors : explode(',', $this->distributors);
+            $query->whereIn('logistic_orders.distributor_id', $distArray);
         }
 
         return $query;
@@ -58,17 +73,14 @@ class DeliveryNoteItemExport implements FromQuery, WithHeadings, WithMapping, Sh
     {
         return [
             'DN NO',
-            'CUSTOMER CODE',
-            'CUSTOMER NAME',
-            'DISTRIBUTOR CODE',
             'DISTRIBUTOR NAME',
-            'SHIP TO CODE',
-            'SHIP TO NAME',
-            'ITEM CODE',
+            'CUSTOMER NAME',
             'ITEM NAME',
             'PRICE ITEM',
             'QTY',
-            'TOTAL',
+            'TOTAL CLAIM',
+            'SALES VALUE',
+            'RATIO'
         ];
     }
 
@@ -78,21 +90,21 @@ class DeliveryNoteItemExport implements FromQuery, WithHeadings, WithMapping, Sh
         $total = (float) ($row->total ?? 0);
         $priceItem = $qty > 0 ? ($total / $qty) : 0;
 
-        $customerCode = $row->customer_code ?: '-';
+        $priceList = (float) ($row->price_list ?? 0);
+        $salesValue = $priceList * $qty;
+
+        $ratio = $salesValue > 0 ? ($total / $salesValue) : 0;
 
         return [
             $row->dn_no ?? '-',
-            $customerCode,
-            $row->customer_name ?? '-',
-            $row->distributor_code ?? '-',
             $row->distributor_name ?? '-',
-            $row->ship_to_code ?? '-',
-            $row->ship_to ?? '-',
-            $row->item_code ?? '-',
+            $row->customer_name ?? '-',
             $row->item_name ?? '-',
             $priceItem,
             $qty,
             $total,
+            $salesValue,
+            round($ratio * 100, 2) . '%',
         ];
     }
 
@@ -101,35 +113,63 @@ class DeliveryNoteItemExport implements FromQuery, WithHeadings, WithMapping, Sh
         return [
             AfterSheet::class => function (AfterSheet $event) {
                 $sheet = $event->sheet->getDelegate();
+                $lastRow = $sheet->getHighestRow();
+                
+                // 1. Tambahkan info unduhan di paling atas (Baris 1 & 2)
+                $sheet->insertNewRowBefore(1, 4); // Tambah 4 baris kosong di atas
+                
+                $sheet->setCellValue('A1', 'Tanggal Download: ' . now()->format('d/m/Y H:i:s'));
+                $sheet->setCellValue('A2', 'Dibuat Oleh: ' . Auth::user()->name);
+                $sheet->getStyle('A1:A2')->getFont()->setSize(9)->setItalic(true);
 
-                // Insert 2 rows before headings
-                $sheet->insertNewRowBefore(1, 2);
-
-                // Title row
-                $sheet->mergeCells('A1:L1');
-                $sheet->setCellValue('A1', 'Report Logistic Order');
-                $sheet->getStyle('A1')->applyFromArray([
+                // 2. Judul Laporan (Baris 3 & 4)
+                $sheet->mergeCells('A3:I3');
+                $sheet->setCellValue('A3', 'Report Logistic Order');
+                $sheet->getStyle('A3')->applyFromArray([
                     'font' => ['bold' => true, 'size' => 14],
-                    'alignment' => ['horizontal' => 'center'],
+                    'alignment' => ['horizontal' => 'center']
                 ]);
 
-                // Date range row
-                $sheet->mergeCells('A2:L2');
-                if (!empty($this->dateFrom) && !empty($this->dateTo)) {
-                    $sheet->setCellValue('A2', 'From ' . $this->dateFrom . ' - To ' . $this->dateTo);
-                } else {
-                    $sheet->setCellValue('A2', 'All Dates');
-                }
-                $sheet->getStyle('A2')->applyFromArray([
+                $sheet->mergeCells('A4:I4');
+                $range = (!empty($this->dateFrom)) ? "Period: $this->dateFrom - $this->dateTo" : "All Dates";
+                $sheet->setCellValue('A4', $range);
+                $sheet->getStyle('A4')->applyFromArray([
                     'font' => ['italic' => true],
-                    'alignment' => ['horizontal' => 'center'],
+                    'alignment' => ['horizontal' => 'center']
                 ]);
 
-                // Headings styling (now on row 3)
-                $sheet->getStyle('A3:L3')->applyFromArray([
+                // 3. Styling Heading (Sekarang ada di Baris 5)
+                $sheet->getStyle('A5:I5')->applyFromArray([
                     'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
                     'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => '166534']],
                 ]);
+
+                // 4. Baris TOTAL
+                $totalRow = $lastRow + 5; // Menyesuaikan karena ada insert 4 baris di atas
+                $dataStartRow = 6;
+                $dataEndRow = $totalRow - 1;
+
+                $sheet->setCellValue("F$totalRow", "GRAND TOTAL:");
+                $sheet->setCellValue("G$totalRow", "=SUM(G$dataStartRow:G$dataEndRow)");
+                $sheet->setCellValue("H$totalRow", "=SUM(H$dataStartRow:H$dataEndRow)");
+                $sheet->setCellValue("I$totalRow", "=IF(H$totalRow>0, G$totalRow/H$totalRow, 0)");
+                
+                $sheet->getStyle("F$totalRow:I$totalRow")->applyFromArray(['font' => ['bold' => true]]);
+                $sheet->getStyle("I$totalRow")->getNumberFormat()->setFormatCode('0.00%');
+
+                // 5. Tanda Tangan (3 Kolom: B, E, H)
+                $sigRow = $totalRow + 3;
+                $sheet->setCellValue("B$sigRow", "Dibuat oleh,");
+                $sheet->setCellValue("E$sigRow", "Diketahui oleh,");
+                $sheet->setCellValue("H$sigRow", "Disetujui oleh,");
+
+                $nameRow = $sigRow + 4;
+                $sheet->setCellValue("B$nameRow", Auth::user()->name);
+                $sheet->setCellValue("E$nameRow", "Rofika");
+                $sheet->setCellValue("H$nameRow", "Ronal Katili");
+
+                $sheet->getStyle("B$sigRow:H$nameRow")->applyFromArray(['alignment' => ['horizontal' => 'center']]);
+                $sheet->getStyle("B$nameRow:H$nameRow")->applyFromArray(['font' => ['bold' => true, 'underline' => true]]);
             },
         ];
     }
