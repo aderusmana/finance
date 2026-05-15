@@ -86,7 +86,7 @@ class LogisticOrderController extends Controller
 
             $user = Auth::user();
             if (!$user->hasRole(['super-admin', 'sales-ka-approver'])) {
-                $data->where('created_by', $user->id); 
+                $data->where('created_by', $user->id);
             }
 
             if ($tab === 'downloaded' && !empty($dateFrom) && !empty($dateTo)) {
@@ -210,10 +210,10 @@ class LogisticOrderController extends Controller
                 ], 422);
             }
 
-            $export = new DeliveryNoteItemExport($from, $to);
+            $export = new DeliveryNoteItemExport($from, $to, $distributors);
             $suffix = $from . '_to_' . $to;
         } else {
-            $export = new DeliveryNoteItemExport();
+            $export = new DeliveryNoteItemExport(null, null, $distributors);
             $suffix = now()->format('Ymd_His');
         }
 
@@ -259,7 +259,7 @@ class LogisticOrderController extends Controller
             $cleanedItems = [];
             foreach ($request->items as $key => $item) {
                 $cleanedItems[$key] = $item;
-                
+
                 if (isset($item['price_list'])) {
                     $cleanedItems[$key]['price_list'] = str_replace(['Rp', '.', ' '], '', $item['price_list']);
                 }

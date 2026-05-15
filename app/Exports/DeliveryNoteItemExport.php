@@ -5,17 +5,20 @@ namespace App\Exports;
 use App\Models\Customer\LogisticOrderItem;
 use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Concerns\FromQuery;
-use Maatwebsite\Excel\Concerns\ShouldAutoSize;
+use Maatwebsite\Excel\Concerns\WithColumnWidths; // Menggantikan ShouldAutoSize
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Events\AfterSheet;
 
-class DeliveryNoteItemExport implements FromQuery, WithHeadings, WithMapping, ShouldAutoSize, WithEvents
+class DeliveryNoteItemExport implements FromQuery, WithHeadings, WithMapping, WithColumnWidths, WithEvents
 {
     private ?string $dateFrom;
     private ?string $dateTo;
     private ?string $distributors;
+    private float $sumTotalClaim = 0;
+    private float $sumSalesValue = 0;
+    private int $rowIndex = 1; // Menambahkan urutan No
 
     public function __construct(?string $dateFrom = null, ?string $dateTo = null, ?string $distributors = null)
     {
@@ -57,21 +60,41 @@ class DeliveryNoteItemExport implements FromQuery, WithHeadings, WithMapping, Sh
             $query->where('logistic_orders.created_by', $user->id);
         }
 
-            if ($this->dateFrom && $this->dateTo) {
+        if ($this->dateFrom && $this->dateTo) {
             $query->whereBetween('logistic_orders.delivery_date', [$this->dateFrom, $this->dateTo]);
         }
 
         if (!empty($this->distributors)) {
             $distArray = is_array($this->distributors) ? $this->distributors : explode(',', $this->distributors);
-            $query->whereIn('logistic_orders.distributor_id', $distArray);
+            $distArray = array_filter($distArray);
+            if (count($distArray) > 0) {
+                $query->whereIn('logistic_orders.distributor_id', $distArray);
+            }
         }
 
         return $query;
     }
 
+    public function columnWidths(): array
+    {
+        return [
+            'A' => 5,   // NO (Kecil)
+            'B' => 30,  // DN NO
+            'C' => 30,  // DISTRIBUTOR NAME
+            'D' => 35,  // CUSTOMER NAME
+            'E' => 30,  // ITEM NAME
+            'F' => 12,  // PRICE ITEM (Kecil)
+            'G' => 8,   // QTY (Kecil)
+            'H' => 18,  // TOTAL CLAIM
+            'I' => 18,  // SALES VALUE
+            'J' => 10,  // RATIO (Kecil)
+        ];
+    }
+
     public function headings(): array
     {
         return [
+            'NO',
             'DN NO',
             'DISTRIBUTOR NAME',
             'CUSTOMER NAME',
@@ -89,13 +112,15 @@ class DeliveryNoteItemExport implements FromQuery, WithHeadings, WithMapping, Sh
         $qty = (float) ($row->qty ?? 0);
         $total = (float) ($row->total ?? 0);
         $priceItem = $qty > 0 ? ($total / $qty) : 0;
-
         $priceList = (float) ($row->price_list ?? 0);
         $salesValue = $priceList * $qty;
-
         $ratio = $salesValue > 0 ? ($total / $salesValue) : 0;
 
+        $this->sumTotalClaim += $total;
+        $this->sumSalesValue += $salesValue;
+
         return [
+            $this->rowIndex++,
             $row->dn_no ?? '-',
             $row->distributor_name ?? '-',
             $row->customer_name ?? '-',
@@ -114,23 +139,20 @@ class DeliveryNoteItemExport implements FromQuery, WithHeadings, WithMapping, Sh
             AfterSheet::class => function (AfterSheet $event) {
                 $sheet = $event->sheet->getDelegate();
                 $lastRow = $sheet->getHighestRow();
-                
-                // 1. Tambahkan info unduhan di paling atas (Baris 1 & 2)
-                $sheet->insertNewRowBefore(1, 4); // Tambah 4 baris kosong di atas
-                
-                $sheet->setCellValue('A1', 'Tanggal Download: ' . now()->format('d/m/Y H:i:s'));
+                $sheet->insertNewRowBefore(1, 4);
+
+                $sheet->setCellValue('A1', 'Tanggal: ' . now()->format('d/m/Y H:i:s'));
                 $sheet->setCellValue('A2', 'Dibuat Oleh: ' . Auth::user()->name);
                 $sheet->getStyle('A1:A2')->getFont()->setSize(9)->setItalic(true);
 
-                // 2. Judul Laporan (Baris 3 & 4)
-                $sheet->mergeCells('A3:I3');
+                $sheet->mergeCells('A3:J3');
                 $sheet->setCellValue('A3', 'Report Logistic Order');
                 $sheet->getStyle('A3')->applyFromArray([
                     'font' => ['bold' => true, 'size' => 14],
                     'alignment' => ['horizontal' => 'center']
                 ]);
 
-                $sheet->mergeCells('A4:I4');
+                $sheet->mergeCells('A4:J4');
                 $range = (!empty($this->dateFrom)) ? "Period: $this->dateFrom - $this->dateTo" : "All Dates";
                 $sheet->setCellValue('A4', $range);
                 $sheet->getStyle('A4')->applyFromArray([
@@ -138,38 +160,53 @@ class DeliveryNoteItemExport implements FromQuery, WithHeadings, WithMapping, Sh
                     'alignment' => ['horizontal' => 'center']
                 ]);
 
-                // 3. Styling Heading (Sekarang ada di Baris 5)
-                $sheet->getStyle('A5:I5')->applyFromArray([
+                $sheet->getStyle('A5:J5')->applyFromArray([
                     'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
                     'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => '166534']],
                 ]);
 
-                // 4. Baris TOTAL
-                $totalRow = $lastRow + 5; // Menyesuaikan karena ada insert 4 baris di atas
+                $totalRow = $lastRow + 5;
                 $dataStartRow = 6;
                 $dataEndRow = $totalRow - 1;
 
-                $sheet->setCellValue("F$totalRow", "GRAND TOTAL:");
-                $sheet->setCellValue("G$totalRow", "=SUM(G$dataStartRow:G$dataEndRow)");
-                $sheet->setCellValue("H$totalRow", "=SUM(H$dataStartRow:H$dataEndRow)");
-                $sheet->setCellValue("I$totalRow", "=IF(H$totalRow>0, G$totalRow/H$totalRow, 0)");
-                
-                $sheet->getStyle("F$totalRow:I$totalRow")->applyFromArray(['font' => ['bold' => true]]);
-                $sheet->getStyle("I$totalRow")->getNumberFormat()->setFormatCode('0.00%');
+                if ($dataEndRow < $dataStartRow) {
+                    $dataEndRow = $dataStartRow;
+                }
 
-                // 5. Tanda Tangan (3 Kolom: B, E, H)
+                $grandRatio = $this->sumSalesValue > 0 ? ($this->sumTotalClaim / $this->sumSalesValue) : 0;
+
+                $sheet->setCellValue("G$totalRow", "GRAND TOTAL:");
+                $sheet->setCellValue("H$totalRow", $this->sumTotalClaim);
+                $sheet->setCellValue("I$totalRow", $this->sumSalesValue);
+                $sheet->setCellValue("J$totalRow", $grandRatio);
+
+                $sheet->getStyle("G$totalRow:J$totalRow")->applyFromArray(['font' => ['bold' => true]]);
+                $sheet->getStyle("H{$dataStartRow}:I{$totalRow}")->getNumberFormat()->setFormatCode('#,##0');
+                $sheet->getStyle("J$totalRow")->getNumberFormat()->setFormatCode('0.00%');
+
+                $sheet->getStyle("J{$dataStartRow}:J{$totalRow}")->applyFromArray([
+                    'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT]
+                ]);
+
+                $sheet->getStyle("A{$dataStartRow}:A{$totalRow}")->applyFromArray([
+                    'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER]
+                ]);
+                $sheet->getStyle("G{$dataStartRow}:G{$totalRow}")->applyFromArray([
+                    'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER]
+                ]);
+
                 $sigRow = $totalRow + 3;
                 $sheet->setCellValue("B$sigRow", "Dibuat oleh,");
                 $sheet->setCellValue("E$sigRow", "Diketahui oleh,");
-                $sheet->setCellValue("H$sigRow", "Disetujui oleh,");
+                $sheet->setCellValue("I$sigRow", "Disetujui oleh,");
 
                 $nameRow = $sigRow + 4;
                 $sheet->setCellValue("B$nameRow", Auth::user()->name);
                 $sheet->setCellValue("E$nameRow", "Rofika");
-                $sheet->setCellValue("H$nameRow", "Ronal Katili");
+                $sheet->setCellValue("I$nameRow", "Ronal Katili");
 
-                $sheet->getStyle("B$sigRow:H$nameRow")->applyFromArray(['alignment' => ['horizontal' => 'center']]);
-                $sheet->getStyle("B$nameRow:H$nameRow")->applyFromArray(['font' => ['bold' => true, 'underline' => true]]);
+                $sheet->getStyle("B$sigRow:I$nameRow")->applyFromArray(['alignment' => ['horizontal' => 'center']]);
+                $sheet->getStyle("B$nameRow:I$nameRow")->applyFromArray(['font' => ['bold' => true, 'underline' => true]]);
             },
         ];
     }
