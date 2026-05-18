@@ -27,20 +27,20 @@ class CustomerRequest extends FormRequest
             }
 
             $extension = strtolower($value->getClientOriginalExtension());
-            $sizeInKb = $value->getSize() / 1024; 
+            $sizeInKb = $value->getSize() / 1024;
 
             // Validasi Image (JPG, JPEG, PNG) - Max 1MB
             if (in_array($extension, ['jpg', 'jpeg', 'png'])) {
                 if ($sizeInKb > 1024) {
                     $fail("File {$attribute} berformat Gambar (JPG/PNG) tidak boleh lebih dari 1MB.");
                 }
-            } 
+            }
             // Validasi PDF - Max 5MB
             elseif ($extension === 'pdf') {
                 if ($sizeInKb > 5120) {
                     $fail("File {$attribute} berformat PDF tidak boleh lebih dari 5MB.");
                 }
-            } 
+            }
             // Format tidak dikenali
             else {
                 $fail("File {$attribute} harus berformat PDF, JPG, atau PNG.");
@@ -56,32 +56,32 @@ class CustomerRequest extends FormRequest
             'customer_class' => 'required|exists:customer_classes,id',
 
             // --- 3. Documents (LOGIC BARU DISINI) ---
-            
+
             // NPWP: Required + Dynamic Rule
             'file_npwp' => [
-                'required', 
-                'file', 
+                'required',
+                'file',
                 $dynamicFileRule
             ],
 
             // NIB: Required + Dynamic Rule
             'file_nib' => [
-                'required', 
-                'file', 
+                'required',
+                'file',
                 $dynamicFileRule
             ],
 
             // KTP: Required + Dynamic Rule
             'file_ktp' => [
-                'required', 
-                'file', 
+                'required',
+                'file',
                 $dynamicFileRule
             ],
 
             // AKTE: Nullable + PDF Only + Max 5MB
             'file_akte' => [
-                'nullable', 
-                'file', 
+                'nullable',
+                'file',
                 'mimes:pdf', // Hanya PDF
                 'max:5120'   // Max 5MB
             ],
@@ -125,25 +125,45 @@ class CustomerRequest extends FormRequest
 
             // --- 7. Financial Terms ---
             'term_of_payment' => 'required|string',
-            'output_tax' => 'required|in:Terhutang PPN,NON-PPN,PPN', 
+            'output_tax' => 'required|in:Terhutang PPN,NON-PPN,PPN',
             'credit_limit' => [
                 'required',
                 'numeric',
                 'min:0',
-                function ($attribute, $value, $fail) {
-                    $bg = request('bank_garansi');
-                    $top = request('term_of_payment');
-                    if ($bg === 'TIDAK' && $top !== 'CBD') {
-                        if ($value <= 0) {
-                            $fail('Jika Bank Garansi NO dan bukan CBD, Credit Limit harus diisi (lebih dari 0).');
-                        }
-                    }
-                },
             ],
             'ccar' => 'required|string',
             'bank_garansi' => 'required|in:YA,TIDAK',
             'lead_time' => 'nullable|numeric|min:0',
         ];
+    }
+
+    protected function prepareForValidation(): void
+    {
+        $top = $this->input('term_of_payment');
+        $bg = $this->input('bank_garansi');
+        $rawCreditLimit = $this->input('credit_limit');
+
+        $creditLimit = $rawCreditLimit;
+        if (is_string($creditLimit)) {
+            $creditLimit = preg_replace('/[^0-9]/', '', $creditLimit);
+            if ($creditLimit === '') {
+                $creditLimit = null;
+            }
+        }
+
+        // CBD (Cash Before Delivery) tidak memiliki kredit, jadi Credit Limit harus 0
+        if (is_string($top) && strtoupper($top) === 'CBD') {
+            $creditLimit = 0;
+        }
+
+        // Jika Bank Garansi TIDAK, Credit Limit harus 0
+        if (is_string($bg) && strtoupper($bg) === 'TIDAK') {
+            $creditLimit = 0;
+        }
+
+        $this->merge([
+            'credit_limit' => $creditLimit,
+        ]);
     }
 
     /**
@@ -164,10 +184,10 @@ class CustomerRequest extends FormRequest
             // NPWP
             'file_npwp.required' => 'Dokumen NPWP wajib diupload.',
             'file_npwp.file'     => 'Dokumen NPWP harus berupa file yang valid.',
-            
+
             'file_nib.required'  => 'Dokumen NIB/SIUP wajib diupload.',
             'file_nib.file'      => 'Dokumen NIB/SIUP harus berupa file yang valid.',
-            
+
             'file_ktp.required'  => 'Dokumen KTP wajib diupload.',
             'file_ktp.file'      => 'Dokumen KTP harus berupa file yang valid.',
 

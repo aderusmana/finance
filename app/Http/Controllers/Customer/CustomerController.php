@@ -250,7 +250,7 @@ class CustomerController extends Controller
                             </button>';
                     }
 
-                    $btn .= '<button type="button" class="btn btn-primary btn-xs rounded-pill fw-bold btn-show-customer shadow-sm w-100" 
+                    $btn .= '<button type="button" class="btn btn-primary btn-xs rounded-pill fw-bold btn-show-customer shadow-sm w-100"
                             ' . $btnStyle . '
                             ' . $dataAttrs . ' title="View Detail">
                             <i class="ph-bold ph-eye me-1"></i> View
@@ -264,8 +264,8 @@ class CustomerController extends Controller
                                 </button>
                             </form>';
                     } else {
-                        $btn .= '<button type="button" class="btn btn-dark btn-xs rounded-pill fw-bold shadow-sm w-100" 
-                                ' . $btnStyle . ' 
+                        $btn .= '<button type="button" class="btn btn-dark btn-xs rounded-pill fw-bold shadow-sm w-100"
+                                ' . $btnStyle . '
                                 onclick="Swal.fire(\'Locked\', \'Approval is in progress.\', \'info\')">
                                 <i class="ph-bold ph-lock-key me-1"></i> Locked
                             </button>';
@@ -286,7 +286,7 @@ class CustomerController extends Controller
                     $words = explode(' ', trim($row->name));
                     $initials = strtoupper(substr($words[0] ?? 'C', 0, 1) . substr($words[1] ?? '', 0, 1));
                     $pic = $row->pic ?? 'No PIC';
-                    
+
                     return '<div class="d-flex align-items-center">
                                 <div class="bg-gradient bg-primary text-white d-flex justify-content-center align-items-center rounded-circle me-3 shadow-sm flex-shrink-0" style="width: 38px; height: 38px; font-weight: 600; font-size: 14px;">
                                     ' . $initials . '
@@ -420,6 +420,11 @@ class CustomerController extends Controller
         DB::transaction(function () use ($request, $customer, &$newLogs) {
             $user = Auth::user();
             $customerData = $request->except(['file_npwp', 'file_nib', 'file_ktp', 'items', '_token']);
+
+            if (is_string($request->bank_garansi) && strtoupper($request->bank_garansi) === 'TIDAK') {
+                $customerData['credit_limit'] = 0;
+            }
+
             $grandTotal = 0;
             if ($request->has('items') && is_array($request->items)) {
                 foreach ($request->items as $item) {
@@ -891,10 +896,10 @@ class CustomerController extends Controller
             }
 
             activity()
-                ->causedBy($actor) 
+                ->causedBy($actor)
                 ->performedOn($customer)
                 ->useLog('customer')
-                ->event($action) 
+                ->event($action)
                 ->withProperties([
                     'level' => $currentLog->level,
                     'status' => $dbStatus,
@@ -1236,7 +1241,7 @@ class CustomerController extends Controller
                 $btnResend = '';
                 if ($row->status === 'Pending') {
                     $approverName = $row->approver ? $row->approver->name : $row->approver_nik;
-                    $btnResend = '<button type="button" class="btn btn-warning btn-xs rounded-pill fw-bold btn-resend-email shadow-sm w-100" 
+                    $btnResend = '<button type="button" class="btn btn-warning btn-xs rounded-pill fw-bold btn-resend-email shadow-sm w-100"
                                     ' . $btnStyle . '
                                     data-token="' . $token . '"
                                     data-approver-name="' . e($approverName) . '"
@@ -1245,7 +1250,7 @@ class CustomerController extends Controller
                                 </button>';
                 }
 
-                $btnReview = '<button type="button" class="btn btn-primary btn-xs rounded-pill fw-bold action-btn-modal shadow-sm w-100" 
+                $btnReview = '<button type="button" class="btn btn-primary btn-xs rounded-pill fw-bold action-btn-modal shadow-sm w-100"
                                 ' . $btnStyle . '
                                 data-id="' . $customerId . '"
                                 data-token="' . $token . '"
@@ -1255,7 +1260,7 @@ class CustomerController extends Controller
                                 <i class="ph-bold ph-clipboard-text me-1"></i> Review
                             </button>';
 
-                $btnInputCode = '<button type="button" class="btn btn-info btn-xs rounded-pill fw-bold action-btn-modal shadow-sm w-100 text-white" 
+                $btnInputCode = '<button type="button" class="btn btn-info btn-xs rounded-pill fw-bold action-btn-modal shadow-sm w-100 text-white"
                                 ' . $btnStyle . '
                                 data-id="' . $customerId . '"
                                 data-token="' . $token . '"
