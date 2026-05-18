@@ -24,48 +24,59 @@ class CustomerService
         return DB::transaction(function () use ($data, $request) {
             $user = Auth::user();
 
+            // CEK STATUS BANK GARANSI (BG)
             $isBgActive = $data['bank_garansi'] === 'YA';
+            if ($isBgActive) {
+                // JIKA BG = YA: Limit Otomatis 0
+                $data['credit_limit'] = 0; 
+            } else {
+                // JIKA BG = TIDAK: Ambil nominal dari inputan user & bersihkan formatnya
+                $rawLimit = $data['credit_limit'] ?? 0;
+                $cleanLimit = str_replace(['.', ','], '', $rawLimit);
+                $data['credit_limit'] = (float) $cleanLimit;
+            }
 
             if ($isBgActive) {
+                // JIKA BG = YA: Generate Nomor PKD (Format: 001/PKD-INI/V/2026)
                 $year = date('Y');
-                $monthRoman = $this->getRomanMonth(date('n'));
-                $initials = $this->generateInitials($data['name']);
+                $monthRoman = $this->getRomanMonth(date('n')); 
+                $initials = $this->generateInitials($data['name']); 
 
                 $maxSequence = 0;
                 $existingNumbers = Customer::where('no_pkd', 'LIKE', "%/{$year}")
                                     ->pluck('no_pkd')->toArray();
 
                 foreach ($existingNumbers as $no) {
-                    $parts = explode('/', $no);
+                    $parts = explode('/', $no); 
                     if (isset($parts[0]) && is_numeric($parts[0])) {
                         $seq = intval($parts[0]);
-                        if ($seq > $maxSequence) $maxSequence = $seq;
+                        if ($seq > $maxSequence) $maxSequence = $seq; 
                     }
                 }
 
-                $nextSequence = $maxSequence + 1;
+                $nextSequence = $maxSequence + 1; 
                 $pkdNumber = '';
+                
                 do {
-                    $sequenceStr = str_pad($nextSequence, 3, '0', STR_PAD_LEFT);
+                    $sequenceStr = str_pad($nextSequence, 3, '0', STR_PAD_LEFT); 
                     $pkdNumber = sprintf("%s/PKD-%s/%s/%s", $sequenceStr, $initials, $monthRoman, $year);
                     $exists = Customer::where('no_pkd', $pkdNumber)->exists();
-                    if ($exists) $nextSequence++;
+                    if ($exists) $nextSequence++; 
                 } while ($exists);
 
                 $data['no_pkd'] = $pkdNumber;
-                $data['credit_limit'] = 0;
+                
             } else {
+                // JIKA BG = TIDAK: Tidak perlu Nomor PKD
                 $data['no_pkd'] = null;
-                $rawLimit = $data['credit_limit'];
-                $cleanLimit = str_replace(['.', ','], '', $rawLimit);
-                $data['credit_limit'] = (float) $cleanLimit;
             }
 
             if (isset($data['top_calc'])) {
                 $data['top_calc'] = $data['top_calc'];
             } else {
                 $termVal = $data['term_of_payment'];
-                $data['top_calc'] = ($termVal === 'CBD') ? 0 : (int) $termVal;
+                // Jika Cash Before Delivery (CBD), kalkulasi harinya adalah 0
+                $data['top_calc'] = ($termVal === 'CBD') ? 0 : (int) $termVal; 
             }
 
             if(empty($data['lead_time'])) {
@@ -80,9 +91,10 @@ class CustomerService
                     $grandTotal += ($qty * $price);
                 }
             }
+            
             $data['customer_total'] = $grandTotal;
             $data['created_by'] = $user->id;
-            $data['status'] = 'Active';
+            $data['status'] = 'Active'; 
 
             $customer = Customer::create($data);
 
@@ -99,7 +111,8 @@ class CustomerService
                 }
             }
 
-            $storageFolder = 'customer_files/' . $customer->id;
+            $storageFolder = 'customer_files/' . $customer->id; 
+            
             $fileData = [
                 'customer_id' => $customer->id,
                 'npwp_file' => $request->hasFile('file_npwp') ? $request->file('file_npwp')->store($storageFolder, 'public') : null,
@@ -108,10 +121,11 @@ class CustomerService
                 'akte_file' => $request->hasFile('file_akte') ? $request->file('file_akte')->store($storageFolder, 'public') : null,
                 'company_profile_file' => $request->hasFile('file_company_profile') ? $request->file('file_company_profile')->store($storageFolder, 'public') : null,
             ];
-            CustomerFile::create($fileData);
+            CustomerFile::create($fileData); 
 
-            $subCategory = ($data['term_of_payment'] === 'CBD') ? 'CBD' : null;
+            $subCategory = ($data['term_of_payment'] === 'CBD') ? 'CBD' : null; 
             $requesterUser = User::find($data['user_id']) ?? $user;
+            
             $this->generateApprovalLogs($requesterUser, $customer->id, 'Customer', $subCategory);
 
             $firstLog = ApprovalLog::where('category', 'Customer')
@@ -132,7 +146,9 @@ class CustomerService
                             'ph-signature',
                             'warning'
                         ));
-                    } catch (\Exception $e) { Log::error("Notif Error: " . $e->getMessage()); }
+                    } catch (\Exception $e) { 
+                        Log::error("Notif Error: " . $e->getMessage()); 
+                    }
                 }
             } else {
                 $customer->update(['status_approval' => 'Completed', 'route_to' => 'Finished']);

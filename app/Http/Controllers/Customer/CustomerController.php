@@ -270,9 +270,18 @@ class CustomerController extends Controller
                                 </button>
                             </form>';
                     } else {
+                        $customerNameJS = htmlspecialchars(addslashes($row->name));
                         $btn .= '<button type="button" class="btn btn-dark btn-xs rounded-pill fw-bold shadow-sm w-100"
                                 ' . $btnStyle . '
-                                onclick="Swal.fire(\'Locked\', \'Approval is in progress.\', \'info\')">
+                                onclick="Swal.fire({
+                                    title: \'Access Locked!\',
+                                    html: \'Customer data <b>' . $customerNameJS . '</b> cannot be deleted because the approval process is in progress.\',
+                                    icon: \'warning\',
+                                    confirmButtonText: \'<i class=\\\'ph-bold ph-check me-1\\\'></i> Okay, closed\',
+                                    confirmButtonColor: \'#475569\',
+                                    customClass: { confirmButton: \'btn rounded-pill px-4 fw-bold shadow-sm text-white\' },
+                                    buttonsStyling: false
+                                })">
                                 <i class="ph-bold ph-lock-key me-1"></i> Locked
                             </button>';
                     }
@@ -1361,11 +1370,11 @@ class CustomerController extends Controller
 
         return DataTables::of($query)
             ->addIndexColumn()
-            
+
             // --- KOLOM LOG NAME (Gradient Pill) ---
             ->editColumn('log_name', function ($log) {
                 $logName = $log->log_name;
-                
+
                 if (str_contains($logName, 'customer')) {
                     $bg = 'linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)';
                     $shadow = '0 4px 10px rgba(37, 99, 235, 0.2)';
@@ -1517,7 +1526,7 @@ class CustomerController extends Controller
             ->addColumn('subject_id', function ($log) {
                 $id = $log->subject_id;
                 if (!$id) return '<span style="color: #cbd5e1; font-weight: 700;">-</span>';
-                
+
                 return '
                     <div class="d-inline-flex align-items-center gap-1" style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 4px 10px; border-radius: 6px; box-shadow: inset 0 2px 4px rgba(255,255,255,0.8);">
                         <i class="ph-bold ph-hash" style="color: #94a3b8; font-size: 0.8rem;"></i>
@@ -1546,7 +1555,7 @@ class CustomerController extends Controller
             // --- KOLOM EVENT (Glossy Action Pill) ---
             ->editColumn('event', function ($log) {
                 $event = strtolower($log->event ?? 'N/A');
-                
+
                 $bg = 'linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%)';
                 $border = '#cbd5e1';
                 $color = '#475569';

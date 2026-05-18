@@ -510,7 +510,7 @@
                     autoWidth: false,
                     language: {
                         search: "",
-                        searchPlaceholder: "🔍 Cari data...",
+                        searchPlaceholder: "🔍 Search data...",
                         lengthMenu: "Tampilkan _MENU_ baris",
                         info: "Menampilkan _START_ s/d _END_ dari _TOTAL_ data"
                     },
