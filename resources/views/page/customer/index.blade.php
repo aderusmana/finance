@@ -35,7 +35,7 @@
 
                     <select id="approvalStatusFilter" class="form-select select2" style="width: 10.9375rem;">
                         <option value="all">All Approval</option>
-                        @foreach($approvalStatuses as $status)
+                        @foreach ($approvalStatuses as $status)
                             <option value="{{ $status }}">{{ $status }}</option>
                         @endforeach
                     </select>
@@ -46,17 +46,17 @@
                 </div>
 
                 <div class="ms-auto d-flex gap-2">
-                    @can ('import customer')
-                    <button class="btn btn-success" type="button" data-bs-toggle="modal" data-bs-target="#importModal">
-                        <i class="ph-bold ph-file-csv"></i>
-                        <span class="d-none d-sm-inline">Import CSV</span>
-                    </button>
+                    @can('import customer')
+                        <button class="btn btn-success" type="button" data-bs-toggle="modal" data-bs-target="#importModal">
+                            <i class="ph-bold ph-file-csv"></i>
+                            <span class="d-none d-sm-inline">Import CSV</span>
+                        </button>
                     @endcan
                     @can('create customer')
-                    <button class="btn btn-primary" type="button" id="btn-create-customer">
-                        <i class="ph-bold ph-plus"></i>
-                        <span>New Customer</span>
-                    </button>
+                        <button class="btn btn-primary" type="button" id="btn-create-customer">
+                            <i class="ph-bold ph-plus"></i>
+                            <span>New Customer</span>
+                        </button>
                     @endcan
                 </div>
             </div>
@@ -73,8 +73,10 @@
                     </div>
 
                     <div class="d-none d-md-flex gap-4 text-white align-items-center pe-2">
-                        <div class="d-flex align-items-center gap-2" data-bs-toggle="tooltip" title="Waiting for Approval">
-                            <div class="bg-white bg-opacity-25 rounded-circle p-1 d-flex justify-content-center align-items-center" style="width: 2rem; height: 2rem;">
+                        <div class="d-flex align-items-center gap-2" data-bs-toggle="tooltip"
+                            title="Waiting for Approval">
+                            <div class="bg-white bg-opacity-25 rounded-circle p-1 d-flex justify-content-center align-items-center"
+                                style="width: 2rem; height: 2rem;">
                                 <i class="ph-fill ph-clock-countdown text-warning f-s-18"></i>
                             </div>
                             <div class="d-flex flex-column line-height-sm">
@@ -84,7 +86,8 @@
                         </div>
 
                         <div class="d-flex align-items-center gap-2" data-bs-toggle="tooltip" title="Processing">
-                            <div class="bg-white bg-opacity-25 rounded-circle p-1 d-flex justify-content-center align-items-center" style="width: 2rem; height: 2rem;">
+                            <div class="bg-white bg-opacity-25 rounded-circle p-1 d-flex justify-content-center align-items-center"
+                                style="width: 2rem; height: 2rem;">
                                 <i class="ph-fill ph-gear text-info f-s-18"></i>
                             </div>
                             <div class="d-flex flex-column line-height-sm">
@@ -93,8 +96,10 @@
                             </div>
                         </div>
 
-                        <div class="d-flex align-items-center gap-2" data-bs-toggle="tooltip" title="Approved (Administrative)">
-                             <div class="bg-white bg-opacity-25 rounded-circle p-1 d-flex justify-content-center align-items-center" style="width: 2rem; height: 2rem;">
+                        <div class="d-flex align-items-center gap-2" data-bs-toggle="tooltip"
+                            title="Approved (Administrative)">
+                            <div class="bg-white bg-opacity-25 rounded-circle p-1 d-flex justify-content-center align-items-center"
+                                style="width: 2rem; height: 2rem;">
                                 <i class="ph-fill ph-seal-check text-success f-s-18"></i>
                             </div>
                             <div class="d-flex flex-column line-height-sm">
@@ -108,8 +113,10 @@
                         {{-- Stat 3: BG Status --}}
                         <div class="d-flex align-items-center gap-4">
 
-                            <div class="d-flex align-items-center gap-2" data-bs-toggle="tooltip" title="Customers with Bank Garansi">
-                                <div class="bg-white bg-opacity-10 rounded-circle p-1 d-flex justify-content-center align-items-center" style="width: 2rem; height: 2rem;">
+                            <div class="d-flex align-items-center gap-2" data-bs-toggle="tooltip"
+                                title="Customers with Bank Garansi">
+                                <div class="bg-white bg-opacity-10 rounded-circle p-1 d-flex justify-content-center align-items-center"
+                                    style="width: 2rem; height: 2rem;">
                                     <i class="ph-fill ph-file-text text-success f-s-18"></i>
                                 </div>
                                 <div class="d-flex flex-column line-height-sm">
@@ -118,8 +125,10 @@
                                 </div>
                             </div>
 
-                            <div class="d-flex align-items-center gap-2" data-bs-toggle="tooltip" title="Customers without Bank Garansi">
-                                <div class="bg-white bg-opacity-10 rounded-circle p-1 d-flex justify-content-center align-items-center" style="width: 2rem; height: 2rem;">
+                            <div class="d-flex align-items-center gap-2" data-bs-toggle="tooltip"
+                                title="Customers without Bank Garansi">
+                                <div class="bg-white bg-opacity-10 rounded-circle p-1 d-flex justify-content-center align-items-center"
+                                    style="width: 2rem; height: 2rem;">
                                     <i class="ph-fill ph-prohibit text-danger f-s-18"></i>
                                 </div>
                                 <div class="d-flex flex-column line-height-sm">
@@ -172,8 +181,10 @@
                             <div class="card-body">
                                 <div class="row">
                                     <div class="col-md-12">
-                                        <label for="user_id" class="form-label">Select User (Requester) <span class="text-danger">*</span></label>
-                                        <select class="form-select select2-styled" id="user_id" name="user_id" style="width: 100%;" required>
+                                        <label for="user_id" class="form-label">Select User (Requester) <span
+                                                class="text-danger">*</span></label>
+                                        <select class="form-select select2-styled" id="user_id" name="user_id"
+                                            style="width: 100%;" required>
                                             <option></option>
                                             @foreach ($sales as $s)
                                                 <option value="{{ $s->user_id }}"
@@ -185,7 +196,8 @@
                                                 </option>
                                             @endforeach
                                         </select>
-                                        <input type="hidden" id="current_user_role" value="{{ Auth::user()->getRoleNames()->first() }}">
+                                        <input type="hidden" id="current_user_role"
+                                            value="{{ Auth::user()->getRoleNames()->first() }}">
                                         <input type="hidden" id="current_user_id" value="{{ Auth::id() }}">
                                     </div>
                                 </div>
@@ -204,13 +216,13 @@
                                         </div>
                                         <div class="col-md-4">
                                             <label class="small text-muted">Branch</label>
-                                            <input type="text" class="form-control form-control-sm" id="user_branch"
-                                                readonly placeholder="Auto-filled">
+                                            <input type="text" class="form-control form-control-sm"
+                                                id="user_branch" readonly placeholder="Auto-filled">
                                         </div>
                                         <div class="col-md-4">
                                             <label class="small text-muted">Region</label>
-                                            <input type="text" class="form-control form-control-sm" id="user_region"
-                                                readonly placeholder="Auto-filled">
+                                            <input type="text" class="form-control form-control-sm"
+                                                id="user_region" readonly placeholder="Auto-filled">
                                         </div>
                                     </div>
                                 </div>
@@ -265,30 +277,38 @@
                                         {{-- Header takes full width --}}
                                         <div class="col-12">
                                             <h6 class="fw-bold text-secondary mb-0">
-                                                <i class="ph-bold ph-upload-simple"></i> Document Uploads (Auto-fill Support)
+                                                <i class="ph-bold ph-upload-simple"></i> Document Uploads (Auto-fill
+                                                Support)
                                             </h6>
                                         </div>
 
                                         {{-- 1. NPWP (REQUIRED) --}}
                                         <div class="col-md">
-                                            <label class="form-label">Upload NPWP <span class="text-danger">*</span></label>
-                                            <input type="file" class="form-control" name="file_npwp" accept=".jpeg,.jpg,.png" required>
-                                            <small class="text-muted f-s-11">Format: JPEG, JPG, PNG. Upload for auto-fill name & address.</small>
+                                            <label class="form-label">Upload NPWP <span
+                                                    class="text-danger">*</span></label>
+                                            <input type="file" class="form-control" name="file_npwp"
+                                                accept=".jpeg,.jpg,.png" required>
+                                            <small class="text-muted f-s-11">Format: JPEG, JPG, PNG. Upload for
+                                                auto-fill name & address.</small>
                                             <div id="preview_npwp" class="mt-2" style="display: none;"></div>
                                         </div>
 
                                         {{-- 2. NIB/SIUP (REQUIRED) --}}
                                         <div class="col-md">
-                                            <label class="form-label">Upload NIB/SIUP <span class="text-danger">*</span></label>
-                                            <input type="file" class="form-control" name="file_nib" accept=".jpeg,.jpg,.png" required>
+                                            <label class="form-label">Upload NIB/SIUP <span
+                                                    class="text-danger">*</span></label>
+                                            <input type="file" class="form-control" name="file_nib"
+                                                accept=".jpeg,.jpg,.png" required>
                                             <small class="text-muted f-s-11">Format: JPEG, JPG, PNG</small>
                                             <div id="preview_nib" class="mt-2" style="display: none;"></div>
                                         </div>
 
                                         {{-- 3. KTP (REQUIRED) --}}
                                         <div class="col-md">
-                                            <label class="form-label">Upload KTP <span class="text-danger">*</span></label>
-                                            <input type="file" class="form-control" name="file_ktp" accept=".jpeg,.jpg,.png" required>
+                                            <label class="form-label">Upload KTP <span
+                                                    class="text-danger">*</span></label>
+                                            <input type="file" class="form-control" name="file_ktp"
+                                                accept=".jpeg,.jpg,.png" required>
                                             <small class="text-muted f-s-11">Format: JPEG, JPG, PNG</small>
                                             <div id="preview_ktp" class="mt-2" style="display: none;"></div>
                                         </div>
@@ -296,17 +316,21 @@
                                         {{-- 4. AKTE (OPTIONAL - PDF ONLY) --}}
                                         <div class="col-md">
                                             <label class="form-label">Upload Akte Pendirian</label>
-                                            <input type="file" class="form-control" name="file_akte" accept=".pdf">
+                                            <input type="file" class="form-control" name="file_akte"
+                                                accept=".pdf">
                                             <small class="text-muted f-s-11">Format: PDF only</small>
-                                            <div id="preview_akte" class="mt-4" style="display: none; position:relative; z-index:2;"></div>
+                                            <div id="preview_akte" class="mt-4"
+                                                style="display: none; position:relative; z-index:2;"></div>
                                         </div>
 
                                         {{-- 5. COMPANY PROFILE (OPTIONAL - PDF ONLY) --}}
                                         <div class="col-md">
                                             <label class="form-label">Upload Company Profile</label>
-                                            <input type="file" class="form-control" name="file_company_profile" accept=".pdf">
+                                            <input type="file" class="form-control" name="file_company_profile"
+                                                accept=".pdf">
                                             <small class="text-muted f-s-11">Format: PDF only</small>
-                                            <div id="preview_company_profile" class="mt-2" style="display: none; position:relative; z-index:2;"></div>
+                                            <div id="preview_company_profile" class="mt-2"
+                                                style="display: none; position:relative; z-index:2;"></div>
                                         </div>
                                     </div>
                                 </div>
@@ -325,38 +349,48 @@
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label">Sort Name</label>
-                                            <input type="text" class="form-control" name="sort_name" id="sort_name"
-                                                placeholder="e.g. MMC">
+                                            <input type="text" class="form-control" name="sort_name"
+                                                id="sort_name" placeholder="e.g. MMC">
                                         </div>
                                         <div class="col-md-12">
-                                            <label class="form-label">Address <span class="text-danger">*</span></label>
+                                            <label class="form-label">Address <span
+                                                    class="text-danger">*</span></label>
                                             <input type="text" class="form-control mb-2" name="address1"
                                                 id="address1" placeholder="Address Line 1 (Required)" required>
                                             <input type="text" class="form-control mb-2" name="address2"
                                                 id="address2" placeholder="Address Line 2 (Optional)">
-                                            <input type="text" class="form-control" name="address3" id="address3"
-                                                placeholder="Address Line 3 (Optional)">
+                                            <input type="text" class="form-control" name="address3"
+                                                id="address3" placeholder="Address Line 3 (Optional)">
                                         </div>
                                         <div class="col-md-4">
-                                            <label class="form-label">Postal Code <span class="text-danger">*</span></label>
-                                            <input type="text" class="form-control" name="postal_code" id="postal_code" placeholder="e.g. 12345" required>
+                                            <label class="form-label">Postal Code <span
+                                                    class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" name="postal_code"
+                                                id="postal_code" placeholder="e.g. 12345" required>
                                         </div>
 
                                         <div class="col-md-4">
                                             <label class="form-label">City <span class="text-danger">*</span></label>
-                                            <input type="text" class="form-control" name="city" id="city" placeholder="e.g. Jakarta Selatan" required>
+                                            <input type="text" class="form-control" name="city" id="city"
+                                                placeholder="e.g. Jakarta Selatan" required>
                                         </div>
 
                                         <div class="col-md-4">
-                                            <label class="form-label">Country <span class="text-danger">*</span></label>
-                                            <input type="text" class="form-control" name="country" id="country" value="Indonesia" placeholder="Country" required>
+                                            <label class="form-label">Country <span
+                                                    class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" name="country" id="country"
+                                                value="Indonesia" placeholder="Country" required>
                                         </div>
                                         <div class="col-md-6">
-                                            <label class="form-label">No PKD <span class="text-danger">*</span></label>
-                                            <input type="text" class="form-control bg-light" name="no_pkd" id="no_pkd" placeholder="PKD No. will be auto-generated by system" readonly>
+                                            <label class="form-label">No PKD <span
+                                                    class="text-danger">*</span></label>
+                                            <input type="text" class="form-control bg-light" name="no_pkd"
+                                                id="no_pkd" placeholder="PKD No. will be auto-generated by system"
+                                                readonly>
                                         </div>
                                         <div class="col-md-6">
-                                            <label class="form-label">Person in Charge (PIC) <span class="text-danger">*</span></label>
+                                            <label class="form-label">Person in Charge (PIC) <span
+                                                    class="text-danger">*</span></label>
                                             <input type="text" class="form-control" name="pic" id="pic"
                                                 placeholder="e.g. John Doe" required>
                                         </div>
@@ -402,9 +436,9 @@
                                         <div class="col-md-3">
                                             <label class="form-label">Purchasing Mgr Email <span
                                                     class="text-danger">*</span></label>
-                                            <input type="email" class="form-control" name="purchasing_manager_email"
-                                                id="purchasing_manager_email" placeholder="email@example.com"
-                                                required>
+                                            <input type="email" class="form-control"
+                                                name="purchasing_manager_email" id="purchasing_manager_email"
+                                                placeholder="email@example.com" required>
                                         </div>
                                         <div class="col-md-3">
                                             <label class="form-label">Finance Mgr Name <span
@@ -510,8 +544,10 @@
                                         <h6 class="fw-bold text-secondary">Financial Terms</h6>
 
                                         <div class="col-md-4">
-                                            <label class="form-label">TOP (Term of Payment) <span class="text-danger">*</span></label>
-                                            <select class="form-select select2-styled" name="term_of_payment" id="term_of_payment" style="width:100%" required>
+                                            <label class="form-label">TOP (Term of Payment) <span
+                                                    class="text-danger">*</span></label>
+                                            <select class="form-select select2-styled" name="term_of_payment"
+                                                id="term_of_payment" style="width:100%" required>
                                                 <option></option>
                                                 @foreach ($top as $t)
                                                     <option value="{{ $t->name_top }}">{{ $t->desc_top }}</option>
@@ -520,8 +556,10 @@
                                         </div>
 
                                         <div class="col-md-4">
-                                            <label class="form-label">Output Tax <span class="text-danger">*</span></label>
-                                            <select class="form-select select2-styled" name="output_tax" id="output_tax" style="width:100%" required>
+                                            <label class="form-label">Output Tax <span
+                                                    class="text-danger">*</span></label>
+                                            <select class="form-select select2-styled" name="output_tax"
+                                                id="output_tax" style="width:100%" required>
                                                 <option></option>
                                                 <option value="Terhutang PPN">Terhutang PPN</option>
                                                 <option value="NON-PPN">Tidak Terhutang (NON-PPN)</option>
@@ -532,13 +570,16 @@
                                         <input type="hidden" name="lead_time" id="lead_time" value="0">
 
                                         <div class="col-md-4">
-                                            <label class="form-label">Credit Limit <span class="text-danger">*</span></label>
-                                            <input type="text" class="form-control" name="credit_limit" id="credit_limit" placeholder="Click to calculate" required readonly>
+                                            <label class="form-label">Credit Limit <span
+                                                    class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" name="credit_limit"
+                                                id="credit_limit" placeholder="Click to calculate" required readonly>
                                         </div>
 
                                         <div class="col-md-4">
                                             <label class="form-label">CCAR <span class="text-danger">*</span></label>
-                                            <select class="form-select select2-styled" name="ccar" id="ccar" style="width:100%" required>
+                                            <select class="form-select select2-styled" name="ccar" id="ccar"
+                                                style="width:100%" required>
                                                 <option></option>
                                                 <option value="smd_idr">SMD (IDR)</option>
                                                 <option value="smd_usd">SMD USD</option>
@@ -546,8 +587,10 @@
                                         </div>
 
                                         <div class="col-md-4">
-                                            <label class="form-label">Bank Garansi <span class="text-danger">*</span></label>
-                                            <select class="form-select select2-styled" name="bank_garansi" id="bank_garansi" style="width:100%" required>
+                                            <label class="form-label">Bank Garansi <span
+                                                    class="text-danger">*</span></label>
+                                            <select class="form-select select2-styled" name="bank_garansi"
+                                                id="bank_garansi" style="width:100%" required>
                                                 <option></option>
                                                 <option value="YA">Yes</option>
                                                 <option value="TIDAK">No</option>
@@ -561,10 +604,14 @@
                                 <div class="card-body">
                                     <div class="row g-3 mb-4">
                                         <h6 class="fw-bold text-secondary d-flex align-items-center">
-                                            <i class="ph-bold ph-calendar-check me-2"></i> Financial Schedule (Optional)
+                                            <i class="ph-bold ph-calendar-check me-2"></i> Financial Schedule
+                                            (Optional)
                                         </h6>
                                         <div class="alert alert-light border border-dashed p-2 mb-3 f-s-12 text-muted">
-                                            <i class="ph-bold ph-info me-1"></i> Set specific billing and payment schedules for this customer. This is optional and can be left blank if not needed. If schedules are set, they will override the default system settings for this customer.
+                                            <i class="ph-bold ph-info me-1"></i> Set specific billing and payment
+                                            schedules for this customer. This is optional and can be left blank if not
+                                            needed. If schedules are set, they will override the default system settings
+                                            for this customer.
                                         </div>
 
                                         {{-- CONTAINER INPUT SCHEDULE --}}
@@ -573,17 +620,25 @@
 
                                                 {{-- LEFT: FAKTUR --}}
                                                 <div class="col-md-6 border-end">
-                                                    <h6 class="text-success fw-bold small text-uppercase mb-2">Billing Schedule</h6>
+                                                    <h6 class="text-success fw-bold small text-uppercase mb-2">Billing
+                                                        Schedule</h6>
 
                                                     {{-- Faktur Days --}}
                                                     <div class="mb-3">
                                                         <label class="form-label small fw-bold">Billing Days</label>
-                                                        <div class="schedule-selector" id="create_faktur_days_container">
+                                                        <div class="schedule-selector"
+                                                            id="create_faktur_days_container">
                                                             <div id="create_faktur_days_inputs"></div>
 
-                                                            <button type="button" class="btn btn-sm btn-outline-dark me-1 mb-1 btn-schedule" data-type="faktur_days" data-val="All">All Days</button>
-                                                            @foreach(['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'] as $day)
-                                                                <button type="button" class="btn btn-sm btn-outline-success mb-1 btn-schedule" data-type="faktur_days" data-val="{{ $day }}">{{ $day }}</button>
+                                                            <button type="button"
+                                                                class="btn btn-sm btn-outline-dark me-1 mb-1 btn-schedule"
+                                                                data-type="faktur_days" data-val="All">All
+                                                                Days</button>
+                                                            @foreach (['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'] as $day)
+                                                                <button type="button"
+                                                                    class="btn btn-sm btn-outline-success mb-1 btn-schedule"
+                                                                    data-type="faktur_days"
+                                                                    data-val="{{ $day }}">{{ $day }}</button>
                                                             @endforeach
                                                         </div>
                                                     </div>
@@ -591,12 +646,16 @@
                                                     {{-- Faktur Date --}}
                                                     <div>
                                                         <label class="form-label small fw-bold">Billing Date</label>
-                                                        <div class="schedule-selector" id="create_faktur_date_container">
+                                                        <div class="schedule-selector"
+                                                            id="create_faktur_date_container">
                                                             <div id="create_faktur_date_inputs"></div>
 
-                                                            <button type="button" class="btn btn-sm btn-outline-dark me-1 mb-2 w-100 btn-schedule" data-type="faktur_date" data-val="All">All Dates (1-31)</button>
+                                                            <button type="button"
+                                                                class="btn btn-sm btn-outline-dark me-1 mb-2 w-100 btn-schedule"
+                                                                data-type="faktur_date" data-val="All">All Dates
+                                                                (1-31)</button>
                                                             <div class="d-flex flex-wrap gap-1">
-                                                                @for($i=1; $i<=31; $i++)
+                                                                @for ($i = 1; $i <= 31; $i++)
                                                                     <button type="button"
                                                                         class="btn btn-xs btn-outline-secondary btn-schedule btn-date-box"
                                                                         style="width: 2.375rem !important; height: 2.375rem !important; padding: 0 !important; display: inline-flex !important; align-items: center; justify-content: center; font-size: 13.6px !important; font-weight: 600; line-height: 1 !important; white-space: nowrap !important;"
@@ -612,17 +671,25 @@
 
                                                 {{-- RIGHT: PAYMENT --}}
                                                 <div class="col-md-6">
-                                                    <h6 class="text-primary fw-bold small text-uppercase mb-2">Payment Schedule</h6>
+                                                    <h6 class="text-primary fw-bold small text-uppercase mb-2">Payment
+                                                        Schedule</h6>
 
                                                     {{-- Payment Days --}}
                                                     <div class="mb-3">
                                                         <label class="form-label small fw-bold">Payment Days</label>
-                                                        <div class="schedule-selector" id="create_payment_days_container">
+                                                        <div class="schedule-selector"
+                                                            id="create_payment_days_container">
                                                             <div id="create_payment_days_inputs"></div>
 
-                                                            <button type="button" class="btn btn-sm btn-outline-dark me-1 mb-1 btn-schedule" data-type="payment_days" data-val="All">All Days</button>
-                                                            @foreach(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'] as $day)
-                                                                <button type="button" class="btn btn-sm btn-outline-primary mb-1 btn-schedule" data-type="payment_days" data-val="{{ $day }}">{{ $day }}</button>
+                                                            <button type="button"
+                                                                class="btn btn-sm btn-outline-dark me-1 mb-1 btn-schedule"
+                                                                data-type="payment_days" data-val="All">All
+                                                                Days</button>
+                                                            @foreach (['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'] as $day)
+                                                                <button type="button"
+                                                                    class="btn btn-sm btn-outline-primary mb-1 btn-schedule"
+                                                                    data-type="payment_days"
+                                                                    data-val="{{ $day }}">{{ $day }}</button>
                                                             @endforeach
                                                         </div>
                                                     </div>
@@ -630,12 +697,16 @@
                                                     {{-- Payment Date --}}
                                                     <div>
                                                         <label class="form-label small fw-bold">Payment Date</label>
-                                                        <div class="schedule-selector" id="create_payment_date_container">
+                                                        <div class="schedule-selector"
+                                                            id="create_payment_date_container">
                                                             <div id="create_payment_date_inputs"></div>
 
-                                                            <button type="button" class="btn btn-sm btn-outline-dark me-1 mb-2 w-100 btn-schedule" data-type="payment_date" data-val="All">All Dates (1-31)</button>
+                                                            <button type="button"
+                                                                class="btn btn-sm btn-outline-dark me-1 mb-2 w-100 btn-schedule"
+                                                                data-type="payment_date" data-val="All">All Dates
+                                                                (1-31)</button>
                                                             <div class="d-flex flex-wrap gap-1">
-                                                                @for($i=1; $i<=31; $i++)
+                                                                @for ($i = 1; $i <= 31; $i++)
                                                                     <button type="button"
                                                                         class="btn btn-xs btn-outline-secondary btn-schedule btn-date-box"
                                                                         style="width: 2.375rem !important; height: 2.375rem !important; padding: 0 !important; display: inline-flex !important; align-items: center; justify-content: center; font-size: 13.6px !important; font-weight: 600; line-height: 1 !important; white-space: nowrap !important;"
@@ -683,7 +754,8 @@
                             <div class="opacity-75 f-s-14 mt-1" id="view_header_code">CODE-001</div>
                         </div>
                     </div>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
                 </div>
 
                 <div class="modal-body bg-light p-4" style="max-height: 85vh; overflow-y: auto;">
@@ -693,12 +765,15 @@
                             <div class="d-flex align-items-center justify-content-between">
                                 <div class="d-flex align-items-center gap-4">
                                     <div>
-                                        <label class="fw-bold text-dark text-uppercase f-s-12 mb-1">Account Status</label>
-                                        <div><span id="view_status_badge" class="badge bg-secondary f-s-12 px-3 py-2">STATUS</span></div>
+                                        <label class="fw-bold text-dark text-uppercase f-s-12 mb-1">Account
+                                            Status</label>
+                                        <div><span id="view_status_badge"
+                                                class="badge bg-secondary f-s-12 px-3 py-2">STATUS</span></div>
                                     </div>
                                     <div class="vr" style="height: 2.5rem; opacity: 0.1;"></div>
                                     <div>
-                                        <label class="fw-bold text-dark text-uppercase f-s-12 mb-1">Approval Progress</label>
+                                        <label class="fw-bold text-dark text-uppercase f-s-12 mb-1">Approval
+                                            Progress</label>
                                         <div id="view_approval_badge" class="fw-bold text-dark f-s-16">Pending</div>
                                     </div>
                                 </div>
@@ -715,23 +790,28 @@
                                 <div class="col-md-6 border-end">
                                     <div class="row g-4">
                                         <div class="col-md-12">
-                                            <label class="fw-bold text-secondary text-uppercase f-s-12 mb-1">Customer Name</label>
+                                            <label class="fw-bold text-secondary text-uppercase f-s-12 mb-1">Customer
+                                                Name</label>
                                             <div class="fw-bold text-dark f-s-16" id="view_name">-</div>
                                         </div>
                                         <div class="col-md-6">
-                                            <label class="fw-bold text-secondary text-uppercase f-s-12 mb-1">Sort Name / Alias</label>
+                                            <label class="fw-bold text-secondary text-uppercase f-s-12 mb-1">Sort Name
+                                                / Alias</label>
                                             <div class="fw-bold text-dark f-s-14" id="view_sort_name">-</div>
                                         </div>
                                         <div class="col-md-6">
-                                            <label class="fw-bold text-secondary text-uppercase f-s-12 mb-1">Email Address</label>
+                                            <label class="fw-bold text-secondary text-uppercase f-s-12 mb-1">Email
+                                                Address</label>
                                             <div class="fw-bold text-dark f-s-14" id="view_email">-</div>
                                         </div>
                                         <div class="col-md-6">
-                                            <label class="fw-bold text-secondary text-uppercase f-s-12 mb-1">No. PKD</label>
+                                            <label class="fw-bold text-secondary text-uppercase f-s-12 mb-1">No.
+                                                PKD</label>
                                             <div class="fw-bold text-dark f-s-14" id="view_no_pkd">-</div>
                                         </div>
                                         <div class="col-md-6">
-                                            <label class="fw-bold text-secondary text-uppercase f-s-12 mb-1">PIC (Penanggung Jawab)</label>
+                                            <label class="fw-bold text-secondary text-uppercase f-s-12 mb-1">PIC
+                                                (Penanggung Jawab)</label>
                                             <div class="fw-bold text-dark f-s-14" id="view_pic">-</div>
                                         </div>
                                     </div>
@@ -739,19 +819,24 @@
                                 <div class="col-md-6 ps-md-4">
                                     <div class="row g-4">
                                         <div class="col-12">
-                                            <label class="fw-bold text-secondary text-uppercase f-s-12 mb-1">Main Address</label>
-                                            <div class="fw-bold text-dark f-s-14 lh-base" id="view_full_address">-</div>
+                                            <label class="fw-bold text-secondary text-uppercase f-s-12 mb-1">Main
+                                                Address</label>
+                                            <div class="fw-bold text-dark f-s-14 lh-base" id="view_full_address">-
+                                            </div>
                                         </div>
                                         <div class="col-md-4">
-                                            <label class="fw-bold text-secondary text-uppercase f-s-12 mb-1">City</label>
+                                            <label
+                                                class="fw-bold text-secondary text-uppercase f-s-12 mb-1">City</label>
                                             <div class="fw-bold text-dark f-s-14" id="view_city">-</div>
                                         </div>
                                         <div class="col-md-4">
-                                            <label class="fw-bold text-secondary text-uppercase f-s-12 mb-1">Area</label>
+                                            <label
+                                                class="fw-bold text-secondary text-uppercase f-s-12 mb-1">Area</label>
                                             <div class="fw-bold text-dark f-s-14" id="view_area">-</div>
                                         </div>
                                         <div class="col-md-4">
-                                            <label class="fw-bold text-secondary text-uppercase f-s-12 mb-1">Postal Code</label>
+                                            <label class="fw-bold text-secondary text-uppercase f-s-12 mb-1">Postal
+                                                Code</label>
                                             <div class="fw-bold text-dark f-s-14" id="view_postal_code">-</div>
                                         </div>
                                     </div>
@@ -769,14 +854,18 @@
                                 <div class="card-body p-4">
                                     <div class="d-flex justify-content-between align-items-start mb-3">
                                         <div>
-                                            <label class="text-white text-opacity-75 text-uppercase f-s-12 fw-bold">Credit Limit</label>
+                                            <label
+                                                class="text-white text-opacity-75 text-uppercase f-s-12 fw-bold">Credit
+                                                Limit</label>
                                             <h3 class="mb-0 fw-bold mt-1" id="view_credit_limit">IDR 0</h3>
                                         </div>
                                         <i class="ph-duotone ph-wallet f-s-40 text-white text-opacity-50"></i>
                                     </div>
-                                    <div class="mt-4 pt-3 border-top border-white border-opacity-25 d-flex justify-content-between align-items-center">
+                                    <div
+                                        class="mt-4 pt-3 border-top border-white border-opacity-25 d-flex justify-content-between align-items-center">
                                         <span class="f-s-13 opacity-75">Term of Payment</span>
-                                        <span class="fw-bold f-s-16 bg-warning bg-opacity-20 px-2 py-1 rounded"><span id="view_top">-</span> Days</span>
+                                        <span class="fw-bold f-s-16 bg-warning bg-opacity-20 px-2 py-1 rounded"><span
+                                                id="view_top">-</span> Days</span>
                                     </div>
                                 </div>
                             </div>
@@ -811,15 +900,18 @@
                                 <div class="card-body p-4">
                                     <h6 class="fw-bold text-dark border-bottom pb-3 mb-3">Billing Contact</h6>
                                     <div class="mb-3">
-                                        <label class="fw-bold text-secondary text-uppercase f-s-11 mb-1">Contact Name</label>
+                                        <label class="fw-bold text-secondary text-uppercase f-s-11 mb-1">Contact
+                                            Name</label>
                                         <div class="fw-bold text-dark f-s-15" id="view_penagihan_nama">-</div>
                                     </div>
                                     <div class="mb-3">
-                                        <label class="fw-bold text-secondary text-uppercase f-s-11 mb-1">Phone Number</label>
+                                        <label class="fw-bold text-secondary text-uppercase f-s-11 mb-1">Phone
+                                            Number</label>
                                         <div class="fw-bold text-dark f-s-15" id="view_penagihan_telp">-</div>
                                     </div>
                                     <div>
-                                        <label class="fw-bold text-secondary text-uppercase f-s-11 mb-1">Billing Address</label>
+                                        <label class="fw-bold text-secondary text-uppercase f-s-11 mb-1">Billing
+                                            Address</label>
                                         <div class="fw-bold text-dark f-s-14 lh-sm" id="view_penagihan_addr">-</div>
                                     </div>
                                 </div>
@@ -837,9 +929,12 @@
                                     <table class="table table-hover mb-0 align-middle">
                                         <thead class="bg-light">
                                             <tr>
-                                                <th class="ps-4 py-3 fw-bold text-secondary text-uppercase f-s-12">Position Role</th>
-                                                <th class="py-3 fw-bold text-secondary text-uppercase f-s-12">Full Name</th>
-                                                <th class="py-3 fw-bold text-secondary text-uppercase f-s-12">Email Address</th>
+                                                <th class="ps-4 py-3 fw-bold text-secondary text-uppercase f-s-12">
+                                                    Position Role</th>
+                                                <th class="py-3 fw-bold text-secondary text-uppercase f-s-12">Full Name
+                                                </th>
+                                                <th class="py-3 fw-bold text-secondary text-uppercase f-s-12">Email
+                                                    Address</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -865,20 +960,25 @@
                         </div>
 
                         <div class="col-md-4">
-                            <div class="card border-0 shadow-sm h-100 bg-warning bg-opacity-10 border-warning border-opacity-25">
+                            <div
+                                class="card border-0 shadow-sm h-100 bg-warning bg-opacity-10 border-warning border-opacity-25">
                                 <div class="card-body p-4">
-                                    <h6 class="fw-bold text-dark mb-3 pb-2 border-bottom border-warning border-opacity-25">
+                                    <h6
+                                        class="fw-bold text-dark mb-3 pb-2 border-bottom border-warning border-opacity-25">
                                         <i class="ph-fill ph-truck me-2 text-warning"></i>Shipping Destination
                                     </h6>
 
                                     <div class="mb-3">
-                                        <label class="fw-bold text-secondary text-uppercase f-s-11 mb-1">Recipient Name</label>
+                                        <label class="fw-bold text-secondary text-uppercase f-s-11 mb-1">Recipient
+                                            Name</label>
                                         <div class="fw-bold text-dark f-s-16" id="view_shipping_name">-</div>
                                     </div>
 
                                     <div>
-                                        <label class="fw-bold text-secondary text-uppercase f-s-11 mb-1">Shipping Address</label>
-                                        <div class="fw-bold text-dark f-s-14 lh-base" id="view_shipping_address">-</div>
+                                        <label class="fw-bold text-secondary text-uppercase f-s-11 mb-1">Shipping
+                                            Address</label>
+                                        <div class="fw-bold text-dark f-s-14 lh-base" id="view_shipping_address">-
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -898,9 +998,14 @@
                                         <label class="form-label small fw-bold">Payment Days</label>
                                         <div class="schedule-selector" id="view_payment_days_container">
                                             <div id="view_payment_days_inputs"></div>
-                                            <button type="button" class="btn btn-sm btn-outline-dark me-1 mb-1 btn-schedule" data-type="payment_days" data-val="All" disabled>All Days</button>
-                                            @foreach(['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'] as $day)
-                                                <button type="button" class="btn btn-sm btn-outline-primary mb-1 btn-schedule" data-type="payment_days" data-val="{{ $day }}" disabled>{{ $day }}</button>
+                                            <button type="button"
+                                                class="btn btn-sm btn-outline-dark me-1 mb-1 btn-schedule"
+                                                data-type="payment_days" data-val="All" disabled>All Days</button>
+                                            @foreach (['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'] as $day)
+                                                <button type="button"
+                                                    class="btn btn-sm btn-outline-primary mb-1 btn-schedule"
+                                                    data-type="payment_days" data-val="{{ $day }}"
+                                                    disabled>{{ $day }}</button>
                                             @endforeach
                                         </div>
                                     </div>
@@ -909,14 +1014,17 @@
                                         <label class="form-label small fw-bold">Payment Date</label>
                                         <div class="schedule-selector" id="view_payment_date_container">
                                             <div id="view_payment_date_inputs"></div>
-                                            <button type="button" class="btn btn-sm btn-outline-dark me-1 mb-2 w-100 btn-schedule" data-type="payment_date" data-val="All" disabled>All Dates (1-31)</button>
+                                            <button type="button"
+                                                class="btn btn-sm btn-outline-dark me-1 mb-2 w-100 btn-schedule"
+                                                data-type="payment_date" data-val="All" disabled>All Dates
+                                                (1-31)</button>
                                             <div class="d-flex flex-wrap gap-1" id="view_payment_date_boxes">
-                                                @for($i=1; $i<=31; $i++)
+                                                @for ($i = 1; $i <= 31; $i++)
                                                     <button type="button"
                                                         class="btn btn-xs btn-outline-secondary btn-schedule btn-date-box"
                                                         style="width: 2.375rem !important; height: 2.375rem !important; padding: 0 !important; display: inline-flex !important; align-items: center; justify-content: center; font-size: 13.6px !important; font-weight: 600; line-height: 1 !important; white-space: nowrap !important;"
-                                                        data-type="payment_date"
-                                                        data-val="{{ $i }}" disabled>
+                                                        data-type="payment_date" data-val="{{ $i }}"
+                                                        disabled>
                                                         {{ $i }}
                                                     </button>
                                                 @endfor
@@ -932,9 +1040,14 @@
                                         <label class="form-label small fw-bold">Faktur Days</label>
                                         <div class="schedule-selector" id="view_faktur_days_container">
                                             <div id="view_faktur_days_inputs"></div>
-                                            <button type="button" class="btn btn-sm btn-outline-dark me-1 mb-1 btn-schedule" data-type="faktur_days" data-val="All" disabled>All Days</button>
-                                            @foreach(['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'] as $day)
-                                                <button type="button" class="btn btn-sm btn-outline-success mb-1 btn-schedule" data-type="faktur_days" data-val="{{ $day }}" disabled>{{ $day }}</button>
+                                            <button type="button"
+                                                class="btn btn-sm btn-outline-dark me-1 mb-1 btn-schedule"
+                                                data-type="faktur_days" data-val="All" disabled>All Days</button>
+                                            @foreach (['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'] as $day)
+                                                <button type="button"
+                                                    class="btn btn-sm btn-outline-success mb-1 btn-schedule"
+                                                    data-type="faktur_days" data-val="{{ $day }}"
+                                                    disabled>{{ $day }}</button>
                                             @endforeach
                                         </div>
                                     </div>
@@ -943,14 +1056,17 @@
                                         <label class="form-label small fw-bold">Faktur Date</label>
                                         <div class="schedule-selector" id="view_faktur_date_container">
                                             <div id="view_faktur_date_inputs"></div>
-                                            <button type="button" class="btn btn-sm btn-outline-dark me-1 mb-2 w-100 btn-schedule" data-type="faktur_date" data-val="All" disabled>All Dates (1-31)</button>
+                                            <button type="button"
+                                                class="btn btn-sm btn-outline-dark me-1 mb-2 w-100 btn-schedule"
+                                                data-type="faktur_date" data-val="All" disabled>All Dates
+                                                (1-31)</button>
                                             <div class="d-flex flex-wrap gap-1" id="view_faktur_date_boxes">
-                                                @for($i=1; $i<=31; $i++)
+                                                @for ($i = 1; $i <= 31; $i++)
                                                     <button type="button"
                                                         class="btn btn-xs btn-outline-secondary btn-schedule btn-date-box"
                                                         style="width: 2.375rem !important; height: 2.375rem !important; padding: 0 !important; display: inline-flex !important; align-items: center; justify-content: center; font-size: 13.6px !important; font-weight: 600; line-height: 1 !important; white-space: nowrap !important;"
-                                                        data-type="faktur_date"
-                                                        data-val="{{ $i }}" disabled>
+                                                        data-type="faktur_date" data-val="{{ $i }}"
+                                                        disabled>
                                                         {{ $i }}
                                                     </button>
                                                 @endfor
@@ -966,8 +1082,9 @@
                         <i class="ph-fill ph-files me-2"></i> Documents
                     </h5>
                     <div class="row g-3" id="document_grid">
-                        </div>
-                    <div id="no_documents" class="text-center py-5 text-muted border border-dashed rounded bg-white" style="display:none;">
+                    </div>
+                    <div id="no_documents" class="text-center py-5 text-muted border border-dashed rounded bg-white"
+                        style="display:none;">
                         <i class="ph-duotone ph-folder-notch-open f-s-48 mb-3 opacity-50"></i>
                         <p class="mb-0 f-s-16">No documents uploaded for this customer.</p>
                     </div>
@@ -975,7 +1092,8 @@
                 </div>
 
                 <div class="modal-footer bg-white border-top py-3">
-                    <button type="button" class="btn btn-secondary px-5 rounded-pill" data-bs-dismiss="modal">Close Detail</button>
+                    <button type="button" class="btn btn-secondary px-5 rounded-pill" data-bs-dismiss="modal">Close
+                        Detail</button>
                 </div>
             </div>
         </div>
@@ -988,11 +1106,14 @@
                     <h6 class="modal-title text-white fw-bold f-s-14" id="fileViewerTitle">
                         FILE PREVIEW
                     </h6>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
                 </div>
-                <div class="modal-body p-0 d-flex align-items-center justify-content-center" style="min-height: 31.25rem; background-color: #1a1a1a;">
-                    <div id="fileContentArea" class="w-100 h-100 d-flex align-items-center justify-content-center" style="margin-top:80px;">
-                        </div>
+                <div class="modal-body p-0 d-flex align-items-center justify-content-center"
+                    style="min-height: 31.25rem; background-color: #1a1a1a;">
+                    <div id="fileContentArea" class="w-100 h-100 d-flex align-items-center justify-content-center"
+                        style="margin-top:80px;">
+                    </div>
                 </div>
             </div>
         </div>
@@ -1023,14 +1144,17 @@
 
                     <div class="modal-body bg-light p-0">
 
-                        <div class="alert alert-warning border-0 rounded-0 mb-0 d-flex align-items-center px-4 py-3" role="alert">
+                        <div class="alert alert-warning border-0 rounded-0 mb-0 d-flex align-items-center px-4 py-3"
+                            role="alert">
                             <i class="ph-fill ph-info f-s-24 me-3"></i>
                             <div>
-                                <strong>Note:</strong> Proses Recall akan mereset status menjadi <strong>Pending</strong> (Level 1).
+                                <strong>Note:</strong> Proses Recall akan mereset status menjadi
+                                <strong>Pending</strong> (Level 1).
                             </div>
                         </div>
 
-                        <div class="alert alert-danger border-0 rounded-0 mb-0 d-flex align-items-start px-4 py-3" role="alert" id="recall_reject_alert" style="display: none;">
+                        <div class="alert alert-danger border-0 rounded-0 mb-0 d-flex align-items-start px-4 py-3"
+                            role="alert" id="recall_reject_alert" style="display: none;">
                             <i class="ph-fill ph-warning-circle f-s-24 me-3 mt-1"></i>
                             <div>
                                 <strong class="d-block mb-1">Alasan Ditolak (Rejection Note):</strong>
@@ -1039,68 +1163,94 @@
                         </div>
 
                         <div class="d-flex align-items-start">
-                            <div class="nav flex-column nav-pills me-3 bg-white h-100 p-3 border-end" style="min-width: 12.5rem;" id="v-pills-tab" role="tablist" aria-orientation="vertical">
-                                <button class="nav-link active text-start fw-bold mb-2" id="v-pills-home-tab" data-bs-toggle="pill" data-bs-target="#tab-recall-general" type="button" role="tab">
+                            <div class="nav flex-column nav-pills me-3 bg-white h-100 p-3 border-end"
+                                style="min-width: 12.5rem;" id="v-pills-tab" role="tablist"
+                                aria-orientation="vertical">
+                                <button class="nav-link active text-start fw-bold mb-2" id="v-pills-home-tab"
+                                    data-bs-toggle="pill" data-bs-target="#tab-recall-general" type="button"
+                                    role="tab">
                                     <i class="ph-bold ph-user-circle me-2"></i> General Info
                                 </button>
-                                <button class="nav-link text-start fw-bold mb-2" id="v-pills-items-tab" data-bs-toggle="pill" data-bs-target="#tab-recall-items" type="button" role="tab">
+                                <button class="nav-link text-start fw-bold mb-2" id="v-pills-items-tab"
+                                    data-bs-toggle="pill" data-bs-target="#tab-recall-items" type="button"
+                                    role="tab">
                                     <i class="ph-bold ph-shopping-cart me-2"></i> Items / Product
                                 </button>
-                                <button class="nav-link text-start fw-bold mb-2" id="v-pills-finance-tab" data-bs-toggle="pill" data-bs-target="#tab-recall-finance" type="button" role="tab">
+                                <button class="nav-link text-start fw-bold mb-2" id="v-pills-finance-tab"
+                                    data-bs-toggle="pill" data-bs-target="#tab-recall-finance" type="button"
+                                    role="tab">
                                     <i class="ph-bold ph-currency-circle-dollar me-2"></i> Financial
                                 </button>
-                                <button class="nav-link text-start fw-bold mb-2" id="v-pills-mgmt-tab" data-bs-toggle="pill" data-bs-target="#tab-recall-mgmt" type="button" role="tab">
+                                <button class="nav-link text-start fw-bold mb-2" id="v-pills-mgmt-tab"
+                                    data-bs-toggle="pill" data-bs-target="#tab-recall-mgmt" type="button"
+                                    role="tab">
                                     <i class="ph-bold ph-users-three me-2"></i> Management
                                 </button>
-                                <button class="nav-link text-start fw-bold mb-2" id="v-pills-docs-tab" data-bs-toggle="pill" data-bs-target="#tab-recall-docs" type="button" role="tab">
+                                <button class="nav-link text-start fw-bold mb-2" id="v-pills-docs-tab"
+                                    data-bs-toggle="pill" data-bs-target="#tab-recall-docs" type="button"
+                                    role="tab">
                                     <i class="ph-bold ph-files me-2"></i> Documents
                                 </button>
                             </div>
 
-                            <div class="tab-content p-4 w-100" id="v-pills-tabContent" style="max-height: 70vh; overflow-y: auto;">
+                            <div class="tab-content p-4 w-100" id="v-pills-tabContent"
+                                style="max-height: 70vh; overflow-y: auto;">
 
                                 <div class="tab-pane fade show active" id="tab-recall-general" role="tabpanel">
-                                    <h6 class="fw-bold text-primary border-bottom pb-2 mb-3">Informasi Utama Customer</h6>
+                                    <h6 class="fw-bold text-primary border-bottom pb-2 mb-3">Informasi Utama Customer
+                                    </h6>
                                     <div class="row g-3">
                                         <div class="col-md-6">
                                             <label class="form-label small fw-bold text-dark">Customer Name</label>
-                                            <input type="text" class="form-control" name="name" id="recall_name" required>
+                                            <input type="text" class="form-control" name="name"
+                                                id="recall_name" required>
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label small fw-bold text-dark">Sort Name / Alias</label>
-                                            <input type="text" class="form-control" name="sort_name" id="recall_sort_name">
+                                            <input type="text" class="form-control" name="sort_name"
+                                                id="recall_sort_name">
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label small fw-bold text-dark">Email</label>
-                                            <input type="email" class="form-control" name="email" id="recall_email" required>
+                                            <input type="email" class="form-control" name="email"
+                                                id="recall_email" required>
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label small fw-bold text-dark">No PKD (Readonly)</label>
-                                            <input type="text" class="form-control bg-light" name="no_pkd" id="recall_no_pkd" readonly>
+                                            <input type="text" class="form-control bg-light" name="no_pkd"
+                                                id="recall_no_pkd" readonly>
                                         </div>
                                         <div class="col-md-6">
-                                            <label class="form-label small fw-bold text-dark">PIC (Penanggung Jawab)</label>
-                                            <input type="text" class="form-control" name="pic" id="recall_pic" required>
+                                            <label class="form-label small fw-bold text-dark">PIC (Penanggung
+                                                Jawab)</label>
+                                            <input type="text" class="form-control" name="pic"
+                                                id="recall_pic" required>
                                         </div>
                                         <div class="col-12">
                                             <label class="form-label small fw-bold text-dark">Main Address</label>
-                                            <input type="text" class="form-control mb-2" name="address1" id="recall_address1" placeholder="Line 1" required>
+                                            <input type="text" class="form-control mb-2" name="address1"
+                                                id="recall_address1" placeholder="Line 1" required>
                                             <div class="d-flex gap-2">
-                                                <input type="text" class="form-control" name="address2" id="recall_address2" placeholder="Line 2">
-                                                <input type="text" class="form-control" name="address3" id="recall_address3" placeholder="Line 3">
+                                                <input type="text" class="form-control" name="address2"
+                                                    id="recall_address2" placeholder="Line 2">
+                                                <input type="text" class="form-control" name="address3"
+                                                    id="recall_address3" placeholder="Line 3">
                                             </div>
                                         </div>
                                         <div class="col-md-4">
                                             <label class="form-label small fw-bold text-dark">City</label>
-                                            <input type="text" class="form-control" name="city" id="recall_city" required>
+                                            <input type="text" class="form-control" name="city"
+                                                id="recall_city" required>
                                         </div>
                                         <div class="col-md-4">
                                             <label class="form-label small fw-bold text-dark">Area</label>
-                                            <input type="text" class="form-control" name="area" id="recall_area" required>
+                                            <input type="text" class="form-control" name="area"
+                                                id="recall_area" required>
                                         </div>
                                         <div class="col-md-4">
                                             <label class="form-label small fw-bold text-dark">Postal Code</label>
-                                            <input type="text" class="form-control" name="postal_code" id="recall_postal_code" required>
+                                            <input type="text" class="form-control" name="postal_code"
+                                                id="recall_postal_code" required>
                                         </div>
                                     </div>
                                 </div>
@@ -1108,7 +1258,8 @@
                                 <div class="tab-pane fade" id="tab-recall-items" role="tabpanel">
                                     <div class="d-flex justify-content-between align-items-center mb-3">
                                         <h6 class="fw-bold text-primary mb-0">Daftar Item / Produk</h6>
-                                        <button type="button" class="btn btn-sm btn-primary rounded-pill px-3" id="btn-recall-add-item">
+                                        <button type="button" class="btn btn-sm btn-primary rounded-pill px-3"
+                                            id="btn-recall-add-item">
                                             <i class="ph-bold ph-plus me-1"></i> Tambah Item
                                         </button>
                                     </div>
@@ -1119,13 +1270,15 @@
                                                     <th class="ps-4 fw-bold text-dark" width="40%">Nama Item</th>
                                                     <th class="fw-bold text-dark" width="20%">Qty</th>
                                                     <th class="fw-bold text-dark" width="30%">Harga (Est)</th>
-                                                    <th width="10%" class="text-center fw-bold text-dark">Aksi</th>
+                                                    <th width="10%" class="text-center fw-bold text-dark">Aksi
+                                                    </th>
                                                 </tr>
                                             </thead>
                                             <tbody id="recall_items_body"></tbody>
                                         </table>
                                     </div>
-                                    <div id="recall_no_items" class="text-center py-5 text-muted bg-white border rounded mt-2">
+                                    <div id="recall_no_items"
+                                        class="text-center py-5 text-muted bg-white border rounded mt-2">
                                         <i class="ph-duotone ph-basket f-s-32 mb-2"></i>
                                         <p class="mb-0">Belum ada item ditambahkan.</p>
                                     </div>
@@ -1136,23 +1289,29 @@
                                     <div class="row g-3">
                                         <div class="col-md-6">
                                             <label class="form-label small fw-bold text-dark">Account Group</label>
-                                            <select class="form-select select2-recall" id="recall_account_group" name="account_group" style="width: 100%;" required>
+                                            <select class="form-select select2-recall" id="recall_account_group"
+                                                name="account_group" style="width: 100%;" required>
                                                 @foreach ($accountgroup as $ag)
-                                                    <option value="{{ $ag->id }}" data-bank_garansi="{{ $ag->bank_garansi }}">{{ $ag->name_account_group }}</option>
+                                                    <option value="{{ $ag->id }}"
+                                                        data-bank_garansi="{{ $ag->bank_garansi }}">
+                                                        {{ $ag->name_account_group }}</option>
                                                 @endforeach
                                             </select>
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label small fw-bold text-dark">Customer Class</label>
-                                            <select class="form-select select2-recall" id="recall_customer_class" name="customer_class" style="width: 100%;" required>
+                                            <select class="form-select select2-recall" id="recall_customer_class"
+                                                name="customer_class" style="width: 100%;" required>
                                                 @foreach ($customerClass as $cc)
-                                                    <option value="{{ $cc->id }}">{{ $cc->name_class }}</option>
+                                                    <option value="{{ $cc->id }}">{{ $cc->name_class }}
+                                                    </option>
                                                 @endforeach
                                             </select>
                                         </div>
                                         <div class="col-md-4">
                                             <label class="form-label small fw-bold text-dark">Term of Payment</label>
-                                            <select class="form-select select2-recall" name="term_of_payment" id="recall_term_of_payment" style="width:100%" required>
+                                            <select class="form-select select2-recall" name="term_of_payment"
+                                                id="recall_term_of_payment" style="width:100%" required>
                                                 @foreach ($top as $t)
                                                     <option value="{{ $t->name_top }}">{{ $t->desc_top }}</option>
                                                 @endforeach
@@ -1160,18 +1319,21 @@
                                         </div>
                                         <div class="col-md-4">
                                             <label class="form-label small fw-bold text-dark">Credit Limit</label>
-                                            <input type="text" class="form-control" name="credit_limit" id="recall_credit_limit" required>
+                                            <input type="text" class="form-control" name="credit_limit"
+                                                id="recall_credit_limit" required>
                                         </div>
                                         <div class="col-md-4">
                                             <label class="form-label small fw-bold text-dark">Bank Garansi</label>
-                                            <select class="form-select select2-recall" name="bank_garansi" id="recall_bank_garansi" style="width:100%" required>
+                                            <select class="form-select select2-recall" name="bank_garansi"
+                                                id="recall_bank_garansi" style="width:100%" required>
                                                 <option value="YA">Yes</option>
                                                 <option value="TIDAK">No</option>
                                             </select>
                                         </div>
                                         <div class="col-md-4">
                                             <label class="form-label small fw-bold text-dark">Output Tax</label>
-                                            <select class="form-select select2-recall" name="output_tax" id="recall_output_tax" style="width:100%" required>
+                                            <select class="form-select select2-recall" name="output_tax"
+                                                id="recall_output_tax" style="width:100%" required>
                                                 <option value="Terhutang PPN">Terhutang PPN</option>
                                                 <option value="NON-PPN">Tidak Terhutang (NON-PPN)</option>
                                                 <option value="PPN">PPN</option>
@@ -1179,65 +1341,89 @@
                                         </div>
                                         <div class="col-md-4">
                                             <label class="form-label small fw-bold text-dark">CCAR</label>
-                                            <select class="form-select select2-recall" name="ccar" id="recall_ccar" style="width:100%" required>
+                                            <select class="form-select select2-recall" name="ccar"
+                                                id="recall_ccar" style="width:100%" required>
                                                 <option value="smd_idr">SMD (IDR)</option>
                                                 <option value="smd_usd">SMD USD</option>
                                             </select>
                                         </div>
 
                                         <div class="col-12 mt-4">
-                                            <h6 class="fw-bold text-dark border-bottom pb-2 mb-3"><i class="ph-bold ph-receipt me-2"></i>Billing Information</h6>
+                                            <h6 class="fw-bold text-dark border-bottom pb-2 mb-3"><i
+                                                    class="ph-bold ph-receipt me-2"></i>Billing Information</h6>
                                         </div>
                                         <div class="col-md-6">
-                                            <label class="form-label fw-bold small text-dark text-uppercase">Billing Contact Name</label>
-                                            <input type="text" class="form-control" name="penagihan_nama_kontak" id="recall_penagihan_nama_kontak">
+                                            <label class="form-label fw-bold small text-dark text-uppercase">Billing
+                                                Contact Name</label>
+                                            <input type="text" class="form-control"
+                                                name="penagihan_nama_kontak" id="recall_penagihan_nama_kontak">
                                         </div>
                                         <div class="col-md-6">
-                                            <label class="form-label fw-bold small text-dark text-uppercase">Billing Phone</label>
-                                            <input type="text" class="form-control" name="penagihan_telepon" id="recall_penagihan_telepon">
+                                            <label class="form-label fw-bold small text-dark text-uppercase">Billing
+                                                Phone</label>
+                                            <input type="text" class="form-control" name="penagihan_telepon"
+                                                id="recall_penagihan_telepon">
                                         </div>
                                         <div class="col-12">
-                                            <label class="form-label fw-bold small text-dark text-uppercase">Billing Address</label>
+                                            <label class="form-label fw-bold small text-dark text-uppercase">Billing
+                                                Address</label>
                                             <textarea class="form-control" name="penagihan_address" id="recall_penagihan_address" rows="2"></textarea>
                                         </div>
                                         <div class="col-12">
-                                            <label class="form-label fw-bold small text-dark text-uppercase">Correspondence Address</label>
+                                            <label
+                                                class="form-label fw-bold small text-dark text-uppercase">Correspondence
+                                                Address</label>
                                             <textarea class="form-control" name="surat_menyurat_address" id="recall_surat_menyurat_address" rows="2"></textarea>
                                         </div>
 
 
                                         <div class="col-12 mt-4">
-                                            <h6 class="fw-bold text-dark border-bottom pb-2 mb-3"><i class="ph-bold ph-calculator me-2"></i>Tax Information</h6>
+                                            <h6 class="fw-bold text-dark border-bottom pb-2 mb-3"><i
+                                                    class="ph-bold ph-calculator me-2"></i>Tax Information</h6>
                                         </div>
 
                                         <div class="col-md-3">
-                                            <label class="form-label fw-bold small text-dark text-uppercase">NPWP Number</label>
-                                            <input type="text" class="form-control" name="npwp" id="recall_npwp" placeholder="00.000.000.0-000.000">
+                                            <label class="form-label fw-bold small text-dark text-uppercase">NPWP
+                                                Number</label>
+                                            <input type="text" class="form-control" name="npwp"
+                                                id="recall_npwp" placeholder="00.000.000.0-000.000">
                                         </div>
                                         <div class="col-md-3">
-                                            <label class="form-label fw-bold small text-dark text-uppercase">NPWP Date</label>
-                                            <input type="date" class="form-control" name="tanggal_npwp" id="recall_tanggal_npwp">
+                                            <label class="form-label fw-bold small text-dark text-uppercase">NPWP
+                                                Date</label>
+                                            <input type="date" class="form-control" name="tanggal_npwp"
+                                                id="recall_tanggal_npwp">
                                         </div>
                                         <div class="col-md-3">
-                                            <label class="form-label fw-bold small text-dark text-uppercase">NPPKP Number</label>
-                                            <input type="text" class="form-control" name="nppkp" id="recall_nppkp">
+                                            <label class="form-label fw-bold small text-dark text-uppercase">NPPKP
+                                                Number</label>
+                                            <input type="text" class="form-control" name="nppkp"
+                                                id="recall_nppkp">
                                         </div>
                                         <div class="col-md-3">
-                                            <label class="form-label fw-bold small text-dark text-uppercase">NPPKP Date</label>
-                                            <input type="date" class="form-control" name="tanggal_nppkp" id="recall_tanggal_nppkp">
+                                            <label class="form-label fw-bold small text-dark text-uppercase">NPPKP
+                                                Date</label>
+                                            <input type="date" class="form-control" name="tanggal_nppkp"
+                                                id="recall_tanggal_nppkp">
                                         </div>
 
                                         <div class="col-md-4 mt-3">
-                                            <label class="form-label fw-bold small text-dark text-uppercase">Tax Contact Name</label>
-                                            <input type="text" class="form-control" name="tax_contact_name" id="recall_tax_contact_name">
+                                            <label class="form-label fw-bold small text-dark text-uppercase">Tax
+                                                Contact Name</label>
+                                            <input type="text" class="form-control" name="tax_contact_name"
+                                                id="recall_tax_contact_name">
                                         </div>
                                         <div class="col-md-4 mt-3">
-                                            <label class="form-label fw-bold small text-dark text-uppercase">Tax Email</label>
-                                            <input type="email" class="form-control" name="tax_contact_email" id="recall_tax_contact_email">
+                                            <label class="form-label fw-bold small text-dark text-uppercase">Tax
+                                                Email</label>
+                                            <input type="email" class="form-control" name="tax_contact_email"
+                                                id="recall_tax_contact_email">
                                         </div>
                                         <div class="col-md-4 mt-3">
-                                            <label class="form-label fw-bold small text-dark text-uppercase">Tax Phone</label>
-                                            <input type="text" class="form-control" name="tax_contact_phone" id="recall_tax_contact_phone">
+                                            <label class="form-label fw-bold small text-dark text-uppercase">Tax
+                                                Phone</label>
+                                            <input type="text" class="form-control" name="tax_contact_phone"
+                                                id="recall_tax_contact_phone">
                                         </div>
                                     </div>
                                 </div>
@@ -1246,26 +1432,39 @@
                                     <h6 class="fw-bold text-primary border-bottom pb-2 mb-3">Management Personnel</h6>
                                     <div class="row g-3">
                                         <div class="col-md-6">
-                                            <label class="form-label small fw-bold text-dark">Purchasing Manager Name</label>
-                                            <input type="text" class="form-control" name="purchasing_manager_name" id="recall_purchasing_manager_name">
+                                            <label class="form-label small fw-bold text-dark">Purchasing Manager
+                                                Name</label>
+                                            <input type="text" class="form-control"
+                                                name="purchasing_manager_name" id="recall_purchasing_manager_name">
                                         </div>
                                         <div class="col-md-6">
-                                            <label class="form-label small fw-bold text-dark">Purchasing Manager Email</label>
-                                            <input type="email" class="form-control" name="purchasing_manager_email" id="recall_purchasing_manager_email">
+                                            <label class="form-label small fw-bold text-dark">Purchasing Manager
+                                                Email</label>
+                                            <input type="email" class="form-control"
+                                                name="purchasing_manager_email"
+                                                id="recall_purchasing_manager_email">
                                         </div>
                                         <div class="col-md-6">
-                                            <label class="form-label small fw-bold text-dark">Finance Manager Name</label>
-                                            <input type="text" class="form-control" name="finance_manager_name" id="recall_finance_manager_name">
+                                            <label class="form-label small fw-bold text-dark">Finance Manager
+                                                Name</label>
+                                            <input type="text" class="form-control" name="finance_manager_name"
+                                                id="recall_finance_manager_name">
                                         </div>
                                         <div class="col-md-6">
-                                            <label class="form-label small fw-bold text-dark">Finance Manager Email</label>
-                                            <input type="email" class="form-control" name="finance_manager_email" id="recall_finance_manager_email">
+                                            <label class="form-label small fw-bold text-dark">Finance Manager
+                                                Email</label>
+                                            <input type="email" class="form-control"
+                                                name="finance_manager_email" id="recall_finance_manager_email">
                                         </div>
 
-                                        <div class="col-12 mt-3"><h6 class="fw-bold text-secondary border-bottom pb-1">Shipping Info</h6></div>
+                                        <div class="col-12 mt-3">
+                                            <h6 class="fw-bold text-secondary border-bottom pb-1">Shipping Info</h6>
+                                        </div>
                                         <div class="col-md-6">
-                                            <label class="form-label small fw-bold text-dark">Shipping Recipient Name</label>
-                                            <input type="text" class="form-control" name="shipping_to_name" id="recall_shipping_to_name">
+                                            <label class="form-label small fw-bold text-dark">Shipping Recipient
+                                                Name</label>
+                                            <input type="text" class="form-control" name="shipping_to_name"
+                                                id="recall_shipping_to_name">
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label small fw-bold text-dark">Shipping Address</label>
@@ -1281,7 +1480,8 @@
                                             <label class="fw-bold small mb-0 text-dark">NPWP</label>
                                             <div id="recall_preview_npwp"></div>
                                         </div>
-                                        <input type="file" class="form-control form-control-sm" name="file_npwp">
+                                        <input type="file" class="form-control form-control-sm"
+                                            name="file_npwp">
                                     </div>
 
                                     <div class="mb-3 border rounded p-2 bg-white">
@@ -1289,7 +1489,8 @@
                                             <label class="fw-bold small mb-0 text-dark">NIB / SIUP</label>
                                             <div id="recall_preview_nib"></div>
                                         </div>
-                                        <input type="file" class="form-control form-control-sm" name="file_nib">
+                                        <input type="file" class="form-control form-control-sm"
+                                            name="file_nib">
                                     </div>
 
                                     <div class="mb-0 border rounded p-2 bg-white">
@@ -1297,7 +1498,8 @@
                                             <label class="fw-bold small mb-0 text-dark">KTP Penanggung Jawab</label>
                                             <div id="recall_preview_ktp"></div>
                                         </div>
-                                        <input type="file" class="form-control form-control-sm" name="file_ktp">
+                                        <input type="file" class="form-control form-control-sm"
+                                            name="file_ktp">
                                     </div>
 
                                     <div class="mb-3 border rounded p-2 bg-white">
@@ -1305,7 +1507,8 @@
                                             <label class="fw-bold small mb-0 text-dark">Company Profile</label>
                                             <div id="recall_preview_company_profile"></div>
                                         </div>
-                                        <input type="file" class="form-control form-control-sm" name="file_company_profile" accept=".pdf">
+                                        <input type="file" class="form-control form-control-sm"
+                                            name="file_company_profile" accept=".pdf">
                                         <small class="text-muted f-s-11">Format: PDF saja</small>
                                     </div>
                                 </div>
@@ -1315,7 +1518,8 @@
                     </div>
 
                     <div class="modal-footer bg-white border-top py-3">
-                        <button type="button" class="btn btn-light border text-muted px-4" data-bs-dismiss="modal">Batal</button>
+                        <button type="button" class="btn btn-light border text-muted px-4"
+                            data-bs-dismiss="modal">Batal</button>
                         <button type="submit" class="btn btn-warning px-4 fw-bold shadow-sm">
                             <i class="ph-bold ph-paper-plane-tilt me-2"></i> Submit & Resend Approval
                         </button>
@@ -1329,30 +1533,37 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header bg-success text-white py-3">
-                    <h5 class="modal-title fw-bold"><i class="ph-bold ph-upload-simple me-2"></i> Import Data Customers</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <h5 class="modal-title fw-bold"><i class="ph-bold ph-upload-simple me-2"></i> Import Data
+                        Customers</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
                 </div>
                 <form id="importForm" enctype="multipart/form-data">
                     @csrf
                     <div class="card modal-body p-4">
                         <div class="alert alert-info border-0 shadow-sm f-s-13">
-                            <i class="ph-fill ph-info me-2"></i> Gunakan format CSV standar untuk memigrasi data. Data yang di-import akan langsung masuk sebagai <strong>Active</strong> & <strong>Approved</strong>.
+                            <i class="ph-fill ph-info me-2"></i> Gunakan format CSV standar untuk memigrasi data. Data
+                            yang di-import akan langsung masuk sebagai <strong>Active</strong> &
+                            <strong>Approved</strong>.
                         </div>
-                        
+
                         <div class="mb-4 text-center">
-                            <a href="{{ route('customers.template') }}" class="btn btn-sm btn-outline-primary rounded-pill px-4">
+                            <a href="{{ route('customers.template') }}"
+                                class="btn btn-sm btn-outline-primary rounded-pill px-4">
                                 <i class="ph-bold ph-download-simple me-1"></i> Download Template CSV
                             </a>
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label fw-bold">Pilih File CSV <span class="text-danger">*</span></label>
+                            <label class="form-label fw-bold">Pilih File CSV <span
+                                    class="text-danger">*</span></label>
                             <input type="file" class="form-control" name="file" accept=".csv" required>
                         </div>
                     </div>
                     <div class="modal-footer bg-white">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                        <button type="submit" class="btn btn-success fw-bold"><i class="ph-bold ph-check me-1"></i> Mulai Import</button>
+                        <button type="submit" class="btn btn-success fw-bold"><i
+                                class="ph-bold ph-check me-1"></i> Mulai Import</button>
                     </div>
                 </form>
             </div>
@@ -1437,7 +1648,7 @@
                     $('#recall_items_body tr').each(function(idx) {
                         $(this).find('input').each(function() {
                             let name = $(this).attr('name');
-                            if(name) {
+                            if (name) {
                                 const newName = name.replace(/items\[\d+\]/, `items[${idx}]`);
                                 $(this).attr('name', newName);
                             }
@@ -1453,7 +1664,7 @@
 
                     try {
                         data = JSON.parse(rawData);
-                    } catch(e) {
+                    } catch (e) {
                         console.error("Failed to parse recall JSON data:", e);
                         Swal.fire('Error', 'Failed to load customer data.', 'error');
                         return;
@@ -1463,7 +1674,8 @@
                     $('#recallCustomerForm')[0].reset();
                     $('#recall_items_body').empty();
 
-                    if (data.reject_note && data.reject_note !== '-' && data.reject_note !== 'Tidak ada catatan rejection.') {
+                    if (data.reject_note && data.reject_note !== '-' && data.reject_note !==
+                        'Tidak ada catatan rejection.') {
                         $('#recall_reject_reason').text(data.reject_note);
                         $('#recall_reject_alert').show(); // Tampilkan alert merah
                     } else {
@@ -1539,7 +1751,7 @@
 
                     // --- 4. POPULATE FILE PREVIEWS ---
                     function createPreviewBtn(path, title) {
-                        if(path && !path.includes('null')) {
+                        if (path && !path.includes('null')) {
                             return `
                                 <button type="button" class="btn btn-xs btn-primary btn-view-file-trigger rounded-pill"
                                     data-path="${path}"
@@ -1555,7 +1767,8 @@
                     $('#recall_preview_nib').html(createPreviewBtn(data.file_nib_path, 'NIB'));
                     $('#recall_preview_ktp').html(createPreviewBtn(data.file_ktp_path, 'KTP'));
                     $('#recall_preview_akte').html(createPreviewBtn(data.file_akte_path, 'Akte Pendirian'));
-                    $('#recall_preview_company_profile').html(createPreviewBtn(data.file_company_profile_path, 'Company Profile'));
+                    $('#recall_preview_company_profile').html(createPreviewBtn(data.file_company_profile_path,
+                        'Company Profile'));
 
                     $('#recallCustomerModal').modal('show');
                 });
@@ -1566,6 +1779,18 @@
                     const id = $('#recall_customer_id').val();
                     const formData = new FormData(this);
                     const url = `/customers/${id}/recall`;
+
+                    // Normalize credit_limit (Recall form doesn't run HTML5 validity checks)
+                    const topVal = $('#recall_term_of_payment').val();
+                    const bgVal = $('#recall_bank_garansi').val();
+                    let rawCreditLimit = formData.get('credit_limit');
+
+                    if (bgVal === 'YA' || String(topVal).toUpperCase() === 'CBD') {
+                        formData.set('credit_limit', '0');
+                    } else if (rawCreditLimit) {
+                        let cleanCreditLimit = rawCreditLimit.toString().replace(/[^0-9]/g, '');
+                        formData.set('credit_limit', cleanCreditLimit);
+                    }
 
                     const currentStatusFilter = $('#statusFilter').val();
                     const currentApprovalFilter = $('#approvalStatusFilter').val();
@@ -1585,7 +1810,9 @@
                                 title: 'Processing...',
                                 html: 'Sedang menyimpan perubahan...',
                                 allowOutsideClick: false,
-                                didOpen: () => { Swal.showLoading(); }
+                                didOpen: () => {
+                                    Swal.showLoading();
+                                }
                             });
 
                             $.ajax({
@@ -1597,7 +1824,7 @@
                                 success: function(response) {
                                     Swal.close();
 
-                                    if(response.success) {
+                                    if (response.success) {
                                         Swal.fire({
                                             icon: 'success',
                                             title: 'Recall Berhasil!',
@@ -1606,25 +1833,34 @@
                                             showConfirmButton: false
                                         }).then(() => {
                                             $('#recallCustomerModal').modal('hide');
-                                            $('#statusFilter').val('all').trigger('change.select2');
-                                            $('#approvalStatusFilter').val('all').trigger('change.select2');
+                                            $('#statusFilter').val('all').trigger(
+                                                'change.select2');
+                                            $('#approvalStatusFilter').val('all')
+                                                .trigger('change.select2');
 
                                             if (typeof table !== 'undefined') {
-                                                table.search('').ajax.reload(null, true);
+                                                table.search('').ajax.reload(null,
+                                                    true);
                                             } else {
-                                                $('#sampleTable').DataTable().search('').ajax.reload(null, true);
+                                                $('#sampleTable').DataTable()
+                                                    .search('').ajax.reload(null,
+                                                        true);
                                             }
                                         });
                                     } else {
-                                        $('#statusFilter').val(currentStatusFilter).trigger('change.select2');
-                                        $('#approvalStatusFilter').val(currentApprovalFilter).trigger('change.select2');
+                                        $('#statusFilter').val(currentStatusFilter).trigger(
+                                            'change.select2');
+                                        $('#approvalStatusFilter').val(
+                                            currentApprovalFilter).trigger(
+                                            'change.select2');
                                         Swal.fire('Failed!', response.message, 'error');
                                     }
                                 },
                                 error: function(xhr) {
                                     Swal.close();
                                     let msg = 'An error occurred on the server.';
-                                    if(xhr.responseJSON && xhr.responseJSON.message) msg = xhr.responseJSON.message;
+                                    if (xhr.responseJSON && xhr.responseJSON.message) msg =
+                                        xhr.responseJSON.message;
                                     Swal.fire('Error!', msg, 'error');
                                 }
                             });
@@ -1666,7 +1902,9 @@
                                 title: 'Menyimpan Data...',
                                 html: 'Mohon tunggu sebentar.',
                                 allowOutsideClick: false,
-                                didOpen: () => { Swal.showLoading(); }
+                                didOpen: () => {
+                                    Swal.showLoading();
+                                }
                             });
 
                             $.ajax({
@@ -1678,7 +1916,7 @@
                                 success: function(response) {
                                     Swal.close();
 
-                                    if(response.success) {
+                                    if (response.success) {
                                         Swal.fire({
                                             icon: 'success',
                                             title: 'Berhasil!',
@@ -1687,25 +1925,34 @@
                                             showConfirmButton: false
                                         }).then(() => {
                                             $('#customerModal').modal('hide');
-                                            $('#statusFilter').val('all').trigger('change.select2');
-                                            $('#approvalStatusFilter').val('all').trigger('change.select2');
+                                            $('#statusFilter').val('all').trigger(
+                                                'change.select2');
+                                            $('#approvalStatusFilter').val('all')
+                                                .trigger('change.select2');
 
                                             if (typeof table !== 'undefined') {
-                                                table.search('').ajax.reload(null, true);
+                                                table.search('').ajax.reload(null,
+                                                    true);
                                             } else {
-                                                $('#sampleTable').DataTable().search('').ajax.reload(null, true);
+                                                $('#sampleTable').DataTable()
+                                                    .search('').ajax.reload(null,
+                                                        true);
                                             }
                                         });
                                     } else {
-                                        $('#statusFilter').val(currentStatusFilter).trigger('change.select2');
-                                        $('#approvalStatusFilter').val(currentApprovalFilter).trigger('change.select2');
+                                        $('#statusFilter').val(currentStatusFilter).trigger(
+                                            'change.select2');
+                                        $('#approvalStatusFilter').val(
+                                            currentApprovalFilter).trigger(
+                                            'change.select2');
                                         Swal.fire('Failed!', response.message, 'error');
                                     }
                                 },
                                 error: function(xhr) {
                                     Swal.close();
                                     let msg = 'An error occurred on the server.';
-                                    if(xhr.responseJSON && xhr.responseJSON.message) msg = xhr.responseJSON.message;
+                                    if (xhr.responseJSON && xhr.responseJSON.message) msg =
+                                        xhr.responseJSON.message;
                                     Swal.fire('Error!', msg, 'error');
                                 }
                             });
@@ -1719,16 +1966,21 @@
 
                     const originalBtn = $('#btn-save-customer');
                     originalBtn.prop('disabled', true);
-                    const notice = $('<div class="mt-2 text-info" id="ocr-status"><i class="ph-bold ph-spinner ph-spin me-1"></i> Reading NPWP (Scanning all lines)...</div>');
+                    const notice = $(
+                        '<div class="mt-2 text-info" id="ocr-status"><i class="ph-bold ph-spinner ph-spin me-1"></i> Reading NPWP (Scanning all lines)...</div>'
+                        );
                     $(this).closest('.card-body').append(notice);
 
                     const reader = new FileReader();
                     reader.onload = function(evt) {
                         try {
-                            Tesseract.recognize(evt.target.result, 'eng', { logger: m => console.log(m) })
+                            Tesseract.recognize(evt.target.result, 'eng', {
+                                    logger: m => console.log(m)
+                                })
                                 .then(result => {
                                     const text = result.data.text || '';
-                                    const lines = text.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+                                    const lines = text.split(/\r?\n/).map(s => s.trim()).filter(
+                                    Boolean);
 
                                     // 1. CARI POSISI BARIS NPWP
                                     let npwpLineIdx = -1;
@@ -1747,7 +1999,8 @@
                                     // Fallback search
                                     if (npwpLineIdx === -1) {
                                         for (let i = 0; i < lines.length; i++) {
-                                            if (npwpRegexLoose.test(lines[i]) && lines[i].replace(/\D/g, '').length >= 15) {
+                                            if (npwpRegexLoose.test(lines[i]) && lines[i].replace(/\D/g,
+                                                    '').length >= 15) {
                                                 npwpLineIdx = i;
                                                 npwpValue = lines[i].match(npwpRegexLoose)[0];
                                                 break;
@@ -1761,8 +2014,10 @@
 
                                     if (npwpLineIdx !== -1 && lines.length > npwpLineIdx + 1) {
                                         let rawName = lines[npwpLineIdx + 1];
-                                        rawName = rawName.replace(/^(Nama|Name)\s*[:.]?\s*/i, '').trim();
-                                        let safeName = rawName.replace(/[^a-zA-Z0-9\s\.\,\(\)\-\&]/g, '').trim();
+                                        rawName = rawName.replace(/^(Nama|Name)\s*[:.]?\s*/i, '')
+                                    .trim();
+                                        let safeName = rawName.replace(/[^a-zA-Z0-9\s\.\,\(\)\-\&]/g,
+                                            '').trim();
 
                                         $('#name').val(safeName);
                                         let bgStatus = $('#bank_garansi').val();
@@ -1786,7 +2041,9 @@
                                             let currentLine = lines[i];
 
                                             // Jika ketemu kata "Penerbit", "Terdaftar", "KPP", stop pengambilan alamat
-                                            if (currentLine.match(/(Penerbit|Terdaftar|KPP|Pratama|Kanwil|Direktorat)/i)) {
+                                            if (currentLine.match(
+                                                    /(Penerbit|Terdaftar|KPP|Pratama|Kanwil|Direktorat)/i
+                                                    )) {
                                                 break;
                                             }
 
@@ -1800,7 +2057,8 @@
                                         rawAddress = addressLines.join(' ');
 
                                         // Bersihkan label "Alamat :" atau "Jalan" di awal (jika ada)
-                                        rawAddress = rawAddress.replace(/^(Alamat|Address|Jalan|Jl)\s*[:.]?\s*/i, '').trim();
+                                        rawAddress = rawAddress.replace(
+                                            /^(Alamat|Address|Jalan|Jl)\s*[:.]?\s*/i, '').trim();
                                     }
 
                                     // Fungsi Chunking (Max 36 Karakter per Input)
@@ -1849,7 +2107,8 @@
                                 })
                                 .catch(err => {
                                     console.error('OCR error', err);
-                                    $('#ocr-status').text('OCR failed (Manual Input Required)').addClass('text-danger');
+                                    $('#ocr-status').text('OCR failed (Manual Input Required)')
+                                        .addClass('text-danger');
                                     originalBtn.prop('disabled', false);
                                 });
                         } catch (e) {
@@ -1880,7 +2139,8 @@
                         },
                         success: function(response) {
                             if (response.success) {
-                                $('#no_pkd').val(response.number).removeClass('text-muted').addClass('fw-bold');
+                                $('#no_pkd').val(response.number).removeClass('text-muted').addClass(
+                                    'fw-bold');
                             } else {
                                 console.warn('Generate Failed:', response);
                                 $('#no_pkd').val('').attr('');
@@ -1890,7 +2150,7 @@
                             console.error('AJAX Error:', status, error);
                             console.error('Response:', xhr.responseText);
 
-                            if(xhr.status === 403) {
+                            if (xhr.status === 403) {
                                 $('#no_pkd').val('Error: Unauthorized (403)');
                             } else {
                                 $('#no_pkd').val('').attr('placeholder', '(Failed to generate)');
@@ -1914,9 +2174,10 @@
                         search: "_INPUT_",
                         searchPlaceholder: "🔍 Search customer..."
                     },
-                    order: [[8, 'desc']], 
-                    columns: [
-                        {
+                    order: [
+                        [8, 'desc']
+                    ],
+                    columns: [{
                             data: 'DT_RowIndex',
                             name: 'DT_RowIndex',
                             orderable: false,
@@ -1926,7 +2187,7 @@
                         {
                             data: 'code',
                             name: 'customers.code',
-                            className: 'dt-no-wrap align-middle' 
+                            className: 'dt-no-wrap align-middle'
                         },
                         {
                             data: 'name',
@@ -1992,49 +2253,54 @@
                             text: 'Please wait a moment.',
                             allowOutsideClick: false,
                             allowEscapeKey: false,
-                            didOpen: () => { Swal.showLoading(); }
+                            didOpen: () => {
+                                Swal.showLoading();
+                            }
                         });
 
                         $.ajax({
-                            url: $form.attr('action'),
-                            method: 'POST',
-                            data: $form.serialize(),
-                            dataType: 'json'
-                        })
-                        .done(function(response) {
-                            Swal.close();
+                                url: $form.attr('action'),
+                                method: 'POST',
+                                data: $form.serialize(),
+                                dataType: 'json'
+                            })
+                            .done(function(response) {
+                                Swal.close();
 
-                            if (response && response.success) {
-                                Swal.fire('Success!', response.message || 'Customer deleted successfully.', 'success')
-                                    .then(() => {
-                                        try {
-                                            if (typeof table !== 'undefined') {
-                                                table.ajax.reload(null, false);
-                                            } else if ($('#sampleTable').length) {
-                                                $('#sampleTable').DataTable().ajax.reload(null, false);
+                                if (response && response.success) {
+                                    Swal.fire('Success!', response.message ||
+                                            'Customer deleted successfully.', 'success')
+                                        .then(() => {
+                                            try {
+                                                if (typeof table !== 'undefined') {
+                                                    table.ajax.reload(null, false);
+                                                } else if ($('#sampleTable').length) {
+                                                    $('#sampleTable').DataTable().ajax.reload(
+                                                        null, false);
+                                                }
+                                            } catch (err) {
+                                                console.warn('Reload DataTable failed', err);
                                             }
-                                        } catch (err) {
-                                            console.warn('Reload DataTable failed', err);
-                                        }
-                                    });
-                                return;
-                            }
+                                        });
+                                    return;
+                                }
 
-                            Swal.fire('Failed!', (response && response.message) ? response.message : 'Failed to delete customer.', 'error');
-                        })
-                        .fail(function(xhr) {
-                            Swal.close();
+                                Swal.fire('Failed!', (response && response.message) ? response
+                                    .message : 'Failed to delete customer.', 'error');
+                            })
+                            .fail(function(xhr) {
+                                Swal.close();
 
-                            let msg = 'An error occurred while deleting data.';
+                                let msg = 'An error occurred while deleting data.';
 
-                            if (xhr && xhr.status === 419) {
-                                msg = 'Session expired. Please refresh the page and try again.';
-                            } else if (xhr && xhr.responseJSON && xhr.responseJSON.message) {
-                                msg = xhr.responseJSON.message;
-                            }
+                                if (xhr && xhr.status === 419) {
+                                    msg = 'Session expired. Please refresh the page and try again.';
+                                } else if (xhr && xhr.responseJSON && xhr.responseJSON.message) {
+                                    msg = xhr.responseJSON.message;
+                                }
 
-                            Swal.fire('Error!', msg, 'error');
-                        });
+                                Swal.fire('Error!', msg, 'error');
+                            });
                     });
                 });
 
@@ -2045,7 +2311,8 @@
                         const saved = {
                             status: $('#statusFilter').val(),
                             approval: $('#approvalStatusFilter').val(),
-                            search: (typeof table !== 'undefined') ? table.search() : ($('#sampleTable_filter input').val() || '')
+                            search: (typeof table !== 'undefined') ? table.search() : ($(
+                                '#sampleTable_filter input').val() || '')
                         };
                         $(this).data('savedFilters', saved);
                     });
@@ -2115,7 +2382,8 @@
                         let rawBg = selectedAg.data('bank_garansi');
                         let rawCcar = selectedAg.data('ccar');
 
-                        let bgValue = (rawBg == 1 || rawBg === true || rawBg === '1' || rawBg === 'YA') ? 'YA' : 'TIDAK';
+                        let bgValue = (rawBg == 1 || rawBg === true || rawBg === '1' || rawBg === 'YA') ? 'YA' :
+                            'TIDAK';
 
                         $('#bank_garansi').val(bgValue).trigger('change');
 
@@ -2147,15 +2415,43 @@
                         if (bgVal === 'YA') msg = 'Credit Limit otomatis 0 (BG Aktif).';
                         else if (topVal === 'CBD') msg = 'Credit Limit otomatis 0 (Cash Before Delivery).';
 
-                        clInput.after(`<small class="cl-status-note text-info fw-bold mt-1 d-block"><i class="ph-bold ph-info me-1"></i> ${msg}</small>`);
+                        clInput.after(
+                            `<small class="cl-status-note text-info fw-bold mt-1 d-block"><i class="ph-bold ph-info me-1"></i> ${msg}</small>`
+                            );
 
-                    }
-                    else {
+                    } else {
                         clInput.prop('readonly', true)
                             .removeClass('bg-light').addClass('bg-white cursor-pointer border-danger')
                             .attr('placeholder', 'Click to calculate');
 
-                        clInput.after('<small class="cl-status-note text-danger fw-bold mt-1 d-block"><i class="ph-bold ph-calculator me-1"></i> Click to calculate</small>');
+                        clInput.after(
+                            '<small class="cl-status-note text-danger fw-bold mt-1 d-block"><i class="ph-bold ph-calculator me-1"></i> Click to calculate</small>'
+                            );
+                    }
+                }
+
+                function checkRecallCreditLimitAccess() {
+                    const bgVal = $('#recall_bank_garansi').val();
+                    const topVal = $('#recall_term_of_payment').val();
+                    const clInput = $('#recall_credit_limit');
+
+                    if (!clInput.length) return;
+
+                    clInput.parent().find('.recall-cl-status-note').remove();
+
+                    if (bgVal === 'YA' || String(topVal).toUpperCase() === 'CBD') {
+                        clInput.val(0).prop('readonly', true).addClass('bg-light');
+
+                        let msg = '';
+                        if (bgVal === 'YA') msg = 'Credit Limit otomatis 0 (BG Aktif).';
+                        else msg = 'Credit Limit otomatis 0 (Cash Before Delivery).';
+
+                        clInput.after(`<small class="recall-cl-status-note text-info fw-bold mt-1 d-block"><i class="ph-bold ph-info me-1"></i> ${msg}</small>`);
+                    } else {
+                        if (String(clInput.val()).trim() === '0') {
+                            clInput.val('');
+                        }
+                        clInput.prop('readonly', false).removeClass('bg-light');
                     }
                 }
 
@@ -2167,11 +2463,16 @@
                         $('#calc_top').val(v).trigger('change');
                     }
 
-                    const modalVisible = $('#creditCalcModal').hasClass('show') || $('#creditCalcModal').is(':visible');
+                    const modalVisible = $('#creditCalcModal').hasClass('show') || $('#creditCalcModal').is(
+                        ':visible');
                     if ($('#calc_top').length && modalVisible) {
                         const r = computeCreditValues();
                         $('#calc_preview_formatted').val(formatRupiah(Math.round(r.valFinal || 0)));
                     }
+                });
+
+                $('#recall_term_of_payment, #recall_bank_garansi').on('change', function() {
+                    checkRecallCreditLimitAccess();
                 });
 
                 $('#bank_garansi').on('change', function() {
@@ -2183,7 +2484,9 @@
 
                     if (val === 'TIDAK') {
                         pkdInput.val('').prop('readonly', true).removeClass('fw-bold');
-                        pkdInput.after('<small class="pkd-status-note text-danger fw-bold mt-1 d-block"><i class="ph-bold ph-info me-1"></i> This Customer does not use Bank Guarantee.</small>');
+                        pkdInput.after(
+                            '<small class="pkd-status-note text-danger fw-bold mt-1 d-block"><i class="ph-bold ph-info me-1"></i> This Customer does not use Bank Guarantee.</small>'
+                            );
                     } else {
                         pkdInput.prop('readonly', true).addClass('fw-bold');
                         if (customerName && customerName.length > 3) {
@@ -2200,12 +2503,12 @@
                     let val = $(this).val();
                     let bgStatus = $('#bank_garansi').val();
 
-                    if(val.length > 3 && (bgStatus === 'YA' || bgStatus === '1')) {
+                    if (val.length > 3 && (bgStatus === 'YA' || bgStatus === '1')) {
                         generatePkdNumber(val);
                     }
                 });
 
-            $(document).on('focus', '#credit_limit', function(e) {
+                $(document).on('focus', '#credit_limit', function(e) {
 
                     const bgStatus = $('#bank_garansi').val();
                     const topVal = $('#term_of_payment').val();
@@ -2235,12 +2538,12 @@
                         let nameAttr = $(this).attr('name');
                         let matches = nameAttr.match(/items\[(\d+)\]\[(\w+)\]/);
 
-                        if(matches) {
+                        if (matches) {
                             hasItems = true;
                             let index = matches[1];
                             let field = matches[2];
 
-                            if(!existingItems[index]) existingItems[index] = {};
+                            if (!existingItems[index]) existingItems[index] = {};
                             existingItems[index][field] = $(this).val();
                         }
                     });
@@ -2292,7 +2595,8 @@
                         $('#user_id').prop('disabled', false);
                     }
 
-                    $('.btn-schedule').removeClass('active btn-dark btn-primary btn-success btn-info text-white');
+                    $('.btn-schedule').removeClass(
+                        'active btn-dark btn-primary btn-success btn-info text-white');
 
                     $('.btn-schedule[data-val="All"]').addClass('btn-outline-dark');
                     $('.btn-date-box').addClass('btn-outline-secondary').removeClass('btn-info');
@@ -2300,7 +2604,8 @@
                     $('[data-type="payment_days"]').not('[data-val="All"]').addClass('btn-outline-primary');
                     $('[data-type="faktur_days"]').not('[data-val="All"]').addClass('btn-outline-success');
 
-                    $('#create_payment_days_inputs, #create_payment_date_inputs, #create_faktur_days_inputs, #create_faktur_date_inputs').empty();
+                    $('#create_payment_days_inputs, #create_payment_date_inputs, #create_faktur_days_inputs, #create_faktur_date_inputs')
+                        .empty();
 
                     $('#customerModalLabel').text('Create New Customer');
                     $('#customerModal').modal('show');
@@ -2339,10 +2644,12 @@
                         } else {
                             const isSelected = selected.includes(val);
                             if (isPayment) {
-                                if (isSelected) $b.removeClass('btn-outline-primary').addClass('btn-primary text-white');
+                                if (isSelected) $b.removeClass('btn-outline-primary').addClass(
+                                    'btn-primary text-white');
                                 else $b.removeClass('btn-primary text-white').addClass('btn-outline-primary');
                             } else {
-                                if (isSelected) $b.removeClass('btn-outline-success').addClass('btn-success text-white');
+                                if (isSelected) $b.removeClass('btn-outline-success').addClass(
+                                    'btn-success text-white');
                                 else $b.removeClass('btn-success text-white').addClass('btn-outline-success');
                             }
                         }
@@ -2353,13 +2660,15 @@
                     const selected = normalizeSelected(rawVal).map(String);
                     const $boxes = $(boxesSelector).find('.btn-date-box');
                     if (typeof rawVal === 'string' && rawVal.toLowerCase() === 'all') {
-                        $(boxesSelector).siblings('button[data-val="All"]').removeClass('btn-outline-dark').addClass('btn-dark');
+                        $(boxesSelector).siblings('button[data-val="All"]').removeClass('btn-outline-dark').addClass(
+                            'btn-dark');
                         $boxes.each(function() {
                             $(this).removeClass('btn-info text-white').addClass('btn-outline-secondary');
                         });
                         return;
                     } else {
-                        $(boxesSelector).siblings('button[data-val="All"]').removeClass('btn-dark').addClass('btn-outline-dark');
+                        $(boxesSelector).siblings('button[data-val="All"]').removeClass('btn-dark').addClass(
+                            'btn-outline-dark');
                     }
 
                     $boxes.each(function() {
@@ -2386,9 +2695,9 @@
 
                     const approval = btn.data('status_approval');
                     let approvalColor = 'text-muted';
-                    if(approval === 'Approved') approvalColor = 'text-success';
-                    if(approval === 'Rejected') approvalColor = 'text-danger';
-                    if(approval === 'Processing') approvalColor = 'text-primary';
+                    if (approval === 'Approved') approvalColor = 'text-success';
+                    if (approval === 'Rejected') approvalColor = 'text-danger';
+                    if (approval === 'Processing') approvalColor = 'text-primary';
                     $('#view_approval_badge').text(approval).attr('class', 'fw-bold ' + approvalColor);
 
                     // $('#view_updated_at').text(btn.data('updated_at') || '-');
@@ -2442,19 +2751,39 @@
                     renderDaySelector('#view_faktur_days_container', fakturDaysRaw, false);
                     renderDateBoxes('#view_faktur_date_boxes', fakturDateRaw);
 
-                    const docs = [
-                        { name: 'NPWP Document', path: btn.data('file_npwp_path'), icon: 'ph-file-text' },
-                        { name: 'NIB / SIUP', path: btn.data('file_nib_path'), icon: 'ph-file-code' },
-                        { name: 'KTP Penanggung Jawab', path: btn.data('file_ktp_path'), icon: 'ph-cardholder' },
-                        { name: 'Akte Pendirian', path: btn.data('file_akte_path'), icon: 'ph-scroll' },
-                        { name: 'Company Profile', path: btn.data('file_company_profile_path'), icon: 'ph-buildings' }
+                    const docs = [{
+                            name: 'NPWP Document',
+                            path: btn.data('file_npwp_path'),
+                            icon: 'ph-file-text'
+                        },
+                        {
+                            name: 'NIB / SIUP',
+                            path: btn.data('file_nib_path'),
+                            icon: 'ph-file-code'
+                        },
+                        {
+                            name: 'KTP Penanggung Jawab',
+                            path: btn.data('file_ktp_path'),
+                            icon: 'ph-cardholder'
+                        },
+                        {
+                            name: 'Akte Pendirian',
+                            path: btn.data('file_akte_path'),
+                            icon: 'ph-scroll'
+                        },
+                        {
+                            name: 'Company Profile',
+                            path: btn.data('file_company_profile_path'),
+                            icon: 'ph-buildings'
+                        }
                     ];
 
                     let docHtml = '';
                     let hasDoc = false;
 
                     docs.forEach(doc => {
-                        if(doc.path && typeof doc.path === 'string' && doc.path.length > 20 && !doc.path.includes('null')) {
+                        if (doc.path && typeof doc.path === 'string' && doc.path.length > 20 && !doc
+                            .path.includes('null')) {
                             hasDoc = true;
                             docHtml += `
                                 <div class="col-md-4">
@@ -2476,7 +2805,7 @@
                         }
                     });
 
-                    if(hasDoc) {
+                    if (hasDoc) {
                         $('#document_grid').html(docHtml).show();
                         $('#no_documents').hide();
                     } else {
@@ -2533,7 +2862,11 @@
                     else if (top === 14) divider = 15;
                     if (divider === 0) divider = 1;
 
-                    return { base, totalValue, valFinal: base / divider };
+                    return {
+                        base,
+                        totalValue,
+                        valFinal: base / divider
+                    };
                 }
 
                 function formatRupiah(angka, prefix) {
@@ -2573,10 +2906,12 @@
                     $('#calc_products').append(row);
                 }
 
-                $(document).on('input change', '#calc_products .calc-qty, #calc_products .calc-price, #calc_lt, #calc_top', function() {
-                    const r = computeCreditValues();
-                    $('#calc_preview_formatted').val(formatRupiah(Math.round(r.valFinal || 0)));
-                });
+                $(document).on('input change',
+                    '#calc_products .calc-qty, #calc_products .calc-price, #calc_lt, #calc_top',
+                    function() {
+                        const r = computeCreditValues();
+                        $('#calc_preview_formatted').val(formatRupiah(Math.round(r.valFinal || 0)));
+                    });
 
                 // When calc_top changes in modal, sync back to main TOP select and recalc
                 $(document).on('change', '#calc_top', function() {
@@ -2602,8 +2937,12 @@
                     const ltVal = $('#calc_lt').val() || 0;
                     $('#lead_time').val(ltVal);
 
-                    if($('#top_calc_hidden').length === 0) {
-                        $('<input>').attr({type: 'hidden', id: 'top_calc_hidden', name: 'top_calc'}).appendTo('#customerForm');
+                    if ($('#top_calc_hidden').length === 0) {
+                        $('<input>').attr({
+                            type: 'hidden',
+                            id: 'top_calc_hidden',
+                            name: 'top_calc'
+                        }).appendTo('#customerForm');
                     }
                     $('#top_calc_hidden').val(v);
                 });
@@ -2637,7 +2976,8 @@
                             return;
                         }
 
-                        $('#fileViewerTitle').html(`<i class="ph-bold ph-eye me-2"></i> ${title.toUpperCase()}`);
+                        $('#fileViewerTitle').html(
+                            `<i class="ph-bold ph-eye me-2"></i> ${title.toUpperCase()}`);
                         let container = $('#fileContentArea');
 
                         container.html(`
@@ -2667,8 +3007,7 @@
                                         onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'text-center py-5\'><i class=\'ph-duotone ph-warning-circle text-danger f-s-48 mb-3\'></i><h5 class=\'text-white\'>Failed to Load Image</h5><p class=\'text-white-50 small\'>File not found on the server.<br>Please run: <code>php artisan storage:link</code></p></div>';"
                                     >
                                 `);
-                            }
-                            else if (extension === 'pdf') {
+                            } else if (extension === 'pdf') {
                                 dialog.addClass('modal-xl');
                                 container.html(`
                                     <iframe src="${filePath}"
@@ -2676,8 +3015,7 @@
                                             allowfullscreen>
                                     </iframe>
                                 `);
-                            }
-                            else {
+                            } else {
                                 dialog.addClass('modal-lg');
                                 container.html(`
                                     <div class="text-center py-5 text-white">
@@ -2692,14 +3030,14 @@
                         }, 300);
                     });
 
-                    $('#fileViewerModal').on('show.bs.modal', function () {
+                    $('#fileViewerModal').on('show.bs.modal', function() {
                         $(this).css('z-index', '1060');
                         setTimeout(function() {
                             $('.modal-backdrop').last().css('z-index', '1055');
                         }, 10);
                     });
 
-                    $('#fileViewerModal').on('hidden.bs.modal', function () {
+                    $('#fileViewerModal').on('hidden.bs.modal', function() {
                         if ($('.modal.show').length > 0) {
                             $('body').addClass('modal-open');
                         }
@@ -2714,7 +3052,8 @@
                     const isAll = value === 'All';
 
                     const colorClass = type.includes('faktur') ? 'btn-success' : 'btn-primary';
-                    const outlineClass = type.includes('faktur') ? 'btn-outline-success' : 'btn-outline-primary';
+                    const outlineClass = type.includes('faktur') ? 'btn-outline-success' :
+                    'btn-outline-primary';
                     const dateSolid = 'btn-info';
                     const dateOutline = 'btn-outline-secondary';
 
@@ -2736,7 +3075,8 @@
                             btn.removeClass('active btn-dark').addClass('btn-outline-dark');
 
                             container.find('.btn-schedule').not('[data-val="All"]').each(function() {
-                                $(this).removeClass('active text-white btn-dark ' + colorClass + ' ' + dateSolid);
+                                $(this).removeClass('active text-white btn-dark ' + colorClass + ' ' +
+                                    dateSolid);
                                 if ($(this).hasClass('btn-date-box')) {
                                     $(this).addClass(dateOutline);
                                 } else {
@@ -2747,7 +3087,7 @@
 
                     } else {
                         const allBtn = container.find('[data-val="All"]');
-                        if(allBtn.hasClass('active')) {
+                        if (allBtn.hasClass('active')) {
                             allBtn.removeClass('active btn-dark').addClass('btn-outline-dark');
                         }
                         if (btn.hasClass('active')) {
@@ -2781,10 +3121,18 @@
                     const allBtn = container.find('[data-val="All"]');
 
                     if (allBtn.hasClass('active')) {
-                        $('<input>').attr({type: 'hidden', name: `${type}[]`, value: 'All'}).appendTo(inputContainer);
+                        $('<input>').attr({
+                            type: 'hidden',
+                            name: `${type}[]`,
+                            value: 'All'
+                        }).appendTo(inputContainer);
                     } else {
                         container.find('.btn-schedule.active').not('[data-val="All"]').each(function() {
-                            $('<input>').attr({type: 'hidden', name: `${type}[]`, value: $(this).data('val')}).appendTo(inputContainer);
+                            $('<input>').attr({
+                                type: 'hidden',
+                                name: `${type}[]`,
+                                value: $(this).data('val')
+                            }).appendTo(inputContainer);
                         });
                     }
                 }
@@ -2801,8 +3149,12 @@
 
                     $('#lead_time').val(ltVal);
 
-                    if($('#top_calc_hidden').length === 0) {
-                        $('<input>').attr({type: 'hidden', id: 'top_calc_hidden', name: 'top_calc'}).appendTo('#customerForm');
+                    if ($('#top_calc_hidden').length === 0) {
+                        $('<input>').attr({
+                            type: 'hidden',
+                            id: 'top_calc_hidden',
+                            name: 'top_calc'
+                        }).appendTo('#customerForm');
                     }
                     $('#top_calc_hidden').val(topVal);
 
@@ -2814,7 +3166,7 @@
                         const price = $(this).find('.calc-price').val();
                         const cleanPrice = cleanRupiah(price);
 
-                        if(name && qty) {
+                        if (name && qty) {
                             const container = $('#customerForm');
 
                             $('<input>').attr({
@@ -2857,12 +3209,14 @@
                 $('#importForm').on('submit', function(e) {
                     e.preventDefault();
                     const formData = new FormData(this);
-                    
+
                     Swal.fire({
                         title: 'Importing...',
                         html: 'Please wait while the file is being imported.',
                         allowOutsideClick: false,
-                        didOpen: () => { Swal.showLoading(); }
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
                     });
 
                     $.ajax({
@@ -2872,7 +3226,7 @@
                         processData: false,
                         contentType: false,
                         success: function(response) {
-                            if(response.success) {
+                            if (response.success) {
                                 Swal.fire({
                                     icon: 'success',
                                     title: 'Import Selesai!',
@@ -2883,14 +3237,17 @@
                                     $('#importModal').modal('hide');
                                     $('#importForm')[0].reset();
                                     $('#statusFilter').val('all').trigger('change.select2');
-                                    $('#approvalStatusFilter').val('all').trigger('change.select2');
-                                    if (typeof table !== 'undefined') table.search('').ajax.reload(null, true);
+                                    $('#approvalStatusFilter').val('all').trigger(
+                                        'change.select2');
+                                    if (typeof table !== 'undefined') table.search('').ajax
+                                        .reload(null, true);
                                 });
                             }
                         },
                         error: function(xhr) {
                             let msg = 'An error occurred during import.';
-                            if(xhr.responseJSON && xhr.responseJSON.message) msg = xhr.responseJSON.message;
+                            if (xhr.responseJSON && xhr.responseJSON.message) msg = xhr.responseJSON
+                                .message;
                             Swal.fire('Error!', msg, 'error');
                         }
                     });
@@ -2900,12 +3257,14 @@
     @endpush
 
     <!-- Credit Limit Calculator Modal -->
-    <div class="modal fade" id="creditCalcModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal fade" id="creditCalcModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static"
+        data-bs-keyboard="false">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header bg-primary">
                     <h5 class="modal-title text-white">Credit Limit Calculator</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
                 </div>
                 <form id="creditCalcForm">
                     <div class="modal-body">
@@ -2913,13 +3272,18 @@
                             <label class="form-label">Products</label>
                             <div id="calc_products">
                                 <div class="calc-row d-flex gap-2 mb-2">
-                                    <input type="text" class="form-control calc-product-name" placeholder="Product name" />
-                                    <input type="number" step="1" min="0" class="form-control calc-qty" placeholder="Qty" />
-                                    <input type="number" step="0.01" min="0" class="form-control calc-price" placeholder="Price" />
-                                    <button type="button" class="btn btn-outline-danger btn-remove-row" title="Remove">&minus;</button>
+                                    <input type="text" class="form-control calc-product-name"
+                                        placeholder="Product name" />
+                                    <input type="number" step="1" min="0"
+                                        class="form-control calc-qty" placeholder="Qty" />
+                                    <input type="number" step="0.01" min="0"
+                                        class="form-control calc-price" placeholder="Price" />
+                                    <button type="button" class="btn btn-outline-danger btn-remove-row"
+                                        title="Remove">&minus;</button>
                                 </div>
                             </div>
-                            <button type="button" id="addCalcRow" class="btn btn-sm btn-secondary mt-1">Add product</button>
+                            <button type="button" id="addCalcRow" class="btn btn-sm btn-secondary mt-1">Add
+                                product</button>
                         </div>
                         <div class="row g-2 mt-2">
                             <div class="col-md-6">
@@ -2933,7 +3297,8 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Lead Time (LT)</label>
-                                <input type="text" step="1" id="calc_lt" class="form-control" readonly/>
+                                <input type="text" step="1" id="calc_lt" class="form-control"
+                                    readonly />
                             </div>
                         </div>
 
