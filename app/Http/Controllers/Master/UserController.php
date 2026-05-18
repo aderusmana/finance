@@ -114,7 +114,7 @@ class UserController extends Controller
             'nik' => 'required|min:4|max:6|unique:users,nik',
             'name' => 'required|string|max:255',
             'username' => 'required|string|max:255|unique:users,username',
-            'email' => 'required|email|max:255|unique:users,email',
+            'email' => 'required|email|max:255',
             'password' => 'required|string|min:8|max:20',
             'department_id' => 'required|exists:departments,id',
             'position_id' => 'nullable|exists:positions,id',
@@ -168,7 +168,7 @@ class UserController extends Controller
     public function update(Request $request, User $user)
     {
         $request->validate([
-            'email' => 'required|email|max:255|unique:users,email,' . $user->id,
+            'email' => 'required|email|max:255',
             'nik' => 'required|min:4|max:6|unique:users,nik,' . $user->id,
             'username' => 'required|string|max:255|unique:users,username,' . $user->id,
             'name' => 'required|string|max:255',

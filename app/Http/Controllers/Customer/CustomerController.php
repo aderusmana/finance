@@ -28,11 +28,13 @@ use App\Mail\CustomerWelcomeMail;
 use Illuminate\Support\Str;
 use Spatie\Activitylog\Models\Activity;
 use App\Services\CustomerService;
+use App\Traits\ApprovalTrait;
 use Illuminate\Http\UploadedFile;
 
 class CustomerController extends Controller
 {
     protected $customerService;
+    use ApprovalTrait;
 
     public function __construct(CustomerService $customerService)
     {
@@ -109,6 +111,8 @@ class CustomerController extends Controller
 
     public function index(Request $request)
     {
+        $user = Auth::user();
+
         if ($request->ajax()) {
             $query = Customer::leftJoin('customer_files', 'customers.id', '=', 'customer_files.customer_id')
                 ->select(
@@ -137,7 +141,7 @@ class CustomerController extends Controller
 
             return DataTables::of($query)
                 ->addIndexColumn()
-                ->addColumn('action', function ($row) {
+                ->addColumn('action', function ($row) use ($user) {
                     $row->load('items');
                     $rowData = $row->toArray();
 
@@ -202,8 +206,10 @@ class CustomerController extends Controller
                     $dataAttrs .= ' data-shipping_to_address="' . e($row->shipping_to_address) . '"';
                     $dataAttrs .= ' data-purchasing_manager_name="' . e($row->purchasing_manager_name) . '"';
                     $dataAttrs .= ' data-purchasing_manager_email="' . e($row->purchasing_manager_email) . '"';
+                    $dataAttrs .= ' data-purchasing_manager_telepon="' . e($row->purchasing_manager_telepon) . '"';
                     $dataAttrs .= ' data-finance_manager_name="' . e($row->finance_manager_name) . '"';
                     $dataAttrs .= ' data-finance_manager_email="' . e($row->finance_manager_email) . '"';
+                    $dataAttrs .= ' data-finance_manager_telepon="' . e($row->finance_manager_telepon) . '"';
                     $dataAttrs .= ' data-penagihan_nama_kontak="' . e($row->penagihan_nama_kontak) . '"';
                     $dataAttrs .= ' data-penagihan_telepon="' . e($row->penagihan_telepon) . '"';
                     $dataAttrs .= ' data-penagihan_address="' . e($row->penagihan_address) . '"';
@@ -242,11 +248,11 @@ class CustomerController extends Controller
                     $btn = '<div class="d-flex flex-column gap-1 justify-content-center align-items-center" style="min-width: 75px;">';
 
                     if ($row->status_approval === 'Rejected' && $user->can('update customer')) {
-                        $btn .= '<button type="button" class="btn btn-warning btn-xs rounded-pill fw-bold btn-recall-customer shadow-sm w-100"
+                        $btn .= '<button type="button" class="btn btn-warning btn-xs rounded-pill fw-bold btn-resubmit-customer shadow-sm w-100"
                                 ' . $btnStyle . '
                                 data-json="' . $jsonRow . '"
-                                data-bs-toggle="tooltip" title="Recall">
-                                <i class="ph-bold ph-arrow-u-up-left me-1"></i> Recall
+                                data-bs-toggle="tooltip" title="Resubmit">
+                                <i class="ph-bold ph-arrow-u-up-left me-1"></i> Resubmit
                             </button>';
                     }
 
@@ -390,7 +396,7 @@ class CustomerController extends Controller
         $customer = Customer::findOrFail($id);
 
         if ($customer->status_approval !== 'Rejected') {
-            return response()->json(['success' => false, 'message' => 'Only data with status Rejected can be recalled.'], 403);
+            return response()->json(['success' => false, 'message' => 'Only data with status Rejected can be resubmitted.'], 403);
         }
 
         $dynamicFileRule = function ($attribute, $value, $fail) {
@@ -499,14 +505,14 @@ class CustomerController extends Controller
                     try {
                         $admins = User::role('super-admin')->get();
                         Notification::send($firstApprover, new SystemNotification(
-                            'Need Approval (Recall)',
+                            'Need Approval (Resubmitted)',
                             "Customer <b>{$customer->name}</b> has been revised and resubmitted by the user.",
                             route('customers.approval'),
                             'ph-arrow-u-up-left',
                             'warning'
                         ));
                     } catch (\Exception $e) {
-                        Log::error("Error sending recall notification: " . $e->getMessage());
+                        Log::error("Error sending resubmission notification: " . $e->getMessage());
                     }
                 }
             } else {
@@ -517,9 +523,9 @@ class CustomerController extends Controller
                 ->causedBy($user)
                 ->performedOn($customer)
                 ->useLog('customer')
-                ->event('recall')
+                ->event('resubmit')
                 ->withProperties(['name' => $customer->name])
-                ->log("Recalled and resubmitted customer: {$customer->name}");
+                ->log("Re submitted and resubmitted customer: {$customer->name}");
         });
 
         try {
@@ -544,15 +550,15 @@ class CustomerController extends Controller
                         ];
 
                         CustomerJob::dispatch($customer->id, $recipients, $token, 'approval');
-                        Log::info("Recall email sent to: " . $approverUser->email);
+                        Log::info("Resubmit email sent to: " . $approverUser->email);
                     }
                 }
             }
         } catch (\Exception $e) {
-            Log::error('Error sending recall email: ' . $e->getMessage());
+            Log::error('Error sending resubmit email: ' . $e->getMessage());
         }
 
-        return response()->json(['success' => true, 'message' => 'Data successfully recalled! Status reverted to Pending.']);
+        return response()->json(['success' => true, 'message' => 'Data successfully resubmitted! Status reverted to Pending.']);
     }
 
     public function show(Customer $customer)
@@ -1051,16 +1057,20 @@ class CustomerController extends Controller
 
             DB::commit();
 
-            if (request()->ajax()) {
-                return response()->json(['success' => true, 'message' => 'Action processed successfully.']);
-            }
-
-            return view('page.customer.links.approval-success', [
+            $successViewData = [
                 'action' => $action,
                 'customerName' => $customer->name,
                 'routeTo' => $customer->route_to,
                 'statusApproval' => $customer->status_approval
-            ]);
+            ];
+
+            if (request()->ajax()) {
+                // return a compact modal-friendly partial for AJAX clients
+                $html = view('page.customer.links.approval-success-modal', $successViewData)->render();
+                return response()->json(['success' => true, 'message' => 'Action processed successfully.', 'html' => $html]);
+            }
+
+            return view('page.customer.links.approval-success', $successViewData);
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Approval Process Error: ' . $e->getMessage());

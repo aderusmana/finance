@@ -45,7 +45,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard/customer', [DashboardController::class, 'customerIndex'])->name('dashboard.customer');
     Route::get('/dashboard/bank-garansi', [DashboardController::class, 'bgIndex'])->name('dashboard.bg');
     Route::get('/dashboard/logistic', [DashboardController::class, 'logisticIndex'])->name('dashboard.logistic');
-
 });
 
 Route::get('/tes-404', function () {

@@ -285,6 +285,7 @@
                                                 <th class="ps-4 py-3 fw-bold text-secondary text-uppercase f-s-12">Position Role</th>
                                                 <th class="py-3 fw-bold text-secondary text-uppercase f-s-12">Full Name</th>
                                                 <th class="py-3 fw-bold text-secondary text-uppercase f-s-12">Email Address</th>
+                                                <th class="py-3 fw-bold text-secondary text-uppercase f-s-12">Phone Number</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -292,11 +293,13 @@
                                                 <td class="ps-4 text-secondary fw-bold">Purchasing Mgr</td>
                                                 <td class="fw-bold text-dark" id="view_purchasing_manager_name">-</td>
                                                 <td class="text-dark" id="view_purchasing_manager_email">-</td>
+                                                <td class="text-dark" id="view_purchasing_manager_phone">-</td>
                                             </tr>
                                             <tr>
                                                 <td class="ps-4 text-secondary fw-bold">Finance Mgr</td>
                                                 <td class="fw-bold text-dark" id="view_finance_manager_name">-</td>
                                                 <td class="text-dark" id="view_finance_manager_email">-</td>
+                                                <td class="text-dark" id="view_finance_manager_phone">-</td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -822,8 +825,10 @@
                     $('#view_penagihan_address').text(data.penagihan_address || '-');
                     $('#view_purchasing_manager_name').text(data.purchasing_manager_name || '-');
                     $('#view_purchasing_manager_email').text(data.purchasing_manager_email || '-');
+                    $('#view_purchasing_manager_phone').text(data.purchasing_manager_phone || '-');
                     $('#view_finance_manager_name').text(data.finance_manager_name || '-');
                     $('#view_finance_manager_email').text(data.finance_manager_email || '-');
+                    $('#view_finance_manager_phone').text(data.finance_manager_phone || '-');
                     $('#view_shipping_to_name').text(data.shipping_to_name || '-');
                     $('#view_shipping_to_address').text(data.shipping_to_address || '-');
 

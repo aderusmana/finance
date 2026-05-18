@@ -289,11 +289,6 @@
                     <div>Name & Signature</div>
                 </td>
                 <td>
-                    <div class="text-bold">Driver / Courier</div>
-                    <div class="sign-line"></div>
-                    <div>Name & Signature</div>
-                </td>
-                <td>
                     <div class="text-bold">Recipient</div>
                     <div class="sign-line"></div>
                     <div>Name, Signature & Company Stamp</div>

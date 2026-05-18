@@ -104,8 +104,10 @@ class CustomerRequest extends FormRequest
             'shipping_to_address' => 'required|string',
             'purchasing_manager_name' => 'required|string|max:255',
             'purchasing_manager_email' => 'required|email|max:255',
+            'purchasing_manager_telepon' => 'nullable|string|max:50',
             'finance_manager_name' => 'required|string|max:255',
             'finance_manager_email' => 'required|email|max:255',
+            'finance_manager_telepon' => 'nullable|string|max:50',
 
             // --- 6. Billing & Tax ---
             'penagihan_nama_kontak' => 'required|string|max:255',
@@ -157,7 +159,7 @@ class CustomerRequest extends FormRequest
         }
 
         // Jika Bank Garansi TIDAK, Credit Limit harus 0
-        if (is_string($bg) && strtoupper($bg) === 'TIDAK') {
+        if (is_string($bg) && strtoupper($bg) === 'YES') {
             $creditLimit = 0;
         }
 
@@ -212,10 +214,12 @@ class CustomerRequest extends FormRequest
             'purchasing_manager_name.required'  => 'Nama Purchasing Manager wajib diisi.',
             'purchasing_manager_email.required' => 'Email Purchasing Manager wajib diisi.',
             'purchasing_manager_email.email'    => 'Format email Purchasing Manager tidak valid.',
+            'purchasing_manager_telepon.required' => 'Telepon Purchasing Manager wajib diisi.',
 
             'finance_manager_name.required'  => 'Nama Finance Manager wajib diisi.',
             'finance_manager_email.required' => 'Email Finance Manager wajib diisi.',
             'finance_manager_email.email'    => 'Format email Finance Manager tidak valid.',
+            'finance_manager_telepon.required' => 'Telepon Finance Manager wajib diisi.',
 
             // --- 6. Billing & Tax ---
             'penagihan_nama_kontak.required'  => 'Nama kontak penagihan wajib diisi.',

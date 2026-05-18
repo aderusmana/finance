@@ -192,6 +192,7 @@
                                             <td>
                                                 <div class="fw-bold">{{ $customer->purchasing_manager_name }}</div>
                                                 <div class="small text-muted">{{ $customer->purchasing_manager_email }}</div>
+                                                <div class="small text-muted">{{ $customer->purchasing_manager_phone }}</div>
                                             </td>
                                         </tr>
                                         <tr>
@@ -199,6 +200,7 @@
                                             <td>
                                                 <div class="fw-bold">{{ $customer->finance_manager_name }}</div>
                                                 <div class="small text-muted">{{ $customer->finance_manager_email }}</div>
+                                                <div class="small text-muted">{{ $customer->finance_manager_phone }}</div>
                                             </td>
                                         </tr>
                                     </table>
@@ -803,6 +805,17 @@
         <h5 class="mt-3 fw-bold text-primary">Processing...</h5>
     </div>
 
+    <!-- AJAX Success Modal -->
+    <div class="modal fade" id="ajaxSuccessModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0">
+                <div class="modal-body p-3" id="ajaxSuccessModalBody" style="background:transparent;">
+                    <!-- injected HTML -->
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
@@ -1210,7 +1223,74 @@
                 }).then((result) => {
                     if (result.isConfirmed) {
                         document.getElementById('loading-overlay').style.display = 'flex';
-                        form.submit();
+
+                        const formData = new FormData(form);
+                        const actionUrl = form.getAttribute('action');
+
+                        fetch(actionUrl, {
+                            method: 'POST',
+                            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                            body: formData,
+                            credentials: 'same-origin'
+                        })
+                        .then(async (res) => {
+                            const text = await res.text();
+                            // Try parse JSON first; if response is JSON use it, otherwise treat as HTML
+                            try {
+                                return JSON.parse(text);
+                            } catch (e) {
+                                return { success: true, html: text };
+                            }
+                        })
+                        .then((data) => {
+                            document.getElementById('loading-overlay').style.display = 'none';
+                            if (data && data.success) {
+                                if (data.html) {
+                                    const modalBody = document.getElementById('ajaxSuccessModalBody');
+                                    modalBody.innerHTML = data.html;
+                                    const ajaxModalEl = document.getElementById('ajaxSuccessModal');
+                                    const ajaxModal = new bootstrap.Modal(ajaxModalEl);
+                                    ajaxModal.show();
+
+                                    // start countdown inside modal
+                                    const countdownEl = modalBody.querySelector('#countdown');
+                                    let seconds = 3;
+                                    if (countdownEl) {
+                                        countdownEl.innerText = seconds;
+                                        const iv = setInterval(() => {
+                                            seconds--;
+                                            if (seconds <= 0) {
+                                                clearInterval(iv);
+                                                try { ajaxModal.hide(); } catch(e){}
+                                                // Try to close the window. If browser blocks it, show fallback message.
+                                                try {
+                                                    window.open('', '_self');
+                                                    window.close();
+                                                } catch (e) {}
+
+                                                // Fallback after short delay: replace body with inactive message
+                                                setTimeout(() => {
+                                                    try {
+                                                        document.body.innerHTML = "<div style='display:flex; height:100vh; justify-content:center; align-items:center; color:#64748b;'>Halaman sudah tidak aktif. Silakan tutup tab ini.</div>";
+                                                    } catch(e) {}
+                                                }, 500);
+                                            } else {
+                                                countdownEl.innerText = seconds;
+                                            }
+                                        }, 1000);
+                                    }
+                                } else {
+                                    Swal.fire('Success', data.message || 'Action processed.', 'success').then(() => location.reload());
+                                }
+                            } else {
+                                Swal.fire('Error', data.message || 'Failed to process the action.', 'error');
+                            }
+                        })
+                        .catch((err) => {
+                            document.getElementById('loading-overlay').style.display = 'none';
+                            const msg = (err && err.message) ? err.message : 'Server error';
+                            Swal.fire('Error', msg, 'error');
+                        });
                     }
                 });
             });

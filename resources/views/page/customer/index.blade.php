@@ -427,30 +427,43 @@
                                                 placeholder="Full Shipping Address" required></textarea>
                                         </div>
 
-                                        <div class="col-md-3">
+                                        <div class="col-md-4">
                                             <label class="form-label">Purchasing Mgr Name <span
                                                     class="text-danger">*</span></label>
                                             <input type="text" class="form-control" name="purchasing_manager_name"
                                                 id="purchasing_manager_name" placeholder="Full Name" required>
                                         </div>
-                                        <div class="col-md-3">
+                                        <div class="col-md-4">
                                             <label class="form-label">Purchasing Mgr Email <span
                                                     class="text-danger">*</span></label>
                                             <input type="email" class="form-control"
                                                 name="purchasing_manager_email" id="purchasing_manager_email"
                                                 placeholder="email@example.com" required>
                                         </div>
-                                        <div class="col-md-3">
+                                        <div class="col-md-4">
+                                            <label class="form-label">Purchasing Mgr Phone <span
+                                                    class="text-danger">*</span></label>
+                                            <input type="text" class="form-control"
+                                                name="purchasing_manager_telepon" id="purchasing_manager_telepon"
+                                                placeholder="Phone Number" required>
+                                        </div>
+                                        <div class="col-md-4">
                                             <label class="form-label">Finance Mgr Name <span
                                                     class="text-danger">*</span></label>
                                             <input type="text" class="form-control" name="finance_manager_name"
                                                 id="finance_manager_name" placeholder="Full Name" required>
                                         </div>
-                                        <div class="col-md-3">
+                                        <div class="col-md-4">
                                             <label class="form-label">Finance Mgr Email <span
                                                     class="text-danger">*</span></label>
                                             <input type="email" class="form-control" name="finance_manager_email"
                                                 id="finance_manager_email" placeholder="email@example.com" required>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label">Finance Mgr Phone <span
+                                                    class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" name="finance_manager_telepon"
+                                                id="finance_manager_telepon" placeholder="Phone Number" required>
                                         </div>
                                     </div>
                                 </div>
@@ -471,13 +484,13 @@
                                             <label class="form-label">Billing Phone <span
                                                     class="text-danger">*</span></label>
                                             <input type="text" class="form-control" name="penagihan_telepon"
-                                                id="penagihan_telepon" placeholder="e.g. 021-5555xxx" required>
+                                                id="penagihan_telepon" placeholder="e.g. 021-5555xxx">
                                         </div>
                                         <div class="col-md-4">
                                             <label class="form-label">Billing Address <span
                                                     class="text-danger">*</span></label>
                                             <textarea class="form-control" name="penagihan_address" id="penagihan_address" rows="1"
-                                                placeholder="Billing Address" required></textarea>
+                                                placeholder="Billing Address"></textarea>
                                         </div>
 
                                         <div class="col-md-12 mt-2">
@@ -685,7 +698,7 @@
                                                                 class="btn btn-sm btn-outline-dark me-1 mb-1 btn-schedule"
                                                                 data-type="payment_days" data-val="All">All
                                                                 Days</button>
-                                                            @foreach (['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'] as $day)
+                                                            @foreach (['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'] as $day)
                                                                 <button type="button"
                                                                     class="btn btn-sm btn-outline-primary mb-1 btn-schedule"
                                                                     data-type="payment_days"
@@ -935,6 +948,8 @@
                                                 </th>
                                                 <th class="py-3 fw-bold text-secondary text-uppercase f-s-12">Email
                                                     Address</th>
+                                                <th class="py-3 fw-bold text-secondary text-uppercase f-s-12">Phone
+                                                    Number</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -942,11 +957,14 @@
                                                 <td class="ps-4 text-secondary fw-bold">Purchasing Mgr</td>
                                                 <td class="fw-bold text-dark" id="view_purc_name">-</td>
                                                 <td class="text-dark" id="view_purc_email">-</td>
+                                                <td class="text-dark" id="view_purc_phone">-</td>
+
                                             </tr>
                                             <tr>
                                                 <td class="ps-4 text-secondary fw-bold">Finance Mgr</td>
                                                 <td class="fw-bold text-dark" id="view_fin_name">-</td>
                                                 <td class="text-dark" id="view_fin_email">-</td>
+                                                <td class="text-dark" id="view_fin_phone">-</td>
                                             </tr>
                                             <tr>
                                                 <td class="ps-4 text-secondary fw-bold">Tax Contact</td>
@@ -1129,7 +1147,7 @@
                             <i class="ph-bold ph-arrow-u-up-left f-s-24"></i>
                         </div>
                         <div>
-                            <h5 class="modal-title fw-bold mb-0">Recall Submission</h5>
+                            <h5 class="modal-title fw-bold mb-0">Re Submission</h5>
                             <small class="opacity-75">Perbaiki data yang ditolak dan ajukan ulang.</small>
                         </div>
                     </div>
@@ -1148,7 +1166,7 @@
                             role="alert">
                             <i class="ph-fill ph-info f-s-24 me-3"></i>
                             <div>
-                                <strong>Note:</strong> Proses Recall akan mereset status menjadi
+                                <strong>Note:</strong> Proses Resubmit akan mereset status menjadi
                                 <strong>Pending</strong> (Level 1).
                             </div>
                         </div>
@@ -1216,7 +1234,8 @@
                                                 id="recall_email" required>
                                         </div>
                                         <div class="col-md-6">
-                                            <label class="form-label small fw-bold text-dark">No PKD (Readonly)</label>
+                                            <label class="form-label small fw-bold text-dark">No PKD
+                                                (Readonly)</label>
                                             <input type="text" class="form-control bg-light" name="no_pkd"
                                                 id="recall_no_pkd" readonly>
                                         </div>
@@ -1445,6 +1464,14 @@
                                                 id="recall_purchasing_manager_email">
                                         </div>
                                         <div class="col-md-6">
+                                            <label class="form-label small fw-bold text-dark">Purchasing Manager
+                                                Telpon</label>
+                                            <input type="text" class="form-control"
+                                                name="purchasing_manager_phone"
+                                                id="recall_purchasing_manager_telepon">
+                                        </div>
+
+                                        <div class="col-md-6">
                                             <label class="form-label small fw-bold text-dark">Finance Manager
                                                 Name</label>
                                             <input type="text" class="form-control" name="finance_manager_name"
@@ -1455,6 +1482,13 @@
                                                 Email</label>
                                             <input type="email" class="form-control"
                                                 name="finance_manager_email" id="recall_finance_manager_email">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-bold text-dark">Finance Manager
+                                                Telpon</label>
+                                            <input type="text" class="form-control"
+                                                name="finance_manager_phone"
+                                                id="recall_finance_manager_telepon">
                                         </div>
 
                                         <div class="col-12 mt-3">
@@ -1573,7 +1607,8 @@
     @push('scripts')
         <script src="{{ asset('assets/vendor/select/select2.min.js') }}"></script>
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.5/dist/tesseract.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
         <script>
             $(document).ready(function() {
                 $('.select2').select2({
@@ -1657,7 +1692,7 @@
                     checkRecallEmptyState();
                 });
 
-                $(document).on('click', '.btn-recall-customer', function() {
+                $(document).on('click', '.btn-resubmit-customer', function() {
                     let btn = $(this);
                     let rawData = btn.attr('data-json');
                     let data = {};
@@ -1723,8 +1758,10 @@
 
                     $('#recall_purchasing_manager_name').val(data.purchasing_manager_name);
                     $('#recall_purchasing_manager_email').val(data.purchasing_manager_email);
+                    $('#recall_purchasing_manager_telepon').val(data.purchasing_manager_telepon);
                     $('#recall_finance_manager_name').val(data.finance_manager_name);
                     $('#recall_finance_manager_email').val(data.finance_manager_email);
+                    $('#recall_finance_manager_telepon').val(data.finance_manager_telepon);
 
                     // Billing & Tax
                     $('#recall_penagihan_nama_kontak').val(data.penagihan_nama_kontak);
@@ -1964,155 +2001,263 @@
                     const file = this.files && this.files[0];
                     if (!file) return;
 
+                    // 1. Kosongkan Form Sebelum Memulai
+                    $('#npwp, #name, #address1, #address2, #address3, #tanggal_npwp').val('');
+
                     const originalBtn = $('#btn-save-customer');
                     originalBtn.prop('disabled', true);
+
                     const notice = $(
-                        '<div class="mt-2 text-info" id="ocr-status"><i class="ph-bold ph-spinner ph-spin me-1"></i> Reading NPWP (Scanning all lines)...</div>'
-                        );
+                        '<div class="mt-2 text-info" id="ocr-status"><i class="ph-bold ph-spinner ph-spin me-1"></i> Membaca QR Code & Memproses Kartu...</div>'
+                    );
+                    $(this).closest('.card-body').find('#ocr-status').remove(); // Hapus notif lama jika ada
                     $(this).closest('.card-body').append(notice);
 
                     const reader = new FileReader();
-                    reader.onload = function(evt) {
+                    reader.onload = async function(evt) {
+                        const originalDataUrl = evt.target.result;
+                        let qrNpwpFound = false;
+
+                        // ============================================================
+                        // TAHAP 1: BACA QR CODE DENGAN jsQR (Instan)
+                        // ============================================================
                         try {
-                            Tesseract.recognize(evt.target.result, 'eng', {
-                                    logger: m => console.log(m)
-                                })
-                                .then(result => {
-                                    const text = result.data.text || '';
-                                    const lines = text.split(/\r?\n/).map(s => s.trim()).filter(
-                                    Boolean);
+                            const img = new Image();
+                            img.src = originalDataUrl;
+                            await new Promise(r => img.onload = r);
 
-                                    // 1. CARI POSISI BARIS NPWP
-                                    let npwpLineIdx = -1;
-                                    let npwpValue = '';
-                                    const npwpRegexStrict = /\d{2}\.\d{3}\.\d{3}\.\d-\d{3}\.\d{3}/;
-                                    const npwpRegexLoose = /[0-9\.\-\s]{15,25}/;
+                            const canvas = document.createElement('canvas');
+                            const ctx = canvas.getContext('2d');
 
-                                    for (let i = 0; i < lines.length; i++) {
-                                        let match = lines[i].match(npwpRegexStrict);
-                                        if (match) {
-                                            npwpLineIdx = i;
-                                            npwpValue = match[0];
-                                            break;
+                            // Limit dimensi maksimal agar tidak berat di RAM saat scan QR
+                            const maxDim = 1500;
+                            let scale = 1;
+                            if (img.width > maxDim || img.height > maxDim) {
+                                scale = maxDim / Math.max(img.width, img.height);
+                            }
+
+                            canvas.width = Math.floor(img.width * scale);
+                            canvas.height = Math.floor(img.height * scale);
+                            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+                            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                            const code = jsQR(imageData.data, imageData.width, imageData.height, {
+                                inversionAttempts: "dontInvert",
+                            });
+
+                            if (code && code.data) {
+                                console.log("[QR SCAN] Data ditemukan:", code.data);
+                                const match = code.data.match(/\b\d{15,16}\b/);
+
+                                if (match) {
+                                    let digits = match[0];
+                                    let formattedNpwp = "";
+
+                                    if (digits.length === 15) {
+                                        formattedNpwp =
+                                            `${digits.slice(0,2)}.${digits.slice(2,5)}.${digits.slice(5,8)}.${digits.slice(8,9)}-${digits.slice(9,12)}.${digits.slice(12,15)}`;
+                                    } else if (digits.length === 16) {
+                                        formattedNpwp =
+                                            `${digits.slice(0,4)}.${digits.slice(4,8)}.${digits.slice(8,12)}.${digits.slice(12,16)}`;
+                                    }
+
+                                    $('#npwp').val(formattedNpwp);
+                                    qrNpwpFound = true;
+                                    $('#ocr-status').html(
+                                        '<i class="ph-bold ph-check text-success me-1"></i> QR Code terbaca! Mengekstrak Nama & Alamat...'
+                                    );
+                                }
+                            }
+                        } catch (err) {
+                            console.warn("[QR SCAN] Gagal mengeksekusi jsQR:", err);
+                        }
+
+                        // ============================================================
+                        // TAHAP 2: EKSTRAKSI OCR TESSERACT.JS (WORD-CLEANER ENGINE)
+                        // ============================================================
+                        try {
+                            const worker = await Tesseract.createWorker('eng+ind', 1, {
+                                logger: m => {
+                                    if (m.status === 'recognizing text' && $('#ocr-status')
+                                        .length) {
+                                        $('#ocr-status').html(
+                                            `<i class="ph-bold ph-spinner ph-spin me-1"></i> Menyaring Data Kartu... ${Math.round(m.progress * 100)}%`
+                                            );
+                                    }
+                                }
+                            });
+
+                            // PSM 6: Paksa Tesseract membaca rapi dari atas ke bawah (Jangan pakai 11!)
+                            await worker.setParameters({
+                                tessedit_pageseg_mode: '6'
+                            });
+
+                            const result = await worker.recognize(originalDataUrl);
+                            await worker.terminate();
+
+                            // --- 1. FILTERING SUPER BERSIH (MENGHANCURKAN NOISE QR CODE) ---
+                            let cleanLines = [];
+
+                            // Kita periksa baris demi baris dari hasil asli Tesseract
+                            for (let line of result.data.lines) {
+                                let words = line.text.trim().split(/\s+/);
+                                let goodWords = [];
+
+                                for (let w of words) {
+                                    // 1. Selamatkan format tanggal (meski ada huruf kecil/nempel)
+                                    if (/\d{2}[\/\-\.]\d{2}[\/\-\.]\d{4}/.test(w)) {
+                                        goodWords.push(w);
+                                        continue;
+                                    }
+
+                                    // 2. Selamatkan format NIK / NPWP
+                                    let digitsOnly = w.replace(/\D/g, '');
+                                    if (digitsOnly.length >= 14 || /\d{2}\.\d{3}\.\d{3}/.test(w)) {
+                                        goodWords.push(w);
+                                        continue;
+                                    }
+
+                                    // 3. SAPU BERSIH: Kartu NPWP HANYA pakai huruf KAPITAL.
+                                    // Jika kata ini punya huruf kecil, ini 100% noise QR Code! Buang!
+                                    if (/[a-z]/.test(w)) continue;
+
+                                    // 4. SAPU BERSIH: Buang kata sampah 1-2 huruf (seperti 'EE', 'LJ', 'X')
+                                    // Pengecualian hanya untuk singkatan resmi atau jika mengandung angka (RT, RW, JL, E5A)
+                                    let cleanW = w.replace(/[^A-Z0-9]/g, '');
+                                    if (cleanW.length <= 2 && !/^(PT|CV|UD|PD|JL|RT|RW|NO|DI)$/.test(
+                                            cleanW) && !/\d/.test(cleanW)) continue;
+
+                                    goodWords.push(w);
+                                }
+
+                                // Gabungkan kata yang selamat menjadi baris baru yang suci dari noise
+                                let cleanedLine = goodWords.join(' ').replace(
+                                    /[^a-zA-Z0-9\s\.\,\/\-:]/g, '').trim();
+                                if (cleanedLine.length > 3) cleanLines.push(cleanedLine);
+                            }
+
+                            console.log("[DEBUG] Baris Setelah Disaring:", cleanLines);
+
+                            // --- 2. AMBIL TANGGAL DAN NPWP ---
+                            let tgl = '';
+                            let npwpTesseract = '';
+
+                            for (let l of cleanLines) {
+                                // Cari Tanggal
+                                let dm = l.replace(/[Oo]/g, '0').match(
+                                    /(\d{2})\s*[\/\-\.]\s*(\d{2})\s*[\/\-\.]\s*(\d{4})/);
+                                if (dm) tgl = `${dm[3]}-${dm[2]}-${dm[1]}`;
+
+                                // Cari NPWP
+                                let cleanDigit = l.replace(/\D/g, '');
+                                let npwpLama = l.match(
+                                    /(?:^|\D)(\d{2})[\.\s]*(\d{3})[\.\s]*(\d{3})[\.\s]*(\d{1})[\-\.\s]*(\d{3})[\.\s]*(\d{3})(?:\D|$)/
+                                    );
+                                let npwpBaru = cleanDigit.match(/\b\d{16}\b/);
+
+                                if (npwpLama) npwpTesseract =
+                                    `${npwpLama[1]}.${npwpLama[2]}.${npwpLama[3]}.${npwpLama[4]}-${npwpLama[5]}.${npwpLama[6]}`;
+                                else if (npwpBaru) npwpTesseract =
+                                    `${npwpBaru[0].slice(0,4)}.${npwpBaru[0].slice(4,8)}.${npwpBaru[0].slice(8,12)}.${npwpBaru[0].slice(12,16)}`;
+                            }
+
+                            if (tgl) $('#tanggal_npwp').val(tgl);
+
+                            // Tulis NPWP (Prioritaskan hasil QR dari Tahap 1, jika gagal pakai Tesseract)
+                            let finalNpwp = qrNpwpFound ? $('#npwp').val() : npwpTesseract;
+                            if (finalNpwp) $('#npwp').val(finalNpwp);
+
+                            // --- 3. IDENTIFIKASI NAMA & ALAMAT ---
+                            let dataSisa = [];
+                            const stopWords =
+                                /(KEMENTERIAN|KEUANGAN|DIREKTORAT|JENDERAL|PAJAK|KPP|PRATAMA|KANTOR|PELAYANAN|TANGGAL|TERDAFTAR|NPWP)/i;
+                            let activeNpwpDigit = ($('#npwp').val() || '').replace(/\D/g, '');
+
+                            // Buang semua baris yang berisi Header Instansi, Tanggal, dan Nomor NPWP
+                            for (let l of cleanLines) {
+                                if (stopWords.test(l)) continue;
+
+                                let lineDigits = l.replace(/\D/g, '');
+                                if (lineDigits.length >= 14 || (activeNpwpDigit && lineDigits.includes(
+                                        activeNpwpDigit.substring(0, 10)))) continue;
+
+                                dataSisa.push(l);
+                            }
+
+                            console.log("[DEBUG] Sisa Teks (Murni Nama & Alamat):", dataSisa);
+
+                            if (dataSisa.length > 0) {
+                                // A. Ekstrak NAMA (Sudah pasti berada di baris pertama sisa data)
+                                let safeName = dataSisa[0].replace(/[^a-zA-Z\s\.\,\(\)\-\&]/g, '')
+                                .trim();
+
+                                // Jika kebetulan nama menyatu dengan alamat dalam 1 baris karena format foto
+                                const addrStarter =
+                                    /\b(JL|JLN|JALAN|KOTA|KAB|KAV|BLOK|RT|RW|TAMAN|PERUM|KAMPUNG|DESA)\b/i;
+                                let match = safeName.match(addrStarter);
+                                if (match && match.index > 5) {
+                                    // Potong dan lempar sisanya ke array alamat
+                                    dataSisa.splice(1, 0, safeName.substring(match.index));
+                                    safeName = safeName.substring(0, match.index).trim();
+                                }
+
+                                $('#name').val(safeName);
+                                if (typeof generatePkdNumber === 'function' && ($('#bank_garansi')
+                                    .val() === 'YA' || $('#bank_garansi').val() === '1')) {
+                                    generatePkdNumber(safeName);
+                                }
+
+                                // B. Ekstrak ALAMAT (Semua baris sisanya digabung)
+                                if (dataSisa.length > 1) {
+                                    let rawAddr = dataSisa.slice(1).join(' ');
+
+                                    // Perbaiki typo OCR umum
+                                    rawAddr = rawAddr
+                                        .replace(/\bJI\b|\bJl\b|\bJIn\b/g, 'JL')
+                                        .replace(/\bRW\.?[Oo0]+\b/g, 'RW.000')
+                                        .replace(/\bRT\.?[Oo0]+\b/g, 'RT.000')
+                                        .replace(/\s+/g, ' ')
+                                        .trim();
+
+                                    // Word Wrap 36 Karakter
+                                    const words = rawAddr.split(' ');
+                                    const out = ['', '', ''];
+                                    let lineCount = 0;
+
+                                    for (let w of words) {
+                                        if (lineCount > 2) break;
+                                        if ((out[lineCount] + w).length <= 36) out[lineCount] += (out[
+                                            lineCount] ? ' ' : '') + w;
+                                        else {
+                                            lineCount++;
+                                            if (lineCount <= 2) out[lineCount] = w;
                                         }
                                     }
-                                    // Fallback search
-                                    if (npwpLineIdx === -1) {
-                                        for (let i = 0; i < lines.length; i++) {
-                                            if (npwpRegexLoose.test(lines[i]) && lines[i].replace(/\D/g,
-                                                    '').length >= 15) {
-                                                npwpLineIdx = i;
-                                                npwpValue = lines[i].match(npwpRegexLoose)[0];
-                                                break;
-                                            }
-                                        }
-                                    }
 
-                                    if (npwpValue) {
-                                        $('#npwp').val(npwpValue.trim());
-                                    }
+                                    if ($('#address1').length) $('#address1').val(out[0]);
+                                    if ($('#address2').length) $('#address2').val(out[1]);
+                                    if ($('#address3').length) $('#address3').val(out[2]);
+                                }
+                            }
 
-                                    if (npwpLineIdx !== -1 && lines.length > npwpLineIdx + 1) {
-                                        let rawName = lines[npwpLineIdx + 1];
-                                        rawName = rawName.replace(/^(Nama|Name)\s*[:.]?\s*/i, '')
-                                    .trim();
-                                        let safeName = rawName.replace(/[^a-zA-Z0-9\s\.\,\(\)\-\&]/g,
-                                            '').trim();
+                            $('#ocr-status').remove();
+                            originalBtn.prop('disabled', false);
 
-                                        $('#name').val(safeName);
-                                        let bgStatus = $('#bank_garansi').val();
+                            console.log("=== HASIL AKHIR OCR ===");
+                            console.log({
+                                NPWP: $('#npwp').val(),
+                                Nama: $('#name').val(),
+                                Alamat_1: $('#address1').val(),
+                                Alamat_2: $('#address2').val(),
+                                Alamat_3: $('#address3').val(),
+                                Tanggal: $('#tanggal_npwp').val()
+                            });
 
-                                        if (bgStatus === 'YA' || bgStatus === '1') {
-                                            generatePkdNumber(safeName);
-                                        } else {
-                                            $('#no_pkd').val('');
-                                            console.log('Skip generate PKD karena Bank Garansi = NO');
-                                        }
-                                    }
-
-                                    // 3. AMBIL ALAMAT (LOOPING SAMPAI KETEMU "FOOTER")
-                                    let rawAddress = '';
-                                    if (npwpLineIdx !== -1) {
-                                        let addressLines = [];
-                                        let startIndex = npwpLineIdx + 2;
-
-                                        // Loop dari baris alamat pertama sampai habis array
-                                        for (let i = startIndex; i < lines.length; i++) {
-                                            let currentLine = lines[i];
-
-                                            // Jika ketemu kata "Penerbit", "Terdaftar", "KPP", stop pengambilan alamat
-                                            if (currentLine.match(
-                                                    /(Penerbit|Terdaftar|KPP|Pratama|Kanwil|Direktorat)/i
-                                                    )) {
-                                                break;
-                                            }
-
-                                            // Abaikan jika baris terlalu pendek (misal sampah OCR: ".")
-                                            if (currentLine.length > 2) {
-                                                addressLines.push(currentLine);
-                                            }
-                                        }
-
-                                        // Gabungkan semua baris alamat yang ditemukan jadi satu string panjang
-                                        rawAddress = addressLines.join(' ');
-
-                                        // Bersihkan label "Alamat :" atau "Jalan" di awal (jika ada)
-                                        rawAddress = rawAddress.replace(
-                                            /^(Alamat|Address|Jalan|Jl)\s*[:.]?\s*/i, '').trim();
-                                    }
-
-                                    // Fungsi Chunking (Max 36 Karakter per Input)
-                                    function splitChunksWordWrap(str, len) {
-                                        if (!str) return [];
-                                        str = str.replace(/\s+/g, ' ').trim(); // Normalisasi spasi
-                                        const words = str.split(' ');
-                                        const out = [];
-                                        let line = '';
-                                        words.forEach(w => {
-                                            if ((line + ' ' + w).trim().length <= len) {
-                                                line = (line + ' ' + w).trim();
-                                            } else {
-                                                if (line) out.push(line);
-                                                // Handle kata yang lebih panjang dari limit (36)
-                                                if (w.length > len) {
-                                                    for (let i = 0; i < w.length; i += len) {
-                                                        out.push(w.substr(i, len));
-                                                    }
-                                                    line = '';
-                                                } else {
-                                                    line = w;
-                                                }
-                                            }
-                                        });
-                                        if (line) out.push(line);
-                                        return out;
-                                    }
-
-                                    // Distribusi ke Input Address 1, 2, 3
-                                    const chunks = splitChunksWordWrap(rawAddress || '', 36);
-
-                                    try {
-                                        // Reset field
-                                        $('#address1, #address2, #address3').val('');
-
-                                        if ($('#address1').length) $('#address1').val(chunks[0] || '');
-                                        if ($('#address2').length) $('#address2').val(chunks[1] || '');
-                                        if ($('#address3').length) $('#address3').val(chunks[2] || '');
-                                    } catch (e) {
-                                        console.error('Error setting address fields', e);
-                                    }
-
-                                    $('#ocr-status').remove();
-                                    originalBtn.prop('disabled', false);
-                                })
-                                .catch(err => {
-                                    console.error('OCR error', err);
-                                    $('#ocr-status').text('OCR failed (Manual Input Required)')
-                                        .addClass('text-danger');
-                                    originalBtn.prop('disabled', false);
-                                });
                         } catch (e) {
-                            $('#ocr-status').text('Error processing file').addClass('text-danger');
+                            console.error('[NPWP OCR] Error:', e);
+                            $('#ocr-status').html(
+                                '<span class="text-danger mt-1">Gagal memproses gambar. Silakan input manual.</span>'
+                                );
                             originalBtn.prop('disabled', false);
                         }
                     };
@@ -2417,7 +2562,7 @@
 
                         clInput.after(
                             `<small class="cl-status-note text-info fw-bold mt-1 d-block"><i class="ph-bold ph-info me-1"></i> ${msg}</small>`
-                            );
+                        );
 
                     } else {
                         clInput.prop('readonly', true)
@@ -2426,7 +2571,7 @@
 
                         clInput.after(
                             '<small class="cl-status-note text-danger fw-bold mt-1 d-block"><i class="ph-bold ph-calculator me-1"></i> Click to calculate</small>'
-                            );
+                        );
                     }
                 }
 
@@ -2446,7 +2591,9 @@
                         if (bgVal === 'YA') msg = 'Credit Limit otomatis 0 (BG Aktif).';
                         else msg = 'Credit Limit otomatis 0 (Cash Before Delivery).';
 
-                        clInput.after(`<small class="recall-cl-status-note text-info fw-bold mt-1 d-block"><i class="ph-bold ph-info me-1"></i> ${msg}</small>`);
+                        clInput.after(
+                            `<small class="recall-cl-status-note text-info fw-bold mt-1 d-block"><i class="ph-bold ph-info me-1"></i> ${msg}</small>`
+                        );
                     } else {
                         if (String(clInput.val()).trim() === '0') {
                             clInput.val('');
@@ -2486,7 +2633,7 @@
                         pkdInput.val('').prop('readonly', true).removeClass('fw-bold');
                         pkdInput.after(
                             '<small class="pkd-status-note text-danger fw-bold mt-1 d-block"><i class="ph-bold ph-info me-1"></i> This Customer does not use Bank Guarantee.</small>'
-                            );
+                        );
                     } else {
                         pkdInput.prop('readonly', true).addClass('fw-bold');
                         if (customerName && customerName.length > 3) {
@@ -2733,8 +2880,10 @@
 
                     $('#view_purc_name').text(btn.data('purchasing_manager_name'));
                     $('#view_purc_email').text(btn.data('purchasing_manager_email'));
+                    $('#view_purc_phone').text(btn.data('purchasing_manager_telepon'));
                     $('#view_fin_name').text(btn.data('finance_manager_name'));
                     $('#view_fin_email').text(btn.data('finance_manager_email'));
+                    $('#view_fin_phone').text(btn.data('finance_manager_telepon'));
                     $('#view_tax_name').text(btn.data('tax_contact_name'));
                     $('#view_tax_email').text(btn.data('tax_contact_email'));
 
@@ -3053,7 +3202,7 @@
 
                     const colorClass = type.includes('faktur') ? 'btn-success' : 'btn-primary';
                     const outlineClass = type.includes('faktur') ? 'btn-outline-success' :
-                    'btn-outline-primary';
+                        'btn-outline-primary';
                     const dateSolid = 'btn-info';
                     const dateOutline = 'btn-outline-secondary';
 
