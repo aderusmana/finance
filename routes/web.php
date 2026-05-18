@@ -45,7 +45,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard/customer', [DashboardController::class, 'customerIndex'])->name('dashboard.customer');
     Route::get('/dashboard/bank-garansi', [DashboardController::class, 'bgIndex'])->name('dashboard.bg');
     Route::get('/dashboard/logistic', [DashboardController::class, 'logisticIndex'])->name('dashboard.logistic');
-    
+
 });
 
 Route::get('/tes-404', function () {
@@ -107,6 +107,7 @@ Route::middleware('auth')->group(function () {
 
     Route::resource('customers', CustomerController::class);
 
+    Route::get('/logistic-orders/export-pdf', [LogisticOrderController::class, 'exportDeliveryNotesPdf'])->name('logistic-orders.export-pdf');
     Route::resource('logistic-orders', LogisticOrderController::class);
     Route::get('/logistic-orders/export/delivery-notes', [LogisticOrderController::class, 'exportDeliveryNotes'])->name('logistic-orders.export-dn');
     Route::get('/logistic-orders/customer-dependencies/{customer}', [LogisticOrderController::class, 'getCustomerDependencies']);

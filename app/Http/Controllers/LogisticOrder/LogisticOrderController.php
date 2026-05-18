@@ -41,8 +41,6 @@ class LogisticOrderController extends Controller
             ->unique('id');
 
         $shipToLocations = CustomerShipTo::with('user')->where('customer_id', $customerId)->get();
-
-        // Jika model Customer kamu punya relasi ke items barang, tarik di sini
         $customer = Customer::with('items')->find($customerId);
 
         return response()->json([
@@ -52,16 +50,12 @@ class LogisticOrderController extends Controller
         ]);
     }
 
-    /**
-     * API 2: Saat Distributor dipilih -> Tarik Harga Logistic Fee
-     */
     public function getLogisticFee($distributorId, $customerId)
     {
         $logisticFee = DistributorCustomer::where('distributor_id', $distributorId)
             ->where('customer_id', $customerId)
             ->first();
 
-        // Cek apakah sedang ada pengajuan harga pending. Jika ya, pakai harga yang diajukan
         $fee = 0;
         if ($logisticFee) {
             $fee = ($logisticFee->status === 'Pending') ? $logisticFee->proposed_fee : $logisticFee->logistic_fee;
@@ -75,11 +69,10 @@ class LogisticOrderController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            // Ambil parameter tab dari AJAX, default 'pending'
             $tab = $request->get('tab', 'pending');
-
             $dateFrom = $request->get('date_from');
             $dateTo = $request->get('date_to');
+            $filterDistributors = $request->get('distributors');
 
             $data = LogisticOrder::with(['distributor', 'customer', 'customerShipTo', 'note'])
                 ->whereHas('note', function ($q) use ($tab) {
@@ -91,15 +84,23 @@ class LogisticOrderController extends Controller
                 })
                 ->select('logistic_orders.*');
 
+            $user = Auth::user();
+            if (!$user->hasRole(['super-admin', 'sales-ka-approver'])) {
+                $data->where('created_by', $user->id);
+            }
+
             if ($tab === 'downloaded' && !empty($dateFrom) && !empty($dateTo)) {
                 $data->whereBetween('delivery_date', [$dateFrom, $dateTo]);
             }
 
-            // Urutkan data berdasarkan status
+            if (!empty($filterDistributors)) {
+                $data->whereIn('distributor_id', $filterDistributors);
+            }
+
             if ($tab === 'downloaded') {
-                $data->orderBy('updated_at', 'desc'); // Selesai terbaru
+                $data->orderBy('updated_at', 'desc');
             } else {
-                $data->orderBy('created_at', 'desc'); // Pending order terbaru
+                $data->orderBy('created_at', 'desc');
             }
 
             return DataTables::of($data)
@@ -107,20 +108,16 @@ class LogisticOrderController extends Controller
                 ->editColumn('logistic_order_no', function ($row) {
                     $loNo = 'LO-' . str_pad($row->id, 4, '0', STR_PAD_LEFT);
                     $createdAt = $row->created_at->format('d M Y, H:i');
-
-                    // Format HTML Cantik untuk Kolom Order Info (Pending)
                     return '
                         <div class="d-flex flex-column gap-1">
                             <span class="fw-bolder text-primary" style="font-size: 0.95rem;">' . $loNo . '</span>
-                            <span class="text-secondary" style="font-size: 0.75rem;"><i class="ph-fill ph-calendar-blank text-primary opacity-75"></i> Dibuat: ' . $createdAt . '</span>
+                            <span class="text-secondary" style="font-size: 0.75rem;"><i class="ph-fill ph-calendar-blank text-primary opacity-75"></i> Created: ' . $createdAt . '</span>
                         </div>
                     ';
                 })
                 ->addColumn('do_no', function ($row) {
                     $doNo = $row->note->delivery_order_no ?? '-';
                     $createdAt = $row->created_at->format('d M Y, H:i');
-
-                    // Format HTML Cantik untuk Kolom DN Info (Hanya Dibuat)
                     return '
                         <div class="d-flex flex-column gap-1">
                             <span class="fw-bolder text-success" style="font-size: 0.95rem;">' . $doNo . '</span>
@@ -164,15 +161,14 @@ class LogisticOrderController extends Controller
                     if ($tab === 'downloaded') {
                         $btnDetail = '<button type="button" class="btn btn-md btn-primary text-white btn-detail shadow-sm px-3 rounded-pill flex-fill" data-id="' . $row->id . '" data-bs-toggle="tooltip" data-bs-placement="top" title="Detail DN" aria-label="Detail DN"><i class="ph-bold ph-eye"></i></button>';
                         $btnDownload = '<a href="' . URL::signedRoute('public.lo.download', ['id' => $row->id, 'fromEmail' => 0]) . '" target="_blank" class="btn btn-sm btn-success text-white shadow-sm px-3 rounded-pill flex-fill" data-bs-toggle="tooltip" data-bs-placement="top" title="Download DN" aria-label="Download DN"><i class="ph-bold ph-printer"></i></a>';
-
                         return '<div class="d-flex flex-row gap-2 align-items-center w-100">' . $btnDetail . $btnDownload . '</div>';
                     }
 
-                    return '<button 
-                                class="btn btn-sm btn-primary text-white btn-detail shadow-sm px-3 rounded-pill" 
-                                data-id="' . $row->id . '" 
-                                data-bs-toggle="tooltip" 
-                                data-bs-placement="top" 
+                    return '<button
+                                class="btn btn-sm btn-primary text-white btn-detail shadow-sm px-3 rounded-pill"
+                                data-id="' . $row->id . '"
+                                data-bs-toggle="tooltip"
+                                data-bs-placement="top"
                                 title="Detail">
                                 <i class="ph-bold ph-eye"></i>
                             </button>';
@@ -182,17 +178,19 @@ class LogisticOrderController extends Controller
         }
 
         $customers = Customer::orderBy('name', 'asc')->get();
-        return view('page.logistic_order.index', compact('customers'));
+        $distributors = Distributor::orderBy('name', 'asc')->get();
+        return view('page.logistic_order.index', compact('customers', 'distributors'));
     }
 
     public function exportDeliveryNotes(Request $request)
     {
         $dateFrom = $request->query('date_from');
         $dateTo = $request->query('date_to');
+        $distributors = $request->query('distributors');
 
         if ((!empty($dateFrom) && empty($dateTo)) || (empty($dateFrom) && !empty($dateTo))) {
             return response()->json([
-                'message' => 'Filter tanggal harus diisi lengkap (From dan To).',
+                'message' => 'The date filter must be filled in completely (From and To).',
             ], 422);
         }
 
@@ -202,28 +200,73 @@ class LogisticOrderController extends Controller
                 $to = Carbon::parse($dateTo)->format('Y-m-d');
             } catch (\Exception $e) {
                 return response()->json([
-                    'message' => 'Format tanggal tidak valid.',
+                    'message' => 'Invalid date format. Please use a valid date format (e.g., YYYY-MM-DD).',
                 ], 422);
             }
 
             if ($from > $to) {
                 return response()->json([
-                    'message' => 'Tanggal From tidak boleh melebihi To.',
+                    'message' => 'The From date cannot be later than the To date.',
                 ], 422);
             }
 
-            $export = new DeliveryNoteItemExport($from, $to);
+            $export = new DeliveryNoteItemExport($from, $to, $distributors);
             $suffix = $from . '_to_' . $to;
         } else {
-            $export = new DeliveryNoteItemExport();
+            $export = new DeliveryNoteItemExport(null, null, $distributors);
             $suffix = now()->format('Ymd_His');
         }
 
         return Excel::download($export, 'delivery_no_export_' . $suffix . '.xlsx');
     }
 
+    public function exportDeliveryNotesPdf(Request $request)
+    {
+        $dateFrom = $request->query('date_from');
+        $dateTo = $request->query('date_to');
+        $distributors = $request->query('distributors');
+        $query = LogisticOrderItem::with(['logisticOrder.distributor', 'logisticOrder.customer']);
+
+        $user = Auth::user();
+        if (!$user->hasRole(['super-admin', 'sales-ka-approver'])) {
+            $query->whereHas('logisticOrder', function($q) use ($user) {
+                $q->where('created_by', $user->id);
+            });
+        }
+
+        if (!empty($dateFrom) && !empty($dateTo)) {
+            $query->whereHas('logisticOrder', function($q) use ($dateFrom, $dateTo) {
+                $q->whereBetween('delivery_date', [$dateFrom, $dateTo]);
+            });
+        }
+
+        if (!empty($distributors)) {
+            $distArray = explode(',', $distributors);
+            $query->whereHas('logisticOrder', function($q) use ($distArray) {
+                $q->whereIn('distributor_id', $distArray);
+            });
+        }
+
+        $items = $query->get();
+
+        $pdf = Pdf::loadView('pdf.logistic_export_pdf', compact('items'))->setPaper('a4', 'landscape');
+        return $pdf->download('logistic_order_report_' . now()->format('Ymd_His') . '.pdf');
+    }
+
     public function store(Request $request)
     {
+        if ($request->has('items') && is_array($request->items)) {
+            $cleanedItems = [];
+            foreach ($request->items as $key => $item) {
+                $cleanedItems[$key] = $item;
+
+                if (isset($item['price_list'])) {
+                    $cleanedItems[$key]['price_list'] = str_replace(['Rp', '.', ' '], '', $item['price_list']);
+                }
+            }
+            $request->merge(['items' => $cleanedItems]);
+        }
+
         $request->validate([
             'customer_id'         => 'required',
             'distributor_id'      => 'required',
@@ -232,36 +275,39 @@ class LogisticOrderController extends Controller
             'items'               => 'required|array|min:1',
             'items.*.item_code'   => 'required|string',
             'items.*.item_name'   => 'required|string',
+            'items.*.qty'         => 'required|numeric|min:1',
+            'items.*.price_list'  => 'required|numeric|min:0',
         ], [
-            'items.*.item_code.required' => 'Semua kode item wajib diisi.',
-            'items.*.item_name.required' => 'Semua nama item wajib diisi.'
+            'items.*.item_code.required'  => 'All item codes are required.',
+            'items.*.item_name.required'  => 'All item names are required.',
+            'items.*.qty.required'        => 'Quantity is required and cannot be 0.',
+            'items.*.qty.min'             => 'Quantity must be at least 1.',
+            'items.*.price_list.required' => 'Pricelist is required.'
         ]);
 
         try {
             DB::beginTransaction();
-
-            // 1. Simpan Header (Hapus period & delivery_to & route_to & status)
             $order = LogisticOrder::create([
                 'distributor_id'      => $request->distributor_id,
                 'customer_id'         => $request->customer_id,
                 'customer_ship_to_id' => $request->customer_ship_to_id,
                 'logistic_order_no'   => 0,
                 'delivery_date'       => $request->delivery_date,
+                'created_by'          => Auth::id(),
             ]);
 
             $order->update(['logistic_order_no' => $order->id]);
             $loNo = 'LO-' . str_pad($order->id, 4, '0', STR_PAD_LEFT);
 
-            // 2. Simpan Item
             foreach ($request->items as $item) {
                 if (empty($item['qty']) || $item['qty'] <= 0) continue;
-
                 LogisticOrderItem::create([
                     'logistic_order_id' => $order->id,
                     'ship_to_code'      => $request->ship_to_code_header,
                     'order_item_code'   => $item['item_code'] ?? '-',
                     'order_item_name'   => $item['item_name'],
                     'order_quantity'    => $item['qty'],
+                    'price_list'        => $item['price_list'] ?? 0,
                     'order_amount'      => str_replace(['Rp', '.', ' '], '', $item['amount']),
                 ]);
             }
@@ -283,16 +329,15 @@ class LogisticOrderController extends Controller
             ]);
 
             if ($distributor && $distributor->email) {
-                // Tarik ulang order dengan relasi lengkap untuk email
                 $orderEmail = LogisticOrder::with(['distributor', 'customer', 'customerShipTo', 'note', 'items'])->find($order->id);
                 Mail::to($distributor->email)->queue(new LogisticOrderDistributorMail($orderEmail));
             }
 
             DB::commit();
-            return response()->json(['success' => true, 'message' => "Order ($loNo) & Note ($doNo) berhasil dibuat! Email dikirim ke Distributor."]);
+            return response()->json(['success' => true, 'message' => "Order ($loNo) & Note ($doNo) successfully created! Email sent to Distributor."], 201);
         } catch (\Exception $e) {
             DB::rollback();
-            return response()->json(['success' => false, 'message' => 'Gagal menyimpan: ' . $e->getMessage()], 500);
+            return response()->json(['success' => false, 'message' => 'Failed to save: ' . $e->getMessage()], 500);
         }
     }
 
@@ -314,22 +359,12 @@ class LogisticOrderController extends Controller
         return response()->json($responseData);
     }
 
-    // ==========================================
-    // FUNGSI UNTUK PORTAL PUBLIK DISTRIBUTOR
-    // ==========================================
-
-    /**
-     * Halaman Detail Publik untuk Distributor
-     */
     public function publicDetail($id)
     {
         $order = LogisticOrder::with(['distributor', 'customer', 'customerShipTo.user', 'items', 'note'])->findOrFail($id);
         return view('page.logistic_order.links.public_detail', compact('order'));
     }
 
-    /**
-     * Fungsi Smart Download (Direct Link Email / Tombol Detail)
-     */
     public function publicDownload($id, $fromEmail = false)
     {
         $order = LogisticOrder::with(['note', 'customerShipTo.user', 'customer', 'distributor', 'items'])->findOrFail($id);
@@ -337,7 +372,7 @@ class LogisticOrderController extends Controller
 
         if ($fromEmail && $note->status === 'Pending Download') {
             return redirect(URL::signedRoute('public.lo.detail', ['id' => $id]))
-                ->with('warning', 'Harap periksa detail pesanan terlebih dahulu sebelum mengunduh Dokumen DN untuk pertama kali.');
+                ->with('warning', 'Please check the order details before downloading the DN document for the first time.');
         }
 
         if ($note->status === 'Pending Download' && $note->download_count == 0) {
@@ -346,8 +381,8 @@ class LogisticOrderController extends Controller
             $salesUser = $order->customerShipTo->user ?? null;
             if ($salesUser) {
                 Notification::send($salesUser, new SystemNotification(
-                    "Dokumen DN Telah Di Download",
-                    "Distributor <b>{$order->distributor->name}</b> telah mencetak DN untuk Customer {$order->customer->name}.",
+                    "DN Document Has Been Downloaded",
+                    "The delivery note document for order {$order->logistic_order_no} has been downloaded. Please review the order details and ensure timely delivery to the Customer {$order->customer->name}.",
                     "#",
                     "ph-printer",
                     "info"
@@ -356,7 +391,7 @@ class LogisticOrderController extends Controller
                     try {
                         Mail::to($salesUser->email)->queue(new LogisticOrderDistributorMail($order, 'sales'));
                     } catch (\Exception $e) {
-                        Log::error('Gagal kirim email ke Sales: ' . $e->getMessage());
+                        Log::error('Failed to send email to Sales: ' . $e->getMessage());
                     }
                 }
             }
@@ -364,10 +399,7 @@ class LogisticOrderController extends Controller
 
         $note->increment('download_count');
 
-        $downloadedBy = 'Distributor (Public Link)';
-        if (Auth::check()) {
-            $downloadedBy = Auth::user()->name . ' (Admin)';
-        }
+        $downloadedBy = Auth::check() ? Auth::user()->name . ' (Admin)' : 'Distributor (Public Link)';
 
         DeliveryOrderDownloadLog::create([
             'delivery_order_note_id' => $note->id,

@@ -125,14 +125,14 @@
                         <div class="text-md-end">
                             @if($order->note->status == 'Downloaded')
                                 <span class="badge badge-custom bg-success text-white">
-                                    <i class="ph-bold ph-check-circle me-1"></i> Telah Didownload
+                                    <i class="ph-bold ph-check-circle me-1"></i> Has been downloaded
                                     @if($order->note->download_count > 0)
                                         <span class="opacity-75 ms-1 fw-normal">({{ $order->note->download_count }}x)</span>
                                     @endif
                                 </span>
                             @else
                                 <span class="badge badge-custom bg-warning text-dark">
-                                    <i class="ph-bold ph-clock me-1"></i> Belum Didownload
+                                    <i class="ph-bold ph-clock me-1"></i> Has not been downloaded
                                 </span>
                             @endif
                             <p class="text-muted small mt-2 mb-0">Tgl. Kirim: <strong class="text-dark">{{ \Carbon\Carbon::parse($order->delivery_date)->format('d F Y') }}</strong></p>
@@ -149,11 +149,11 @@
                                     <h5 class="fw-bold mb-0 text-dark">Customer Info</h5>
                                 </div>
                                 <div class="mb-3">
-                                    <div class="info-label">Nama Customer</div>
+                                    <div class="info-label">Customer Name</div>
                                     <div class="info-value">{{ $order->customer->name }}</div>
                                 </div>
                                 <div>
-                                    <div class="info-label">Distributor Ditugaskan</div>
+                                    <div class="info-label">Distributor Assigned</div>
                                     <div class="info-value">{{ $order->distributor->name }}</div>
                                 </div>
                             </div>
@@ -164,14 +164,14 @@
                                     <div class="bg-white p-2 rounded-3 shadow-sm me-3 text-info border">
                                         <i class="ph-duotone ph-map-pin fs-3"></i>
                                     </div>
-                                    <h5 class="fw-bold mb-0 text-dark">Tujuan (Ship To)</h5>
+                                    <h5 class="fw-bold mb-0 text-dark">Destination (Ship To)</h5>
                                 </div>
                                 <div class="mb-3">
                                     <div class="info-label">{{ $order->customerShipTo->ship_to_code ?? '-' }}</div>
                                     <div class="info-value">{{ $order->customerShipTo->ship_to_name }}</div>
                                 </div>
                                 <div>
-                                    <div class="info-label">Alamat Lengkap</div>
+                                    <div class="info-label">Complete Address</div>
                                     <div class="text-dark" style="font-size: 0.95rem; line-height: 1.5;">
                                         {{ $order->customerShipTo->ship_to_address_1 }}<br>
                                         @if($order->customerShipTo->ship_to_address_2) {{ $order->customerShipTo->ship_to_address_2 }}<br> @endif
@@ -184,15 +184,15 @@
                     </div>
 
                     <h5 class="fw-bold mb-3 d-flex align-items-center text-dark">
-                        <i class="ph-duotone ph-package me-2 text-primary fs-4"></i> Daftar Item Pesanan
+                        <i class="ph-duotone ph-package me-2 text-primary fs-4"></i> List of Order Items
                     </h5>
                     <div class="table-responsive rounded-3 border mb-5 overflow-hidden">
                         <table class="table table-custom table-hover mb-0 border-0">
                             <thead>
                                 <tr>
                                     <th width="8%" class="text-center border-0">No</th>
-                                    <th width="20%" class="border-0">Kode Item</th>
-                                    <th width="52%" class="border-0">Nama Barang</th>
+                                    <th width="20%" class="border-0">Item Code</th>
+                                    <th width="52%" class="border-0">Item Name</th>
                                     <th width="20%" class="text-center border-0">Quantity</th>
                                 </tr>
                             </thead>
@@ -206,7 +206,7 @@
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="4" class="text-center text-muted py-5">Data item tidak ditemukan.</td>
+                                    <td colspan="4" class="text-center text-muted py-5">Item data not found.</td>
                                 </tr>
                                 @endforelse
                             </tbody>
@@ -217,8 +217,8 @@
                         <div class="mb-3">
                             <i class="ph-duotone ph-printer text-success opacity-75" style="font-size: 3rem;"></i>
                         </div>
-                        <h4 class="fw-bold mb-2 text-dark">Siap memproses pengiriman?</h4>
-                        <p class="text-muted mb-4 mx-auto" style="max-width: 500px;">Unduh dokumen Delivery Notes (DO) resmi di bawah ini untuk dibawa oleh pengemudi menuju lokasi Customer.</p>
+                        <h4 class="fw-bold mb-2 text-dark">Ready to process shipment?</h4>
+                        <p class="text-muted mb-4 mx-auto" style="max-width: 500px;">Download the official Delivery Notes (DO) document below to be taken by the driver to the Customer location.</p>
 
                         <a href="{{ \Illuminate\Support\Facades\URL::signedRoute('public.lo.download', ['id' => $order->id, 'fromEmail' => 0]) }}" target="_blank" class="btn btn-download btn-lg text-white rounded-pill px-5 py-3 fw-bold shadow">
                             <i class="ph-bold ph-printer me-2"></i> Download DN

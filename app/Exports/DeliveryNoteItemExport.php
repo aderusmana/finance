@@ -3,22 +3,28 @@
 namespace App\Exports;
 
 use App\Models\Customer\LogisticOrderItem;
+use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Concerns\FromQuery;
-use Maatwebsite\Excel\Concerns\ShouldAutoSize;
+use Maatwebsite\Excel\Concerns\WithColumnWidths; // Menggantikan ShouldAutoSize
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Events\AfterSheet;
 
-class DeliveryNoteItemExport implements FromQuery, WithHeadings, WithMapping, ShouldAutoSize, WithEvents
+class DeliveryNoteItemExport implements FromQuery, WithHeadings, WithMapping, WithColumnWidths, WithEvents
 {
     private ?string $dateFrom;
     private ?string $dateTo;
+    private ?string $distributors;
+    private float $sumTotalClaim = 0;
+    private float $sumSalesValue = 0;
+    private int $rowIndex = 1; // Menambahkan urutan No
 
-    public function __construct(?string $dateFrom = null, ?string $dateTo = null)
+    public function __construct(?string $dateFrom = null, ?string $dateTo = null, ?string $distributors = null)
     {
         $this->dateFrom = $dateFrom;
         $this->dateTo = $dateTo;
+        $this->distributors = $distributors;
     }
 
     public function query()
@@ -42,33 +48,62 @@ class DeliveryNoteItemExport implements FromQuery, WithHeadings, WithMapping, Sh
                 'logistic_order_items.order_item_name as item_name',
                 'logistic_order_items.order_quantity as qty',
                 'logistic_order_items.order_amount as total',
+                'logistic_order_items.price_list as price_list',
                 'logistic_orders.delivery_date as delivery_date',
+                'logistic_orders.distributor_id as distributor_id',
             ])
             ->orderBy('logistic_orders.delivery_date', 'desc')
             ->orderBy('delivery_order_notes.delivery_order_no', 'desc');
 
-        if (!empty($this->dateFrom) && !empty($this->dateTo)) {
+        $user = Auth::user();
+        if (!$user->hasRole(['super-admin', 'sales-ka-approver'])) {
+            $query->where('logistic_orders.created_by', $user->id);
+        }
+
+        if ($this->dateFrom && $this->dateTo) {
             $query->whereBetween('logistic_orders.delivery_date', [$this->dateFrom, $this->dateTo]);
+        }
+
+        if (!empty($this->distributors)) {
+            $distArray = is_array($this->distributors) ? $this->distributors : explode(',', $this->distributors);
+            $distArray = array_filter($distArray);
+            if (count($distArray) > 0) {
+                $query->whereIn('logistic_orders.distributor_id', $distArray);
+            }
         }
 
         return $query;
     }
 
+    public function columnWidths(): array
+    {
+        return [
+            'A' => 5,   // NO (Kecil)
+            'B' => 30,  // DN NO
+            'C' => 30,  // DISTRIBUTOR NAME
+            'D' => 35,  // CUSTOMER NAME
+            'E' => 30,  // ITEM NAME
+            'F' => 12,  // PRICE ITEM (Kecil)
+            'G' => 8,   // QTY (Kecil)
+            'H' => 18,  // TOTAL CLAIM
+            'I' => 18,  // SALES VALUE
+            'J' => 10,  // RATIO (Kecil)
+        ];
+    }
+
     public function headings(): array
     {
         return [
+            'NO',
             'DN NO',
-            'CUSTOMER CODE',
-            'CUSTOMER NAME',
-            'DISTRIBUTOR CODE',
             'DISTRIBUTOR NAME',
-            'SHIP TO CODE',
-            'SHIP TO NAME',
-            'ITEM CODE',
+            'CUSTOMER NAME',
             'ITEM NAME',
             'PRICE ITEM',
             'QTY',
-            'TOTAL',
+            'TOTAL CLAIM',
+            'SALES VALUE',
+            'RATIO'
         ];
     }
 
@@ -77,22 +112,24 @@ class DeliveryNoteItemExport implements FromQuery, WithHeadings, WithMapping, Sh
         $qty = (float) ($row->qty ?? 0);
         $total = (float) ($row->total ?? 0);
         $priceItem = $qty > 0 ? ($total / $qty) : 0;
+        $priceList = (float) ($row->price_list ?? 0);
+        $salesValue = $priceList * $qty;
+        $ratio = $salesValue > 0 ? ($total / $salesValue) : 0;
 
-        $customerCode = $row->customer_code ?: '-';
+        $this->sumTotalClaim += $total;
+        $this->sumSalesValue += $salesValue;
 
         return [
+            $this->rowIndex++,
             $row->dn_no ?? '-',
-            $customerCode,
-            $row->customer_name ?? '-',
-            $row->distributor_code ?? '-',
             $row->distributor_name ?? '-',
-            $row->ship_to_code ?? '-',
-            $row->ship_to ?? '-',
-            $row->item_code ?? '-',
+            $row->customer_name ?? '-',
             $row->item_name ?? '-',
             $priceItem,
             $qty,
             $total,
+            $salesValue,
+            round($ratio * 100, 2) . '%',
         ];
     }
 
@@ -101,35 +138,75 @@ class DeliveryNoteItemExport implements FromQuery, WithHeadings, WithMapping, Sh
         return [
             AfterSheet::class => function (AfterSheet $event) {
                 $sheet = $event->sheet->getDelegate();
+                $lastRow = $sheet->getHighestRow();
+                $sheet->insertNewRowBefore(1, 4);
 
-                // Insert 2 rows before headings
-                $sheet->insertNewRowBefore(1, 2);
+                $sheet->setCellValue('A1', 'Tanggal: ' . now()->format('d/m/Y H:i:s'));
+                $sheet->setCellValue('A2', 'Dibuat Oleh: ' . Auth::user()->name);
+                $sheet->getStyle('A1:A2')->getFont()->setSize(9)->setItalic(true);
 
-                // Title row
-                $sheet->mergeCells('A1:L1');
-                $sheet->setCellValue('A1', 'Report Logistic Order');
-                $sheet->getStyle('A1')->applyFromArray([
+                $sheet->mergeCells('A3:J3');
+                $sheet->setCellValue('A3', 'Report Logistic Order');
+                $sheet->getStyle('A3')->applyFromArray([
                     'font' => ['bold' => true, 'size' => 14],
-                    'alignment' => ['horizontal' => 'center'],
+                    'alignment' => ['horizontal' => 'center']
                 ]);
 
-                // Date range row
-                $sheet->mergeCells('A2:L2');
-                if (!empty($this->dateFrom) && !empty($this->dateTo)) {
-                    $sheet->setCellValue('A2', 'From ' . $this->dateFrom . ' - To ' . $this->dateTo);
-                } else {
-                    $sheet->setCellValue('A2', 'All Dates');
-                }
-                $sheet->getStyle('A2')->applyFromArray([
+                $sheet->mergeCells('A4:J4');
+                $range = (!empty($this->dateFrom)) ? "Period: $this->dateFrom - $this->dateTo" : "All Dates";
+                $sheet->setCellValue('A4', $range);
+                $sheet->getStyle('A4')->applyFromArray([
                     'font' => ['italic' => true],
-                    'alignment' => ['horizontal' => 'center'],
+                    'alignment' => ['horizontal' => 'center']
                 ]);
 
-                // Headings styling (now on row 3)
-                $sheet->getStyle('A3:L3')->applyFromArray([
+                $sheet->getStyle('A5:J5')->applyFromArray([
                     'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
                     'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => '166534']],
                 ]);
+
+                $totalRow = $lastRow + 5;
+                $dataStartRow = 6;
+                $dataEndRow = $totalRow - 1;
+
+                if ($dataEndRow < $dataStartRow) {
+                    $dataEndRow = $dataStartRow;
+                }
+
+                $grandRatio = $this->sumSalesValue > 0 ? ($this->sumTotalClaim / $this->sumSalesValue) : 0;
+
+                $sheet->setCellValue("G$totalRow", "GRAND TOTAL:");
+                $sheet->setCellValue("H$totalRow", $this->sumTotalClaim);
+                $sheet->setCellValue("I$totalRow", $this->sumSalesValue);
+                $sheet->setCellValue("J$totalRow", $grandRatio);
+
+                $sheet->getStyle("G$totalRow:J$totalRow")->applyFromArray(['font' => ['bold' => true]]);
+                $sheet->getStyle("H{$dataStartRow}:I{$totalRow}")->getNumberFormat()->setFormatCode('#,##0');
+                $sheet->getStyle("J$totalRow")->getNumberFormat()->setFormatCode('0.00%');
+
+                $sheet->getStyle("J{$dataStartRow}:J{$totalRow}")->applyFromArray([
+                    'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT]
+                ]);
+
+                $sheet->getStyle("A{$dataStartRow}:A{$totalRow}")->applyFromArray([
+                    'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER]
+                ]);
+                $sheet->getStyle("G{$dataStartRow}:G{$totalRow}")->applyFromArray([
+                    'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER]
+                ]);
+
+                $sigRow = $totalRow + 3;
+                $sheet->setCellValue("B$sigRow", "Dibuat oleh,");
+                $sheet->setCellValue("E$sigRow", "Diketahui oleh,");
+                $sheet->setCellValue("I$sigRow", "Disetujui oleh,");
+
+                $nameRow = $sigRow + 4;
+                $sheet->setCellValue("B$nameRow", Auth::user()->name);
+                $sheet->setCellValue("E$nameRow", "Rofika");
+                $sheet->setCellValue("I$nameRow", "Ronal Katili");
+
+                $sheet->getStyle("B$sigRow:I$nameRow")->applyFromArray(['alignment' => ['horizontal' => 'center']]);
+                $sheet->getStyle("B$nameRow:I$nameRow")->applyFromArray(['font' => ['bold' => true, 'underline' => true]]);
             },
         ];
     }

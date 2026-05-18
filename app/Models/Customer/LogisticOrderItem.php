@@ -13,6 +13,7 @@ class LogisticOrderItem extends Model
         'order_item_name',
         'order_quantity',
         'order_amount',
+        'price_list'
     ];
 
     public function logisticOrder()
