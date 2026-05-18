@@ -1146,7 +1146,12 @@ class CustomerController extends Controller
             ->addIndexColumn()
 
             ->addColumn('approver_nik', function ($row) {
-                return '<span class="badge status-badge-lg bg-primary">' . e($row->approver_nik) . '</span>';
+                return '
+                    <div class="d-inline-flex align-items-center gap-1" style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 4px 10px; border-radius: 8px; box-shadow: inset 0 2px 4px rgba(255,255,255,0.8), 0 1px 2px rgba(0,0,0,0.02);">
+                        <i class="ph-bold ph-identification-card" style="color: #64748b; font-size: 1rem;"></i>
+                        <span class="fw-bold" style="color: #475569; font-size: 0.85rem; letter-spacing: 0.5px;">' . e($row->approver_nik) . '</span>
+                    </div>
+                ';
             })
             ->addColumn('level', function ($row) {
                 return '<span class="badge status-badge-lg bg-info">Level ' . $row->level . '</span>';
@@ -1168,9 +1173,18 @@ class CustomerController extends Controller
                 return false;
             })
             ->addColumn('customer_name', function ($row) {
-                return '<div>
-                            <div class="fw-bold text-dark">' . e($row->customer_name) . '</div>
-                        </div>';
+                $code = $row->code ?? 'DRAFT';
+                return '
+                    <div class="d-flex align-items-center gap-3">
+                        <div style="width: 38px; height: 38px; background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); color: #16a34a; border-radius: 10px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(22, 163, 74, 0.15); flex-shrink: 0;">
+                            <i class="ph-fill ph-storefront" style="font-size: 1.2rem;"></i>
+                        </div>
+                        <div class="d-flex flex-column">
+                            <span class="fw-bolder" style="color: #1e293b; font-size: 0.95rem;">' . e($row->customer_name) . '</span>
+                            <span style="color: #94a3b8; font-size: 0.75rem; font-weight: 600;"><i class="ph-bold ph-hash me-1"></i>' . $code . '</span>
+                        </div>
+                    </div>
+                ';
             })
             ->addColumn('status_approval', function ($row) {
                 $status = $row->customer_status;
@@ -1207,12 +1221,13 @@ class CustomerController extends Controller
                 }
 
                 if (!$canAction) {
-                    return '<div class="d-flex flex-column gap-1 justify-content-center align-items-center" style="min-width: 45px;">
-                        <button type="button" class="btn btn-secondary btn-xs rounded-pill fw-bold shadow-sm w-100" disabled
-                            data-bs-toggle="tooltip" title="Waiting for previous level approval">
-                            <i class="ph-bold ph-lock me-1"></i> Locked
-                        </button>
-                    </div>';
+                    return '
+                        <div class="d-flex flex-column gap-1 justify-content-center align-items-center">
+                            <button type="button" class="btn d-inline-flex align-items-center justify-content-center w-100" disabled style="background-color: #f1f5f9; border: 1px solid #cbd5e1; color: #94a3b8; font-weight: 700; font-size: 0.8rem; padding: 0.5rem 1rem; border-radius: 50rem; cursor: not-allowed; min-width: 100px;">
+                                <i class="ph-bold ph-lock me-2"></i> Locked
+                            </button>
+                        </div>
+                    ';
                 }
 
                 $btnStyle = 'style="font-size: 14px; padding: 5px 10px; min-height: 18px;"';
@@ -1331,34 +1346,44 @@ class CustomerController extends Controller
 
         return DataTables::of($query)
             ->addIndexColumn()
+            
+            // --- KOLOM LOG NAME (Gradient Pill) ---
             ->editColumn('log_name', function ($log) {
                 $logName = $log->log_name;
-                $badgeClass = 'bg-secondary';
-                $icon = 'ph-scroll';
-
+                
                 if (str_contains($logName, 'customer')) {
-                    $badgeClass = 'bg-primary'; // Biru
+                    $bg = 'linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)';
+                    $shadow = '0 4px 10px rgba(37, 99, 235, 0.2)';
                     $icon = 'ph-users-three';
                 } elseif (str_contains($logName, 'path')) {
-                    $badgeClass = 'bg-dark'; // Hitam
+                    $bg = 'linear-gradient(135deg, #1e293b 0%, #334155 100%)';
+                    $shadow = '0 4px 10px rgba(30, 41, 59, 0.2)';
                     $icon = 'ph-git-branch';
-                } elseif (str_contains($logName, 'sample')) {
-                    $badgeClass = 'bg-info text-dark';
+                } else {
+                    $bg = 'linear-gradient(135deg, #0d9488 0%, #14b8a6 100%)';
+                    $shadow = '0 4px 10px rgba(13, 148, 136, 0.2)';
                     $icon = 'ph-flask';
                 }
 
                 $displayText = ucwords(str_replace('-', ' ', $logName));
 
-                return '<span class="badge ' . $badgeClass . '"><i class="ph-bold ' . $icon . ' me-1"></i>' . e($displayText) . '</span>';
+                return '
+                    <div class="d-inline-flex align-items-center px-3 py-1 text-white" style="background: ' . $bg . '; border-radius: 2rem; box-shadow: ' . $shadow . ';">
+                        <i class="ph-bold ' . $icon . ' me-2" style="font-size: 0.9rem;"></i>
+                        <span class="fw-bold" style="font-size: 0.75rem; letter-spacing: 0.5px;">' . e($displayText) . '</span>
+                    </div>
+                ';
             })
+
+            // --- KOLOM PROPERTIES (Card Mini) ---
             ->addColumn('properties', function ($log) {
                 $props = $log->properties ?? [];
 
                 if (empty($props) || (is_object($props) && method_exists($props, 'isEmpty') && $props->isEmpty())) {
-                    return '<span class="text-muted small">-</span>';
+                    return '<span class="text-muted fw-bold" style="font-size: 0.8rem; font-style: italic;">Tidak ada perubahan</span>';
                 }
 
-                $output = '<div class="small">';
+                $output = '<div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 0.75rem; padding: 12px; max-width: 320px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);">';
 
                 foreach ($props as $key => $value) {
                     if ($key === 'old') continue;
@@ -1367,33 +1392,37 @@ class CustomerController extends Controller
                     if ($key === 'attributes') {
                         $json = json_encode($value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
                         $escaped = e($json);
-                        $output .= '<div class="mb-1"><span class="text-muted">' . e($label) . ':</span> '
-                            . '<button class="btn btn-xs btn-outline-secondary btn-view-json ms-2" data-json="' . $escaped . '">View details</button></div>';
+                        $output .= '
+                            <div style="margin-bottom: 8px;">
+                                <div style="color: #64748b; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">' . e($label) . '</div>
+                                <button class="btn btn-view-json d-inline-flex align-items-center" style="background: #e2e8f0; color: #475569; border: none; padding: 4px 10px; font-size: 0.7rem; border-radius: 6px; font-weight: 700; transition: all 0.2s;" data-json="' . $escaped . '">
+                                    <i class="ph-bold ph-braces me-1 text-primary"></i> View JSON Data
+                                </button>
+                            </div>';
                         continue;
                     }
 
                     if (is_array($value) || $value instanceof \Illuminate\Support\Collection) {
                         if (str_contains(strtolower($key), 'approver') || str_contains(strtolower($key), 'approvers')) {
-                            $output .= '<div class="mb-1"><span class=" text-muted text-dark">' . e($label) . ':</span>';
-                            $output .= '<ul class="m-0 ps-3" style="font-size:0.9rem;">';
+                            $output .= '<div style="margin-bottom: 8px;"><div style="color: #64748b; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">' . e($label) . '</div>';
+                            $output .= '<ul style="margin: 0; padding-left: 1.2rem; font-size: 0.8rem; color: #1e293b; font-weight: 600;">';
                             foreach ((array) $value as $v) {
-                                if (is_array($v)) {
-                                    $name = $v['name'] ?? reset($v);
-                                } else {
-                                    $name = $v;
-                                }
-                                $output .= '<li class="text-dark">' . e($name) . '</li>';
+                                $name = is_array($v) ? ($v['name'] ?? reset($v)) : $v;
+                                $output .= '<li>' . e($name) . '</li>';
                             }
                             $output .= '</ul></div>';
                             continue;
                         }
 
                         $preview = implode(', ', array_map(function ($i) {
-                            if (is_array($i)) return json_encode($i, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-                            return (string) $i;
+                            return is_array($i) ? json_encode($i, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : (string) $i;
                         }, (array) $value));
 
-                        $output .= '<div class="mb-1"><span class="">' . e($label) . ':</span> <span class="fw-bold text-dark">' . e(Str::limit($preview, 80)) . '</span></div>';
+                        $output .= '
+                            <div style="margin-bottom: 8px;">
+                                <div style="color: #64748b; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">' . e($label) . '</div>
+                                <div style="color: #1e293b; font-weight: 600; font-size: 0.8rem; line-height: 1.4; word-break: break-word;">' . e(Str::limit($preview, 80)) . '</div>
+                            </div>';
                         continue;
                     }
 
@@ -1401,15 +1430,11 @@ class CustomerController extends Controller
                         $decoded = json_decode($value, true);
                         if (json_last_error() === JSON_ERROR_NONE && (is_array($decoded) || is_object($decoded))) {
                             if (str_contains(strtolower($key), 'approver') || str_contains(strtolower($key), 'approvers')) {
-                                $output .= '<div class="mb-1"><span class="fw-bold text-dark">' . e($label) . ':</span>';
-                                $output .= '<ul class="m-0 ps-3" style="font-size:0.9rem;">';
+                                $output .= '<div style="margin-bottom: 8px;"><div style="color: #64748b; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">' . e($label) . '</div>';
+                                $output .= '<ul style="margin: 0; padding-left: 1.2rem; font-size: 0.8rem; color: #1e293b; font-weight: 600;">';
                                 foreach ((array) $decoded as $v) {
-                                    if (is_array($v)) {
-                                        $name = $v['name'] ?? reset($v);
-                                    } else {
-                                        $name = $v;
-                                    }
-                                    $output .= '<li class="text-dark">' . e($name) . '</li>';
+                                    $name = is_array($v) ? ($v['name'] ?? reset($v)) : $v;
+                                    $output .= '<li>' . e($name) . '</li>';
                                 }
                                 $output .= '</ul></div>';
                                 continue;
@@ -1419,102 +1444,167 @@ class CustomerController extends Controller
                                 return is_array($i) ? json_encode($i) : (string) $i;
                             }, $decoded)) : json_encode($decoded, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
-                            $output .= '<div class="mb-1"><span class="">' . e($label) . ':</span> <span class="fw-bold text-dark">' . e(Str::limit($preview, 80)) . '</span></div>';
+                            $output .= '
+                                <div style="margin-bottom: 8px;">
+                                    <div style="color: #64748b; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">' . e($label) . '</div>
+                                    <div style="color: #1e293b; font-weight: 600; font-size: 0.8rem; line-height: 1.4; word-break: break-word;">' . e(Str::limit($preview, 80)) . '</div>
+                                </div>';
                             continue;
                         }
                     }
 
                     $display = is_null($value) ? '-' : (string) $value;
-                    $output .= '<div class="mb-1"><span class="text-muted">' . e($label) . ':</span> <span class="fw-bold text-dark">' . e(Str::limit($display, 80)) . '</span></div>';
+                    $output .= '
+                        <div style="margin-bottom: 8px;">
+                            <div style="color: #64748b; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">' . e($label) . '</div>
+                            <div style="color: #1e293b; font-weight: 600; font-size: 0.8rem; line-height: 1.4; word-break: break-word;">' . e(Str::limit($display, 80)) . '</div>
+                        </div>';
                 }
 
                 $output .= '</div>';
-
                 return $output;
             })
-            ->addColumn('subject_info', function ($log) {
 
+            // --- KOLOM SUBJECT INFO (Dengan Icon Avatar) ---
+            ->addColumn('subject_info', function ($log) {
                 if ($log->subject_type === Customer::class) {
                     $code = $log->subject ? $log->subject->code : ($log->properties['code'] ?? '-');
                     $name = $log->subject ? $log->subject->name : ($log->properties['name'] ?? '-');
 
                     return '
-                        <div class="d-flex flex-column text-start">
-                            <span class="fw-bold text-dark" style="font-size: 0.85em;">' . e($code) . '</span>
-                            <span class="text-muted" style="font-size: 0.75em;">' . Str::limit(e($name), 25) . '</span>
+                        <div class="d-flex align-items-center gap-3">
+                            <div style="width: 38px; height: 38px; background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); color: #16a34a; border-radius: 10px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(22, 163, 74, 0.15); flex-shrink: 0;">
+                                <i class="ph-fill ph-storefront" style="font-size: 1.2rem;"></i>
+                            </div>
+                            <div class="d-flex flex-column">
+                                <span class="fw-bolder" style="color: #1e293b; font-size: 0.9rem;">' . e($code) . '</span>
+                                <span style="color: #64748b; font-size: 0.75rem; font-weight: 600;">' . Str::limit(e($name), 25) . '</span>
+                            </div>
                         </div>';
                 }
 
                 if ($log->subject_type === ApprovalPath::class) {
-
                     $category = $log->subject ? $log->subject->category : ($log->properties['category'] ?? 'General');
                     $sub = $log->subject ? $log->subject->sub_category : ($log->properties['sub_category'] ?? null);
-
                     $text = $category . ($sub ? ' - ' . $sub : '');
 
-                    return '<span class="badge bg-secondary">' . e($text) . '</span>';
+                    return '
+                        <div class="d-inline-flex align-items-center px-3 py-1" style="background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 8px;">
+                            <i class="ph-fill ph-git-merge me-2" style="color: #475569;"></i>
+                            <span class="fw-bold" style="color: #334155; font-size: 0.8rem;">' . e($text) . '</span>
+                        </div>';
                 }
 
-                return '<span class="badge bg-light text-muted">N/A</span>';
+                return '<span class="fw-bold text-muted" style="font-size: 0.8rem; font-style: italic;">N/A</span>';
             })
+
+            // --- KOLOM SUBJECT ID (Kode Tag ID) ---
             ->addColumn('subject_id', function ($log) {
                 $id = $log->subject_id;
-                if (!$id) return '-';
-                if ($log->subject_type === Customer::class) {
-                    return '<span class="fw-bold text-primary">#' . $id . '</span>';
-                }
-                return e($id);
+                if (!$id) return '<span style="color: #cbd5e1; font-weight: 700;">-</span>';
+                
+                return '
+                    <div class="d-inline-flex align-items-center gap-1" style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 4px 10px; border-radius: 6px; box-shadow: inset 0 2px 4px rgba(255,255,255,0.8);">
+                        <i class="ph-bold ph-hash" style="color: #94a3b8; font-size: 0.8rem;"></i>
+                        <span class="fw-bolder" style="color: #475569; font-size: 0.85rem; font-family: monospace;">' . e($id) . '</span>
+                    </div>
+                ';
             })
+
+            // --- KOLOM CAUSER INFO (Profil Aktor) ---
             ->addColumn('causer_info', function ($log) {
                 $causerName = optional($log->causer)->name ?? 'System';
-                $icon = $causerName === 'System' ? 'ph-robot' : 'ph-user-circle';
+                $isSystem = $causerName === 'System';
+                $icon = $isSystem ? 'ph-robot' : 'ph-user';
+                $bg = $isSystem ? '#fee2e2' : '#e0e7ff';
+                $color = $isSystem ? '#ef4444' : '#4f46e5';
+
                 return '
-                    <div class="d-flex align-items-center causer-info">
-                        <i class="ph-bold ' . $icon . ' me-2 text-primary"></i>
-                        <span class="fw-bold">' . e($causerName) . '</span>
+                    <div class="d-flex align-items-center gap-2">
+                        <div style="width: 32px; height: 32px; background: ' . $bg . '; color: ' . $color . '; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                            <i class="ph-fill ' . $icon . ' fs-6"></i>
+                        </div>
+                        <span class="fw-bolder" style="color: #1e293b; font-size: 0.85rem;">' . e($causerName) . '</span>
                     </div>';
             })
+
+            // --- KOLOM EVENT (Glossy Action Pill) ---
             ->editColumn('event', function ($log) {
                 $event = strtolower($log->event ?? 'N/A');
-                $badgeClass = 'bg-secondary';
+                
+                $bg = 'linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%)';
+                $border = '#cbd5e1';
+                $color = '#475569';
+                $iconColor = '#64748b';
                 $icon = 'ph-info';
 
                 switch ($event) {
                     case 'create':
-                        $badgeClass = 'bg-success';
+                        $bg = 'linear-gradient(180deg, #f0fdf4 0%, #dcfce7 100%)';
+                        $border = '#86efac';
+                        $color = '#15803d';
+                        $iconColor = '#16a34a';
                         $icon = 'ph-plus-circle';
                         break;
                     case 'update':
-                        $badgeClass = 'bg-warning text-dark';
+                        $bg = 'linear-gradient(180deg, #fffbeb 0%, #fef3c7 100%)';
+                        $border = '#fde68a';
+                        $color = '#b45309';
+                        $iconColor = '#d97706';
                         $icon = 'ph-pencil-simple';
                         break;
                     case 'delete':
-                        $badgeClass = 'bg-danger';
+                        $bg = 'linear-gradient(180deg, #fef2f2 0%, #fee2e2 100%)';
+                        $border = '#fca5a5';
+                        $color = '#b91c1c';
+                        $iconColor = '#dc2626';
                         $icon = 'ph-trash';
                         break;
                     case 'approve':
-                        $badgeClass = 'bg-success';
+                        $bg = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+                        $border = '#047857';
+                        $color = '#ffffff';
+                        $iconColor = '#ffffff';
                         $icon = 'ph-check-circle';
                         break;
                     case 'reject':
-                        $badgeClass = 'bg-danger';
+                        $bg = 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)';
+                        $border = '#b91c1c';
+                        $color = '#ffffff';
+                        $iconColor = '#ffffff';
                         $icon = 'ph-x-circle';
                         break;
                     case 'review':
-                        $badgeClass = 'bg-info';
+                        $bg = 'linear-gradient(180deg, #eff6ff 0%, #dbeafe 100%)';
+                        $border = '#93c5fd';
+                        $color = '#1d4ed8';
+                        $iconColor = '#2563eb';
                         $icon = 'ph-eye';
                         break;
                     case 'resend':
-                        $badgeClass = 'bg-primary';
+                        $bg = 'linear-gradient(180deg, #faf5ff 0%, #f3e8ff 100%)';
+                        $border = '#d8b4fe';
+                        $color = '#7e22ce';
+                        $iconColor = '#9333ea';
                         $icon = 'ph-paper-plane-tilt';
                         break;
                 }
-                return '<span class="badge ' . $badgeClass . '"><i class="ph-bold ' . $icon . ' me-1"></i>' . ucfirst($event) . '</span>';
+
+                return '
+                    <div class="d-inline-flex align-items-center px-3 py-1" style="background: ' . $bg . '; border: 1px solid ' . $border . '; border-radius: 2rem; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                        <i class="ph-fill ' . $icon . ' me-1" style="color: ' . $iconColor . '; font-size: 0.9rem;"></i>
+                        <span class="fw-bold" style="color: ' . $color . '; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px;">' . e(ucfirst($event)) . '</span>
+                    </div>
+                ';
             })
+
+            // --- KOLOM TIMESTAMP (Dengan Icon Jam) ---
             ->editColumn('created_at', function ($log) {
-                return Carbon::parse($log->created_at)->format('d M Y, H:i');
+                $date = Carbon::parse($log->created_at)->format('d M Y, H:i');
+                return '<div class="d-flex align-items-center gap-2"><i class="ph-fill ph-clock-counter-clockwise" style="color: #94a3b8; font-size: 1.1rem;"></i><span style="color: #475569; font-weight: 600; font-size: 0.85rem;">' . $date . '</span></div>';
             })
-            ->rawColumns(['log_name', 'event', 'subject_info', 'causer_info', 'subject_id', 'properties'])
+
+            ->rawColumns(['log_name', 'event', 'subject_info', 'causer_info', 'subject_id', 'properties', 'created_at'])
             ->make(true);
     }
 
