@@ -792,17 +792,18 @@
                                     </div>
                                 </div>
 
-                                <div class="text-end bg-light px-3 py-2 rounded border border-secondary border-opacity-25" style="min-width: 190px;">
-                                    <label class="fw-bold text-muted text-uppercase d-block mb-1" style="font-size: 10px; letter-spacing: 0.5px;">
-                                        <i class="ph-bold ph-file-text text-primary me-1"></i>Doc Revision
-                                    </label>
-                                    <div class="fw-bold text-dark mb-1" style="font-size: 13px;">
-                                        No: <span id="view_revision_number" class="text-primary">{{ $latestRevision->revision_number ?? '-' }}</span>
+                                <div class="text-start ms-auto" style="min-width: 190px;">
+                                    <div class="text-muted mb-1" style="font-size: 12px;">
+                                        <span class="fw-semibold me-1">No Rev:</span>
+                                        <span id="view_revision_number" class="fw-bold text-primary" style="font-size: 13px;">{{ $latestRevision->revision_number ?? '-' }}</span>
                                     </div>
-                                    <div class="text-muted" style="font-size: 11px;">
-                                        Rev: <span id="view_revision_count" class="fw-semibold text-dark">{{ $latestRevision->revision_count ?? '0' }}</span>
-                                        <span class="mx-1">|</span>
-                                        Date: <span id="view_revision_date">{{ $latestRevision && $latestRevision->revision_date ? \Carbon\Carbon::parse($latestRevision->revision_date)->format('d M Y') : '-' }}</span>
+                                    <div class="text-muted mb-1" style="font-size: 12px;">
+                                        <span class="fw-semibold me-1">Revision:</span>
+                                        <span id="view_revision_count" class="fw-bold text-dark" style="font-size: 13px;">{{ $latestRevision->revision_count ?? '0' }}</span>
+                                    </div>
+                                    <div class="text-muted" style="font-size: 12px;">
+                                        <span class="fw-semibold me-1">Date:</span>
+                                        <span id="view_revision_date" class="fw-bold text-dark" style="font-size: 13px;">{{ $latestRevision && $latestRevision->revision_date ? \Carbon\Carbon::parse($latestRevision->revision_date)->format('d M Y') : '-' }}</span>
                                     </div>
                                 </div>
                             </div>
@@ -985,6 +986,7 @@
                                                 <td class="ps-4 text-secondary fw-bold">Tax Contact</td>
                                                 <td class="fw-bold text-dark" id="view_tax_name">-</td>
                                                 <td class="text-dark" id="view_tax_email">-</td>
+                                                <td class="text-dark" id="view_tax_phone">-</td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -2866,7 +2868,7 @@
 
                     $('#view_revision_number').text(btn.data('revision_number') || '-');
                     $('#view_revision_count').text(btn.data('revision_count') || '0');
-                    
+
                     const revDate = btn.data('revision_date');
                     if(revDate && revDate !== '-') {
                         $('#view_revision_date').text(revDate);
@@ -2911,8 +2913,8 @@
                     $('#view_fin_email').text(btn.data('finance_manager_email'));
                     $('#view_fin_phone').text(btn.data('finance_manager_telepon'));
                     $('#view_tax_name').text(btn.data('tax_contact_name'));
+                    $('#view_tax_phone').text(btn.data('tax_contact_phone'));
                     $('#view_tax_email').text(btn.data('tax_contact_email'));
-
                     $('#view_shipping_name').text(btn.data('shipping_to_name'));
                     $('#view_shipping_address').text(btn.data('shipping_to_address'));
 

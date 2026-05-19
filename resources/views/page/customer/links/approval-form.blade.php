@@ -90,22 +90,32 @@
                     <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
                         <div>
                             <h4 class="mb-1 fw-bold">Customer Approval</h4>
-                            <div class="d-flex align-items-center flex-wrap gap-2 text-white opacity-75" style="font-size: 0.9rem;">
-                                <span>{{ $customer->code ?? 'New Customer' }}</span>
-                                
-                                @if($latestRevision)
+                            <div class="d-flex align-items-start justify-content-between flex-wrap w-100">
+                                <div class="d-flex align-items-center gap-2 text-white opacity-75 mb-2" style="font-size: 0.9rem;">
+                                    <span>{{ $customer->code ?? 'New Customer' }}</span>
                                     <span class="mx-1">|</span>
-                                    <span>
-                                        <i class="fas fa-file-alt me-1"></i> Form Berdasarkan: 
-                                        <strong>{{ $latestRevision->revision_number }}</strong> 
-                                        (Jml: {{ $latestRevision->revision_count }}, Tgl: {{ \Carbon\Carbon::parse($latestRevision->revision_date)->format('d M Y') }})
+                                    <span class="badge bg-white text-primary px-3 py-2 rounded-pill shadow-sm text-uppercase fw-bold" style="font-size: 0.8rem;">
+                                        {{ $customer->status_approval }}
                                     </span>
-                                @endif
+                                </div>
                             </div>
                         </div>
-                        <span class="badge bg-white text-primary px-3 py-2 rounded-pill shadow-sm text-uppercase fw-bold" style="font-size: 0.8rem;">
-                            {{ $customer->status_approval }}
-                        </span>
+                        @if($latestRevision)
+                            <div class="text-start ms-auto" style="min-width: 180px;">
+                                <div style="font-size: 12px; color: rgba(255, 255, 255, 0.75); margin-bottom: 4px;">
+                                    <span style="font-weight: 600; margin-right: 4px;">No Rev:</span>
+                                    <span style="font-weight: 700; color: #ffffff; font-size: 13px;">{{ $latestRevision->revision_number }}</span>
+                                </div>
+                                <div style="font-size: 12px; color: rgba(255, 255, 255, 0.75); margin-bottom: 4px;">
+                                    <span style="font-weight: 600; margin-right: 4px;">Revision:</span>
+                                    <span style="font-weight: 700; color: #ffffff; font-size: 13px;">{{ $latestRevision->revision_count }}</span>
+                                </div>
+                                <div style="font-size: 12px; color: rgba(255, 255, 255, 0.75);">
+                                    <span style="font-weight: 600; margin-right: 4px;">Date:</span>
+                                    <span style="font-weight: 700; color: #ffffff; font-size: 13px;">{{ \Carbon\Carbon::parse($latestRevision->revision_date)->format('d M Y') }}</span>
+                                </div>
+                            </div>
+                        @endif
                     </div>
                 </div>
 

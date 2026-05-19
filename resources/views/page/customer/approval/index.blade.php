@@ -157,18 +157,23 @@
                                     </div>
                                 </div>
 
-                                <div class="text-end" style="background: #f8fafc; padding: 10px 16px; border-radius: 8px; border: 1px solid #e2e8f0; min-width: 180px;">
-                                    <label style="color: #64748b; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; display: block;">
-                                        <i class="ph-bold ph-file-text" style="color: #3b82f6; margin-right: 4px;"></i>Doc Revision
-                                    </label>
-                                    <div style="font-size: 0.9rem; font-weight: 700; color: #1e293b; margin-bottom: 2px;">
-                                        No: <span id="view_modal_rev_number" style="color: #3b82f6;">-</span>
+                                <div class="text-start ms-auto" style="min-width: 180px;">
+    
+                                    <div style="font-size: 12px; color: #64748b; margin-bottom: 4px;">
+                                        <span style="font-weight: 600; margin-right: 4px;">No Rev:</span>
+                                        <span id="view_modal_rev_number" style="font-weight: 700; color: #3b82f6; font-size: 13px;">-</span>
                                     </div>
-                                    <div style="font-size: 0.75rem; color: #64748b;">
-                                        Rev: <span id="view_modal_rev_count" style="font-weight: 600; color: #1e293b;">0</span> 
-                                        <span style="margin: 0 4px;">|</span> 
-                                        Date: <span id="view_modal_rev_date">-</span>
+
+                                    <div style="font-size: 12px; color: #64748b; margin-bottom: 4px;">
+                                        <span style="font-weight: 600; margin-right: 4px;">Revision:</span>
+                                        <span id="view_modal_rev_count" style="font-weight: 700; color: #1e293b; font-size: 13px;">0</span>
                                     </div>
+
+                                    <div style="font-size: 12px; color: #64748b;">
+                                        <span style="font-weight: 600; margin-right: 4px;">Date:</span>
+                                        <span id="view_modal_rev_date" style="font-weight: 700; color: #1e293b; font-size: 13px;">-</span>
+                                    </div>
+
                                 </div>
 
                             </div>
