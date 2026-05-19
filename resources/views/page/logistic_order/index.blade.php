@@ -708,52 +708,38 @@
                     }
                 });
 
-                // FUNGSI UNTUK HANDLE EXPORT BERSAMA (PDF & EXCEL)
                 function executeExport(baseUrl) {
                     const from = $('#dn_date_from').val();
                     const to = $('#dn_date_to').val();
                     const dists = $('#filter_distributor').val();
+                    const currentTab = activeTab; 
 
-                    // If user doesn't use date filter, check other
-                    if (!from && !to) {
-                        let url = baseUrl;
-                        if (dists && dists.length > 0) {
-                            url += '?distributors=' + encodeURIComponent(dists.join(','));
+                    let url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 'tab=' + currentTab;
+
+                    if (from && to) {
+                        if (from > to) {
+                            Swal.fire('Warning', 'From date cannot be later than To date.', 'warning');
+                            return;
                         }
-                        window.location.href = url;
-                        return;
+                        url += '&date_from=' + encodeURIComponent(from) + '&date_to=' + encodeURIComponent(to);
                     }
-
-                    // Prevent partial range
-                    if (!from || !to) {
-                        Swal.fire('Warning', 'Date filter must be filled in completely (From and To).', 'warning');
-                        return;
-                    }
-
-                    if (from > to) {
-                        Swal.fire('Warning', 'From date cannot be later than To date.', 'warning');
-                        return;
-                    }
-
-                    let url = baseUrl + '?date_from=' + encodeURIComponent(from) + '&date_to=' + encodeURIComponent(to);
+                    
                     if (dists && dists.length > 0) {
                         url += '&distributors=' + encodeURIComponent(dists.join(','));
                     }
+
                     window.location.href = url;
                 }
 
-                // Panggil ekspor masing-masing
                 $('#btn-export-dn').on('click', function() { executeExport(exportDnBaseUrl); });
                 $('#btn-export-pdf').on('click', function() { executeExport(exportPdfBaseUrl); });
 
-                // Init Select2 form order
                 $('.select2-custom').select2({
                     theme: 'bootstrap-5',
                     dropdownParent: $('#modalForm'),
                     allowClear: true
                 });
 
-                // LOGIC FORM CREATE (Sama persis seperti sebelumnya)
                 $('#customer_id').on('change', function() {
                     let custId = $(this).val();
                     let distSelect = $('#distributor_id'),
@@ -792,7 +778,6 @@
 
                             if (res.items && res.items.length > 0) {
                                 $.each(res.items, function(key, item) {
-                                    // Set default qty 1 dan passing price list
                                     addRow(item.item_code || '', item.item_name, item.price_list || 0, item.quantity || 1);
                                 });
                             } else {

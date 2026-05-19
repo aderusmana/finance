@@ -31,10 +31,10 @@
                         <td style="padding: 40px 35px;">
                             @if($type === 'sales')
                                 <p style="margin: 0 0 20px 0; font-size: 16px; line-height: 1.6; color: #1e293b;">Halo <strong>{{ $order->customerShipTo->user->name ?? 'Tim Sales' }}</strong>,</p>
-                                <p style="margin: 0 0 30px 0; font-size: 15px; line-height: 1.6; color: #475569;">Kami informasikan bahwa dokumen pengiriman <b>Delivery Note (DN)</b> berikut <strong>telah didownload</strong> oleh pihak Distributor.</p>
+                                <p style="margin: 0 0 30px 0; font-size: 15px; line-height: 1.6; color: #475569;">We inform you that the delivery document <b>Delivery Note (DN)</b> below <strong>has been downloaded</strong> by the Distributor.</p>
                             @else
                                 <p style="margin: 0 0 20px 0; font-size: 16px; line-height: 1.6; color: #1e293b;">Halo <strong>Tim {{ $order->distributor->name }}</strong>,</p>
-                                <p style="margin: 0 0 30px 0; font-size: 15px; line-height: 1.6; color: #475569;">Kami informasikan bahwa terdapat dokumen pengiriman <b>Delivery Note (DN)</b> baru yang siap untuk diproses. Berikut adalah rincian pesanan tersebut:</p>
+                                <p style="margin: 0 0 30px 0; font-size: 15px; line-height: 1.6; color: #475569;">We would like to inform you that a new <b>Delivery Note (DN)</b> is ready for processing. The order details are as follows:</p>
                             @endif
 
                             <table width="100%" border="0" cellpadding="0" cellspacing="0" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 35px;">
@@ -47,17 +47,17 @@
                                                     <p style="margin: 4px 0 0 0; font-size: 16px; font-weight: 700; color: #0f172a;">{{ $order->note->delivery_order_no }}</p>
                                                 </td>
                                                 <td width="50%" style="padding-bottom: 20px;">
-                                                    <p style="margin: 0; font-size: 12px; color: #64748b; text-transform: uppercase; font-weight: 600;">Customer Tujuan</p>
+                                                    <p style="margin: 0; font-size: 12px; color: #64748b; text-transform: uppercase; font-weight: 600;">Customer</p>
                                                     <p style="margin: 4px 0 0 0; font-size: 15px; font-weight: 700; color: #a68831;">{{ $order->customer->name }}</p>
                                                 </td>
                                             </tr>
                                             <tr>
                                                 <td width="50%">
-                                                    <p style="margin: 0; font-size: 12px; color: #64748b; text-transform: uppercase; font-weight: 600;">Penerima (Ship To)</p>
+                                                    <p style="margin: 0; font-size: 12px; color: #64748b; text-transform: uppercase; font-weight: 600;">Recipient (Ship To)</p>
                                                     <p style="margin: 4px 20px 0 0; font-size: 14px; font-weight: 600; color: #334155; line-height: 1.4;">{{ $order->customerShipTo->ship_to_name }}</p>
                                                 </td>
                                                 <td width="50%" valign="top">
-                                                    <p style="margin: 0; font-size: 12px; color: #64748b; text-transform: uppercase; font-weight: 600;">Tgl. Pengiriman</p>
+                                                    <p style="margin: 0; font-size: 12px; color: #64748b; text-transform: uppercase; font-weight: 600;">Delivery Date</p>
                                                     <p style="margin: 4px 0 0 0; font-size: 15px; font-weight: 600; color: #334155;">{{ \Carbon\Carbon::parse($order->delivery_date)->format('d F Y') }}</p>
                                                 </td>
                                             </tr>
@@ -67,23 +67,23 @@
                             </table>
 
                             @if($type === 'sales')
-                                <p style="margin: 0 0 25px 0; font-size: 15px; text-align: center; color: #475569;">Silakan masuk ke sistem untuk memantau status pesanan lebih lanjut:</p>
+                                <p style="margin: 0 0 25px 0; font-size: 15px; text-align: center; color: #475569;">Please log in to the system to monitor the order status further:</p>
                                 <table width="100%" border="0" cellpadding="0" cellspacing="0" style="text-align: center;">
                                     <tr>
                                         <td style="padding-bottom: 15px;">
                                             <a href="{{ route('login') }}" style="display: inline-block; background-color: #1e293b; color: #ffffff; text-decoration: none; padding: 14px 30px; border-radius: 6px; font-weight: 600; font-size: 15px; width: 80%; max-width: 300px; box-shadow: 0 4px 10px rgba(30, 41, 59, 0.3);">
-                                                &#x1F517; Buka Sistem / See More
+                                                &#x1F517; See More
                                             </a>
                                         </td>
                                     </tr>
                                 </table>
                             @else
-                                <p style="margin: 0 0 25px 0; font-size: 15px; text-align: center; color: #475569;">Silakan klik tombol di bawah ini untuk melihat detail lengkap:</p>
+                                <p style="margin: 0 0 25px 0; font-size: 15px; text-align: center; color: #475569;">Please click the button below to see full details:</p>
                                 <table width="100%" border="0" cellpadding="0" cellspacing="0" style="text-align: center;">
                                     <tr>
                                         <td style="padding-bottom: 15px;">
                                             <a href="{{ $urlDetail }}" style="display: inline-block; background-color: #a68831; color: #ffffff; text-decoration: none; padding: 14px 30px; border-radius: 6px; font-weight: 600; font-size: 15px; width: 80%; max-width: 300px; box-shadow: 0 4px 10px rgba(166, 136, 49, 0.3);">
-                                                &#x1F4CB; Tinjau Detail Pesanan
+                                                &#x1F4CB; Review Order Details
                                             </a>
                                         </td>
                                     </tr>
@@ -95,7 +95,7 @@
                     <tr>
                         <td align="center" style="background-color: #f8fafc; padding: 25px 20px; border-top: 1px solid #e2e8f0;">
                             <p style="margin: 0; font-size: 12px; color: #64748b;">&copy; {{ date('Y') }} PT Sinar Meadow International Indonesia. All rights reserved.</p>
-                            <p style="margin: 5px 0 0 0; font-size: 11px; color: #94a3b8;">Email ini dihasilkan secara otomatis oleh sistem. Mohon tidak membalas email ini.</p>
+                            <p style="margin: 5px 0 0 0; font-size: 11px; color: #94a3b8;">This email was automatically generated by the system. Please do not reply to this email.</p>
                         </td>
                     </tr>
                 </table>

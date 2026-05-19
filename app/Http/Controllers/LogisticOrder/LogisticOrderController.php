@@ -225,7 +225,16 @@ class LogisticOrderController extends Controller
         $dateFrom = $request->query('date_from');
         $dateTo = $request->query('date_to');
         $distributors = $request->query('distributors');
-        $query = LogisticOrderItem::with(['logisticOrder.distributor', 'logisticOrder.customer']);
+        $query = LogisticOrderItem::with(['logisticOrder.distributor', 'logisticOrder.customer', 'logisticOrder.note']);
+
+        $statusTab = $request->query('tab', 'downloaded');
+        $query->whereHas('logisticOrder.note', function ($q) use ($statusTab) {
+            if ($statusTab === 'downloaded') {
+                $q->where('status', 'Downloaded');
+            } else {
+                $q->where('status', 'Pending Download');
+            }
+        });
 
         $user = Auth::user();
         if (!$user->hasRole(['super-admin', 'sales-ka-approver'])) {
@@ -244,6 +253,13 @@ class LogisticOrderController extends Controller
             $distArray = explode(',', $distributors);
             $query->whereHas('logisticOrder', function($q) use ($distArray) {
                 $q->whereIn('distributor_id', $distArray);
+            });
+        }
+
+        $searchCustomer = $request->query('search_customer');
+        if (!empty($searchCustomer)) {
+            $query->whereHas('logisticOrder.customer', function($q) use ($searchCustomer) {
+                $q->where('name', 'LIKE', '%' . $searchCustomer . '%');
             });
         }
 

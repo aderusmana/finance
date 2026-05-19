@@ -70,7 +70,7 @@
                     <td class="text-center">{{ $qty }}</td>
                     <td class="text-right">Rp {{ number_format($amount, 0, ',', '.') }}</td>
                     <td class="text-right">Rp {{ number_format($salesValue, 0, ',', '.') }}</td>
-                    <td class="text-center">{{ round($ratio, 1) }}%</td>
+                    <td class="text-center">{{ number_format($ratio, 2, '.', '') }}%</td>
                 </tr>
             @endforeach
         </tbody>
@@ -80,7 +80,7 @@
                 <td class="text-right">Rp {{ number_format($totalClaim, 0, ',', '.') }}</td>
                 <td class="text-right">Rp {{ number_format($totalSales, 0, ',', '.') }}</td>
                 <td class="text-center">
-                    {{ $totalSales > 0 ? round(($totalClaim / $totalSales) * 100, 1) : 0 }}%
+                    {{ number_format($totalSales > 0 ? ($totalClaim / $totalSales) * 100 : 0, 2, '.', '') }}%
                 </td>
             </tr>
         </tfoot>
