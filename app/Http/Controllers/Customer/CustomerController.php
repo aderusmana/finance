@@ -649,7 +649,8 @@ class CustomerController extends Controller
         try {
             $firstLog = ApprovalLog::where('category', 'Customer')
                 ->where('related_id', $customer->id)
-                ->where('level', 1)
+                ->where('status', 'Pending')
+                ->orderBy('level', 'asc')
                 ->first();
 
             if ($firstLog) {
@@ -666,7 +667,11 @@ class CustomerController extends Controller
 
                     CustomerJob::dispatch($customer->id, $recipients, $firstLog->token, 'approval');
                     Log::info("Email approval dispatched to: " . $approverUser->email);
+                } else {
+                    Log::error("Cannot dispatch approval email: approver user missing or email empty. Customer ID {$customer->id}, approver_nik={$firstLog->approver_nik}");
                 }
+            } else {
+                Log::error("Cannot dispatch approval email: no Pending approval log found. Customer ID {$customer->id}");
             }
         } catch (\Exception $e) {
             Log::error('Error dispatching email job: ' . $e->getMessage());

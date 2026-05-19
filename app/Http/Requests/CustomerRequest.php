@@ -104,10 +104,10 @@ class CustomerRequest extends FormRequest
             'shipping_to_address' => 'required|string',
             'purchasing_manager_name' => 'required|string|max:255',
             'purchasing_manager_email' => 'required|email|max:255',
-            'purchasing_manager_telepon' => 'nullable|string|max:50',
+            'purchasing_manager_telepon' => 'required|string|max:50',
             'finance_manager_name' => 'required|string|max:255',
             'finance_manager_email' => 'required|email|max:255',
-            'finance_manager_telepon' => 'nullable|string|max:50',
+            'finance_manager_telepon' => 'required|string|max:50',
 
             // --- 6. Billing & Tax ---
             'penagihan_nama_kontak' => 'required|string|max:255',

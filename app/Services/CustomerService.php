@@ -130,6 +130,7 @@ class CustomerService
 
             $firstLog = ApprovalLog::where('category', 'Customer')
                 ->where('related_id', $customer->id)
+                ->where('status', 'Pending')
                 ->orderBy('level', 'asc')
                 ->first();
 
@@ -146,12 +147,16 @@ class CustomerService
                             'ph-signature',
                             'warning'
                         ));
-                    } catch (\Exception $e) { 
-                        Log::error("Notif Error: " . $e->getMessage()); 
+                    } catch (\Exception $e) {
+                        Log::error("Notif Error: " . $e->getMessage());
                     }
+                } else {
+                    $customer->update(['status_approval' => 'Error', 'route_to' => 'No Approver Found']);
+                    Log::error("First approver user not found for Customer ID {$customer->id}, approver_nik={$firstLog->approver_nik}");
                 }
             } else {
-                $customer->update(['status_approval' => 'Completed', 'route_to' => 'Finished']);
+                $customer->update(['status_approval' => 'Error', 'route_to' => 'No Approver Found']);
+                Log::error("No Pending approval logs generated for Customer ID {$customer->id}");
             }
 
             activity()

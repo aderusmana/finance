@@ -104,6 +104,14 @@ trait ApprovalTrait
 
             // 4. INSERT KE LOGS (Hanya jika usernya ketemu)
             if ($approverNik) {
+                $approverExists = User::where('nik', $approverNik)->exists();
+                if (!$approverExists) {
+                    Log::error("Gagal generate step $level: Approver dengan NIK '$approverNik' tidak ditemukan di master user.");
+                    $approverNik = null;
+                }
+            }
+
+            if ($approverNik) {
                 $logs->push([
                     'category'       => $category,
                     'sub_category'   => $pathSubCategory,

@@ -827,10 +827,10 @@
                     $('#view_penagihan_address').text(data.penagihan_address || '-');
                     $('#view_purchasing_manager_name').text(data.purchasing_manager_name || '-');
                     $('#view_purchasing_manager_email').text(data.purchasing_manager_email || '-');
-                    $('#view_purchasing_manager_phone').text(data.purchasing_manager_phone || '-');
+                    $('#view_purchasing_manager_phone').text(data.purchasing_manager_telepon || data.purchasing_manager_phone || '-');
                     $('#view_finance_manager_name').text(data.finance_manager_name || '-');
                     $('#view_finance_manager_email').text(data.finance_manager_email || '-');
-                    $('#view_finance_manager_phone').text(data.finance_manager_phone || '-');
+                    $('#view_finance_manager_phone').text(data.finance_manager_telepon || data.finance_manager_phone || '-');
                     $('#view_shipping_to_name').text(data.shipping_to_name || '-');
                     $('#view_shipping_to_address').text(data.shipping_to_address || '-');
 

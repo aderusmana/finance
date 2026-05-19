@@ -445,7 +445,7 @@
                                                 class="text-danger">*</span></label>
                                             <input type="text" class="form-control"
                                             name="purchasing_manager_telepon" id="purchasing_manager_telepon"
-                                            placeholder="Phone Number" inputmode="numeric" pattern="\\d*" maxlength="20"
+                                            placeholder="Phone Number (digits only)" inputmode="numeric" pattern="[0-9]+" maxlength="50"
                                             oninput="this.value=this.value.replace(/[^0-9]/g,'');" required>
                                         </div>
                                         <div class="col-md-4">
@@ -464,7 +464,7 @@
                                             <label class="form-label">Finance Mgr Phone <span
                                                 class="text-danger">*</span></label>
                                             <input type="text" class="form-control" name="finance_manager_telepon"
-                                            id="finance_manager_telepon" placeholder="Phone Number" inputmode="numeric" pattern="\\d*" maxlength="20"
+                                            id="finance_manager_telepon"  placeholder="Phone Number (digits only)" inputmode="numeric" pattern="[0-9]+" maxlength="50"
                                             oninput="this.value=this.value.replace(/[^0-9]/g,'');" required>
                                         </div>
                                     </div>
@@ -1469,8 +1469,9 @@
                                             <label class="form-label small fw-bold text-dark">Purchasing Manager
                                                 Telpon</label>
                                             <input type="text" class="form-control"
-                                                name="purchasing_manager_phone"
-                                                id="recall_purchasing_manager_telepon">
+                                                name="purchasing_manager_telepon"
+                                                id="recall_purchasing_manager_telepon" inputmode="numeric" pattern="[0-9]+" maxlength="50"
+                                                oninput="this.value=this.value.replace(/[^0-9]/g,'');">
                                         </div>
 
                                         <div class="col-md-6">
@@ -1489,8 +1490,9 @@
                                             <label class="form-label small fw-bold text-dark">Finance Manager
                                                 Telpon</label>
                                             <input type="text" class="form-control"
-                                                name="finance_manager_phone"
-                                                id="recall_finance_manager_telepon">
+                                                name="finance_manager_telepon"
+                                                id="recall_finance_manager_telepon" inputmode="numeric" pattern="[0-9]+" maxlength="50"
+                                                oninput="this.value=this.value.replace(/[^0-9]/g,'');">
                                         </div>
 
                                         <div class="col-12 mt-3">

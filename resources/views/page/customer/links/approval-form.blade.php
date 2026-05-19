@@ -192,7 +192,7 @@
                                             <td>
                                                 <div class="fw-bold">{{ $customer->purchasing_manager_name }}</div>
                                                 <div class="small text-muted">{{ $customer->purchasing_manager_email }}</div>
-                                                <div class="small text-muted">{{ $customer->purchasing_manager_phone }}</div>
+                                                <div class="small text-muted">{{ $customer->purchasing_manager_telepon }}</div>
                                             </td>
                                         </tr>
                                         <tr>
@@ -200,7 +200,7 @@
                                             <td>
                                                 <div class="fw-bold">{{ $customer->finance_manager_name }}</div>
                                                 <div class="small text-muted">{{ $customer->finance_manager_email }}</div>
-                                                <div class="small text-muted">{{ $customer->finance_manager_phone }}</div>
+                                                <div class="small text-muted">{{ $customer->finance_manager_telepon }}</div>
                                             </td>
                                         </tr>
                                     </table>
