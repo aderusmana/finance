@@ -442,10 +442,11 @@
                                         </div>
                                         <div class="col-md-4">
                                             <label class="form-label">Purchasing Mgr Phone <span
-                                                    class="text-danger">*</span></label>
+                                                class="text-danger">*</span></label>
                                             <input type="text" class="form-control"
-                                                name="purchasing_manager_telepon" id="purchasing_manager_telepon"
-                                                placeholder="Phone Number" required>
+                                            name="purchasing_manager_telepon" id="purchasing_manager_telepon"
+                                            placeholder="Phone Number" inputmode="numeric" pattern="\\d*" maxlength="20"
+                                            oninput="this.value=this.value.replace(/[^0-9]/g,'');" required>
                                         </div>
                                         <div class="col-md-4">
                                             <label class="form-label">Finance Mgr Name <span
@@ -461,9 +462,10 @@
                                         </div>
                                         <div class="col-md-4">
                                             <label class="form-label">Finance Mgr Phone <span
-                                                    class="text-danger">*</span></label>
+                                                class="text-danger">*</span></label>
                                             <input type="text" class="form-control" name="finance_manager_telepon"
-                                                id="finance_manager_telepon" placeholder="Phone Number" required>
+                                            id="finance_manager_telepon" placeholder="Phone Number" inputmode="numeric" pattern="\\d*" maxlength="20"
+                                            oninput="this.value=this.value.replace(/[^0-9]/g,'');" required>
                                         </div>
                                     </div>
                                 </div>
@@ -494,10 +496,10 @@
                                         </div>
 
                                         <div class="col-md-12 mt-2">
-                                            <label class="form-label">Correspondence Address <span
-                                                    class="text-danger">*</span></label>
-                                            <textarea class="form-control" name="surat_menyurat_address" id="surat_menyurat_address" rows="2"
-                                                placeholder="Correspondence Address" required></textarea>
+                                            <label class="form-label">Billing Email <span
+                                                class="text-danger">*</span></label>
+                                            <input type="email" class="form-control" name="surat_menyurat_address" id="surat_menyurat_address" 
+                                            placeholder="email@example.com" inputmode="email" maxlength="191" required>
                                         </div>
 
                                         <div class="col-md-4">
