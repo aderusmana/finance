@@ -137,20 +137,40 @@
                         {{-- Status Banner --}}
                         <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 1rem; padding: 1.5rem; box-shadow: 0 4px 15px rgba(0,0,0,0.02); margin-bottom: 2rem;">
                             <div class="d-flex flex-wrap align-items-center justify-content-between gap-4">
-                                <div class="d-flex flex-column">
-                                    <label style="color: #64748b; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">Status Akun</label>
-                                    <div><span id="view_status_badge" class="badge rounded-pill" style="background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 6px 16px; font-weight: 700; font-size: 0.8rem;">-</span></div>
+                                
+                                <div class="d-flex flex-wrap align-items-center gap-4">
+                                    <div class="d-flex flex-column">
+                                        <label style="color: #64748b; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">Status Akun</label>
+                                        <div><span id="view_status_badge" class="badge rounded-pill" style="background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 6px 16px; font-weight: 700; font-size: 0.8rem;">-</span></div>
+                                    </div>
+                                    <div style="width: 1px; height: 40px; background: #e2e8f0;" class="d-none d-md-block"></div>
+                                    
+                                    <div class="d-flex flex-column">
+                                        <label style="color: #64748b; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">Progress Approval</label>
+                                        <div id="view_approval_badge" class="fw-bolder" style="font-size: 1.1rem; color: #1e293b;">Pending</div>
+                                    </div>
+                                    <div style="width: 1px; height: 40px; background: #e2e8f0;" class="d-none d-md-block"></div>
+                                    
+                                    <div class="d-flex flex-column">
+                                        <label style="color: #64748b; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">Sales Person</label>
+                                        <div id="view_user_name" class="fw-bolder" style="font-size: 1.1rem; color: #1e293b;">-</div>
+                                    </div>
                                 </div>
-                                <div style="width: 1px; height: 40px; background: #e2e8f0;" class="d-none d-md-block"></div>
-                                <div class="d-flex flex-column">
-                                    <label style="color: #64748b; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">Progress Approval</label>
-                                    <div id="view_approval_badge" class="fw-bolder" style="font-size: 1.1rem; color: #1e293b;">Pending</div>
+
+                                <div class="text-end" style="background: #f8fafc; padding: 10px 16px; border-radius: 8px; border: 1px solid #e2e8f0; min-width: 180px;">
+                                    <label style="color: #64748b; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; display: block;">
+                                        <i class="ph-bold ph-file-text" style="color: #3b82f6; margin-right: 4px;"></i>Doc Revision
+                                    </label>
+                                    <div style="font-size: 0.9rem; font-weight: 700; color: #1e293b; margin-bottom: 2px;">
+                                        No: <span id="view_modal_rev_number" style="color: #3b82f6;">-</span>
+                                    </div>
+                                    <div style="font-size: 0.75rem; color: #64748b;">
+                                        Rev: <span id="view_modal_rev_count" style="font-weight: 600; color: #1e293b;">0</span> 
+                                        <span style="margin: 0 4px;">|</span> 
+                                        Date: <span id="view_modal_rev_date">-</span>
+                                    </div>
                                 </div>
-                                <div style="width: 1px; height: 40px; background: #e2e8f0;" class="d-none d-md-block"></div>
-                                <div class="d-flex flex-column">
-                                    <label style="color: #64748b; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">Sales Person</label>
-                                    <div id="view_user_name" class="fw-bolder" style="font-size: 1.1rem; color: #1e293b;">-</div>
-                                </div>
+
                             </div>
                         </div>
 
@@ -1032,7 +1052,6 @@
 
                                                 <label style="color: #475569; font-size: 0.85rem; font-weight: 700; margin-bottom: 12px; display: block;">Choose Your Decision <span class="text-danger">*</span></label>
                                                 <div class="d-flex flex-column flex-md-row gap-3 mb-4">
-
                                                     <div class="decision-btn flex-fill" data-select-action="approve" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 1rem; padding: 1rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center;">
                                                         <div style="width: 40px; height: 40px; background: #10b981; color: white; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-right: 15px; box-shadow: 0 4px 10px rgba(16,185,129,0.2);">
                                                             <i class="ph-bold ph-check-circle fs-4"></i>
@@ -1053,7 +1072,6 @@
                                                         </div>
                                                         <h6 class="mb-0 fw-bolder" style="color: #1e293b; font-size: 0.95rem;">Reject<br><span style="font-size: 0.75rem; font-weight: 600; color: #64748b;">With Notes</span></h6>
                                                     </div>
-
                                                 </div>
                                                 <div id="notes_container" style="display: none;">
                                                     <label for="modal_notes" style="color: #475569; font-size: 0.85rem; font-weight: 700; margin-bottom: 8px; display: block;">Notes / Reasons <span class="text-danger">*</span></label>
@@ -1074,6 +1092,16 @@
                             const submitUrl = "{{ route('customers.approval_action', ':id') }}".replace(':id', customerId);
                             $('#viewModalActionFormContainer').html(actionFormHtml);
                             $('#viewModalActionFormContainer form').attr('action', submitUrl);
+
+                            if (response.latest_revision) {
+                                $('#view_modal_rev_number').text(response.latest_revision.revision_number);
+                                $('#view_modal_rev_count').text(response.latest_revision.revision_count);
+                                $('#view_modal_rev_date').text(response.latest_revision.revision_date);
+                            } else {
+                                $('#view_modal_rev_number').text('-');
+                                $('#view_modal_rev_count').text('0');
+                                $('#view_modal_rev_date').text('-');
+                            }
 
                             $('#viewModalFooter button[type="submit"]').remove();
                             $('#viewModalFooter').prepend(submitBtnHtml);

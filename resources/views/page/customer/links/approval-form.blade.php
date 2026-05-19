@@ -79,6 +79,7 @@
         $ktpPath  = ($doc && $doc->ktp_file) ? asset('storage/' . $doc->ktp_file) : null;
         $aktePath = ($doc && $doc->akte_file) ? asset('storage/' . $doc->akte_file) : null;
         $companyProfilePath = ($doc && $doc->company_profile_file) ? asset('storage/' . $doc->company_profile_file) : null;
+        $latestRevision = \App\Models\Master\Revision::orderBy('created_at', 'desc')->first();
     @endphp
 
     <div class="main-container">
@@ -86,10 +87,21 @@
         <div class="left-column">
             <div class="card">
                 <div class="card-header main-header">
-                    <div class="d-flex justify-content-between align-items-center">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
                         <div>
                             <h4 class="mb-1 fw-bold">Customer Approval</h4>
-                            <p class="mb-0 opacity-75">{{ $customer->code ?? 'New Customer' }}</p>
+                            <div class="d-flex align-items-center flex-wrap gap-2 text-white opacity-75" style="font-size: 0.9rem;">
+                                <span>{{ $customer->code ?? 'New Customer' }}</span>
+                                
+                                @if($latestRevision)
+                                    <span class="mx-1">|</span>
+                                    <span>
+                                        <i class="fas fa-file-alt me-1"></i> Form Berdasarkan: 
+                                        <strong>{{ $latestRevision->revision_number }}</strong> 
+                                        (Jml: {{ $latestRevision->revision_count }}, Tgl: {{ \Carbon\Carbon::parse($latestRevision->revision_date)->format('d M Y') }})
+                                    </span>
+                                @endif
+                            </div>
                         </div>
                         <span class="badge bg-white text-primary px-3 py-2 rounded-pill shadow-sm text-uppercase fw-bold" style="font-size: 0.8rem;">
                             {{ $customer->status_approval }}

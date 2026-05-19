@@ -30,6 +30,7 @@ use Spatie\Activitylog\Models\Activity;
 use App\Services\CustomerService;
 use App\Traits\ApprovalTrait;
 use Illuminate\Http\UploadedFile;
+use App\Models\Master\Revision;
 
 class CustomerController extends Controller
 {
@@ -112,6 +113,7 @@ class CustomerController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
+        $latestRevision = Revision::orderBy('created_at', 'desc')->first();
 
         if ($request->ajax()) {
             $query = Customer::leftJoin('customer_files', 'customers.id', '=', 'customer_files.customer_id')
@@ -141,7 +143,7 @@ class CustomerController extends Controller
 
             return DataTables::of($query)
                 ->addIndexColumn()
-                ->addColumn('action', function ($row) use ($user) {
+                ->addColumn('action', function ($row) use ($user, $latestRevision) {
                     $row->load('items');
                     $rowData = $row->toArray();
 
@@ -243,6 +245,9 @@ class CustomerController extends Controller
                     $dataAttrs .= ' data-payment_date="' . e($paymentDateVal) . '"';
                     $dataAttrs .= ' data-faktur_days="' . e($fakturDaysVal) . '"';
                     $dataAttrs .= ' data-faktur_date="' . e($fakturDateVal) . '"';
+                    $dataAttrs .= ' data-revision_number="' . e($latestRevision ? $latestRevision->revision_number : '-') . '"';
+                    $dataAttrs .= ' data-revision_count="' . e($latestRevision ? $latestRevision->revision_count : '0') . '"';
+                    $dataAttrs .= ' data-revision_date="' . e($latestRevision && $latestRevision->revision_date ? Carbon::parse($latestRevision->revision_date)->format('Y-m-d') : '-') . '"';
 
                     $btnStyle = 'style="font-size: 14px; padding: 4px 10px; min-height: 22px;"';
                     $btn = '<div class="d-flex flex-column gap-1 justify-content-center align-items-center" style="min-width: 75px;">';
@@ -396,7 +401,8 @@ class CustomerController extends Controller
             'activeCount',
             'inactiveCount',
             'approvalStatuses',
-            'accountStatuses'
+            'accountStatuses',
+            'latestRevision'
         ));
     }
 
@@ -584,6 +590,9 @@ class CustomerController extends Controller
 
         $data['can_adjust_finance'] = $canAdjustFinance;
         $data['base_total_amount']  = $baseTotalAmount;
+
+        $latestRevision = Revision::orderBy('created_at', 'desc')->first();
+        $data['latest_revision'] = $latestRevision ? $latestRevision->toArray() : null;
 
         return response()->json($data);
     }
@@ -1136,6 +1145,19 @@ class CustomerController extends Controller
     public function getApprovalData(Request $request)
     {
         $currentUser = Auth::user();
+        
+        // =========================================================================
+        // 1. Ambil data revisi terbaru di awal
+        // =========================================================================
+        $latestRevision = Revision::orderBy('created_at', 'desc')->first();
+        
+        $revNumber = $latestRevision ? $latestRevision->revision_number : '-';
+        $revCount  = $latestRevision ? $latestRevision->revision_count : '0';
+        $revDate   = $latestRevision && $latestRevision->revision_date 
+                        ? Carbon::parse($latestRevision->revision_date)->format('d M Y') 
+                        : '-';
+        // =========================================================================
+
         $query = ApprovalLog::with('approver')
             ->select(
                 'approval_logs.*',
@@ -1173,7 +1195,6 @@ class CustomerController extends Controller
 
         return DataTables::of($query)
             ->addIndexColumn()
-
             ->addColumn('approver_nik', function ($row) {
                 return '
                     <div class="d-inline-flex align-items-center gap-1" style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 4px 10px; border-radius: 8px; box-shadow: inset 0 2px 4px rgba(255,255,255,0.8), 0 1px 2px rgba(0,0,0,0.02);">
@@ -1231,7 +1252,7 @@ class CustomerController extends Controller
                             <i class="ph-bold ph-user me-1"></i> ' . strtoupper($row->route_to ?? '-') . '
                         </span>';
             })
-            ->addColumn('action', function ($row) use ($currentUser) {
+            ->addColumn('action', function ($row) use ($currentUser, $revNumber, $revCount, $revDate) { // <-- Passing var revision kesini
                 $token = $row->token;
                 $customerName = e($row->customer_name);
                 $customerId = $row->customer_id;
@@ -1274,12 +1295,18 @@ class CustomerController extends Controller
                                 </button>';
                 }
 
+                // =====================================================================
+                // TAMBAHKAN DATA REVISION KE ATRIBUT TOMBOL REVIEW & INPUT CODE
+                // =====================================================================
                 $btnReview = '<button type="button" class="btn btn-primary btn-xs rounded-pill fw-bold action-btn-modal shadow-sm w-100"
                                 ' . $btnStyle . '
                                 data-id="' . $customerId . '"
                                 data-token="' . $token . '"
                                 data-action="review"
                                 data-name="' . $customerName . '"
+                                data-revision_number="' . e($revNumber) . '"
+                                data-revision_count="' . e($revCount) . '"
+                                data-revision_date="' . e($revDate) . '"
                                 data-bs-toggle="tooltip" title="Review Approval">
                                 <i class="ph-bold ph-clipboard-text me-1"></i> Review
                             </button>';
@@ -1290,9 +1317,13 @@ class CustomerController extends Controller
                                 data-token="' . $token . '"
                                 data-action="review"
                                 data-name="' . $customerName . '"
+                                data-revision_number="' . e($revNumber) . '"
+                                data-revision_count="' . e($revCount) . '"
+                                data-revision_date="' . e($revDate) . '"
                                 data-bs-toggle="tooltip" title="Input Code">
                                 <i class="ph-bold ph-pencil-simple me-1"></i> Input Code
                             </button>';
+                // =====================================================================
 
                 if ($currentUser->hasRole(['it', 'IT'])) {
                     $btn .= $btnInputCode;
@@ -1307,6 +1338,14 @@ class CustomerController extends Controller
                 return $btn;
             })
             ->rawColumns(['approver_nik', 'level', 'customer_name', 'status_approval', 'route_to', 'action'])
+            // Tambahkan with() untuk mem-passing data global di object JSON Datatables (opsional / fallback)
+            ->with([
+                'latest_revision' => [
+                    'revision_number' => $revNumber,
+                    'revision_count' => $revCount,
+                    'revision_date' => $revDate
+                ]
+            ])
             ->make(true);
     }
 

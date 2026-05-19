@@ -782,16 +782,27 @@
                             <div class="d-flex align-items-center justify-content-between">
                                 <div class="d-flex align-items-center gap-4">
                                     <div>
-                                        <label class="fw-bold text-dark text-uppercase f-s-12 mb-1">Account
-                                            Status</label>
-                                        <div><span id="view_status_badge"
-                                                class="badge bg-secondary f-s-12 px-3 py-2">STATUS</span></div>
+                                        <label class="fw-bold text-dark text-uppercase f-s-12 mb-1">Account Status</label>
+                                        <div><span id="view_status_badge" class="badge bg-secondary f-s-12 px-3 py-2">STATUS</span></div>
                                     </div>
                                     <div class="vr" style="height: 2.5rem; opacity: 0.1;"></div>
                                     <div>
-                                        <label class="fw-bold text-dark text-uppercase f-s-12 mb-1">Approval
-                                            Progress</label>
+                                        <label class="fw-bold text-dark text-uppercase f-s-12 mb-1">Approval Progress</label>
                                         <div id="view_approval_badge" class="fw-bold text-dark f-s-16">Pending</div>
+                                    </div>
+                                </div>
+
+                                <div class="text-end bg-light px-3 py-2 rounded border border-secondary border-opacity-25" style="min-width: 190px;">
+                                    <label class="fw-bold text-muted text-uppercase d-block mb-1" style="font-size: 10px; letter-spacing: 0.5px;">
+                                        <i class="ph-bold ph-file-text text-primary me-1"></i>Doc Revision
+                                    </label>
+                                    <div class="fw-bold text-dark mb-1" style="font-size: 13px;">
+                                        No: <span id="view_revision_number" class="text-primary">{{ $latestRevision->revision_number ?? '-' }}</span>
+                                    </div>
+                                    <div class="text-muted" style="font-size: 11px;">
+                                        Rev: <span id="view_revision_count" class="fw-semibold text-dark">{{ $latestRevision->revision_count ?? '0' }}</span>
+                                        <span class="mx-1">|</span>
+                                        Date: <span id="view_revision_date">{{ $latestRevision && $latestRevision->revision_date ? \Carbon\Carbon::parse($latestRevision->revision_date)->format('d M Y') : '-' }}</span>
                                     </div>
                                 </div>
                             </div>
@@ -2853,6 +2864,15 @@
                     if (approval === 'Processing') approvalColor = 'text-primary';
                     $('#view_approval_badge').text(approval).attr('class', 'fw-bold ' + approvalColor);
 
+                    $('#view_revision_number').text(btn.data('revision_number') || '-');
+                    $('#view_revision_count').text(btn.data('revision_count') || '0');
+                    
+                    const revDate = btn.data('revision_date');
+                    if(revDate && revDate !== '-') {
+                        $('#view_revision_date').text(revDate);
+                    } else {
+                        $('#view_revision_date').text('-');
+                    }
                     // $('#view_updated_at').text(btn.data('updated_at') || '-');
 
                     $('#view_name').text(btn.data('name'));
