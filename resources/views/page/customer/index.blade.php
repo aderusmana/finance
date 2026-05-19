@@ -486,7 +486,8 @@
                                             <label class="form-label">Billing Phone <span
                                                     class="text-danger">*</span></label>
                                             <input type="text" class="form-control" name="penagihan_telepon"
-                                                id="penagihan_telepon" placeholder="e.g. 021-5555xxx">
+                                                id="penagihan_telepon" placeholder="Phone Number (digits only)" inputmode="numeric" pattern="[0-9]+" maxlength="50"
+                                            oninput="this.value=this.value.replace(/[^0-9]/g,'');">
                                         </div>
                                         <div class="col-md-4">
                                             <label class="form-label">Billing Address <span
@@ -498,7 +499,7 @@
                                         <div class="col-md-12 mt-2">
                                             <label class="form-label">Billing Email <span
                                                 class="text-danger">*</span></label>
-                                            <input type="email" class="form-control" name="surat_menyurat_address" id="surat_menyurat_address" 
+                                            <input type="email" class="form-control" name="surat_menyurat_address" id="surat_menyurat_address"
                                             placeholder="email@example.com" inputmode="email" maxlength="191" required>
                                         </div>
 
@@ -518,7 +519,8 @@
                                             <label class="form-label">Tax Contact Phone <span
                                                     class="text-danger">*</span></label>
                                             <input type="text" class="form-control" name="tax_contact_phone"
-                                                id="tax_contact_phone" placeholder="Phone Number" required>
+                                                id="tax_contact_phone" placeholder="Phone Number (digits only)" inputmode="numeric" pattern="[0-9]+" maxlength="50"
+                                                oninput="this.value=this.value.replace(/[^0-9]/g,'');" required>
                                         </div>
 
                                         <div class="col-md-3">
