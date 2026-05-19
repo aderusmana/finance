@@ -216,7 +216,7 @@
                 $('#customer_id').select2('destroy').select2({
                     theme: 'bootstrap-5',
                     dropdownParent: $('#modalForm'),
-                    placeholder: "-- Ketik untuk mencari --",
+                    placeholder: "-- Type to search --",
                     allowClear: true
                 });
             }
@@ -235,7 +235,7 @@
                 $('#distributor_id, #customer_id').select2({
                     theme: 'bootstrap-5',
                     dropdownParent: $('#modalForm'),
-                    placeholder: "-- Ketik untuk mencari --",
+                    placeholder: "-- Type to search --",
                     allowClear: true
                 });
 
@@ -265,7 +265,7 @@
                     order: [],
                     language: {
                         search: "",
-                        searchPlaceholder: "🔍 Cari data...",
+                        searchPlaceholder: "🔍 Search data...",
                         lengthMenu: "Tampilkan _MENU_ baris",
                         info: "Menampilkan _START_ s/d _END_ dari _TOTAL_ data"
                     },

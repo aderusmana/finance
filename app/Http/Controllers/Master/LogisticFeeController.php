@@ -130,7 +130,9 @@ class LogisticFeeController extends Controller
                             </div>
                         ';
                     }
-                    return '<span style="color: #94a3b8; font-weight: 700; font-size: 1rem;">-</span>';
+                    return '<div class="d-inline-flex align-items-center justify-content-center" style="background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%); border: 1px solid #94a3b8; border-radius: 2rem; padding: 2px 18px; box-shadow: 0 2px 5px rgba(148, 163, 184, 0.15);">
+                                <span style="color: #334155; font-weight: 900; font-size: 0.95rem;">-</span>
+                            </div>';
                 })
                 ->addColumn('action', function($row){
                     if($row->status == 'Pending') {
