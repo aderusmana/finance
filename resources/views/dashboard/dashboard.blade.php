@@ -24,10 +24,11 @@
 
             <div class="dropdown">
                 <button
-                    class="btn btn-primary rounded-pill px-2 shadow-sm fw-bold dropdown-toggle d-flex align-items-center"
-                    style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); border:none; padding: 10px 20px;"
-                    type="button" data-bs-toggle="dropdown">
-                    <i class="ti ti-bolt me-2"></i> Quick Action
+                    class="btn btn-primary rounded-pill py-2 px-3 px-md-4 shadow-sm fw-bold dropdown-toggle d-flex align-items-center"
+                    style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); border:none;"
+                    type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="ti ti-bolt me-2"></i>
+                    <span class="d-none d-sm-inline">Quick Action</span>
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg p-2 rounded-3">
                     <li><a class="dropdown-item rounded-2 py-2" href="{{ route('bg-list.index') }}"><i

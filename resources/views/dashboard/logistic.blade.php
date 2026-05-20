@@ -1,6 +1,6 @@
 <x-app-layout>
     @section('title', 'Logistic Dashboard')
-    
+
     {{-- Custom CSS untuk Tampilan Modern --}}
     <style>
         .stat-card {
@@ -26,7 +26,7 @@
             transform: rotate(0deg) scale(1.1);
             opacity: 0.25;
         }
-        
+
         /* Gradients */
         .bg-grad-primary { background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); }
         .bg-grad-warning { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
@@ -39,7 +39,7 @@
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
             border: 1px solid #f1f5f9;
         }
-        
+
         .table-custom th {
             text-transform: uppercase;
             font-size: 0.75rem;
@@ -62,11 +62,11 @@
                 <h3 class="fw-bolder text-dark mb-1" style="letter-spacing: -0.5px;">Logistic Recap Dashboard</h3>
                 <p class="text-muted mb-0 small">Ringkasan aktivitas Logistic Order & Logistic Fee</p>
             </div>
-            <div class="text-end">
+            {{-- <div class="text-end">
                 <span class="badge bg-white text-primary border border-primary px-3 py-2 rounded-pill shadow-sm" id="live-time">
                     <i class="ph-bold ph-clock"></i> Memuat waktu...
                 </span>
-            </div>
+            </div> --}}
         </div>
     </div>
 
@@ -82,7 +82,7 @@
                 </div>
             </div>
         </div>
-        
+
         {{-- Card 2 --}}
         <div class="col-xl-3 col-sm-6">
             <div class="stat-card bg-grad-warning text-white h-100 p-4 shadow-sm">
@@ -135,12 +135,12 @@
         <div class="col-xl-4 col-lg-5">
             <div class="dashboard-panel p-4 h-100 d-flex flex-column">
                 <h6 class="fw-bold text-dark mb-4"><i class="ph-duotone ph-clock-counter-clockwise text-primary me-2"></i>Histori Harga Terkini</h6>
-                
+
                 <div class="flex-grow-1 overflow-auto" id="recent_fee_logs_container" style="max-height: 300px;">
                     {{-- Diisi via AJAX --}}
                     <div class="text-center text-muted my-5"><div class="spinner-border spinner-border-sm me-2"></div>Memuat data...</div>
                 </div>
-                
+
                 <div class="mt-3 text-center border-top pt-3">
                     <a href="{{ route('logistic-fees.log') }}" class="text-primary text-decoration-none fw-semibold small">Lihat Semua Histori <i class="ph-bold ph-arrow-right"></i></a>
                 </div>
@@ -196,7 +196,7 @@
             // Panggil API Statistik
             function loadDashboardData() {
                 $.get("{{ route('dashboard.data.logistic-stats') }}", function(res) {
-                    
+
                     // 1. Update Cards dengan Animasi Counter
                     animateValue("stat_total_orders", 0, res.summary.total_orders, 1000);
                     animateValue("stat_pending_downloads", 0, res.summary.pending_downloads, 1000);
@@ -210,10 +210,10 @@
                     let ordersHtml = '';
                     if(res.recent_orders.length > 0) {
                         res.recent_orders.forEach(function(o) {
-                            let statusBadge = o.status === 'Downloaded' 
+                            let statusBadge = o.status === 'Downloaded'
                                 ? `<span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 rounded-pill"><i class="ph-bold ph-check me-1"></i>Downloaded</span>`
                                 : `<span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-2 rounded-pill"><i class="ph-bold ph-clock me-1"></i>Pending</span>`;
-                            
+
                             ordersHtml += `
                                 <tr>
                                     <td class="fw-bold text-primary">${o.lo_no}</td>
@@ -268,7 +268,7 @@
             // Fungsi Render Chart.js (Style Modern dengan Gradient)
             function renderChart(labels, data) {
                 const ctx = document.getElementById('orderChart').getContext('2d');
-                
+
                 if (orderChartInstance) { orderChartInstance.destroy(); }
 
                 // Buat Gradient untuk garis grafik
