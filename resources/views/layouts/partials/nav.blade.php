@@ -129,6 +129,7 @@
                             <li><a href="{{ route('customers.approval') }}">Approvals List</a></li>
                         @endcan
                         <li><a href="{{ route('customers.log') }}">Customer Logs</a></li>
+                        <li><a href="{{ route('customers.reports') }}">Customer Reports</a></li>
                     </ul>
                 </li>
             @endcan

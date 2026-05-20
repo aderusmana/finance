@@ -104,6 +104,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/customers/log', [CustomerController::class, 'logPage'])->name('customers.log');
     Route::get('/customers-log/data', [CustomerController::class, 'getLogData'])->name('customers.log.data');
 
+    Route::get('/customers/reports', [CustomerController::class, 'reportsPage'])->name('customers.reports');
+    Route::post('/customers/reports/print', [CustomerController::class, 'printMultipleReport'])->name('customers.reports.print');
+    Route::get('/customers-reports/data', [CustomerController::class, 'getReportsData'])->name('customers.reports.data');
+
     Route::resource('customers', CustomerController::class);
 
     Route::get('/logistic-orders/export-pdf', [LogisticOrderController::class, 'exportDeliveryNotesPdf'])->name('logistic-orders.export-pdf');
