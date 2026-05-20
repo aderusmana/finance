@@ -112,7 +112,7 @@
                                 </div>
                                 <div style="font-size: 12px; color: rgba(255, 255, 255, 0.75);">
                                     <span style="font-weight: 600; margin-right: 4px;">Date:</span>
-                                    <span style="font-weight: 700; color: #ffffff; font-size: 13px;">{{ \Carbon\Carbon::parse($latestRevision->revision_date)->format('d M Y') }}</span>
+                                    <span style="font-weight: 700; color: #ffffff; font-size: 13px;">{{ $latestRevision->revision_date ? \Carbon\Carbon::parse($latestRevision->revision_date)->format('d-M-y') : '-' }}</span>
                                 </div>
                             </div>
                         @endif

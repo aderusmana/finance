@@ -803,7 +803,7 @@
                                     </div>
                                     <div class="text-muted" style="font-size: 12px;">
                                         <span class="fw-semibold me-1">Date:</span>
-                                        <span id="view_revision_date" class="fw-bold text-dark" style="font-size: 13px;">{{ $latestRevision && $latestRevision->revision_date ? \Carbon\Carbon::parse($latestRevision->revision_date)->format('d M Y') : '-' }}</span>
+                                        <span id="view_revision_date" class="fw-bold text-dark" style="font-size: 13px;">{{ $latestRevision && $latestRevision->revision_date ? \Carbon\Carbon::parse($latestRevision->revision_date)->format('d-M-y') : '-' }}</span>
                                     </div>
                                 </div>
                             </div>
@@ -2848,6 +2848,42 @@
                     });
                 }
 
+                const REV_MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+                function pad2(n) {
+                    const num = Number(n);
+                    return num < 10 ? '0' + num : String(num);
+                }
+
+                function formatRevisionDate(value) {
+                    if (value === undefined || value === null) return '-';
+
+                    const s = String(value).trim();
+                    if (!s || s === '-' || s.toLowerCase() === 'null') return '-';
+
+                    // Prefer manual parsing for YYYY-MM-DD to avoid timezone shifts
+                    const m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+                    if (m) {
+                        const year = Number(m[1]);
+                        const month = Number(m[2]);
+                        const day = Number(m[3]);
+                        if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+                            return `${pad2(day)}-${REV_MONTHS[month - 1]}-${String(year).slice(-2)}`;
+                        }
+                    }
+
+                    // Fallback: try Date parsing
+                    const d = new Date(s);
+                    if (!Number.isNaN(d.getTime())) {
+                        const day = d.getDate();
+                        const month = d.getMonth() + 1;
+                        const year = d.getFullYear();
+                        return `${pad2(day)}-${REV_MONTHS[month - 1]}-${String(year).slice(-2)}`;
+                    }
+
+                    return s;
+                }
+
                 $(document).on('click', '.btn-show-customer', function() {
                     const btn = $(this);
 
@@ -2869,12 +2905,10 @@
                     $('#view_revision_number').text(btn.data('revision_number') || '-');
                     $('#view_revision_count').text(btn.data('revision_count') || '0');
 
-                    const revDate = btn.data('revision_date');
-                    if(revDate && revDate !== '-') {
-                        $('#view_revision_date').text(revDate);
-                    } else {
-                        $('#view_revision_date').text('-');
-                    }
+                    const revDateRaw = btn.data('revision_date');
+                    $('#view_revision_date')
+                        .text(formatRevisionDate(revDateRaw))
+                        .attr('title', revDateRaw ?? '-');
                     // $('#view_updated_at').text(btn.data('updated_at') || '-');
 
                     $('#view_name').text(btn.data('name'));

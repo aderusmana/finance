@@ -137,20 +137,20 @@
                         {{-- Status Banner --}}
                         <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 1rem; padding: 1.5rem; box-shadow: 0 4px 15px rgba(0,0,0,0.02); margin-bottom: 2rem;">
                             <div class="d-flex flex-wrap align-items-center justify-content-between gap-4">
-                                
+
                                 <div class="d-flex flex-wrap align-items-center gap-4">
                                     <div class="d-flex flex-column">
                                         <label style="color: #64748b; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">Status Akun</label>
                                         <div><span id="view_status_badge" class="badge rounded-pill" style="background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 6px 16px; font-weight: 700; font-size: 0.8rem;">-</span></div>
                                     </div>
                                     <div style="width: 1px; height: 40px; background: #e2e8f0;" class="d-none d-md-block"></div>
-                                    
+
                                     <div class="d-flex flex-column">
                                         <label style="color: #64748b; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">Progress Approval</label>
                                         <div id="view_approval_badge" class="fw-bolder" style="font-size: 1.1rem; color: #1e293b;">Pending</div>
                                     </div>
                                     <div style="width: 1px; height: 40px; background: #e2e8f0;" class="d-none d-md-block"></div>
-                                    
+
                                     <div class="d-flex flex-column">
                                         <label style="color: #64748b; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">Sales Person</label>
                                         <div id="view_user_name" class="fw-bolder" style="font-size: 1.1rem; color: #1e293b;">-</div>
@@ -158,7 +158,7 @@
                                 </div>
 
                                 <div class="text-start ms-auto" style="min-width: 180px;">
-    
+
                                     <div style="font-size: 12px; color: #64748b; margin-bottom: 4px;">
                                         <span style="font-weight: 600; margin-right: 4px;">No Rev:</span>
                                         <span id="view_modal_rev_number" style="font-weight: 700; color: #3b82f6; font-size: 13px;">-</span>
@@ -1098,10 +1098,46 @@
                             $('#viewModalActionFormContainer').html(actionFormHtml);
                             $('#viewModalActionFormContainer form').attr('action', submitUrl);
 
+                            const REV_MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+                            function pad2(n) {
+                                const num = Number(n);
+                                return num < 10 ? '0' + num : String(num);
+                            }
+
+                            function formatRevisionDate(value) {
+                                if (value === undefined || value === null) return '-';
+                                const s = String(value).trim();
+                                if (!s || s === '-' || s.toLowerCase() === 'null') return '-';
+
+                                // Prefer manual parsing for YYYY-MM-DD to avoid timezone shifts
+                                const m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+                                if (m) {
+                                    const year = Number(m[1]);
+                                    const month = Number(m[2]);
+                                    const day = Number(m[3]);
+                                    if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+                                        return `${pad2(day)}-${REV_MONTHS[month - 1]}-${String(year).slice(-2)}`;
+                                    }
+                                }
+
+                                const d = new Date(s);
+                                if (!Number.isNaN(d.getTime())) {
+                                    const day = d.getDate();
+                                    const month = d.getMonth() + 1;
+                                    const year = d.getFullYear();
+                                    return `${pad2(day)}-${REV_MONTHS[month - 1]}-${String(year).slice(-2)}`;
+                                }
+
+                                return s;
+                            }
+
                             if (response.latest_revision) {
                                 $('#view_modal_rev_number').text(response.latest_revision.revision_number);
                                 $('#view_modal_rev_count').text(response.latest_revision.revision_count);
-                                $('#view_modal_rev_date').text(response.latest_revision.revision_date);
+                                $('#view_modal_rev_date')
+                                    .text(formatRevisionDate(response.latest_revision.revision_date))
+                                    .attr('title', response.latest_revision.revision_date ?? '-');
                             } else {
                                 $('#view_modal_rev_number').text('-');
                                 $('#view_modal_rev_count').text('0');
