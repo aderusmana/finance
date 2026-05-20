@@ -6,7 +6,7 @@
         body { font-family: sans-serif; font-size: 8.5pt; color: #333; margin: 0; }
         .top-info { font-size: 8pt; margin-bottom: 10px; }
         table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-        th { background-color: #166534; color: white; padding: 7px; border: 1px solid #ddd; text-align: center; font-size: 8pt; }
+        th { padding: 7px; border: 1px solid #ddd; text-align: center; font-size: 8pt; }
         td { padding: 5px; border: 1px solid #ddd; word-wrap: break-word; vertical-align: middle; }
         .text-right { text-align: right; }
         .text-center { text-align: center; }
