@@ -714,7 +714,7 @@
                             <div class="form-check p-3 border rounded mb-2 {{ $isIT ? 'bg-light-warning border-warning' : 'bg-light-info' }}">
                                 <input class="form-check-input" type="radio" name="action" id="action_review" value="review" {{ $preSelectedAction == 'review' || $isIT ? 'checked' : '' }}>
                                 <label class="form-check-label fw-bold d-block" for="action_review">
-                                    @if($isIT) <i class="fas fa-keyboard me-2"></i> Input Code & Approve @else <i class="fas fa-edit me-2"></i> Review with Notes @endif
+                                    @if($isIT) <i class="fas fa-keyboard me-2"></i> Input Code & Approve @else <i class="fas fa-edit me-2"></i> Approved with Notes (Optional) @endif
                                 </label>
                                 @if(!$isIT && $canAdjust) <small class="text-muted ms-4 d-block mt-1" style="font-size: 0.75rem;">Allows editing Terms, Limit & NPWP.</small> @endif
                             </div>
@@ -1050,18 +1050,21 @@
                         noteHelper.classList.add('text-success');
                     }
                 }
-                // 3. REVIEW (General/Non-IT)
+                // 3. REVIEW (General/Non-IT) -> Notes optional (no required rule)
                 else if (actionReview && !canAdjust && !isITMode) {
-                    notesField.required = true;
-                    noteAsterisk.classList.remove('d-none');
-                    noteHelper.innerText = "Notes are required with clear explanations.";
-                    noteHelper.classList.add('text-danger');
+                    noteHelper.innerText = "Notes are optional.";
+                    noteHelper.classList.add('text-success');
                 }
             }
 
             function updateUI() {
                 const selected = document.querySelector('input[name="action"]:checked')?.value;
                 const isReject = selected === 'reject';
+
+                // Reset submit button to a safe default before applying mode-specific styling
+                btnSubmit.classList.remove('btn-danger', 'btn-info', 'btn-success');
+                btnSubmit.classList.add('btn-primary');
+                btnSubmit.innerHTML = 'Submit Decision';
 
                 // --- Logic Existing: Fields ---
                 if (selected === 'review') {
@@ -1075,6 +1078,11 @@
                     } else if (isITMode) {
                         btnSubmit.classList.add('btn-success');
                         btnSubmit.innerHTML = '<i class="fas fa-check-circle me-2"></i> Save Code & Activate';
+                    } else {
+                        // General approval/review (notes optional)
+                        btnSubmit.classList.remove('btn-danger', 'btn-info', 'btn-success');
+                        btnSubmit.classList.add('btn-primary');
+                        btnSubmit.innerHTML = '<i class="fas fa-check me-2"></i> Submit Approval';
                     }
                 } else if (isReject) {
                     editableFields.forEach(el => el.disabled = true);
@@ -1217,10 +1225,9 @@
                             }
                         }
                     } else if (!isITMode) {
-                        if (!notesValue) {
-                            isValid = false; errorMsg = 'Notes are required for Review.';
-                        } else if (!meaningfulRegex.test(notesValue)) {
-                            isValid = false; errorMsg = 'Notes must be clear (minimum 2 characters).';
+                        // Notes optional for review; validate only if user fills it.
+                        if (notesValue.length > 0 && !meaningfulRegex.test(notesValue)) {
+                            isValid = false; errorMsg = 'If filling out notes, please use clear sentences.';
                         }
                     }
                 }

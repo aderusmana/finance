@@ -799,25 +799,39 @@ class CustomerController extends Controller
         $isIT = $actor && $actor->hasRole('it');
         $cleanNotes = trim($notes);
 
+        $fail = function (string $message) {
+            if (request()->ajax()) {
+                return response()->json(['success' => false, 'message' => $message], 422);
+            }
+            return back()->withInput()->withErrors(['notes' => $message]);
+        };
+
         if ($isFinanceAdjuster && ($action === 'review' || $action === 'approve')) {
             $isTopChanged = request()->has('update_top') && request('update_top') != $customer->term_of_payment;
 
 
             if ($isTopChanged) {
                 if (empty($cleanNotes)) {
-                    return back()->withInput()->withErrors(['notes' => 'Notes are required when changing Term of Payment.']);
+                    return $fail('Notes are required when changing Term of Payment.');
                 }
             }
         } else {
-            if ($action === 'review' || $action === 'reject') {
-
-                if (!$isIT) {
+            // Non-Finance, Non-IT validation rules:
+            // - Reject: notes required
+            // - Review: notes optional (validate clarity only if provided)
+            if (!$isIT) {
+                if ($action === 'reject') {
                     if (empty($cleanNotes)) {
-                        return back()->withInput()->withErrors(['notes' => 'Notes are required for review or reject actions.']);
+                        return $fail('Notes are required for reject action.');
                     }
-
                     if (!preg_match('/[a-zA-Z]{2,}/', $cleanNotes)) {
-                        return back()->withInput()->withErrors(['notes' => 'Notes must contain clear sentences.']);
+                        return $fail('Notes must contain clear sentences.');
+                    }
+                }
+
+                if ($action === 'review' && !empty($cleanNotes)) {
+                    if (!preg_match('/[a-zA-Z]{2,}/', $cleanNotes)) {
+                        return $fail('Notes must contain clear sentences.');
                     }
                 }
             }
