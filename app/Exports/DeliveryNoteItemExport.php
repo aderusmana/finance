@@ -78,16 +78,17 @@ class DeliveryNoteItemExport implements FromQuery, WithHeadings, WithMapping, Wi
     public function columnWidths(): array
     {
         return [
-            'A' => 5,   // NO (Kecil)
-            'B' => 30,  // DN NO
-            'C' => 30,  // DISTRIBUTOR NAME
-            'D' => 35,  // CUSTOMER NAME
-            'E' => 30,  // ITEM NAME
-            'F' => 12,  // PRICE ITEM (Kecil)
-            'G' => 8,   // QTY (Kecil)
-            'H' => 18,  // TOTAL CLAIM
-            'I' => 18,  // SALES VALUE
-            'J' => 10,  // RATIO (Kecil)
+            'A' => 5,   // NO
+            'B' => 26,  // DN NO
+            'C' => 15,  // DELIVERY DATE (Kolom Baru)
+            'D' => 30,  // DISTRIBUTOR NAME
+            'E' => 30,  // CUSTOMER NAME
+            'F' => 30,  // ITEM NAME
+            'G' => 12,  // PRICE ITEM
+            'H' => 8,   // QTY
+            'I' => 16,  // TOTAL CLAIM
+            'J' => 16,  // SALES VALUE
+            'K' => 10,  // RATIO
         ];
     }
 
@@ -96,6 +97,7 @@ class DeliveryNoteItemExport implements FromQuery, WithHeadings, WithMapping, Wi
         return [
             'NO',
             'DN NO',
+            'DELIVERY DATE',
             'DISTRIBUTOR NAME',
             'CUSTOMER NAME',
             'ITEM NAME',
@@ -122,6 +124,7 @@ class DeliveryNoteItemExport implements FromQuery, WithHeadings, WithMapping, Wi
         return [
             $this->rowIndex++,
             $row->dn_no ?? '-',
+            $row->delivery_date ? \Carbon\Carbon::parse($row->delivery_date)->format('d/m/Y') : '-',
             $row->distributor_name ?? '-',
             $row->customer_name ?? '-',
             $row->item_name ?? '-',
@@ -145,14 +148,14 @@ class DeliveryNoteItemExport implements FromQuery, WithHeadings, WithMapping, Wi
                 $sheet->setCellValue('A2', 'Dibuat Oleh: ' . Auth::user()->name);
                 $sheet->getStyle('A1:A2')->getFont()->setSize(9)->setItalic(true);
 
-                $sheet->mergeCells('A3:J3');
+                $sheet->mergeCells('A3:K3');
                 $sheet->setCellValue('A3', 'Report Logistic Order');
                 $sheet->getStyle('A3')->applyFromArray([
                     'font' => ['bold' => true, 'size' => 14],
                     'alignment' => ['horizontal' => 'center']
                 ]);
 
-                $sheet->mergeCells('A4:J4');
+                $sheet->mergeCells('A4:K4');
                 $range = (!empty($this->dateFrom)) ? "Period: $this->dateFrom - $this->dateTo" : "All Dates";
                 $sheet->setCellValue('A4', $range);
                 $sheet->getStyle('A4')->applyFromArray([
@@ -160,7 +163,7 @@ class DeliveryNoteItemExport implements FromQuery, WithHeadings, WithMapping, Wi
                     'alignment' => ['horizontal' => 'center']
                 ]);
 
-                $sheet->getStyle('A5:J5')->applyFromArray([
+                $sheet->getStyle('A5:K5')->applyFromArray([
                     'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
                     'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => '166534']],
                 ]);
@@ -175,23 +178,23 @@ class DeliveryNoteItemExport implements FromQuery, WithHeadings, WithMapping, Wi
 
                 $grandRatio = $this->sumSalesValue > 0 ? ($this->sumTotalClaim / $this->sumSalesValue) : 0;
 
-                $sheet->setCellValue("G$totalRow", "GRAND TOTAL:");
-                $sheet->setCellValue("H$totalRow", $this->sumTotalClaim);
-                $sheet->setCellValue("I$totalRow", $this->sumSalesValue);
-                $sheet->setCellValue("J$totalRow", $grandRatio);
+                $sheet->setCellValue("H$totalRow", "GRAND TOTAL:");
+                $sheet->setCellValue("I$totalRow", $this->sumTotalClaim);
+                $sheet->setCellValue("J$totalRow", $this->sumSalesValue);
+                $sheet->setCellValue("K$totalRow", $grandRatio);
 
-                $sheet->getStyle("G$totalRow:J$totalRow")->applyFromArray(['font' => ['bold' => true]]);
-                $sheet->getStyle("H{$dataStartRow}:I{$totalRow}")->getNumberFormat()->setFormatCode('#,##0');
-                $sheet->getStyle("J$totalRow")->getNumberFormat()->setFormatCode('0.00%');
+                $sheet->getStyle("H$totalRow:K$totalRow")->applyFromArray(['font' => ['bold' => true]]);
+                $sheet->getStyle("I{$dataStartRow}:J{$totalRow}")->getNumberFormat()->setFormatCode('#,##0');
+                $sheet->getStyle("K$totalRow")->getNumberFormat()->setFormatCode('0.00%');
 
-                $sheet->getStyle("J{$dataStartRow}:J{$totalRow}")->applyFromArray([
+                $sheet->getStyle("K{$dataStartRow}:K{$totalRow}")->applyFromArray([
                     'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT]
                 ]);
 
                 $sheet->getStyle("A{$dataStartRow}:A{$totalRow}")->applyFromArray([
                     'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER]
                 ]);
-                $sheet->getStyle("G{$dataStartRow}:G{$totalRow}")->applyFromArray([
+                $sheet->getStyle("H{$dataStartRow}:H{$totalRow}")->applyFromArray([
                     'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER]
                 ]);
 

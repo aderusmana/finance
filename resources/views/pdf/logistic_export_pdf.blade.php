@@ -6,11 +6,12 @@
         body { font-family: sans-serif; font-size: 8.5pt; color: #333; margin: 0; }
         .top-info { font-size: 8pt; margin-bottom: 10px; }
         table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-        th { padding: 7px; border: 1px solid #ddd; text-align: center; font-size: 8pt; }
-        td { padding: 5px; border: 1px solid #ddd; word-wrap: break-word; vertical-align: middle; }
+        th { padding: 6px 4px; border: 1px solid #ddd; text-align: center; font-size: 7.5pt; background-color: #1f6b3c; color: white; }
+        td { padding: 5px 4px; border: 1px solid #ddd; word-wrap: break-word; vertical-align: middle; font-size: 7.5pt; }
         .text-right { text-align: right; }
         .text-center { text-align: center; }
         .fw-bold { font-weight: bold; }
+        .nowrap { white-space: nowrap; }
         .signature-wrapper { margin-top: 40px; width: 100%; }
         .signature-box { width: 32%; display: inline-block; text-align: center; }
     </style>
@@ -31,6 +32,7 @@
             <tr>
                 <th style="width: 3%;">No</th>
                 <th style="width: 15%;">DN NO</th>
+                <th style="width: 10%;">Delivery Date</th>
                 <th style="width: 15%;">Distributor</th>
                 <th style="width: 15%;">Customer</th>
                 <th style="width: 13%;">Item Name</th>
@@ -63,6 +65,7 @@
                 <tr>
                     <td class="text-center">{{ $index + 1 }}</td>
                     <td class="fw-bold">{{ $lo->note->delivery_order_no ?? '-' }}</td>
+                    <td class="text-center">{{ $lo->delivery_date ? \Carbon\Carbon::parse($lo->delivery_date)->format('d/m/Y') : '-' }}</td>
                     <td>{{ $lo->distributor->name ?? '-' }}</td>
                     <td>{{ $lo->customer->name ?? '-' }}</td>
                     <td>{{ $item->order_item_name }}</td>
@@ -75,8 +78,8 @@
             @endforeach
         </tbody>
         <tfoot>
-            <tr class="fw-bold" style="background-color: #f2f2f2;">
-                <td colspan="7" class="text-right">GRAND TOTAL :</td>
+            <tr class="fw-bold" style="background-color: #e2e8f0; color: #0f172a;">
+                <td colspan="8" class="text-right">GRAND TOTAL :</td>
                 <td class="text-right">Rp {{ number_format($totalClaim, 0, ',', '.') }}</td>
                 <td class="text-right">Rp {{ number_format($totalSales, 0, ',', '.') }}</td>
                 <td class="text-center">
