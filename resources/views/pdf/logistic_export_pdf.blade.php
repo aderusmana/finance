@@ -31,11 +31,11 @@
     </table>
 
     <h2 style="text-align: center; text-transform: uppercase; margin-bottom: 5px; color: #0f172a; letter-spacing: 0.5px;">Report Logistic Order</h2>
-    <p style="text-align: center; margin-top: 0; font-style: italic; font-size: 8.5pt; color: #212326; margin-bottom: 20px;">
-        {{ request('date_from') ? 'Periode: ' . \Carbon\Carbon::parse(request('date_from'))->format('d/m/Y') . ' - ' . \Carbon\Carbon::parse(request('date_to'))->format('d/m/Y') : 'Semua Periode' }}
+    <p style="text-align: center; margin-top: 0; font-weight: bold; font-size: 9pt; color: #000000; margin-bottom: 0px; letter-spacing: 0.5px;">
+        {{ request('date_from') ? 'Periode: ' . \Carbon\Carbon::parse(request('date_from'))->format('d/m/Y') . ' - ' . \Carbon\Carbon::parse(request('date_to'))->format('d/m/Y') : 'Periode: All Dates' }}
     </p>
-    <p style="text-align: center; margin-top: 0; font-weight: bold; font-size: 9pt; color: #000000; margin-bottom: 20px; letter-spacing: 0.5px;">
-        AP NUMBER: {{ strtoupper($apNumber) }}
+    <p style="text-align: center; margin-top: 0; font-weight: bold; font-size: 9pt; color: #000000; margin-bottom: 10px; letter-spacing: 0.5px;">
+        AP: {{ strtoupper($apNumber) }}
     </p>
 
     <table class="main-table">

@@ -162,7 +162,7 @@ class DeliveryNoteItemExport implements FromQuery, WithHeadings, WithMapping, Wi
                 ]);
 
                 $sheet->mergeCells('A4:L4');
-                $range = (!empty($this->dateFrom)) ? "Period: $this->dateFrom - $this->dateTo" : "All Dates";
+                $range = (!empty($this->dateFrom)) ? "Period: $this->dateFrom - $this->dateTo" : "Periode: All Dates";
                 $sheet->setCellValue('A4', $range);
                 $sheet->getStyle('A4')->applyFromArray([
                     'font' => ['italic' => true],
@@ -170,7 +170,7 @@ class DeliveryNoteItemExport implements FromQuery, WithHeadings, WithMapping, Wi
                 ]);
 
                 $sheet->mergeCells('A5:L5');
-                $sheet->setCellValue('A5', 'AP Number: ' . strtoupper($this->apNumber));
+                $sheet->setCellValue('A5', 'AP : ' . strtoupper($this->apNumber));
                 $sheet->getStyle('A5')->applyFromArray([
                     'font' => ['bold' => true, 'size' => 11],
                     'alignment' => ['horizontal' => 'center']
