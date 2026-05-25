@@ -90,7 +90,7 @@
             border: 1px solid #e2e8f0;
             padding: 10px;
             border-radius: 6px;
-            height: 85px;
+            height: 100px;
         }
 
         .info-title {

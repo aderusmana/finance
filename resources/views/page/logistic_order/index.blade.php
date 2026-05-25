@@ -250,7 +250,7 @@
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label fw-bold">No. PO (Purchase Order)</label>
-                                            <input type="text" id="no_po" name="no_po" class="form-control" placeholder="e.g: PO-2026-001X">
+                                            <input type="text" id="no_po" name="no_po" class="form-control" placeholder="e.g: PO-2026-001">
                                         </div>
                                     </div>
                                 </div>

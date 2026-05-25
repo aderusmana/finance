@@ -436,10 +436,15 @@ class LogisticOrderController extends Controller
 
         $pdfContent = base64_decode($pdfBase64);
 
-        return response()->streamDownload(function () use ($pdfContent) {
-            echo $pdfContent;
-        }, $pdfFileName, [
+        // return response()->streamDownload(function () use ($pdfContent) {
+        //     echo $pdfContent;
+        // }, $pdfFileName, [
+        //     'Content-Type' => 'application/pdf',
+        // ]);
+
+        return response($pdfContent, 200, [
             'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="' . $pdfFileName . '"',
         ]);
     }
 }
