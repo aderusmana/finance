@@ -308,6 +308,7 @@ class LogisticOrderController extends Controller
                 'customer_id'         => $request->customer_id,
                 'customer_ship_to_id' => $request->customer_ship_to_id,
                 'logistic_order_no'   => 0,
+                'no_po'               => $request->no_po,
                 'delivery_date'       => $request->delivery_date,
                 'created_by'          => Auth::id(),
             ]);

@@ -118,8 +118,6 @@
                             <h3 class="fw-bold text-dark mb-1">Delivery Notes Details</h3>
                             <p class="text-muted mb-0 fs-6">
                                 <i class="ph-bold ph-receipt text-primary"></i> LO-{{ str_pad($order->logistic_order_no, 4, '0', STR_PAD_LEFT) }}
-                                <span class="mx-2 text-light-subtle">|</span>
-                                <i class="ph-bold ph-barcode text-primary"></i> {{ $order->note->delivery_order_no }}
                             </p>
                         </div>
                         <div class="text-md-end">
@@ -148,11 +146,19 @@
                                     </div>
                                     <h5 class="fw-bold mb-0 text-dark">Customer Info</h5>
                                 </div>
-                                <div class="mb-3">
+                                <div class="mb-2">
+                                    <div class="info-label">Delivery Order No.</div>
+                                    <div class="info-value">{{ $order->note->delivery_order_no ?? '-' }}</div>
+                                </div>
+                                <div class="mb-2">
+                                    <div class="info-label">Purchase Order No.</div>
+                                    <div class="info-value">{{ $order->no_po ?? '-' }}</div>
+                                </div>
+                                <div class="mb-2">
                                     <div class="info-label">Customer Name</div>
                                     <div class="info-value">{{ $order->customer->name }}</div>
                                 </div>
-                                <div>
+                                <div class="mb-2">
                                     <div class="info-label">Distributor Assigned</div>
                                     <div class="info-value">{{ $order->distributor->name }}</div>
                                 </div>
@@ -166,11 +172,11 @@
                                     </div>
                                     <h5 class="fw-bold mb-0 text-dark">Destination (Ship To)</h5>
                                 </div>
-                                <div class="mb-3">
+                                <div class="mb-2">
                                     <div class="info-label">{{ $order->customerShipTo->ship_to_code ?? '-' }}</div>
                                     <div class="info-value">{{ $order->customerShipTo->ship_to_name }}</div>
                                 </div>
-                                <div>
+                                <div class="mb-2">
                                     <div class="info-label">Complete Address</div>
                                     <div class="text-dark" style="font-size: 0.95rem; line-height: 1.5;">
                                         {{ $order->customerShipTo->ship_to_address_1 }}<br>

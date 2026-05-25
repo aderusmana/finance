@@ -41,26 +41,36 @@
                                 <tr>
                                     <td style="padding: 20px;">
                                         <table width="100%" border="0" cellpadding="0" cellspacing="0">
+                                            
                                             <tr>
-                                                <td width="50%" style="padding-bottom: 20px;">
+                                                <td width="50%" valign="top" style="padding-bottom: 20px; padding-right: 10px;">
                                                     <p style="margin: 0; font-size: 12px; color: #64748b; text-transform: uppercase; font-weight: 600;">No. Delivery Note</p>
                                                     <p style="margin: 4px 0 0 0; font-size: 16px; font-weight: 700; color: #0f172a;">{{ $order->note->delivery_order_no }}</p>
                                                 </td>
-                                                <td width="50%" style="padding-bottom: 20px;">
-                                                    <p style="margin: 0; font-size: 12px; color: #64748b; text-transform: uppercase; font-weight: 600;">Customer</p>
-                                                    <p style="margin: 4px 0 0 0; font-size: 15px; font-weight: 700; color: #a68831;">{{ $order->customer->name }}</p>
+                                                <td width="50%" valign="top" style="padding-bottom: 20px; padding-left: 10px;">
+                                                    <p style="margin: 0; font-size: 12px; color: #64748b; text-transform: uppercase; font-weight: 600;">NO PO</p>
+                                                    <p style="margin: 4px 0 0 0; font-size: 15px; font-weight: 700; color: #0f172a;">{{ $order->no_po ?? '-' }}</p>
                                                 </td>
                                             </tr>
+
                                             <tr>
-                                                <td width="50%">
-                                                    <p style="margin: 0; font-size: 12px; color: #64748b; text-transform: uppercase; font-weight: 600;">Recipient (Ship To)</p>
-                                                    <p style="margin: 4px 20px 0 0; font-size: 14px; font-weight: 600; color: #334155; line-height: 1.4;">{{ $order->customerShipTo->ship_to_name }}</p>
+                                                <td width="50%" valign="top" style="padding-bottom: 20px; padding-right: 10px;">
+                                                    <p style="margin: 0; font-size: 12px; color: #64748b; text-transform: uppercase; font-weight: 600;">Customer</p>
+                                                    <p style="margin: 4px 0 0 0; font-size: 15px; font-weight: 700; color: #0f172a;">{{ $order->customer->name }}</p>
                                                 </td>
-                                                <td width="50%" valign="top">
-                                                    <p style="margin: 0; font-size: 12px; color: #64748b; text-transform: uppercase; font-weight: 600;">Delivery Date</p>
-                                                    <p style="margin: 4px 0 0 0; font-size: 15px; font-weight: 600; color: #334155;">{{ \Carbon\Carbon::parse($order->delivery_date)->format('d F Y') }}</p>
+                                                <td width="50%" valign="top" style="padding-bottom: 20px; padding-left: 10px;">
+                                                    <p style="margin: 0; font-size: 12px; color: #64748b; text-transform: uppercase; font-weight: 600;">Recipient (Ship To)</p>
+                                                    <p style="margin: 4px 0 0 0; font-size: 14px; font-weight: 600; color: #0f172a; line-height: 1.4;">{{ $order->customerShipTo->ship_to_name }}</p>
                                                 </td>
                                             </tr>
+
+                                            <tr>
+                                                <td colspan="2" width="100%" valign="top">
+                                                    <p style="margin: 0; font-size: 12px; color: #64748b; text-transform: uppercase; font-weight: 600;">Delivery Date</p>
+                                                    <p style="margin: 4px 0 0 0; font-size: 15px; font-weight: 600; color: #0f172a;">{{ \Carbon\Carbon::parse($order->delivery_date)->format('d F Y') }}</p>
+                                                </td>
+                                            </tr>
+                                            
                                         </table>
                                     </td>
                                 </tr>

@@ -243,11 +243,15 @@
                                             <option value="">-- Select Distributor --</option>
                                         </select>
                                     </div>
-                                    <div class="mb-2">
-                                        <label class="form-label fw-semibold">Delivery Date <span
-                                                class="text-danger">*</span></label>
-                                        <input type="date" name="delivery_date" id="delivery_date"
-                                            class="form-control" required>
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold">Delivery Date <span class="text-danger">*</span></label>
+                                            <input type="date" id="delivery_date" name="delivery_date" class="form-control" required>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold">No. PO (Purchase Order)</label>
+                                            <input type="text" id="no_po" name="no_po" class="form-control" placeholder="e.g: PO-2026-001X">
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -275,7 +279,7 @@
                                                     id="txt_ship_name">-</span></div>
                                         </div>
                                         <div class="row mb-2">
-                                            <div class="col-12"><span class="text-muted small fw-bold d-block">Complete 
+                                            <div class="col-12"><span class="text-muted small fw-bold d-block">Complete
                                                     Address:</span><span class="text-dark small d-block"
                                                     id="txt_address_1">-</span><span class="text-dark small d-block"
                                                     id="txt_address_2">-</span><span class="text-dark small d-block"
@@ -397,6 +401,10 @@
                                     <tr>
                                         <td width="40%" class="text-muted pb-2">Delivery No</td>
                                         <td class="fw-bold text-dark pb-2">: <span id="detail_do_no">-</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-muted pb-2">Purchase Order No.</td>
+                                        <td class="fw-bold text-dark pb-2">: <span id="detail_no_po">-</span></td>
                                     </tr>
                                     <tr>
                                         <td class="text-muted pb-2">Delivery Date</td>
@@ -712,7 +720,7 @@
                     const from = $('#dn_date_from').val();
                     const to = $('#dn_date_to').val();
                     const dists = $('#filter_distributor').val();
-                    const currentTab = activeTab; 
+                    const currentTab = activeTab;
 
                     let url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 'tab=' + currentTab;
 
@@ -723,7 +731,7 @@
                         }
                         url += '&date_from=' + encodeURIComponent(from) + '&date_to=' + encodeURIComponent(to);
                     }
-                    
+
                     if (dists && dists.length > 0) {
                         url += '&distributors=' + encodeURIComponent(dists.join(','));
                     }
@@ -869,7 +877,7 @@
                         if (result.isConfirmed) {
                             $('.price-input').each(function() {
                                 let raw = $(this).val().replace(/[^0-9]/g, '');
-                                $(this).data('formatted', $(this).val()); 
+                                $(this).data('formatted', $(this).val());
                                 $(this).val(raw);
                             });
 
@@ -929,6 +937,7 @@
                         $('#detail_delivery_date').text(data.delivery_date || '-');
                         $('#detail_customer').text(data.customer ? data.customer.name : '-');
                         $('#detail_distributor').text(data.distributor ? data.distributor.name : '-');
+                        $('#detail_no_po').text(data.no_po || '-');
 
                         if (data.customer_ship_to) {
                             let st = data.customer_ship_to;
@@ -967,7 +976,6 @@
                         logTbody.empty();
                         if (data.download_logs && data.download_logs.length > 0) {
                             $.each(data.download_logs, function(index, log) {
-                                // Format Tanggal
                                 let d = new Date(log.created_at);
                                 let dateStr = d.toLocaleDateString('id-ID', {
                                     day: '2-digit',
@@ -1109,6 +1117,7 @@
                     year: 'numeric'
                 });
                 $('#delivery_date').val(today);
+                $('#no_po').val('');
                 $('#hidden_delivery_to').val(today);
                 $('#hidden_period').val(currentMonth);
                 $('#customer_id').val('').trigger('change');

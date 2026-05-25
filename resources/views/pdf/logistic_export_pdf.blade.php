@@ -39,15 +39,16 @@
         <thead>
             <tr>
                 <th style="width: 3%;">No</th>
-                <th style="width: 13%;">DN NO</th>
+                <th style="width: 12%;">DN NO</th>
+                <th style="width: 11%;">NO PO</th> 
                 <th style="width: 8%;">Delivery Date</th>
-                <th style="width: 12%;">Distributor</th>
-                <th style="width: 14%;">Customer</th>
-                <th style="width: 12%;">Item Name</th>
-                <th style="width: 9%;">Price Item</th>
-                <th style="width: 4%;">Qty</th>
-                <th style="width: 10%;">Total Claim</th>
-                <th style="width: 10%;">Sales Value</th>
+                <th style="width: 11%;">Distributor</th>
+                <th style="width: 13%;">Customer</th>
+                <th style="width: 11%;">Item Name</th>
+                <th style="width: 8%;">Price Item</th>
+                <th style="width: 3%;">Qty</th>
+                <th style="width: 8%;">Total Claim</th>
+                <th style="width: 9%;">Sales Value</th>
                 <th style="width: 5%;">Ratio</th>
             </tr>
         </thead>
@@ -73,6 +74,7 @@
                 <tr>
                     <td class="text-center">{{ $index + 1 }}</td>
                     <td class="fw-bold" style="color: #0f172a;">{{ $lo->note->delivery_order_no ?? '-' }}</td>
+                    <td class="fw-bold" style="color: #475569;">{{ $lo->no_po ?? '-' }}</td>
                     <td class="text-center">{{ $lo->delivery_date ? \Carbon\Carbon::parse($lo->delivery_date)->format('d/m/Y') : '-' }}</td>
                     <td>{{ $lo->distributor->name ?? '-' }}</td>
                     <td>{{ $lo->customer->name ?? '-' }}</td>
@@ -87,7 +89,7 @@
         </tbody>
         <tfoot>
             <tr class="fw-bold" style="color: #0f172a;">
-                <td colspan="8" class="text-right" style="border-top: 1px solid #0f172a; border-bottom: 1px solid #0f172a; padding: 8px 4px;">GRAND TOTAL :</td>
+                <td colspan="9" class="text-right" style="border-top: 1px solid #0f172a; border-bottom: 1px solid #0f172a; padding: 8px 4px;">GRAND TOTAL :</td>
                 <td class="text-right nowrap" style="border-top: 1px solid #0f172a; border-bottom: 1px solid #0f172a; padding: 8px 4px;">Rp {{ number_format($totalClaim, 0, ',', '.') }}</td>
                 <td class="text-right nowrap" style="border-top: 1px solid #0f172a; border-bottom: 1px solid #0f172a; padding: 8px 4px;">Rp {{ number_format($totalSales, 0, ',', '.') }}</td>
                 <td class="text-center nowrap" style="border-top: 1px solid #0f172a; border-bottom: 1px solid #0f172a; padding: 8px 4px;">
@@ -103,4 +105,4 @@
         <div class="signature-box"><p>Disetujui oleh,</p><br><br><br><p class="fw-bold">Ronal Katili</p></div>
     </div>
 </body>
-</html>
+</html> 

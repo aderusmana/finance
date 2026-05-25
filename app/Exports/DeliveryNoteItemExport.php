@@ -38,6 +38,7 @@ class DeliveryNoteItemExport implements FromQuery, WithHeadings, WithMapping, Wi
             ->where('delivery_order_notes.status', 'Downloaded')
             ->select([
                 'delivery_order_notes.delivery_order_no as dn_no',
+                'logistic_orders.no_po as no_po',
                 'customers.code as customer_code',
                 'customers.name as customer_name',
                 'distributors.code as distributor_code',
@@ -79,16 +80,17 @@ class DeliveryNoteItemExport implements FromQuery, WithHeadings, WithMapping, Wi
     {
         return [
             'A' => 5,   // NO
-            'B' => 26,  // DN NO
-            'C' => 15,  // DELIVERY DATE (Kolom Baru)
-            'D' => 30,  // DISTRIBUTOR NAME
-            'E' => 30,  // CUSTOMER NAME
-            'F' => 30,  // ITEM NAME
-            'G' => 12,  // PRICE ITEM
-            'H' => 8,   // QTY
-            'I' => 16,  // TOTAL CLAIM
-            'J' => 16,  // SALES VALUE
-            'K' => 10,  // RATIO
+            'B' => 25,  // DN NO
+            'C' => 20,  // NO PO
+            'D' => 15,  // DELIVERY DATE
+            'E' => 30,  // DISTRIBUTOR NAME
+            'F' => 30,  // CUSTOMER NAME
+            'G' => 30,  // ITEM NAME
+            'H' => 12,  // PRICE ITEM
+            'I' => 8,   // QTY
+            'J' => 16,  // TOTAL CLAIM
+            'K' => 16,  // SALES VALUE
+            'L' => 10,  // RATIO
         ];
     }
 
@@ -97,6 +99,7 @@ class DeliveryNoteItemExport implements FromQuery, WithHeadings, WithMapping, Wi
         return [
             'NO',
             'DN NO',
+            'NO PO',
             'DELIVERY DATE',
             'DISTRIBUTOR NAME',
             'CUSTOMER NAME',
@@ -124,6 +127,7 @@ class DeliveryNoteItemExport implements FromQuery, WithHeadings, WithMapping, Wi
         return [
             $this->rowIndex++,
             $row->dn_no ?? '-',
+            $row->no_po ?? '-',
             $row->delivery_date ? \Carbon\Carbon::parse($row->delivery_date)->format('d/m/Y') : '-',
             $row->distributor_name ?? '-',
             $row->customer_name ?? '-',
@@ -148,14 +152,14 @@ class DeliveryNoteItemExport implements FromQuery, WithHeadings, WithMapping, Wi
                 $sheet->setCellValue('A2', 'Dibuat Oleh: ' . Auth::user()->name);
                 $sheet->getStyle('A1:A2')->getFont()->setSize(9)->setItalic(true);
 
-                $sheet->mergeCells('A3:K3');
+                $sheet->mergeCells('A3:L3');
                 $sheet->setCellValue('A3', 'Report Logistic Order');
                 $sheet->getStyle('A3')->applyFromArray([
                     'font' => ['bold' => true, 'size' => 14],
                     'alignment' => ['horizontal' => 'center']
                 ]);
 
-                $sheet->mergeCells('A4:K4');
+                $sheet->mergeCells('A4:L4');
                 $range = (!empty($this->dateFrom)) ? "Period: $this->dateFrom - $this->dateTo" : "All Dates";
                 $sheet->setCellValue('A4', $range);
                 $sheet->getStyle('A4')->applyFromArray([
@@ -163,7 +167,7 @@ class DeliveryNoteItemExport implements FromQuery, WithHeadings, WithMapping, Wi
                     'alignment' => ['horizontal' => 'center']
                 ]);
 
-                $sheet->getStyle('A5:K5')->applyFromArray([
+                $sheet->getStyle('A5:L5')->applyFromArray([
                     'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
                     'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => '166534']],
                 ]);
@@ -178,16 +182,16 @@ class DeliveryNoteItemExport implements FromQuery, WithHeadings, WithMapping, Wi
 
                 $grandRatio = $this->sumSalesValue > 0 ? ($this->sumTotalClaim / $this->sumSalesValue) : 0;
 
-                $sheet->setCellValue("H$totalRow", "GRAND TOTAL:");
-                $sheet->setCellValue("I$totalRow", $this->sumTotalClaim);
-                $sheet->setCellValue("J$totalRow", $this->sumSalesValue);
-                $sheet->setCellValue("K$totalRow", $grandRatio);
+                $sheet->setCellValue("I$totalRow", "GRAND TOTAL:");
+                $sheet->setCellValue("J$totalRow", $this->sumTotalClaim);
+                $sheet->setCellValue("K$totalRow", $this->sumSalesValue);
+                $sheet->setCellValue("L$totalRow", $grandRatio);
 
-                $sheet->getStyle("H$totalRow:K$totalRow")->applyFromArray(['font' => ['bold' => true]]);
-                $sheet->getStyle("I{$dataStartRow}:J{$totalRow}")->getNumberFormat()->setFormatCode('#,##0');
-                $sheet->getStyle("K$totalRow")->getNumberFormat()->setFormatCode('0.00%');
+                $sheet->getStyle("I$totalRow:L$totalRow")->applyFromArray(['font' => ['bold' => true]]);
+                $sheet->getStyle("J{$dataStartRow}:K{$totalRow}")->getNumberFormat()->setFormatCode('#,##0');
+                $sheet->getStyle("L$totalRow")->getNumberFormat()->setFormatCode('0.00%');
 
-                $sheet->getStyle("K{$dataStartRow}:K{$totalRow}")->applyFromArray([
+                $sheet->getStyle("I{$dataStartRow}:I{$totalRow}")->applyFromArray([
                     'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT]
                 ]);
 

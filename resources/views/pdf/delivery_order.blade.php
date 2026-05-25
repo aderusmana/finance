@@ -221,6 +221,11 @@
                             <td class="text-bold">{{ $order->note->delivery_order_no }}</td>
                         </tr>
                         <tr>
+                            <td width="35%" class="text-bold">Purchase Order No.</td>
+                            <td width="5%">:</td>
+                            <td class="text-bold">{{ $order->no_po ?? '-' }}</td>
+                        </tr>
+                        <tr>
                             <td>Customer Name</td>
                             <td>:</td>
                             <td>{{ $order->customer->name }}</td>
