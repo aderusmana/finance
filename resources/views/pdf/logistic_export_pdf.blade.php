@@ -5,8 +5,8 @@
     <style>
         body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 8pt; color: #000000; margin: 0; }
         table.main-table { width: 100%; border-collapse: collapse; table-layout: fixed; margin-top: 10px; }
-        th { padding: 8px 4px; border: 1px solid #000000; text-align: center; font-size: 7.5pt; color: #000000; font-weight: bold; }
-        td { padding: 6px 4px; border: 1px solid #000000; word-wrap: break-word; vertical-align: middle; font-size: 7.5pt; color: #000000; }
+        th { padding: 8px 4px; border: 1px solid #000000; text-align: center; font-size: 7pt; color: #000000; font-weight: bold; }
+        td { padding: 6px 4px; border: 1px solid #000000; word-wrap: break-word; vertical-align: middle; font-size: 7pt; color: #000000; }
         .text-right { text-align: right; }
         .text-center { text-align: center; }
         .fw-bold { font-weight: bold; }
@@ -33,6 +33,9 @@
     <h2 style="text-align: center; text-transform: uppercase; margin-bottom: 5px; color: #0f172a; letter-spacing: 0.5px;">Report Logistic Order</h2>
     <p style="text-align: center; margin-top: 0; font-style: italic; font-size: 8.5pt; color: #212326; margin-bottom: 20px;">
         {{ request('date_from') ? 'Periode: ' . \Carbon\Carbon::parse(request('date_from'))->format('d/m/Y') . ' - ' . \Carbon\Carbon::parse(request('date_to'))->format('d/m/Y') : 'Semua Periode' }}
+    </p>
+    <p style="text-align: center; margin-top: 0; font-weight: bold; font-size: 9pt; color: #000000; margin-bottom: 20px; letter-spacing: 0.5px;">
+        AP NUMBER: {{ strtoupper($apNumber) }}
     </p>
 
     <table class="main-table">

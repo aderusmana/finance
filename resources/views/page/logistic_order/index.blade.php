@@ -736,7 +736,56 @@
                         url += '&distributors=' + encodeURIComponent(dists.join(','));
                     }
 
-                    window.location.href = url;
+                    Swal.fire({
+                        title: 'Export Report',
+                        text: 'Please enter the AP Number for this export:',
+                        input: 'text',
+                        inputPlaceholder: 'e.g: KA-SMII-2026-001',
+                        icon: 'info',
+                        showCancelButton: true,
+                        confirmButtonText: '<i class="ph-bold ph-download-simple me-1"></i> Export',
+                        cancelButtonText: 'Cancel',
+                        customClass: {
+                            confirmButton: 'btn btn-primary rounded-pill px-4 fw-bold',
+                            cancelButton: 'btn btn-light rounded-pill px-4 fw-bold border'
+                        },
+                        buttonsStyling: false,
+                        inputValidator: (value) => {
+                            if (!value) {
+                                return 'AP Number is required to proceed with the export.';
+                            }
+                        }
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            const apNumber = result.value;
+                            Swal.fire({
+                                title: 'Processing Export',
+                                html: '<span style="color: #64748b; font-size: 0.95rem;">Please wait while we process your export request.</span>',
+                                allowOutsideClick: false, 
+                                allowEscapeKey: false,
+                                showConfirmButton: false,
+                                didOpen: () => {
+                                    Swal.showLoading();
+                                }
+                            });
+
+                            let url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 'tab=' + currentTab + '&ap_number=' + encodeURIComponent(apNumber);
+
+                            if (from && to) {
+                                url += '&date_from=' + encodeURIComponent(from) + '&date_to=' + encodeURIComponent(to);
+                            }
+                            
+                            if (dists && dists.length > 0) {
+                                url += '&distributors=' + encodeURIComponent(dists.join(','));
+                            }
+
+                            window.location.href = url;
+
+                            setTimeout(() => {
+                                Swal.close();
+                            }, 3000); 
+                        }
+                    });
                 }
 
                 $('#btn-export-dn').on('click', function() { executeExport(exportDnBaseUrl); });

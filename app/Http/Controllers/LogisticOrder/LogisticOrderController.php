@@ -187,6 +187,7 @@ class LogisticOrderController extends Controller
         $dateFrom = $request->query('date_from');
         $dateTo = $request->query('date_to');
         $distributors = $request->query('distributors');
+        $apNumber = $request->query('ap_number', '-');
 
         if ((!empty($dateFrom) && empty($dateTo)) || (empty($dateFrom) && !empty($dateTo))) {
             return response()->json([
@@ -210,10 +211,10 @@ class LogisticOrderController extends Controller
                 ], 422);
             }
 
-            $export = new DeliveryNoteItemExport($from, $to, $distributors);
+            $export = new DeliveryNoteItemExport($from, $to, $distributors, $apNumber);
             $suffix = $from . '_to_' . $to;
         } else {
-            $export = new DeliveryNoteItemExport(null, null, $distributors);
+            $export = new DeliveryNoteItemExport(null, null, $distributors, $apNumber);
             $suffix = now()->format('Ymd_His');
         }
 
@@ -226,6 +227,7 @@ class LogisticOrderController extends Controller
         $dateTo = $request->query('date_to');
         $distributors = $request->query('distributors');
         $query = LogisticOrderItem::with(['logisticOrder.distributor', 'logisticOrder.customer', 'logisticOrder.note']);
+        $apNumber = $request->query('ap_number', '-');
 
         $statusTab = $request->query('tab', 'downloaded');
         $query->whereHas('logisticOrder.note', function ($q) use ($statusTab) {
@@ -265,7 +267,7 @@ class LogisticOrderController extends Controller
 
         $items = $query->get();
 
-        $pdf = Pdf::loadView('pdf.logistic_export_pdf', compact('items'))->setPaper('a4', 'landscape');
+        $pdf = Pdf::loadView('pdf.logistic_export_pdf', compact('items', 'apNumber'))->setPaper('a4', 'landscape');
         return $pdf->download('logistic_order_report_' . now()->format('Ymd_His') . '.pdf');
     }
 
@@ -436,15 +438,15 @@ class LogisticOrderController extends Controller
 
         $pdfContent = base64_decode($pdfBase64);
 
-        // return response()->streamDownload(function () use ($pdfContent) {
-        //     echo $pdfContent;
-        // }, $pdfFileName, [
-        //     'Content-Type' => 'application/pdf',
-        // ]);
-
-        return response($pdfContent, 200, [
+        return response()->streamDownload(function () use ($pdfContent) {
+            echo $pdfContent;
+        }, $pdfFileName, [
             'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'inline; filename="' . $pdfFileName . '"',
         ]);
+
+        // return response($pdfContent, 200, [
+        //     'Content-Type' => 'application/pdf',
+        //     'Content-Disposition' => 'inline; filename="' . $pdfFileName . '"',
+        // ]);
     }
 }

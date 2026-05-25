@@ -18,13 +18,15 @@ class DeliveryNoteItemExport implements FromQuery, WithHeadings, WithMapping, Wi
     private ?string $distributors;
     private float $sumTotalClaim = 0;
     private float $sumSalesValue = 0;
-    private int $rowIndex = 1; // Menambahkan urutan No
+    private int $rowIndex = 1;
+    private ?string $apNumber;
 
-    public function __construct(?string $dateFrom = null, ?string $dateTo = null, ?string $distributors = null)
+    public function __construct(?string $dateFrom = null, ?string $dateTo = null, ?string $distributors = null, ?string $apNumber = null)
     {
         $this->dateFrom = $dateFrom;
         $this->dateTo = $dateTo;
         $this->distributors = $distributors;
+        $this->apNumber = $apNumber;
     }
 
     public function query()
@@ -146,7 +148,7 @@ class DeliveryNoteItemExport implements FromQuery, WithHeadings, WithMapping, Wi
             AfterSheet::class => function (AfterSheet $event) {
                 $sheet = $event->sheet->getDelegate();
                 $lastRow = $sheet->getHighestRow();
-                $sheet->insertNewRowBefore(1, 4);
+                $sheet->insertNewRowBefore(1, 5);
 
                 $sheet->setCellValue('A1', 'Tanggal: ' . now()->format('d/m/Y H:i:s'));
                 $sheet->setCellValue('A2', 'Dibuat Oleh: ' . Auth::user()->name);
@@ -167,13 +169,20 @@ class DeliveryNoteItemExport implements FromQuery, WithHeadings, WithMapping, Wi
                     'alignment' => ['horizontal' => 'center']
                 ]);
 
-                $sheet->getStyle('A5:L5')->applyFromArray([
+                $sheet->mergeCells('A5:L5');
+                $sheet->setCellValue('A5', 'AP Number: ' . strtoupper($this->apNumber));
+                $sheet->getStyle('A5')->applyFromArray([
+                    'font' => ['bold' => true, 'size' => 11],
+                    'alignment' => ['horizontal' => 'center']
+                ]);
+
+                $sheet->getStyle('A6:L6')->applyFromArray([
                     'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
                     'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => '166534']],
                 ]);
 
-                $totalRow = $lastRow + 5;
-                $dataStartRow = 6;
+                $totalRow = $lastRow + 6;
+                $dataStartRow = 7;
                 $dataEndRow = $totalRow - 1;
 
                 if ($dataEndRow < $dataStartRow) {
@@ -191,14 +200,14 @@ class DeliveryNoteItemExport implements FromQuery, WithHeadings, WithMapping, Wi
                 $sheet->getStyle("J{$dataStartRow}:K{$totalRow}")->getNumberFormat()->setFormatCode('#,##0');
                 $sheet->getStyle("L$totalRow")->getNumberFormat()->setFormatCode('0.00%');
 
-                $sheet->getStyle("I{$dataStartRow}:I{$totalRow}")->applyFromArray([
+                $sheet->getStyle("L{$dataStartRow}:L{$totalRow}")->applyFromArray([
                     'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT]
                 ]);
 
                 $sheet->getStyle("A{$dataStartRow}:A{$totalRow}")->applyFromArray([
                     'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER]
                 ]);
-                $sheet->getStyle("H{$dataStartRow}:H{$totalRow}")->applyFromArray([
+                $sheet->getStyle("I{$dataStartRow}:I{$totalRow}")->applyFromArray([
                     'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER]
                 ]);
 
