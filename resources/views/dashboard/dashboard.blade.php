@@ -35,11 +35,10 @@
                                 class="ti ti-file-plus me-2 text-primary"></i>Input BG Baru</a></li>
                     <li><a class="dropdown-item rounded-2 py-2" href="{{ route('customers.index') }}"><i
                                 class="ti ti-user-plus me-2 text-success"></i>Customer Baru</a></li>
-                    <li>
-                        <hr class="dropdown-divider">
-                    </li>
-                    <li><a class="dropdown-item rounded-2 py-2" href="#"><i
-                                class="ti ti-download me-2 text-muted"></i>Download Report</a></li>
+                    <li><a class="dropdown-item rounded-2 py-2" href="{{ route('logistic-fees.index') }}"><i
+                                class="ti ti-currency-dollar me-2 text-warning"></i>Logistic Fee</a></li>
+                    <li><a class="dropdown-item rounded-2 py-2" href="{{ route('logistic-orders.index') }}"><i
+                                class="ti ti-truck me-2 text-info"></i>Logistic Orders</a></li>
                 </ul>
             </div>
         </div>
@@ -159,9 +158,9 @@
                         class="badge bg-danger rounded-circle d-flex align-items-center justify-content-center shadow"
                         style="width: 25px; height: 25px;" id="myActionsCount">0</span>
                 </div>
-                <div class="card-body px-3 pb-3 pt-0">
-                    <div class="custom-scroll pe-2" style="height: 140px; overflow-y: auto;">
-                        <ul class="list-unstyled mb-0 d-flex flex-column gap-2" id="myActionsList">
+                <div class="card-body px-1 pb-0 pt-0 d-flex flex-column">
+                    <div class="custom-scroll pe-1 flex-grow-1" style="overflow-y: auto; height: 0; min-height: 140px;">
+                        <ul class="list-unstyled mb-0 d-flex flex-column gap-2 pb-2" id="myActionsList">
                             <li class="text-white-50 small fst-italic text-center mt-4">Loading actions...</li>
                         </ul>
                     </div>
@@ -186,6 +185,7 @@
                         id="dataTypeSelect" style="width: auto; cursor: pointer;">
                         <option value="bg">Bank Garansi</option>
                         <option value="customer">Customer</option>
+                        <option value="logistic_order">Logistic Order</option>
                     </select>
                 </div>
 
@@ -557,133 +557,200 @@
                             <p class="text-muted small mb-0">Tracking registrasi & limit kredit</p>
                         </div>
                     </div>
+                    <ul class="nav nav-pills mb-2" id="customer-workflow-tabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active py-1 px-3 fw-bold rounded-pill" id="bg-workflow-tab" data-bs-toggle="pill" data-bs-target="#bg-workflow" type="button" role="tab" aria-controls="bg-workflow" aria-selected="true" style="font-size: 0.75rem;">Dengan BG</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link py-1 px-3 fw-bold rounded-pill ms-2" id="cbd-workflow-tab" data-bs-toggle="pill" data-bs-target="#cbd-workflow" type="button" role="tab" aria-controls="cbd-workflow" aria-selected="false" style="font-size: 0.75rem;">Tanpa BG (CBD)</button>
+                        </li>
+                    </ul>
                 </div>
 
-                <div class="card-body">
-                    {{-- Container Timeline --}}
-                    <div style="position: relative; padding-left: 10px;">
+                <div class="card-body pt-3">
+                    <div class="tab-content" id="customer-workflow-content">
+                        {{-- TAB 1: DENGAN BG --}}
+                        <div class="tab-pane fade show active" id="bg-workflow" role="tabpanel" aria-labelledby="bg-workflow-tab">
+                            {{-- Container Timeline --}}
+                            <div style="position: relative; padding-left: 10px;">
+                                {{-- Garis Konektor --}}
+                                <div style="position: absolute; top: 15px; bottom: 30px; left: 28px; width: 2px; background: #e5e7eb; z-index: 0;"></div>
 
-                        {{-- Garis Konektor --}}
-                        <div
-                            style="position: absolute; top: 15px; bottom: 30px; left: 28px; width: 2px; background: #e5e7eb; z-index: 0;">
-                        </div>
-
-                        {{-- Step 1 --}}
-                        <div style="position: relative; padding-bottom: 30px; display: flex;">
-                            <div
-                                style="width: 38px; height: 38px; background: #eff6ff; color: #2563eb; border: 3px solid #fff; box-shadow: 0 0 0 1px #bfdbfe; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 1; flex-shrink: 0;">
-                                <i class="ti ti-keyboard fw-bold" style="font-size: 0.9rem;"></i>
-                            </div>
-                            <div style="margin-left: 15px; flex-grow: 1;">
-                                <div class="d-flex align-items-center justify-content-between mb-1">
-                                    <span class="badge"
-                                        style="background: #eff6ff; color: #1d4ed8; font-weight: 700; font-size: 0.65rem; padding: 4px 8px;">SALES
-                                        TEAM</span>
-                                    <small class="text-muted" style="font-size: 0.7rem;">Step 1</small>
+                                {{-- Step 1 --}}
+                                <div style="position: relative; padding-bottom: 30px; display: flex;">
+                                    <div style="width: 38px; height: 38px; background: #eff6ff; color: #2563eb; border: 3px solid #fff; box-shadow: 0 0 0 1px #bfdbfe; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 1; flex-shrink: 0;">
+                                        <i class="ti ti-keyboard fw-bold" style="font-size: 0.9rem;"></i>
+                                    </div>
+                                    <div style="margin-left: 15px; flex-grow: 1;">
+                                        <div class="d-flex align-items-center justify-content-between mb-1">
+                                            <span class="badge" style="background: #eff6ff; color: #1d4ed8; font-weight: 700; font-size: 0.65rem; padding: 4px 8px;">SALES TEAM</span>
+                                            <small class="text-muted" style="font-size: 0.7rem;">Step 1</small>
+                                        </div>
+                                        <h6 class="fw-bold mb-1" style="font-size: 0.9rem; color: #1f2937;">Input Data</h6>
+                                        <p class="text-muted mb-0 small" style="line-height: 1.3;">Mengisi form lengkap customer baru (Identitas, Bank, Kontak, Limit Awal).</p>
+                                    </div>
                                 </div>
-                                <h6 class="fw-bold mb-1" style="font-size: 0.9rem; color: #1f2937;">Input Data</h6>
-                                <p class="text-muted mb-0 small" style="line-height: 1.3;">Mengisi form lengkap
-                                    customer baru (Identitas, Bank, Kontak, Limit Awal).</p>
-                            </div>
-                        </div>
 
-                        {{-- Step 2 --}}
-                        <div style="position: relative; padding-bottom: 30px; display: flex;">
-                            <div
-                                style="width: 38px; height: 38px; background: #eff6ff; color: #2563eb; border: 3px solid #fff; box-shadow: 0 0 0 1px #bfdbfe; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 1; flex-shrink: 0;">
-                                <i class="ti ti-user-check fw-bold" style="font-size: 0.9rem;"></i>
-                            </div>
-                            <div style="margin-left: 15px; flex-grow: 1;">
-                                <div class="d-flex align-items-center justify-content-between mb-1">
-                                    <span class="badge"
-                                        style="background: #eff6ff; color: #1d4ed8; font-weight: 700; font-size: 0.65rem; padding: 4px 8px;">SPV
-                                        SALES</span>
-                                    <small class="text-muted" style="font-size: 0.7rem;">Step 2</small>
+                                {{-- Step 2 --}}
+                                <div style="position: relative; padding-bottom: 30px; display: flex;">
+                                    <div style="width: 38px; height: 38px; background: #eff6ff; color: #2563eb; border: 3px solid #fff; box-shadow: 0 0 0 1px #bfdbfe; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 1; flex-shrink: 0;">
+                                        <i class="ti ti-user-check fw-bold" style="font-size: 0.9rem;"></i>
+                                    </div>
+                                    <div style="margin-left: 15px; flex-grow: 1;">
+                                        <div class="d-flex align-items-center justify-content-between mb-1">
+                                            <span class="badge" style="background: #eff6ff; color: #1d4ed8; font-weight: 700; font-size: 0.65rem; padding: 4px 8px;">SPV SALES</span>
+                                            <small class="text-muted" style="font-size: 0.7rem;">Step 2</small>
+                                        </div>
+                                        <h6 class="fw-bold mb-1" style="font-size: 0.9rem; color: #1f2937;">Validasi Data</h6>
+                                        <p class="text-muted mb-0 small" style="line-height: 1.3;">Pengecekan kelengkapan dan validitas data awal dari tim sales.</p>
+                                    </div>
                                 </div>
-                                <h6 class="fw-bold mb-1" style="font-size: 0.9rem; color: #1f2937;">Validasi Data</h6>
-                                <p class="text-muted mb-0 small" style="line-height: 1.3;">Pengecekan kelengkapan dan
-                                    validitas data awal dari tim sales.</p>
-                            </div>
-                        </div>
 
-                        {{-- Step 3 --}}
-                        <div style="position: relative; padding-bottom: 30px; display: flex;">
-                            <div
-                                style="width: 38px; height: 38px; background: #e0f2fe; color: #0284c7; border: 3px solid #fff; box-shadow: 0 0 0 1px #7dd3fc; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 1; flex-shrink: 0;">
-                                <i class="ti ti-building fw-bold" style="font-size: 0.9rem;"></i>
-                            </div>
-                            <div style="margin-left: 15px; flex-grow: 1;">
-                                <div class="d-flex align-items-center justify-content-between mb-1">
-                                    <span class="badge"
-                                        style="background: #e0f2fe; color: #0369a1; font-weight: 700; font-size: 0.65rem; padding: 4px 8px;">HEAD
-                                        SALES</span>
-                                    <small class="text-muted" style="font-size: 0.7rem;">Step 3</small>
+                                {{-- Step 3 --}}
+                                <div style="position: relative; padding-bottom: 30px; display: flex;">
+                                    <div style="width: 38px; height: 38px; background: #e0f2fe; color: #0284c7; border: 3px solid #fff; box-shadow: 0 0 0 1px #7dd3fc; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 1; flex-shrink: 0;">
+                                        <i class="ti ti-building fw-bold" style="font-size: 0.9rem;"></i>
+                                    </div>
+                                    <div style="margin-left: 15px; flex-grow: 1;">
+                                        <div class="d-flex align-items-center justify-content-between mb-1">
+                                            <span class="badge" style="background: #e0f2fe; color: #0369a1; font-weight: 700; font-size: 0.65rem; padding: 4px 8px;">HEAD SALES</span>
+                                            <small class="text-muted" style="font-size: 0.7rem;">Step 3</small>
+                                        </div>
+                                        <h6 class="fw-bold mb-1" style="font-size: 0.9rem; color: #1f2937;">Business Review</h6>
+                                        <p class="text-muted mb-0 small" style="line-height: 1.3;">Verifikasi kebutuhan bisnis, area coverage, dan prospek customer.</p>
+                                    </div>
                                 </div>
-                                <h6 class="fw-bold mb-1" style="font-size: 0.9rem; color: #1f2937;">Business Review
-                                </h6>
-                                <p class="text-muted mb-0 small" style="line-height: 1.3;">Verifikasi kebutuhan
-                                    bisnis, area coverage, dan prospek customer.</p>
-                            </div>
-                        </div>
 
-                        {{-- Step 4 --}}
-                        <div style="position: relative; padding-bottom: 30px; display: flex;">
-                            <div
-                                style="width: 38px; height: 38px; background: #f0fdf4; color: #16a34a; border: 3px solid #fff; box-shadow: 0 0 0 1px #86efac; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 1; flex-shrink: 0;">
-                                <i class="ti ti-calculator fw-bold" style="font-size: 0.9rem;"></i>
-                            </div>
-                            <div style="margin-left: 15px; flex-grow: 1;">
-                                <div class="d-flex align-items-center justify-content-between mb-1">
-                                    <span class="badge"
-                                        style="background: #f0fdf4; color: #14532d; font-weight: 700; font-size: 0.65rem; padding: 4px 8px;">FINANCE
-                                        MGR</span>
-                                    <small class="text-muted" style="font-size: 0.7rem;">Step 4</small>
+                                {{-- Step 4 --}}
+                                <div style="position: relative; padding-bottom: 30px; display: flex;">
+                                    <div style="width: 38px; height: 38px; background: #f0fdf4; color: #16a34a; border: 3px solid #fff; box-shadow: 0 0 0 1px #86efac; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 1; flex-shrink: 0;">
+                                        <i class="ti ti-calculator fw-bold" style="font-size: 0.9rem;"></i>
+                                    </div>
+                                    <div style="margin-left: 15px; flex-grow: 1;">
+                                        <div class="d-flex align-items-center justify-content-between mb-1">
+                                            <span class="badge" style="background: #f0fdf4; color: #14532d; font-weight: 700; font-size: 0.65rem; padding: 4px 8px;">FINANCE MGR</span>
+                                            <small class="text-muted" style="font-size: 0.7rem;">Step 4</small>
+                                        </div>
+                                        <h6 class="fw-bold mb-1" style="font-size: 0.9rem; color: #1f2937;">Financial Calc</h6>
+                                        <p class="text-muted mb-0 small" style="line-height: 1.3;">Perhitungan final credit limit. Dapat menyesuaikan angka sebelum approve.</p>
+                                    </div>
                                 </div>
-                                <h6 class="fw-bold mb-1" style="font-size: 0.9rem; color: #1f2937;">Financial Calc
-                                </h6>
-                                <p class="text-muted mb-0 small" style="line-height: 1.3;">Perhitungan final credit
-                                    limit. Dapat menyesuaikan angka sebelum approve.</p>
-                            </div>
-                        </div>
 
-                        {{-- Step 5 --}}
-                        <div style="position: relative; padding-bottom: 30px; display: flex;">
-                            <div
-                                style="width: 38px; height: 38px; background: #f8f9fa; color: #374151; border: 3px solid #fff; box-shadow: 0 0 0 1px #d1d5db; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 1; flex-shrink: 0;">
-                                <i class="ti ti-shield-check fw-bold" style="font-size: 0.9rem;"></i>
-                            </div>
-                            <div style="margin-left: 15px; flex-grow: 1;">
-                                <div class="d-flex align-items-center justify-content-between mb-1">
-                                    <span class="badge"
-                                        style="background: #f8f9fa; color: #374151; font-weight: 700; font-size: 0.65rem; padding: 4px 8px;">HEAD
-                                        FINANCE</span>
-                                    <small class="text-muted" style="font-size: 0.7rem;">Optional</small>
+                                {{-- Step 5 --}}
+                                <div style="position: relative; padding-bottom: 30px; display: flex;">
+                                    <div style="width: 38px; height: 38px; background: #f8f9fa; color: #374151; border: 3px solid #fff; box-shadow: 0 0 0 1px #d1d5db; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 1; flex-shrink: 0;">
+                                        <i class="ti ti-shield-check fw-bold" style="font-size: 0.9rem;"></i>
+                                    </div>
+                                    <div style="margin-left: 15px; flex-grow: 1;">
+                                        <div class="d-flex align-items-center justify-content-between mb-1">
+                                            <span class="badge" style="background: #f8f9fa; color: #374151; font-weight: 700; font-size: 0.65rem; padding: 4px 8px;">HEAD FINANCE</span>
+                                            <small class="text-muted" style="font-size: 0.7rem;">Optional</small>
+                                        </div>
+                                        <h6 class="fw-bold mb-1" style="font-size: 0.9rem; color: #1f2937;">Approval Akhir</h6>
+                                        <p class="text-muted mb-0 small" style="line-height: 1.3;">Persetujuan level Head Finance (jika diperlukan kebijakan).</p>
+                                    </div>
                                 </div>
-                                <h6 class="fw-bold mb-1" style="font-size: 0.9rem; color: #1f2937;">Approval Akhir
-                                </h6>
-                                <p class="text-muted mb-0 small" style="line-height: 1.3;">Persetujuan level Head
-                                    Finance (jika diperlukan kebijakan).</p>
-                            </div>
-                        </div>
 
-                        {{-- Step 6 --}}
-                        <div style="position: relative; display: flex;">
-                            <div
-                                style="width: 38px; height: 38px; background: #212529; color: #fff; border: 3px solid #fff; box-shadow: 0 0 0 1px #374151; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 1; flex-shrink: 0;">
-                                <i class="ti ti-database fw-bold" style="font-size: 0.9rem;"></i>
-                            </div>
-                            <div style="margin-left: 15px; flex-grow: 1;">
-                                <div class="d-flex align-items-center justify-content-between mb-1">
-                                    <span class="badge"
-                                        style="background: #212529; color: #fff; font-weight: 700; font-size: 0.65rem; padding: 4px 8px;">SYSTEM</span>
-                                    <small class="text-muted" style="font-size: 0.7rem;">Finish</small>
+                                {{-- Step 6 --}}
+                                <div style="position: relative; display: flex;">
+                                    <div style="width: 38px; height: 38px; background: #212529; color: #fff; border: 3px solid #fff; box-shadow: 0 0 0 1px #374151; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 1; flex-shrink: 0;">
+                                        <i class="ti ti-database fw-bold" style="font-size: 0.9rem;"></i>
+                                    </div>
+                                    <div style="margin-left: 15px; flex-grow: 1;">
+                                        <div class="d-flex align-items-center justify-content-between mb-1">
+                                            <span class="badge" style="background: #212529; color: #fff; font-weight: 700; font-size: 0.65rem; padding: 4px 8px;">SYSTEM</span>
+                                            <small class="text-muted" style="font-size: 0.7rem;">Finish</small>
+                                        </div>
+                                        <h6 class="fw-bold mb-1" style="font-size: 0.9rem; color: #1f2937;">Registered</h6>
+                                        <p class="text-muted mb-0 small" style="line-height: 1.3;">Data tersimpan di Master Data Customer dan log aktivitas tercatat.</p>
+                                    </div>
                                 </div>
-                                <h6 class="fw-bold mb-1" style="font-size: 0.9rem; color: #1f2937;">Registered</h6>
-                                <p class="text-muted mb-0 small" style="line-height: 1.3;">Data tersimpan di Master
-                                    Data Customer dan log aktivitas tercatat.</p>
                             </div>
                         </div>
 
+                        {{-- TAB 2: TANPA BG (CBD) --}}
+                        <div class="tab-pane fade" id="cbd-workflow" role="tabpanel" aria-labelledby="cbd-workflow-tab">
+                            {{-- Container Timeline --}}
+                            <div style="position: relative; padding-left: 10px;">
+                                {{-- Garis Konektor --}}
+                                <div style="position: absolute; top: 15px; bottom: 30px; left: 28px; width: 2px; background: #e5e7eb; z-index: 0;"></div>
+
+                                {{-- Step 1 --}}
+                                <div style="position: relative; padding-bottom: 30px; display: flex;">
+                                    <div style="width: 38px; height: 38px; background: #eff6ff; color: #2563eb; border: 3px solid #fff; box-shadow: 0 0 0 1px #bfdbfe; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 1; flex-shrink: 0;">
+                                        <i class="ti ti-keyboard fw-bold" style="font-size: 0.9rem;"></i>
+                                    </div>
+                                    <div style="margin-left: 15px; flex-grow: 1;">
+                                        <div class="d-flex align-items-center justify-content-between mb-1">
+                                            <span class="badge" style="background: #eff6ff; color: #1d4ed8; font-weight: 700; font-size: 0.65rem; padding: 4px 8px;">SALES TEAM</span>
+                                            <small class="text-muted" style="font-size: 0.7rem;">Step 1</small>
+                                        </div>
+                                        <h6 class="fw-bold mb-1" style="font-size: 0.9rem; color: #1f2937;">Input Data</h6>
+                                        <p class="text-muted mb-0 small" style="line-height: 1.3;">Mengisi form lengkap customer baru (Identitas, Bank, Kontak, Limit Awal).</p>
+                                    </div>
+                                </div>
+
+                                {{-- Step 2 --}}
+                                <div style="position: relative; padding-bottom: 30px; display: flex;">
+                                    <div style="width: 38px; height: 38px; background: #eff6ff; color: #2563eb; border: 3px solid #fff; box-shadow: 0 0 0 1px #bfdbfe; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 1; flex-shrink: 0;">
+                                        <i class="ti ti-user-check fw-bold" style="font-size: 0.9rem;"></i>
+                                    </div>
+                                    <div style="margin-left: 15px; flex-grow: 1;">
+                                        <div class="d-flex align-items-center justify-content-between mb-1">
+                                            <span class="badge" style="background: #eff6ff; color: #1d4ed8; font-weight: 700; font-size: 0.65rem; padding: 4px 8px;">SPV SALES</span>
+                                            <small class="text-muted" style="font-size: 0.7rem;">Step 2</small>
+                                        </div>
+                                        <h6 class="fw-bold mb-1" style="font-size: 0.9rem; color: #1f2937;">Validasi Data</h6>
+                                        <p class="text-muted mb-0 small" style="line-height: 1.3;">Pengecekan kelengkapan dan validitas data awal dari tim sales.</p>
+                                    </div>
+                                </div>
+
+                                {{-- Step 3 --}}
+                                <div style="position: relative; padding-bottom: 30px; display: flex;">
+                                    <div style="width: 38px; height: 38px; background: #e0f2fe; color: #0284c7; border: 3px solid #fff; box-shadow: 0 0 0 1px #7dd3fc; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 1; flex-shrink: 0;">
+                                        <i class="ti ti-building fw-bold" style="font-size: 0.9rem;"></i>
+                                    </div>
+                                    <div style="margin-left: 15px; flex-grow: 1;">
+                                        <div class="d-flex align-items-center justify-content-between mb-1">
+                                            <span class="badge" style="background: #e0f2fe; color: #0369a1; font-weight: 700; font-size: 0.65rem; padding: 4px 8px;">HEAD SALES</span>
+                                            <small class="text-muted" style="font-size: 0.7rem;">Step 3</small>
+                                        </div>
+                                        <h6 class="fw-bold mb-1" style="font-size: 0.9rem; color: #1f2937;">Business Review</h6>
+                                        <p class="text-muted mb-0 small" style="line-height: 1.3;">Verifikasi kebutuhan bisnis, area coverage, dan prospek customer.</p>
+                                    </div>
+                                </div>
+
+                                {{-- Step 4 --}}
+                                <div style="position: relative; padding-bottom: 30px; display: flex;">
+                                    <div style="width: 38px; height: 38px; background: #f0fdf4; color: #16a34a; border: 3px solid #fff; box-shadow: 0 0 0 1px #86efac; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 1; flex-shrink: 0;">
+                                        <i class="ti ti-calculator fw-bold" style="font-size: 0.9rem;"></i>
+                                    </div>
+                                    <div style="margin-left: 15px; flex-grow: 1;">
+                                        <div class="d-flex align-items-center justify-content-between mb-1">
+                                            <span class="badge" style="background: #f0fdf4; color: #14532d; font-weight: 700; font-size: 0.65rem; padding: 4px 8px;">FINANCE MGR</span>
+                                            <small class="text-muted" style="font-size: 0.7rem;">Step 4</small>
+                                        </div>
+                                        <h6 class="fw-bold mb-1" style="font-size: 0.9rem; color: #1f2937;">Financial Calc</h6>
+                                        <p class="text-muted mb-0 small" style="line-height: 1.3;">Perhitungan final credit limit. Dapat menyesuaikan angka sebelum approve.</p>
+                                    </div>
+                                </div>
+
+                                {{-- Step 5 (Finish, Head Finance skipped) --}}
+                                <div style="position: relative; display: flex;">
+                                    <div style="width: 38px; height: 38px; background: #212529; color: #fff; border: 3px solid #fff; box-shadow: 0 0 0 1px #374151; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 1; flex-shrink: 0;">
+                                        <i class="ti ti-database fw-bold" style="font-size: 0.9rem;"></i>
+                                    </div>
+                                    <div style="margin-left: 15px; flex-grow: 1;">
+                                        <div class="d-flex align-items-center justify-content-between mb-1">
+                                            <span class="badge" style="background: #212529; color: #fff; font-weight: 700; font-size: 0.65rem; padding: 4px 8px;">SYSTEM</span>
+                                            <small class="text-muted" style="font-size: 0.7rem;">Finish</small>
+                                        </div>
+                                        <h6 class="fw-bold mb-1" style="font-size: 0.9rem; color: #1f2937;">Registered</h6>
+                                        <p class="text-muted mb-0 small" style="line-height: 1.3;">Data tersimpan di Master Data Customer dan log aktivitas tercatat.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1074,17 +1141,17 @@
                 d.notifications.forEach(n => {
                     l.innerHTML += `
                     <li>
-                        <a href="${n.url}" class="d-flex text-white text-decoration-none p-3 rounded-3" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1); transition: all 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
-                            <div class="me-3">
-                                <div class="rounded-circle bg-warning bg-opacity-25 text-warning d-flex align-items-center justify-content-center" style="width: 35px; height: 35px;">
+                        <a href="${n.url}" class="d-flex text-white text-decoration-none p-2 rounded-3" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1); transition: all 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
+                            <div class="me-2">
+                                <div class="rounded-circle bg-warning bg-opacity-25 text-warning d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
                                     <i class="ti ti-bell"></i>
                                 </div>
                             </div>
                             <div class="flex-grow-1" style="min-width: 0;">
-                                <div class="text-truncate small fw-bold mb-1">${n.message}</div>
+                                <div class="text-truncate fw-bold mb-1" style="font-size: 0.8rem;">${n.message}</div>
                                 <div class="d-flex justify-content-between align-items-center">
-                                    <small class="text-white-50" style="font-size: 0.7rem;">Check Now</small>
-                                    <small class="text-white-50" style="font-size: 0.7rem;">${n.timestamp}</small>
+                                    <small class="text-white-50" style="font-size: 0.65rem;">Check Now</small>
+                                    <small class="text-white-50" style="font-size: 0.65rem;">${n.timestamp}</small>
                                 </div>
                             </div>
                         </a>
