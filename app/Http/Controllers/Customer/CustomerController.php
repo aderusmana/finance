@@ -280,7 +280,7 @@ class CustomerController extends Controller
                         $btn .= '<button type="button" class="btn btn-dark btn-xs rounded-pill fw-bold shadow-sm w-100"
                                 ' . $btnStyle . '
                                 onclick="Swal.fire({
-                                    title: \'Access Locked!\',
+                                    title: \'Delete Access Locked!\',
                                     html: \'Customer data <b>' . $customerNameJS . '</b> cannot be deleted because the approval process is in progress.\',
                                     icon: \'warning\',
                                     confirmButtonText: \'<i class=\\\'ph-bold ph-check me-1\\\'></i> Okay, closed\',
@@ -288,7 +288,7 @@ class CustomerController extends Controller
                                     customClass: { confirmButton: \'btn rounded-pill px-4 fw-bold shadow-sm text-white\' },
                                     buttonsStyling: false
                                 })">
-                                <i class="ph-bold ph-lock-key me-1"></i> Locked
+                                <i class="ph-bold ph-lock-key me-1"></i> Delete
                             </button>';
                     }
 

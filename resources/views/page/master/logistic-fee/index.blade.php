@@ -149,15 +149,13 @@
                             </div>
 
                             <div id="editModeWrapper" style="display: none;">
-                                <div class="row mb-4">
-                                    <div class="col-md-6">
-                                        <label class="form-label fw-bold" style="color: #64748b; font-size: 0.85rem;">Distributor</label>
-                                        <input type="text" id="distributor_info" class="form-control fw-bold" readonly style="background-color: #f1f5f9; border: none; color: #334155; border-radius: 0.75rem; padding: 0.6rem 1rem;">
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label fw-bold" style="color: #64748b; font-size: 0.85rem;">Customer</label>
-                                        <input type="text" id="customer_info" class="form-control fw-bold" readonly style="background-color: #f1f5f9; border: none; color: #334155; border-radius: 0.75rem; padding: 0.6rem 1rem;">
-                                    </div>
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold" style="color: #64748b; font-size: 0.85rem;">Distributor</label>
+                                    <input type="text" id="distributor_info" class="form-control fw-bold" readonly style="background-color: #f1f5f9; border: none; color: #334155; border-radius: 0.75rem; padding: 0.6rem 1rem;">
+                                </div>
+                                <div class="mb-4">
+                                    <label class="form-label fw-bold" style="color: #64748b; font-size: 0.85rem;">Customer</label>
+                                    <input type="text" id="customer_info" class="form-control fw-bold" readonly style="background-color: #f1f5f9; border: none; color: #334155; border-radius: 0.75rem; padding: 0.6rem 1rem;">
                                 </div>
 
                                 <div class="mb-4 p-3" style="background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 1rem;">
