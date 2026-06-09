@@ -8,10 +8,8 @@
     {{-- HEADER & ACTIONS --}}
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
         <div>
-            <h3 class="fw-bold mb-0" style="color: #2c3e50; font-size: 1.75rem;">Executive Dashboard | Customers & Bank
-                Garansi</h3>
-            <p class="text-muted small mb-0">Ringkasan Eksekutif Real-Time: Monitoring Bank Garansi, Data Pelanggan, dan
-                Alur Kerja Terintegrasi</p>
+            <h3 class="fw-bold mb-0" style="color: #2c3e50; font-size: 1.75rem;">Executive Dashboard | Customers Portal</h3>
+            <p class="text-muted small mb-0">Ringkasan Eksekutif Real-Time: Monitoring Bank Garansi, Data Pelanggan, Operasional Logistik, dan Alur Kerja Terintegrasi</p>
         </div>
         <div class="d-flex align-items-center gap-2">
             {{-- DATE PICKER --}}
@@ -31,14 +29,14 @@
                     <span class="d-none d-sm-inline">Quick Action</span>
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg p-2 rounded-3">
-                    <li><a class="dropdown-item rounded-2 py-2" href="{{ route('bg-list.index') }}"><i
-                                class="ti ti-file-plus me-2 text-primary"></i>Input BG Baru</a></li>
                     <li><a class="dropdown-item rounded-2 py-2" href="{{ route('customers.index') }}"><i
-                                class="ti ti-user-plus me-2 text-success"></i>Customer Baru</a></li>
+                                class="ti ti-user-plus me-2 text-success"></i>Customers</a></li>
                     <li><a class="dropdown-item rounded-2 py-2" href="{{ route('logistic-fees.index') }}"><i
                                 class="ti ti-currency-dollar me-2 text-warning"></i>Logistic Fee</a></li>
                     <li><a class="dropdown-item rounded-2 py-2" href="{{ route('logistic-orders.index') }}"><i
                                 class="ti ti-truck me-2 text-info"></i>Logistic Orders</a></li>
+                    <li><a class="dropdown-item rounded-2 py-2" href="{{ route('bg-list.index') }}"><i
+                                class="ti ti-file-plus me-2 text-primary"></i>Bank Garansi</a></li>
                 </ul>
             </div>
         </div>
@@ -353,52 +351,7 @@
         </div>
     </div>
 
-    {{-- ROW 3: LISTS (Top Cust & Activities) --}}
-    <div class="row g-3 mb-3">
-        {{-- Top Customer (White - BORDER TEGAS) --}}
-        <div class="col-lg-6">
-            <div class="card bg-white h-100"
-                style="border: 1px solid #cbd5e1; border-radius: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
-                <div class="px-4 py-3 border-bottom d-flex justify-content-between align-items-center">
-                    <h6 class="fw-bold mb-0 text-primary"><i class="ti ti-trophy me-2"></i> Top Customers (Value)</h6>
-                </div>
-                <div class="p-2" style="max-height: 350px; overflow-y: auto;">
-                    <ul class="list-group list-group-flush" id="topCustomersList">
-                        {{-- JS Injected --}}
-                    </ul>
-                </div>
-            </div>
-        </div>
-
-        {{-- Recent Activity (White - BORDER TEGAS) --}}
-        <div class="col-lg-6">
-            <div class="card bg-white h-100"
-                style="border: 1px solid #cbd5e1; border-radius: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
-                <div class="px-4 py-3 border-bottom">
-                    <h6 class="fw-bold mb-0 text-info"><i class="ti ti-activity me-2"></i> Recent Activities</h6>
-                </div>
-                <div class="custom-scroll" style="max-height: 350px; overflow-y: auto;">
-                    <div class="table-responsive border rounded-3" style="border-color: #e2e8f0 !important;">
-                        <table class="table table-hover align-middle mb-0" style="font-size: 0.85rem;">
-                            <thead class="bg-light sticky-top" style="z-index: 2;">
-                                <tr>
-                                    <th class="ps-4 text-secondary py-3 border-bottom" style="border-color: #cbd5e1;">Ref ID</th>
-                                    <th class="text-secondary border-bottom" style="border-color: #cbd5e1;">Requester</th>
-                                    <th class="text-secondary border-bottom" style="border-color: #cbd5e1;">Category</th>
-                                    <th class="text-secondary border-bottom" style="border-color: #cbd5e1;">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody id="recentActivitiesTableBody">
-                                {{-- JS Injected --}}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    {{-- ROW 4: LOGISTIC ORDERS OVERVIEW --}}
+    {{-- ROW 3: LOGISTIC ORDERS OVERVIEW --}}
     <div class="row g-3 mb-3">
         <div class="col-12">
             <div class="card bg-white p-4" style="border: 1px solid #cbd5e1; border-radius: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
@@ -477,6 +430,51 @@
                                 <span class="text-muted small fst-italic"><i class="ti ti-info-circle me-1"></i>Belum ada data pesanan logistik.</span>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- ROW 4: LISTS (Top Cust & Activities) --}}
+    <div class="row g-3 mb-3">
+        {{-- Top Customer (White - BORDER TEGAS) --}}
+        <div class="col-lg-6">
+            <div class="card bg-white h-100"
+                style="border: 1px solid #cbd5e1; border-radius: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                <div class="px-4 py-3 border-bottom d-flex justify-content-between align-items-center">
+                    <h6 class="fw-bold mb-0 text-primary"><i class="ti ti-trophy me-2"></i> Top Customers (Value)</h6>
+                </div>
+                <div class="p-2" style="max-height: 350px; overflow-y: auto;">
+                    <ul class="list-group list-group-flush" id="topCustomersList">
+                        {{-- JS Injected --}}
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        {{-- Recent Activity (White - BORDER TEGAS) --}}
+        <div class="col-lg-6">
+            <div class="card bg-white h-100"
+                style="border: 1px solid #cbd5e1; border-radius: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                <div class="px-4 py-3 border-bottom">
+                    <h6 class="fw-bold mb-0 text-info"><i class="ti ti-activity me-2"></i> Recent Activities</h6>
+                </div>
+                <div class="custom-scroll" style="max-height: 350px; overflow-y: auto;">
+                    <div class="table-responsive border rounded-3" style="border-color: #e2e8f0 !important;">
+                        <table class="table table-hover align-middle mb-0" style="font-size: 0.85rem;">
+                            <thead class="bg-light sticky-top" style="z-index: 2;">
+                                <tr>
+                                    <th class="ps-4 text-secondary py-3 border-bottom" style="border-color: #cbd5e1;">Ref ID</th>
+                                    <th class="text-secondary border-bottom" style="border-color: #cbd5e1;">Requester</th>
+                                    <th class="text-secondary border-bottom" style="border-color: #cbd5e1;">Category</th>
+                                    <th class="text-secondary border-bottom" style="border-color: #cbd5e1;">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recentActivitiesTableBody">
+                                {{-- JS Injected --}}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
