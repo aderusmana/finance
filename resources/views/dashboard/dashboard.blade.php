@@ -373,7 +373,7 @@
                         <div class="card p-3 border-0 shadow-sm" style="background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%); border-radius: 12px; border-left: 4px solid #0ea5e9 !important;">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
-                                    <small class="fw-bold text-uppercase" style="color: #0369a1; font-size: 0.65rem;">Total Orders</small>
+                                    <small class="fw-bold text-uppercase" style="color: #0369a1; font-size: 0.65rem;">Total Logistic Orders</small>
                                     <h4 class="fw-bold mb-0 mt-1" style="color: #0369a1;" id="lo_total_orders">-</h4>
                                 </div>
                                 <div class="bg-white rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 45px; height: 45px; color: #0ea5e9;">
@@ -397,8 +397,8 @@
                         <div class="card p-3 border-0 shadow-sm" style="background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); border-radius: 12px; border-left: 4px solid #22c55e !important;">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
-                                    <small class="fw-bold text-uppercase" style="color: #166534; font-size: 0.65rem;">Active Logistic Fees</small>
-                                    <h4 class="fw-bold mb-0 mt-1" style="color: #166534;" id="lo_active_fees">-</h4>
+                                    <small class="fw-bold text-uppercase" style="color: #166534; font-size: 0.65rem;">Total DN Downloaded</small>
+                                    <h4 class="fw-bold mb-0 mt-1" style="color: #166534;" id="lo_downloaded_dn">-</h4>
                                 </div>
                                 <div class="bg-white rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 45px; height: 45px; color: #22c55e;">
                                     <i class="ti ti-circle-check fs-4"></i>
@@ -1270,7 +1270,7 @@
 
                 document.getElementById('lo_total_orders').textContent = d.summary.total_orders + " Orders";
                 document.getElementById('lo_pending_downloads').textContent = d.summary.pending_downloads + " Pending";
-                document.getElementById('lo_active_fees').textContent = d.summary.active_fees + " Active";
+                document.getElementById('lo_downloaded_dn').textContent = d.summary.downloaded_dn + " Download";
 
                 const t = document.getElementById('lo_recent_orders_body');
                 const emptyState = document.getElementById('lo_empty_state');

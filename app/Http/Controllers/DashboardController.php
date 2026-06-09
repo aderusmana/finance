@@ -471,6 +471,7 @@ class DashboardController extends Controller
                 'pending_downloads' => $pendingDownloads,
                 'active_fees' => $activeFees,
                 'pending_fees' => $pendingFees,
+                'downloaded_dn' => DeliveryOrderNote::where('status', 'Downloaded')->count(),
             ],
             'chart' => [
                 'labels' => $chartLabels,
