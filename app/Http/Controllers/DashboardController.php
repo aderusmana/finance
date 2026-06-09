@@ -111,6 +111,61 @@ class DashboardController extends Controller
         // Parse tanggal
         [$startDate, $endDate] = $this->parseDateRange($request->input('date_range'));
 
+        if ($type === 'all') {
+            $bgData = BankGaransi::query()
+                ->whereBetween('created_at', [$startDate, $endDate])
+                ->select(DB::raw('MONTH(created_at) as month'), DB::raw('count(*) as total'))
+                ->groupBy('month')->pluck('total', 'month')->toArray();
+
+            $custData = Customer::query()
+                ->whereBetween('created_at', [$startDate, $endDate])
+                ->select(DB::raw('MONTH(created_at) as month'), DB::raw('count(*) as total'))
+                ->groupBy('month')->pluck('total', 'month')->toArray();
+
+            $loData = LogisticOrder::query()
+                ->whereBetween('created_at', [$startDate, $endDate])
+                ->select(DB::raw('MONTH(created_at) as month'), DB::raw('count(*) as total'))
+                ->groupBy('month')->pluck('total', 'month')->toArray();
+
+            $bg_total = array_fill(0, 12, 0);
+            $customer_total = array_fill(0, 12, 0);
+            $logistic_total = array_fill(0, 12, 0);
+
+            for ($i = 1; $i <= 12; $i++) {
+                $bg_total[$i - 1] = $bgData[$i] ?? 0;
+                $customer_total[$i - 1] = $custData[$i] ?? 0;
+                $logistic_total[$i - 1] = $loData[$i] ?? 0;
+            }
+
+            return response()->json([
+                'type' => 'all',
+                'bg_total' => $bg_total,
+                'customer_total' => $customer_total,
+                'logistic_total' => $logistic_total
+            ]);
+        }
+
+        if ($type === 'logistic_order') {
+            $data = LogisticOrder::query()->whereBetween('created_at', [$startDate, $endDate])
+                ->select(DB::raw('MONTH(created_at) as month'))->get();
+            $created = array_fill(0, 12, 0);
+            $approved = array_fill(0, 12, 0);
+            $pending  = array_fill(0, 12, 0);
+            $rejected = array_fill(0, 12, 0);
+
+            foreach ($data as $row) {
+                $created[$row->month - 1]++;
+                $approved[$row->month - 1]++; // Simplify for chart representation
+            }
+
+            return response()->json([
+                'created' => $created,
+                'approved' => $approved,
+                'pending' => $pending,
+                'rejected' => $rejected
+            ]);
+        }
+
         // --- PERBAIKAN DI SINI: Switch Query Berdasarkan Tipe ---
         if ($type === 'customer') {
             $query = Customer::query()->whereBetween('created_at', [$startDate, $endDate]);
@@ -119,9 +174,6 @@ class DashboardController extends Controller
         }
 
         // Ambil data status dan bulan
-        // Pastikan model Customer memiliki kolom 'status' (active/pending/dll).
-        // Jika tidak ada, kode ini tetap menghitung 'Created' dengan benar,
-        // tapi Approved/Pending mungkin 0 jika nama statusnya beda.
         $data = $query->select('status', DB::raw('MONTH(created_at) as month'))->get();
 
         $created = array_fill(0, 12, 0);
@@ -131,15 +183,10 @@ class DashboardController extends Controller
 
         foreach ($data as $row) {
             $idx = $row->month - 1;
-
-            // 1. Hitung Created (Semua data yang masuk query = Created)
             $created[$idx]++;
 
-            // 2. Mapping Status (Sesuaikan dengan value di database Anda)
-            // Lowercase agar case-insensitive
             $st = strtolower($row->status ?? '');
 
-            // Logic untuk Bank Garansi & Customer
             if (in_array($st, ['approved', 'completed', 'active', 'verified'])) {
                 $approved[$idx]++;
             } elseif (in_array($st, ['rejected', 'expired', 'returned', 'inactive'])) {
@@ -147,10 +194,7 @@ class DashboardController extends Controller
             } elseif (in_array($st, ['draft', 'pending', 'process', 'new', 'waiting_approval'])) {
                 $pending[$idx]++;
             } else {
-                // Jika status kosong atau null, anggap sebagai Pending atau biarkan hanya masuk Created
                 if($type === 'customer' && $st == '') {
-                    // Opsional: Jika customer tidak punya kolom status, bisa dianggap Approved otomatis
-                    // $approved[$idx]++;
                 } else {
                     $pending[$idx]++;
                 }

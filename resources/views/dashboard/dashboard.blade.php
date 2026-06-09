@@ -45,7 +45,7 @@
     </div>
 
     {{-- ROW 1: COMPACT METRICS --}}
-    <div class="row g-3 mb-4">
+    <div class="row g-3 mb-3">
         {{-- Total Active BG Value --}}
         <div class="col-12 col-md-6 col-xl-3">
             <div class="card h-100 border-0 shadow-sm text-white"
@@ -170,7 +170,7 @@
     </div>
 
     {{-- ROW 2: CHART & HIGHLIGHTS --}}
-    <div class="row g-3 mb-4">
+    <div class="row g-3 mb-3">
         {{-- Chart Section (White - BORDER TEGAS) --}}
         <div class="col-lg-8">
             <div class="card p-4 h-100"
@@ -183,6 +183,7 @@
                     </div>
                     <select class="form-select form-select-sm bg-light border-0 fw-bold text-primary"
                         id="dataTypeSelect" style="width: auto; cursor: pointer;">
+                        <option value="all" selected>Semua Data (All)</option>
                         <option value="bg">Bank Garansi</option>
                         <option value="customer">Customer</option>
                         <option value="logistic_order">Logistic Order</option>
@@ -199,21 +200,21 @@
                     <div class="col-4">
                         <div
                             class="p-3 rounded-3 bg-primary bg-opacity-10 text-primary border border-primary border-opacity-10">
-                            <span class="d-block small fw-bold text-uppercase mb-1">Created</span>
+                            <span class="d-block small fw-bold text-uppercase mb-1" id="labelSummary1">Created</span>
                             <span class="fs-4" id="summaryCreated" style="font-weight: 800;">-</span>
                         </div>
                     </div>
                     <div class="col-4">
                         <div
                             class="p-3 rounded-3 bg-success bg-opacity-10 text-success border border-success border-opacity-10">
-                            <span class="d-block small fw-bold text-uppercase mb-1">Approved</span>
+                            <span class="d-block small fw-bold text-uppercase mb-1" id="labelSummary2">Approved</span>
                             <span class="fs-4" id="summaryApproved" style="font-weight: 800;">-</span>
                         </div>
                     </div>
                     <div class="col-4">
                         <div
                             class="p-3 rounded-3 bg-warning bg-opacity-10 text-warning border border-warning border-opacity-10">
-                            <span class="d-block small fw-bold text-uppercase mb-1">Pending</span>
+                            <span class="d-block small fw-bold text-uppercase mb-1" id="labelSummary3">Pending</span>
                             <span class="fs-4" id="summaryPending" style="font-weight: 800;">-</span>
                         </div>
                     </div>
@@ -353,7 +354,7 @@
     </div>
 
     {{-- ROW 3: LISTS (Top Cust & Activities) --}}
-    <div class="row g-3 mb-5">
+    <div class="row g-3 mb-3">
         {{-- Top Customer (White - BORDER TEGAS) --}}
         <div class="col-lg-6">
             <div class="card bg-white h-100"
@@ -376,15 +377,15 @@
                 <div class="px-4 py-3 border-bottom">
                     <h6 class="fw-bold mb-0 text-info"><i class="ti ti-activity me-2"></i> Recent Activities</h6>
                 </div>
-                <div style="max-height: 350px; overflow-y: auto;">
-                    <div class="table-responsive">
+                <div class="custom-scroll" style="max-height: 350px; overflow-y: auto;">
+                    <div class="table-responsive border rounded-3" style="border-color: #e2e8f0 !important;">
                         <table class="table table-hover align-middle mb-0" style="font-size: 0.85rem;">
-                            <thead class="bg-light sticky-top">
+                            <thead class="bg-light sticky-top" style="z-index: 2;">
                                 <tr>
-                                    <th class="ps-4 text-secondary py-3">Ref ID</th>
-                                    <th class="text-secondary">Requester</th>
-                                    <th class="text-secondary">Category</th>
-                                    <th class="text-secondary">Status</th>
+                                    <th class="ps-4 text-secondary py-3 border-bottom" style="border-color: #cbd5e1;">Ref ID</th>
+                                    <th class="text-secondary border-bottom" style="border-color: #cbd5e1;">Requester</th>
+                                    <th class="text-secondary border-bottom" style="border-color: #cbd5e1;">Category</th>
+                                    <th class="text-secondary border-bottom" style="border-color: #cbd5e1;">Status</th>
                                 </tr>
                             </thead>
                             <tbody id="recentActivitiesTableBody">
@@ -397,8 +398,93 @@
         </div>
     </div>
 
-    {{-- ROW 4: WORKFLOW SPLIT COLUMNS (White - BORDER TEGAS) --}}
-    <div class="row g-3 mb-4">
+    {{-- ROW 4: LOGISTIC ORDERS OVERVIEW --}}
+    <div class="row g-3 mb-3">
+        <div class="col-12">
+            <div class="card bg-white p-4" style="border: 1px solid #cbd5e1; border-radius: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h5 class="text-dark mb-1" style="font-weight: 800;">
+                            <i class="ti ti-truck text-info me-2"></i>Logistic Orders Overview
+                        </h5>
+                        <p class="text-muted small mb-0">Status pengiriman dan summary pesanan logistik</p>
+                    </div>
+                    <a href="{{ route('logistic-orders.index') }}" class="btn btn-sm btn-outline-info rounded-pill fw-bold px-3">
+                        View All
+                    </a>
+                </div>
+
+                <div class="row g-4">
+                    {{-- Left: Metrics --}}
+                    <div class="col-lg-4 d-flex flex-column">
+                        <div class="card p-3 border-0 shadow-sm" style="background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%); border-radius: 12px; border-left: 4px solid #0ea5e9 !important;">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <small class="fw-bold text-uppercase" style="color: #0369a1; font-size: 0.65rem;">Total Orders</small>
+                                    <h4 class="fw-bold mb-0 mt-1" style="color: #0369a1;" id="lo_total_orders">-</h4>
+                                </div>
+                                <div class="bg-white rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 45px; height: 45px; color: #0ea5e9;">
+                                    <i class="ti ti-clock-pause fs-4"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card p-3 border-0 shadow-sm" style="background: linear-gradient(135deg, #fef08a 0%, #fde047 100%); border-radius: 12px; border-left: 4px solid #eab308 !important;">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <small class="fw-bold text-uppercase" style="color: #854d0e; font-size: 0.65rem;">Pending DN Downloads</small>
+                                    <h4 class="fw-bold mb-0 mt-1" style="color: #854d0e;" id="lo_pending_downloads">-</h4>
+                                </div>
+                                <div class="bg-white rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 45px; height: 45px; color: #eab308;">
+                                    <i class="ti ti-truck-delivery fs-4"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card p-3 border-0 shadow-sm" style="background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); border-radius: 12px; border-left: 4px solid #22c55e !important;">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <small class="fw-bold text-uppercase" style="color: #166534; font-size: 0.65rem;">Active Logistic Fees</small>
+                                    <h4 class="fw-bold mb-0 mt-1" style="color: #166534;" id="lo_active_fees">-</h4>
+                                </div>
+                                <div class="bg-white rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 45px; height: 45px; color: #22c55e;">
+                                    <i class="ti ti-circle-check fs-4"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Right: Table --}}
+                    <div class="col-lg-8">
+                        <div class="table-responsive custom-scroll border rounded-3" style="border-color: #e2e8f0 !important;">
+                            <table class="table table-hover align-middle mb-0" style="font-size: 0.85rem;">
+                                <thead class="bg-light sticky-top" style="z-index: 2;">
+                                    <tr>
+                                        <th class="ps-3 text-secondary py-3 border-bottom" style="font-size: 0.75rem; text-transform: uppercase; border-color: #cbd5e1;">No. DO</th>
+                                        <th class="text-secondary border-bottom" style="font-size: 0.75rem; text-transform: uppercase; border-color: #cbd5e1;">Distributor</th>
+                                        <th class="text-secondary border-bottom" style="font-size: 0.75rem; text-transform: uppercase; border-color: #cbd5e1;">Destination</th>
+                                        <th class="text-secondary text-end pe-4 border-bottom" style="font-size: 0.75rem; text-transform: uppercase; border-color: #cbd5e1;">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="lo_recent_orders_body">
+                                    {{-- JS Injected --}}
+                                    <tr>
+                                        <td colspan="4" class="text-center py-4 text-muted small fst-italic">Loading recent orders...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <div class="text-center mt-3 mb-2" id="lo_empty_state" style="display: none;">
+                                <span class="text-muted small fst-italic"><i class="ti ti-info-circle me-1"></i>Belum ada data pesanan logistik.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- ROW 5: WORKFLOW SPLIT COLUMNS (White - BORDER TEGAS) --}}
+    <div class="row g-3 mb-3">
         {{-- KOLOM KIRI: ALUR BG --}}
         <div class="col-lg-6">
             <div class="card h-100"
@@ -984,31 +1070,57 @@
                     );
                 if (!d) return;
 
-                // Update Box Summary di bawah chart
+                let seriesData = [];
+                let chartType = 'bar';
+                let strokeConfig = { show: true, width: 2, colors: ['transparent'] };
+                let fillConfig = { opacity: 1 };
+
                 const sum = a => a.reduce((x, y) => x + y, 0);
-                document.getElementById('summaryCreated').textContent = sum(d.created);
-                document.getElementById('summaryApproved').textContent = sum(d.approved);
-                document.getElementById('summaryPending').textContent = sum(d.pending);
+
+                if (type === 'all') {
+                    chartType = 'bar';
+                    
+                    document.getElementById('labelSummary1').textContent = 'Total BG';
+                    document.getElementById('labelSummary2').textContent = 'Total Customer';
+                    document.getElementById('labelSummary3').textContent = 'Total Logistic';
+
+                    document.getElementById('summaryCreated').textContent = sum(d.bg_total);
+                    document.getElementById('summaryApproved').textContent = sum(d.customer_total);
+                    document.getElementById('summaryPending').textContent = sum(d.logistic_total);
+
+                    seriesData = [
+                        { name: 'Bank Garansi', type: 'column', data: d.bg_total, color: '#0d6efd' },
+                        { name: 'Customer', type: 'column', data: d.customer_total, color: '#198754' },
+                        { name: 'Logistic Order', type: 'column', data: d.logistic_total, color: '#ffc107' }
+                    ];
+
+                    strokeConfig = { show: true, width: 2, colors: ['transparent'] };
+                    fillConfig = { opacity: 1 };
+                } else {
+                    chartType = 'bar';
+
+                    document.getElementById('labelSummary1').textContent = 'Created';
+                    document.getElementById('labelSummary2').textContent = 'Approved';
+                    document.getElementById('labelSummary3').textContent = 'Pending';
+
+                    document.getElementById('summaryCreated').textContent = sum(d.created);
+                    document.getElementById('summaryApproved').textContent = sum(d.approved);
+                    document.getElementById('summaryPending').textContent = sum(d.pending);
+
+                    seriesData = [
+                        { name: 'Created', type: 'column', data: d.created, color: '#0d6efd' },
+                        { name: 'Approved', type: 'column', data: d.approved, color: '#198754' },
+                        { name: 'Pending', type: 'column', data: d.pending, color: '#ffc107' }
+                    ];
+
+                    strokeConfig = { show: true, width: 2, colors: ['transparent'] };
+                    fillConfig = { opacity: 1 };
+                }
 
                 const options = {
-                    series: [{
-                            name: 'Created',
-                            data: d.created,
-                            color: '#0d6efd'
-                        },
-                        {
-                            name: 'Approved',
-                            data: d.approved,
-                            color: '#198754'
-                        },
-                        {
-                            name: 'Pending',
-                            data: d.pending,
-                            color: '#ffc107'
-                        }
-                    ],
+                    series: seriesData,
                     chart: {
-                        type: 'bar',
+                        type: chartType,
                         height: 280,
                         toolbar: {
                             show: false
@@ -1024,11 +1136,7 @@
                     dataLabels: {
                         enabled: false
                     },
-                    stroke: {
-                        show: true,
-                        width: 2,
-                        colors: ['transparent']
-                    },
+                    stroke: strokeConfig,
                     // Force X-Axis Jan-Des agar tampilan konsisten
                     xaxis: {
                         type: 'category',
@@ -1060,9 +1168,7 @@
                             }
                         }
                     },
-                    fill: {
-                        opacity: 1
-                    },
+                    fill: fillConfig,
                     legend: {
                         position: 'top',
                         fontSize: '12px'
@@ -1120,10 +1226,10 @@
                     else if (r.status === 'process') badge = 'bg-info';
                     t.innerHTML += `
                     <tr>
-                        <td class="ps-4 py-3 border-bottom-0"><span class="fw-bold text-primary bg-primary bg-opacity-10 px-2 py-1 rounded small">${r.srs_number}</span></td>
-                        <td class="border-bottom-0 fw-bold text-dark small">${r.requester_name}</td>
-                        <td class="border-bottom-0"><span class="badge bg-light text-dark border fw-normal">${r.category}</span></td>
-                        <td class="border-bottom-0"><span class="badge ${badge} rounded-pill bg-opacity-75 text-white" style="font-size:10px">${r.status}</span></td>
+                        <td class="ps-4 py-3 border-bottom" style="border-color: #f1f5f9;"><span class="fw-bold text-primary bg-primary bg-opacity-10 px-2 py-1 rounded small">${r.srs_number}</span></td>
+                        <td class="border-bottom fw-bold text-dark small" style="border-color: #f1f5f9;">${r.requester_name}</td>
+                        <td class="border-bottom" style="border-color: #f1f5f9;"><span class="badge bg-light text-dark border fw-normal">${r.category}</span></td>
+                        <td class="border-bottom" style="border-color: #f1f5f9;"><span class="badge ${badge} rounded-pill bg-opacity-75 text-white" style="font-size:10px">${r.status}</span></td>
                     </tr>`;
                 });
             }
@@ -1159,12 +1265,49 @@
                 });
             }
 
+            async function loadLogisticOrders() {
+                const d = await fetchData("{{ route('dashboard.data.logistic-stats') }}");
+                if (!d) return;
+
+                document.getElementById('lo_total_orders').textContent = d.summary.total_orders + " Orders";
+                document.getElementById('lo_pending_downloads').textContent = d.summary.pending_downloads + " Pending";
+                document.getElementById('lo_active_fees').textContent = d.summary.active_fees + " Active";
+
+                const t = document.getElementById('lo_recent_orders_body');
+                const emptyState = document.getElementById('lo_empty_state');
+                t.innerHTML = '';
+                
+                if (!d.recent_orders || d.recent_orders.length === 0) {
+                    emptyState.style.display = 'block';
+                } else {
+                    emptyState.style.display = 'none';
+                    d.recent_orders.forEach((r, idx) => {
+                        let badge = 'bg-secondary text-dark border-secondary bg-opacity-50 border-opacity-50';
+                        const st = r.status ? r.status.toLowerCase() : '';
+                        if (st.includes('completed') || st.includes('downloaded')) badge = 'bg-success text-white border-success';
+                        else if (st.includes('delivery') || st.includes('process')) badge = 'bg-warning text-dark border-warning bg-opacity-50 border-opacity-50';
+                        else if (st.includes('pending')) badge = 'bg-warning text-dark border-warning bg-opacity-50 border-opacity-50';
+                        
+                        const borderClass = idx === d.recent_orders.length - 1 ? 'border-bottom-0' : 'border-bottom';
+
+                        t.innerHTML += `
+                        <tr>
+                            <td class="ps-3 py-3 ${borderClass}" style="border-color: #f1f5f9;"><span class="fw-bold text-primary bg-primary bg-opacity-10 px-2 py-1 rounded small">${r.lo_no}</span></td>
+                            <td class="${borderClass} fw-bold text-dark" style="border-color: #f1f5f9;">${r.distributor}</td>
+                            <td class="${borderClass} text-muted" style="border-color: #f1f5f9;"><i class="ti ti-map-pin text-danger me-1"></i>${r.customer}</td>
+                            <td class="${borderClass} text-end pe-4" style="border-color: #f1f5f9;"><span class="badge ${badge} rounded-pill border px-2 py-1">${r.status}</span></td>
+                        </tr>`;
+                    });
+                }
+            }
+
             // === EKSEKUSI OTOMATIS SAAT PAGE LOAD ===
             // Fungsi dipanggil langsung tanpa menunggu event listener kalender
             reloadAllData();
             loadTopCust();
             loadRecents();
             loadActions();
+            loadLogisticOrders();
         });
     </script>
 </x-app-layout>
