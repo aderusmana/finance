@@ -444,7 +444,8 @@ class DashboardController extends Controller
                     'customer' => $order->customer->name ?? 'N/A',
                     'distributor' => $order->distributor->name ?? 'N/A',
                     'status' => $order->note->status ?? 'Pending',
-                    'date' => $order->created_at->format('d M Y')
+                    'date' => $order->created_at->format('d M Y'),
+                    'updated_date' => $order->note ? $order->note->updated_at->format('d M y H:i') : $order->updated_at->format('d M y H:i')
                 ];
             });
 

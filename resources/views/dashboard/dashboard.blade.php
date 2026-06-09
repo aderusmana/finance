@@ -17,7 +17,7 @@
                 <i class="ti ti-calendar text-primary me-2"></i>
                 <input type="text" id="dashboardDateFilter" class="border-0 bg-transparent fw-bold text-dark"
                     style="outline: none; width: 220px; cursor: pointer; font-size: 0.85rem;"
-                    placeholder="Filter Tanggal...">
+                    placeholder="Filter Date...">
             </div>
 
             <div class="dropdown">
@@ -60,7 +60,7 @@
                     <div class="mt-3">
                         <h3 class="fw-bold mb-0" id="metric_bg_total_value" style="font-size: 1.8rem;">Loading...</h3>
                         <div class="d-flex align-items-center mt-1">
-                            <span class="opacity-75 small">Total Nilai BG (Filtered)</span>
+                            <span class="opacity-75 small">Total BG Value (Filtered)</span>
                         </div>
                     </div>
                     <div class="mt-3">
@@ -90,7 +90,7 @@
                         <small class="text-muted fw-bold text-uppercase"
                             style="letter-spacing: 1px; font-size: 0.65rem;">Expiring Soon</small>
                         <h3 class="fw-bold text-dark mb-0" id="metric_bg_expiring" style="font-size: 1.8rem;">-</h3>
-                        <small class="text-muted" style="font-size: 0.75rem;">Dalam 60 Hari</small>
+                        <small class="text-muted" style="font-size: 0.75rem;">Within 60 Days</small>
                     </div>
                 </div>
                 <div class="card border-0 shadow-sm p-3 flex-grow-1 d-flex flex-row align-items-center"
@@ -176,12 +176,12 @@
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <div>
                         <h5 class="text-dark mb-1" style="font-weight: 800;"><i
-                                class="ti ti-chart-bar text-primary me-2"></i>Statistik Transaksi</h5>
-                        <p class="text-muted small mb-0">Monitoring data bulanan (Jan - Des)</p>
+                                class="ti ti-chart-bar text-primary me-2"></i>Transaction Statistics</h5>
+                        <p class="text-muted small mb-0">Monthly data monitoring (Jan - Dec)</p>
                     </div>
                     <select class="form-select form-select-sm bg-light border-0 fw-bold text-primary"
                         id="dataTypeSelect" style="width: auto; cursor: pointer;">
-                        <option value="all" selected>Semua Data (All)</option>
+                        <option value="all" selected>All Data</option>
                         <option value="bg">Bank Garansi</option>
                         <option value="customer">Customer</option>
                         <option value="logistic_order">Logistic Order</option>
@@ -239,7 +239,7 @@
                                         style="font-size: 0.95rem;">BG Type Breakdown</h6>
                                     <small class="text-muted"
                                         style="font-size: 0.7rem; display: block; line-height: 1.2;"
-                                        id="bgBreakdownSubtitle">Komposisi Pengajuan</small>
+                                        id="bgBreakdownSubtitle">Submission Composition</small>
                                 </div>
                             </div>
 
@@ -295,7 +295,7 @@
                     <div class="px-3 py-2 bg-light border-top d-flex align-items-center justify-content-between"
                         style="border-color: #f1f5f9;">
                         <small class="text-muted" style="font-size: 0.65rem;"><i
-                                class="ti ti-info-circle me-1"></i>Data Realtime</small>
+                                class="ti ti-info-circle me-1"></i>Realtime Data</small>
 
                         {{-- UPDATE DI SINI: MENGGUNAKAN TAG <a> --}}
                         <a href="{{ route('bg-list.index') }}" class="text-decoration-none small text-primary fw-bold"
@@ -360,7 +360,7 @@
                         <h5 class="text-dark mb-1" style="font-weight: 800;">
                             <i class="ti ti-truck text-info me-2"></i>Logistic Orders Overview
                         </h5>
-                        <p class="text-muted small mb-0">Status pengiriman dan summary pesanan logistik</p>
+                        <p class="text-muted small mb-0">Delivery status and logistic order summary</p>
                     </div>
                     <a href="{{ route('logistic-orders.index') }}" class="btn btn-sm btn-outline-info rounded-pill fw-bold px-3">
                         View All
@@ -412,22 +412,23 @@
                         <div class="table-responsive custom-scroll border rounded-3" style="border-color: #e2e8f0 !important;">
                             <table class="table table-hover align-middle mb-0" style="font-size: 0.85rem;">
                                 <thead class="bg-light sticky-top" style="z-index: 2;">
-                                    <tr>
+                                    <tr class="align-middle">
                                         <th class="ps-3 text-secondary py-3 border-bottom" style="font-size: 0.75rem; text-transform: uppercase; border-color: #cbd5e1;">No. DO</th>
                                         <th class="text-secondary border-bottom" style="font-size: 0.75rem; text-transform: uppercase; border-color: #cbd5e1;">Distributor</th>
                                         <th class="text-secondary border-bottom" style="font-size: 0.75rem; text-transform: uppercase; border-color: #cbd5e1;">Destination</th>
-                                        <th class="text-secondary text-end pe-4 border-bottom" style="font-size: 0.75rem; text-transform: uppercase; border-color: #cbd5e1;">Status</th>
+                                        <th class="text-secondary border-bottom" style="font-size: 0.75rem; text-transform: uppercase; border-color: #cbd5e1;">Status</th>
+                                        <th class="text-secondary text-end pe-4 border-bottom" style="font-size: 0.75rem; text-transform: uppercase; border-color: #cbd5e1;">Date</th>
                                     </tr>
                                 </thead>
                                 <tbody id="lo_recent_orders_body">
                                     {{-- JS Injected --}}
                                     <tr>
-                                        <td colspan="4" class="text-center py-4 text-muted small fst-italic">Loading recent orders...</td>
+                                        <td colspan="5" class="text-center py-4 text-muted small fst-italic">Loading recent orders...</td>
                                     </tr>
                                 </tbody>
                             </table>
                             <div class="text-center mt-3 mb-2" id="lo_empty_state" style="display: none;">
-                                <span class="text-muted small fst-italic"><i class="ti ti-info-circle me-1"></i>Belum ada data pesanan logistik.</span>
+                                <span class="text-muted small fst-italic"><i class="ti ti-info-circle me-1"></i>No logistic order data available.</span>
                             </div>
                         </div>
                     </div>
@@ -1293,7 +1294,12 @@
                             <td class="ps-3 py-3 ${borderClass}" style="border-color: #f1f5f9;"><span class="fw-bold text-primary bg-primary bg-opacity-10 px-2 py-1 rounded small">${r.lo_no}</span></td>
                             <td class="${borderClass} fw-bold text-dark" style="border-color: #f1f5f9;">${r.distributor}</td>
                             <td class="${borderClass} text-muted" style="border-color: #f1f5f9;"><i class="ti ti-map-pin text-danger me-1"></i>${r.customer}</td>
-                            <td class="${borderClass} text-end pe-4" style="border-color: #f1f5f9;"><span class="badge ${badge} rounded-pill border px-2 py-1">${r.status}</span></td>
+                            <td class="${borderClass}" style="border-color: #f1f5f9;">
+                                <span class="badge ${badge} rounded-pill border px-2 py-1">${r.status}</span>
+                            </td>
+                            <td class="${borderClass} text-end pe-4" style="border-color: #f1f5f9;">
+                                <small class="text-muted fw-bold" style="font-size: 0.75rem;">${r.updated_date}</small>
+                            </td>
                         </tr>`;
                     });
                 }
