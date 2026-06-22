@@ -115,6 +115,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/logistic-orders/export/delivery-notes', [LogisticOrderController::class, 'exportDeliveryNotes'])->name('logistic-orders.export-dn');
     Route::get('/logistic-orders/customer-dependencies/{customer}', [LogisticOrderController::class, 'getCustomerDependencies']);
     Route::get('/logistic-orders/fee/{distributor}/{customer}', [LogisticOrderController::class, 'getLogisticFee']);
+    Route::post('/logistic-orders/{id}/cancel', [LogisticOrderController::class, 'cancel']);
+    Route::put('/logistic-orders/{id}', [LogisticOrderController::class, 'update']);
 
     Route::resource('revision', RevisionController::class);
     Route::resource('account-groups', AccountGroupController::class);

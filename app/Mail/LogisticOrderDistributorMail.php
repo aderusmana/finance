@@ -29,11 +29,14 @@ class LogisticOrderDistributorMail extends Mailable implements ShouldQueue
         $formattedLo = 'LO-' . str_pad($this->order->logistic_order_no, 4, '0', STR_PAD_LEFT);
 
         if ($this->type === 'sales') {
-            return $this->subject('Download Delivery Notes Notifications: ' . $formattedLo)
+            return $this->subject('Download Delivery Notes & Purchase Order Notifications: ' . $formattedLo)
+                        ->view('mail.distributor_order');
+        } elseif ($this->type === 'cancel') {
+            return $this->subject('CANCELED - Delivery Notes & Purchase Order Notification: ' . $formattedLo)
                         ->view('mail.distributor_order');
         }
 
-        return $this->subject('New Logistics Order Notification: ' . $formattedLo)
+        return $this->subject('New Delivery Notes & Purchase Order Notification: ' . $formattedLo)
                     ->view('mail.distributor_order');
     }
 }

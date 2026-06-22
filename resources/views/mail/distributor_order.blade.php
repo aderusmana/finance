@@ -32,9 +32,16 @@
                             @if($type === 'sales')
                                 <p style="margin: 0 0 20px 0; font-size: 16px; line-height: 1.6; color: #1e293b;">Halo <strong>{{ $order->customerShipTo->user->name ?? 'Tim Sales' }}</strong>,</p>
                                 <p style="margin: 0 0 30px 0; font-size: 15px; line-height: 1.6; color: #475569;">We inform you that the delivery document <b>Delivery Note (DN)</b> below <strong>has been downloaded</strong> by the Distributor.</p>
+                            @elseif($type === 'cancel')
+                                <p style="margin: 0 0 20px 0; font-size: 16px; line-height: 1.6; color: #1e293b;">Halo <strong>Tim {{ $order->distributor->name }} & Tim Manajemen</strong>,</p>
+                                <p style="margin: 0 0 15px 0; font-size: 15px; line-height: 1.6; color: #dc2626;">We regret to inform you that the Delivery Note (DN) below has been <strong>CANCELED</strong>.</p>
+                                <div style="background-color: #fee2e2; border-left: 4px solid #ef4444; padding: 15px; border-radius: 5px; margin-bottom: 25px; font-size: 14px;">
+                                    <strong style="color: #991b1b;">Cancellation Reason:</strong><br>
+                                    <span style="color: #7f1d1d;">{{ $order->cancel_reason }}</span>
+                                </div>
                             @else
                                 <p style="margin: 0 0 20px 0; font-size: 16px; line-height: 1.6; color: #1e293b;">Halo <strong>Tim {{ $order->distributor->name }}</strong>,</p>
-                                <p style="margin: 0 0 30px 0; font-size: 15px; line-height: 1.6; color: #475569;">We would like to inform you that a new <b>Delivery Note (DN)</b> is ready for processing. The order details are as follows:</p>
+                                <p style="margin: 0 0 30px 0; font-size: 15px; line-height: 1.6; color: #475569;">We would like to inform you that a new/revised <b>Delivery Note (DN)</b> is ready for processing. The order details are as follows:</p>
                             @endif
 
                             <table width="100%" border="0" cellpadding="0" cellspacing="0" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 35px;">
@@ -87,13 +94,24 @@
                                         </td>
                                     </tr>
                                 </table>
-                            @else
+                            @elseif($type === 'distributor')
                                 <p style="margin: 0 0 25px 0; font-size: 15px; text-align: center; color: #475569;">Please click the button below to see full details:</p>
                                 <table width="100%" border="0" cellpadding="0" cellspacing="0" style="text-align: center;">
                                     <tr>
                                         <td style="padding-bottom: 15px;">
                                             <a href="{{ $urlDetail }}" style="display: inline-block; background-color: #a68831; color: #ffffff; text-decoration: none; padding: 14px 30px; border-radius: 6px; font-weight: 600; font-size: 15px; width: 80%; max-width: 300px; box-shadow: 0 4px 10px rgba(166, 136, 49, 0.3);">
                                                 &#x1F4CB; Review Order Details
+                                            </a>
+                                        </td>
+                                    </tr>
+                                </table>
+                            @elseif($type === 'cancel')
+                                <p style="margin: 0 0 25px 0; font-size: 15px; text-align: center; color: #475569;">The order with the following details has been cancelled:</p>
+                                <table width="100%" border="0" cellpadding="0" cellspacing="0" style="text-align: center;">
+                                    <tr>
+                                        <td style="padding-bottom: 15px;">
+                                            <a href="{{ $urlDetail }}" style="display: inline-block; background-color: #ef4444; color: #ffffff; text-decoration: none; padding: 14px 30px; border-radius: 6px; font-weight: 600; font-size: 15px; width: 80%; max-width: 300px; box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3);">
+                                                &#x1F534; View Cancellation Details
                                             </a>
                                         </td>
                                     </tr>

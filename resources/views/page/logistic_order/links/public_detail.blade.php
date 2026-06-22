@@ -155,6 +155,14 @@
                                     <div class="info-value">{{ $order->no_po ?? '-' }}</div>
                                 </div>
                                 <div class="mb-2">
+                                    <div class="info-label">Date of PO</div>
+                                    <div class="info-value">{{ $order->date_of_po ? \Carbon\Carbon::parse($order->date_of_po)->format('d F Y') : '-' }}</div>
+                                </div>
+                                <div class="mb-2">
+                                    <div class="info-label">Attention</div>
+                                    <div class="info-value">{{ $order->attention ?? '-' }}</div>
+                                </div>
+                                <div class="mb-2">
                                     <div class="info-label">Customer Name</div>
                                     <div class="info-value">{{ $order->customer->name }}</div>
                                 </div>
@@ -197,8 +205,9 @@
                             <thead>
                                 <tr>
                                     <th width="8%" class="text-center border-0">No</th>
-                                    <th width="20%" class="border-0">Item Code</th>
-                                    <th width="52%" class="border-0">Item Name</th>
+                                    <th width="15%" class="border-0">Item Code</th>
+                                    <th width="42%" class="border-0">Item Name</th>
+                                    <th width="15%" class="text-center border-0">Pack Size</th>
                                     <th width="20%" class="text-center border-0">Quantity</th>
                                 </tr>
                             </thead>
@@ -208,6 +217,7 @@
                                     <td class="text-center text-muted">{{ $index + 1 }}</td>
                                     <td><span class="badge bg-light text-secondary border px-2 py-1">{{ $item->order_item_code }}</span></td>
                                     <td class="fw-bold">{{ $item->order_item_name }}</td>
+                                    <td class="text-center">{{ $item->pack_size ?? '-' }}</td>
                                     <td class="text-center fs-5 fw-bold text-primary">{{ $item->order_quantity }}</td>
                                 </tr>
                                 @empty
@@ -227,7 +237,7 @@
                         <p class="text-muted mb-4 mx-auto" style="max-width: 500px;">Download the official Delivery Notes (DO) document below to be taken by the driver to the Customer location.</p>
 
                         <a href="{{ \Illuminate\Support\Facades\URL::signedRoute('public.lo.download', ['id' => $order->id, 'fromEmail' => 0]) }}" target="_blank" class="btn btn-download btn-lg text-white rounded-pill px-5 py-3 fw-bold shadow">
-                            <i class="ph-bold ph-printer me-2"></i> Download DN
+                            <i class="ph-bold ph-printer me-2"></i> Download DN & PO
                         </a>
                     </div>
 

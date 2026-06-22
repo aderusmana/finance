@@ -32,10 +32,44 @@
         }
 
         .signature-fixed {
-            position: fixed;
-            left: 30px;
-            right: 30px;
-            bottom: 20px;
+            margin-top: 40px;
+            margin-bottom: 20px;
+            padding-left: 30px;
+            padding-right: 30px;
+        }
+        .page-break {
+            page-break-before: always;
+        }
+        .kaso-title {
+            color: red;
+            font-size: 20px;
+            font-style: italic;
+            font-weight: 800;
+            text-decoration: underline;
+            text-align: center;
+            margin: 0;
+        }
+        .kaso-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+            margin-top: 15px;
+        }
+        .kaso-table td, .kaso-table th {
+            border: 1px solid #000;
+            padding: 6px;
+            vertical-align: top;
+        }
+        .kaso-header-table {
+            width: 100%;
+            font-size: 11px;
+            margin-top: 20px;
+        }
+        .kaso-header-table td {
+            padding: 4px;
+        }
+        .border-bottom-line {
+            border-bottom: 1px solid #000;
         }
 
         /* Header styling */
@@ -301,6 +335,92 @@
             </tr>
         </table>
     </div>
+
+    <div class="page-break"></div>
+
+    <table width="100%" style="margin-top: 10px;">
+        <tr>
+            <td width="70%" align="center">
+                <h1 class="kaso-title">KEY ACCOUNT SALES ORDER</h1>
+            </td>
+            <td width="30%">
+                <table width="100%" border="1" style="border-collapse: collapse; font-size: 10px;">
+                    <tr><td style="padding: 4px;">No.F/C.1.3.02</td></tr>
+                    <tr><td style="padding: 4px;">Revision : 1</td></tr>
+                    <tr><td style="padding: 4px;">Date : 28 April 03</td></tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+
+    <table class="kaso-header-table">
+        <tr>
+            <td width="15%">To</td>
+            <td width="3%">:</td>
+            <td width="32%" class="border-bottom-line">Sales Admin</td>
+            <td width="20%" align="right">Sales Order No. :</td>
+            <td width="30%" class="border-bottom-line">LO-{{ str_pad($order->id, 4, '0', STR_PAD_LEFT) }}</td>
+        </tr>
+        <tr>
+            <td>Attention</td>
+            <td>:</td>
+            <td class="border-bottom-line">{{ $order->attention ?? '-' }}</td>
+            <td align="right">Sales Order Date :</td>
+            <td class="border-bottom-line">{{ $order->created_at->format('d F Y') }}</td>
+        </tr>
+        <tr>
+            <td>From</td>
+            <td>:</td>
+            <td class="border-bottom-line">Key Account Sales</td>
+            <td align="right">Cust. Order (PO) No. :</td>
+            <td class="border-bottom-line">{{ $order->no_po ?? '-' }}</td>
+        </tr>
+        <tr>
+            <td>Name of PIC</td>
+            <td>:</td>
+            <td class="border-bottom-line">{{ $order->customerShipTo->user->name ?? '-' }}</td>
+            <td align="right">Date of PO :</td>
+            <td class="border-bottom-line">{{ $order->date_of_po ? \Carbon\Carbon::parse($order->date_of_po)->format('d F Y') : '-' }}</td>
+        </tr>
+        <tr>
+            <td>Ship to</td>
+            <td>:</td>
+            <td colspan="3" class="border-bottom-line"><strong>{{ $order->customerShipTo->ship_to_name }}</strong></td>
+        </tr>
+        <tr>
+            <td>Address</td>
+            <td>:</td>
+            <td colspan="3" class="border-bottom-line">
+                {{ $order->customerShipTo->ship_to_address_1 }} 
+                {{ $order->customerShipTo->ship_to_address_2 ? ', ' . $order->customerShipTo->ship_to_address_2 : '' }}
+            </td>
+        </tr>
+    </table>
+
+    <table class="kaso-table">
+        <thead>
+            <tr style="background-color: #f8fafc;">
+                <th width="5%" align="center">No.</th>
+                <th width="15%" align="center">Product Code</th>
+                <th width="35%" align="center">Description (Product Name)</th>
+                <th width="15%" align="center">Pack Size</th>
+                <th width="10%" align="center">Quantity</th>
+                <th width="20%" align="center">Delivery Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach ($order->items as $index => $item)
+                <tr>
+                    <td align="center">{{ $index + 1 }}</td>
+                    <td align="center">{{ $item->order_item_code }}</td>
+                    <td>{{ $item->order_item_name }}</td>
+                    <td align="center">{{ $item->pack_size ?? '-' }}</td>
+                    <td align="center">{{ $item->order_quantity }}</td>
+                    <td align="center">{{ \Carbon\Carbon::parse($order->delivery_date)->format('d F Y') }}</td>
+                </tr>
+            @endforeach
+        </tbody>
+    </table>
 
 </body>
 

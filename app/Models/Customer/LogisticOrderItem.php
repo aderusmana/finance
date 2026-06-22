@@ -11,6 +11,7 @@ class LogisticOrderItem extends Model
         'ship_to_code',
         'order_item_code',
         'order_item_name',
+        'pack_size',
         'order_quantity',
         'order_amount',
         'price_list'

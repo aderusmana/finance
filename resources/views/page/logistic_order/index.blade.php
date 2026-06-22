@@ -212,6 +212,11 @@
                     </div>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
+                <div id="cancelInfoBanner" class="alert alert-danger m-3 d-none">
+                    <strong><i class="ph-bold ph-warning-circle"></i> Canceled on:</strong> <span
+                        id="canceledDateText"></span><br>
+                    <strong>Reason:</strong> <span id="cancelReasonText"></span>
+                </div>
                 @csrf
                 <input type="hidden" name="period" id="hidden_period">
                 <input type="hidden" name="delivery_to" id="hidden_delivery_to">
@@ -251,6 +256,16 @@
                                         <div class="col-md-6">
                                             <label class="form-label fw-bold">No. PO (Purchase Order)</label>
                                             <input type="text" id="no_po" name="no_po" class="form-control" placeholder="e.g: PO-2026-001">
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold">Attention</label>
+                                            <input type="text" id="attention" name="attention" class="form-control" placeholder="e.g: Bapak Budi">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold">Date of PO</label>
+                                            <input type="date" id="date_of_po" name="date_of_po" class="form-control">
                                         </div>
                                     </div>
                                 </div>
@@ -316,14 +331,14 @@
                                     <div class="table-responsive" style="max-height: 350px; overflow-y: auto;">
                                         <table class="table table-bordered table-hover align-middle mb-0"
                                             id="itemTable">
-                                            <thead class="table-light position-sticky top-0 shadow-sm"
-                                                style="z-index: 10;">
+                                            <thead class="table-light position-sticky top-0 shadow-sm" style="z-index: 10;">
                                                 <tr>
-                                                    <th width="15%">Item Code <span class="text-danger">*</span></th>
-                                                    <th width="30%">Item Name <span class="text-danger">*</span></th>
+                                                    <th width="12%">Item Code <span class="text-danger">*</span></th>
+                                                    <th width="23%">Item Name <span class="text-danger">*</span></th>
+                                                    <th width="15%">Pack Size</th>
                                                     <th width="15%">Price List <span class="text-danger">*</span></th>
-                                                    <th width="12%">Qty <span class="text-danger">*</span></th>
-                                                    <th width="18%">Amount</th>
+                                                    <th width="10%">Qty <span class="text-danger">*</span></th>
+                                                    <th width="15%">Amount</th>
                                                     <th width="10%" class="text-center"><i class="ph-bold ph-gear"></i></th>
                                                 </tr>
                                             </thead>
@@ -407,6 +422,14 @@
                                         <td class="fw-bold text-dark pb-2">: <span id="detail_no_po">-</span></td>
                                     </tr>
                                     <tr>
+                                        <td class="text-muted pb-2">Attention</td>
+                                        <td class="fw-bold text-dark pb-2">: <span id="detail_attention">-</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-muted pb-2">Date of PO</td>
+                                        <td class="fw-semibold text-dark pb-2">: <span id="detail_date_of_po">-</span></td>
+                                    </tr>
+                                    <tr>
                                         <td class="text-muted pb-2">Delivery Date</td>
                                         <td class="fw-semibold text-dark pb-2">: <span
                                                 id="detail_delivery_date">-</span></td>
@@ -471,7 +494,8 @@
                                         <thead class="table-light">
                                             <tr>
                                                 <th width="10%" class="text-center text-muted py-3">NO</th>
-                                                <th width="70%" class="text-muted py-3">ITEM NAME</th>
+                                                <th width="50%" class="text-muted py-3">ITEM NAME</th>
+                                                <th width="20%" class="text-center text-muted py-3">PACK SIZE</th>
                                                 <th width="20%" class="text-center text-muted py-3">QTY</th>
                                             </tr>
                                         </thead>
@@ -833,13 +857,23 @@
                             });
                             shipSelect.trigger('change');
 
-                            if (res.items && res.items.length > 0) {
-                                $.each(res.items, function(key, item) {
-                                    addRow(item.item_code || '', item.item_name, item.price_list || 0, item.quantity || 1);
-                                });
-                            } else {
-                                addRow();
-                            }
+                            if (editDataBuffer && editDataBuffer.customer_id == custId) {
+                            $('#distributor_id').val(editDataBuffer.distributor_id).trigger('change');
+                            $('#customer_ship_to_id').val(editDataBuffer.customer_ship_to_id).trigger('change');
+                            
+                            $('#itemTable tbody').empty();
+                            $.each(editDataBuffer.items, function(key, item) {
+                                addRow(item.order_item_code, item.order_item_name, item.price_list, item.order_quantity, item.pack_size);
+                            });
+                            editDataBuffer = null;
+                        } 
+                        else if (res.items && res.items.length > 0) {
+                            $.each(res.items, function(key, item) {
+                                addRow(item.item_code || '', item.item_name, item.price_list || 0, item.quantity || 1, '');
+                            });
+                        } else {
+                            addRow();
+                        }
                         });
                     } else {
                         $('#itemTable tbody').html(
@@ -893,7 +927,6 @@
                 $('#mainForm').on('submit', function(e) {
                     e.preventDefault();
 
-                    // UPDATE VALIDASI QTY MINIMAL 1
                     let totalItems = 0;
                     let invalidQty = false;
 
@@ -943,13 +976,16 @@
                                     Swal.showLoading();
                                 }
                             });
+                            let orderId = $('#edit_order_id').val();
+                            let submitUrl = orderId ? "{{ url('logistic-orders') }}/" + orderId : "{{ route('logistic-orders.store') }}";
+
                             $.ajax({
-                                url: "{{ route('logistic-orders.store') }}",
+                                url: submitUrl,
                                 method: "POST",
-                                data: $(this).serialize(),
+                                data: formData,
                                 success: function(res) {
                                     $('#modalForm').modal('hide');
-                                    sampleTable.ajax.reload(); // Refresh tabel pending
+                                    sampleTable.ajax.reload();
                                     Swal.fire('Success!', res.message, 'success');
                                 },
                                 error: function() {
@@ -961,7 +997,6 @@
                     });
                 });
 
-                // TOMBOL DETAIL DI-KLIK
                 $(document).on('click', '.btn-detail', function() {
                     let id = $(this).data('id');
                     Swal.fire({
@@ -987,6 +1022,8 @@
                         $('#detail_customer').text(data.customer ? data.customer.name : '-');
                         $('#detail_distributor').text(data.distributor ? data.distributor.name : '-');
                         $('#detail_no_po').text(data.no_po || '-');
+                        $('#detail_attention').text(data.attention || '-');
+                        $('#detail_date_of_po').text(data.date_of_po || '-');
 
                         if (data.customer_ship_to) {
                             let st = data.customer_ship_to;
@@ -1010,13 +1047,14 @@
                                         <div class="fw-bold text-dark">${item.order_item_name}</div>
                                         <small class="text-muted">${item.order_item_code || '-'}</small>
                                     </td>
+                                    <td class="text-center fw-bold text-primary py-2">${item.pack_size}</td>
                                     <td class="text-center fw-bold text-primary py-2">${item.order_quantity}</td>
                                 </tr>
                             `);
                             });
                         } else {
                             tbody.append(
-                                '<tr><td colspan="3" class="text-center text-muted py-4">No item details available.</td></tr>'
+                                '<tr><td colspan="4" class="text-center text-muted py-4">No item details available.</td></tr>'
                             );
                         }
 
@@ -1064,7 +1102,7 @@
                         if (data.note && data.note.status === 'Downloaded') {
                             $('#admin-download-wrapper').html(`
                             <a href="${data.download_url}" target="_blank" class="btn btn-success px-4 py-2 rounded-pill fw-bold shadow-sm">
-                                <i class="ph-bold ph-printer me-2"></i> Download DN (Admin)
+                                <i class="ph-bold ph-printer me-2"></i> Download DN & PO (Admin)
                             </a>
                         `);
                         } else {
@@ -1078,6 +1116,85 @@
                     });
                 });
 
+                let editDataBuffer = null;
+
+                $(document).on('click', '.btn-edit', function() {
+                    let id = $(this).data('id');
+                    openEditModal(id);
+                });
+
+                $(document).on('click', '.btn-cancel', function() {
+                    let id = $(this).data('id');
+                    Swal.fire({
+                        title: 'Cancel Order?',
+                        text: "Please provide a reason for cancellation:",
+                        input: 'textarea',
+                        inputPlaceholder: 'Type your reason here...',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#d33',
+                        cancelButtonColor: '#6c757d',
+                        confirmButtonText: '<i class="ph-bold ph-paper-plane-tilt"></i> Submit Cancel',
+                        inputValidator: (value) => {
+                            if (!value) return 'Reason is required!';
+                        }
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            Swal.fire({ title: 'Processing...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                            $.ajax({
+                                url: "{{ url('/logistic-orders') }}/" + id + "/cancel",
+                                method: "POST",
+                                data: { reason: result.value },
+                                success: function(res) {
+                                    historyTable.ajax.reload(null, false); 
+
+                                    Swal.fire({
+                                        title: 'Success Cancelled!',
+                                        text: 'Data has been cancelled and emails have been sent to the Supervisor and Distributor.',
+                                        icon: 'success',
+                                        showCancelButton: true,
+                                        confirmButtonText: '<i class="ph-bold ph-pencil-simple me-1"></i> Continue to Revise Data',
+                                        cancelButtonText: 'Close',
+                                        reverseButtons: true,
+                                        customClass: { confirmButton: 'btn btn-primary px-4', cancelButton: 'btn btn-secondary px-4' },
+                                        buttonsStyling: false
+                                    }).then((res2) => {
+                                        if (res2.isConfirmed) {
+                                            openEditModal(id);
+                                        }
+                                    });
+                                }
+                            });
+                        }
+                    });
+                });
+
+                function openEditModal(id) {
+                    Swal.fire({ title: 'Loading Data...', didOpen: () => Swal.showLoading() });
+                    $.get("{{ url('/logistic-orders') }}/" + id, function(data) {
+                        Swal.close();
+                        $('#mainForm')[0].reset();
+                        $('#formMethod').val('PUT');
+                        $('#edit_order_id').val(data.id);
+                        $('#modalTitle').text('Revise Logistic Order');
+                        $('#btnSubmit').text('Submit Revision');
+                        
+                        $('#cancelInfoBanner').removeClass('d-none');
+                        $('#canceledDateText').text(new Date(data.canceled_at).toLocaleString('id-ID'));
+                        $('#cancelReasonText').text(data.cancel_reason);
+
+                        $('#delivery_date').val(data.delivery_date);
+                        $('#no_po').val(data.no_po);
+                        $('#attention').val(data.attention);
+                        $('#date_of_po').val(data.date_of_po);
+
+                        editDataBuffer = data; 
+                        $('#customer_id').val(data.customer_id).trigger('change');
+
+                        $('#modalForm').modal('show');
+                    });
+                }
+
                 $('#modalDetail').on('hidden.bs.modal', function () {
                     if (sampleTable) {
                         sampleTable.columns.adjust().draw();
@@ -1090,41 +1207,33 @@
 
             function switchTab(tabName) {
                 activeTab = tabName;
-                // Ubah Warna Card
                 $('.toggle-card').removeClass('active');
                 $('#btn-tab-' + tabName).addClass('active');
 
                 if (tabName === 'pending') {
-                    // Tampilkan Tabel Pending
                     $('#wrapper-downloaded').addClass('d-none');
                     $('#wrapper-pending').removeClass('d-none');
 
-                    // Ubah Judul & Tombol
                     $('#dynamic-table-title').html('<i class="ph-fill ph-stack text-primary me-2"></i> List Logistic Order');
                     $('#dynamic-table-subtitle').text('Displaying orders with Pending status.');
                     $('#btn-create-order').removeClass('d-none');
                     $('#dn-export-area').addClass('d-none');
-
-                    // Refresh Data
                     sampleTable.ajax.reload(null, false);
                 } else {
-                    // Tampilkan Tabel Downloaded
                     $('#wrapper-pending').addClass('d-none');
                     $('#wrapper-downloaded').removeClass('d-none');
 
-                    // Ubah Judul & Sembunyikan Tombol Create
                     $('#dynamic-table-title').html(
                         '<i class="ph-fill ph-check-circle text-success me-2"></i> Archive Delivery No');
                     $('#dynamic-table-subtitle').text('Displaying Delivery Notes that have been downloaded (Completed).');
                     $('#btn-create-order').addClass('d-none');
                     $('#dn-export-area').removeClass('d-none');
 
-                    // Refresh Data
                     historyTable.ajax.reload(null, false);
                 }
             }
 
-            function addRow(code = '', name = '', price = 0, qty = 1) {
+            function addRow(code = '', name = '', price = 0, qty = 1, packSize = '') {
                 $('#emptyRow').remove();
                 let index = Date.now() + Math.floor(Math.random() * 1000);
                 let initialTotal = (qty > 0) ? formatRupiah(qty * activeLogisticFee) : 'Rp 0';
@@ -1133,6 +1242,7 @@
                 <tr>
                     <td><input type="text" name="items[${index}][item_code]" class="form-control form-control-sm" value="${code}" placeholder="Item Code" required></td>
                     <td><input type="text" name="items[${index}][item_name]" class="form-control form-control-sm" value="${name}" placeholder="Item Name" required></td>
+                    <td><input type="text" name="items[${index}][pack_size]" class="form-control form-control-sm" value="${packSize}" placeholder="e.g. 10 x 10's"></td>
                     <td><input type="text" name="items[${index}][price_list]" class="form-control form-control-sm price-input" value="${displayPrice}" placeholder="Rp 0" oninput="handlePriceInput(this)" required></td>
                     <td><input type="number" name="items[${index}][qty]" class="form-control form-control-sm qty-input" value="${qty}" placeholder="1" min="1" oninput="calculateRow(this)" required></td>
                     <td><input type="text" name="items[${index}][amount]" class="form-control form-control-sm bg-light amount-display fw-bold text-primary" readonly value="${initialTotal}"></td>
@@ -1159,6 +1269,11 @@
             }
 
             function openModal() {
+                $('#formMethod').val('POST');
+                $('#edit_order_id').val('');
+                $('#modalTitle').text('Create Logistic Order');
+                $('#btnSubmit').text('Submit Order');
+                $('#cancelInfoBanner').addClass('d-none');
                 $('#mainForm')[0].reset();
                 let today = new Date().toISOString().split('T')[0];
                 let currentMonth = new Date().toLocaleString('id-ID', {
@@ -1167,6 +1282,8 @@
                 });
                 $('#delivery_date').val(today);
                 $('#no_po').val('');
+                $('#attention').val('');
+                $('#date_of_po').val(today);
                 $('#hidden_delivery_to').val(today);
                 $('#hidden_period').val(currentMonth);
                 $('#customer_id').val('').trigger('change');

@@ -6,7 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class LogisticOrder extends Model
 {
-    protected $fillable = ['distributor_id', 'customer_id', 'customer_ship_to_id', 'logistic_order_no', 'no_po', 'delivery_date', 'created_by'];
+    protected $fillable = [
+        'distributor_id', 'customer_id', 'customer_ship_to_id', 'logistic_order_no',
+        'no_po', 'delivery_date', 'attention', 'date_of_po', 'created_by', 'cancel_reason', 'canceled_at'
+    ];
 
     public function customer() { return $this->belongsTo(Customer::class); }
     public function distributor() { return $this->belongsTo(Distributor::class); }

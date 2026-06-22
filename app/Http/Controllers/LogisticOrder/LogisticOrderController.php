@@ -26,6 +26,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use App\Exports\DeliveryNoteItemExport;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Jobs\SendLogisticOrderEmailJob;
 
 class LogisticOrderController extends Controller
 {
@@ -77,7 +78,7 @@ class LogisticOrderController extends Controller
             $data = LogisticOrder::with(['distributor', 'customer', 'customerShipTo', 'note'])
                 ->whereHas('note', function ($q) use ($tab) {
                     if ($tab === 'downloaded') {
-                        $q->where('status', 'Downloaded');
+                        $q->whereIn('status', ['Downloaded', 'Canceled']);
                     } else {
                         $q->where('status', 'Pending Download');
                     }
@@ -135,6 +136,20 @@ class LogisticOrderController extends Controller
                     return $row->customerShipTo->ship_to_name ?? '-';
                 })
                 ->addColumn('status_badge', function ($row) use ($tab) {
+                    if ($row->note && $row->note->status === 'Canceled') {
+                        $cancelTime = $row->canceled_at ? Carbon::parse($row->canceled_at)->format('d M Y, H:i') : '-';
+                        return '
+                            <div class="d-flex flex-column align-items-start">
+                                <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-3 py-1 rounded-pill">
+                                    <i class="ph-bold ph-x-circle me-1"></i> Canceled
+                                </span>
+                                <span class="text-secondary" style="font-size: 0.72rem; margin-top: 4px; padding-left: 4px;">
+                                    <i class="ph-fill ph-clock text-danger opacity-75"></i> ' . $cancelTime . '
+                                </span>
+                            </div>
+                        ';
+                    }
+
                     if ($tab === 'downloaded') {
                         $count = $row->note->download_count ?? 0;
                         $lastDownloadAt = DeliveryOrderDownloadLog::where('delivery_order_note_id', $row->note->id)
@@ -159,9 +174,15 @@ class LogisticOrderController extends Controller
                 })
                 ->addColumn('action', function ($row) use ($tab) {
                     if ($tab === 'downloaded') {
-                        $btnDetail = '<button type="button" class="btn btn-md btn-primary text-white btn-detail shadow-sm px-3 rounded-pill flex-fill" data-id="' . $row->id . '" data-bs-toggle="tooltip" data-bs-placement="top" title="Detail DN" aria-label="Detail DN"><i class="ph-bold ph-eye"></i></button>';
-                        $btnDownload = '<a href="' . URL::signedRoute('public.lo.download', ['id' => $row->id, 'fromEmail' => 0]) . '" target="_blank" class="btn btn-sm btn-success text-white shadow-sm px-3 rounded-pill flex-fill" data-bs-toggle="tooltip" data-bs-placement="top" title="Download DN" aria-label="Download DN"><i class="ph-bold ph-printer"></i></a>';
-                        return '<div class="d-flex flex-row gap-2 align-items-center w-100">' . $btnDetail . $btnDownload . '</div>';
+                        $btnDetail = '<button type="button" class="btn btn-sm btn-primary text-white btn-detail shadow-sm px-2 rounded-pill flex-fill" data-id="' . $row->id . '" title="Detail DN"><i class="ph-bold ph-eye"></i></button>';
+                        if ($row->note && $row->note->status === 'Canceled') {
+                            $btnEdit = '<button type="button" class="btn btn-sm btn-warning text-dark btn-edit shadow-sm px-2 rounded-pill flex-fill" data-id="' . $row->id . '" title="Revise/Resubmit Order"><i class="ph-bold ph-pencil-simple"></i></button>';
+                            return '<div class="d-flex flex-row gap-1 align-items-center w-100">' . $btnDetail . $btnEdit . '</div>';
+                        } else {
+                            $btnDownload = '<a href="' . URL::signedRoute('public.lo.download', ['id' => $row->id, 'fromEmail' => 0]) . '" target="_blank" class="btn btn-sm btn-success text-white shadow-sm px-2 rounded-pill flex-fill" title="Download DN & PO"><i class="ph-bold ph-printer"></i></a>';
+                            $btnCancel = '<button type="button" class="btn btn-sm btn-danger text-white btn-cancel shadow-sm px-2 rounded-pill flex-fill" data-id="' . $row->id . '" title="Cancel Order"><i class="ph-bold ph-x-circle"></i></button>';
+                            return '<div class="d-flex flex-row gap-1 align-items-center w-100">' . $btnDetail . $btnDownload . $btnCancel . '</div>';
+                        }
                     }
 
                     return '<button
@@ -290,17 +311,20 @@ class LogisticOrderController extends Controller
             'distributor_id'      => 'required',
             'customer_ship_to_id' => 'required',
             'delivery_date'       => 'required|date',
+            'attention'           => 'nullable|string',
+            'date_of_po'          => 'nullable|date',
             'items'               => 'required|array|min:1',
             'items.*.item_code'   => 'required|string',
             'items.*.item_name'   => 'required|string',
             'items.*.qty'         => 'required|numeric|min:1',
             'items.*.price_list'  => 'required|numeric|min:0',
+            'items.*.pack_size'   => 'required|string',
         ], [
             'items.*.item_code.required'  => 'All item codes are required.',
             'items.*.item_name.required'  => 'All item names are required.',
             'items.*.qty.required'        => 'Quantity is required and cannot be 0.',
             'items.*.qty.min'             => 'Quantity must be at least 1.',
-            'items.*.price_list.required' => 'Pricelist is required.'
+            'items.*.price_list.required' => 'Pricelist is required.',
         ]);
 
         try {
@@ -310,6 +334,8 @@ class LogisticOrderController extends Controller
                 'customer_id'         => $request->customer_id,
                 'customer_ship_to_id' => $request->customer_ship_to_id,
                 'logistic_order_no'   => 0,
+                'attention'           => $request->attention,
+                'date_of_po'          => $request->date_of_po,
                 'no_po'               => $request->no_po,
                 'delivery_date'       => $request->delivery_date,
                 'created_by'          => Auth::id(),
@@ -325,6 +351,7 @@ class LogisticOrderController extends Controller
                     'ship_to_code'      => $request->ship_to_code_header,
                     'order_item_code'   => $item['item_code'] ?? '-',
                     'order_item_name'   => $item['item_name'],
+                    'pack_size'         => $item['pack_size'] ?? null,
                     'order_quantity'    => $item['qty'],
                     'price_list'        => $item['price_list'] ?? 0,
                     'order_amount'      => str_replace(['Rp', '.', ' '], '', $item['amount']),
@@ -349,7 +376,7 @@ class LogisticOrderController extends Controller
 
             if ($distributor && $distributor->email) {
                 $orderEmail = LogisticOrder::with(['distributor', 'customer', 'customerShipTo', 'note', 'items'])->find($order->id);
-                Mail::to($distributor->email)->queue(new LogisticOrderDistributorMail($orderEmail));
+                dispatch(new SendLogisticOrderEmailJob($orderEmail, $distributor->email, 'distributor'));
             }
 
             DB::commit();
@@ -449,4 +476,79 @@ class LogisticOrderController extends Controller
         //     'Content-Disposition' => 'inline; filename="' . $pdfFileName . '"',
         // ]);
     }
+
+    public function cancel(Request $request, $id)
+        {
+            $request->validate(['reason' => 'required|string']);
+            
+            $order = LogisticOrder::with(['note', 'distributor', 'customer'])->findOrFail($id);
+            
+            $order->update([
+                'cancel_reason' => $request->reason,
+                'canceled_at' => now(),
+            ]);
+
+            if ($order->note) {
+                $order->note->update(['status' => 'Canceled']);
+            }
+
+            $distEmail = $order->distributor->email ?? null;
+            if ($distEmail) {
+                dispatch(new SendLogisticOrderEmailJob($order, $distEmail, 'cancel'));
+            }
+
+            $superiorEmail = Auth::user()->manager->email ?? 'atasan@sinarmeadow.com'; 
+            if ($superiorEmail) {
+                dispatch(new SendLogisticOrderEmailJob($order, $superiorEmail, 'cancel'));
+            }
+
+            return response()->json(['success' => true, 'message' => 'Order canceled successfully!']);
+        }
+
+        public function update(Request $request, $id)
+        {            
+            $order = LogisticOrder::findOrFail($id);
+
+            $order->update([
+                'distributor_id'      => $request->distributor_id,
+                'customer_id'         => $request->customer_id,
+                'customer_ship_to_id' => $request->customer_ship_to_id,
+                'attention'           => $request->attention,
+                'date_of_po'          => $request->date_of_po,
+                'no_po'               => $request->no_po,
+                'delivery_date'       => $request->delivery_date,
+                'cancel_reason'       => null,
+                'canceled_at'         => null,
+            ]);
+
+            $order->items()->delete();
+            foreach ($request->items as $item) {
+                if (empty($item['qty']) || $item['qty'] <= 0) continue;
+                LogisticOrderItem::create([
+                    'logistic_order_id' => $order->id,
+                    'ship_to_code'      => $request->ship_to_code_header,
+                    'order_item_code'   => $item['item_code'] ?? '-',
+                    'order_item_name'   => $item['item_name'],
+                    'pack_size'         => $item['pack_size'] ?? null,
+                    'order_quantity'    => $item['qty'],
+                    'price_list'        => str_replace(['Rp', '.', ' '], '', $item['price_list'] ?? 0),
+                    'order_amount'      => str_replace(['Rp', '.', ' '], '', $item['amount']),
+                ]);
+            }
+
+            if ($order->note) {
+                $order->note->update([
+                    'status' => 'Pending Download',
+                    'download_count' => 0
+                ]);
+            }
+
+            $distributor = Distributor::find($request->distributor_id);
+            if ($distributor && $distributor->email) {
+                $orderEmail = LogisticOrder::with(['distributor', 'customer', 'customerShipTo', 'note', 'items'])->find($order->id);
+                dispatch(new SendLogisticOrderEmailJob($orderEmail, $distributor->email, 'distributor'));
+            }
+
+            return response()->json(['success' => true, 'message' => "Order data successfully revised! Email sent to Distributor."]);
+        }
 }
