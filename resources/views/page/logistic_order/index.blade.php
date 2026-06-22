@@ -402,6 +402,15 @@
 
                 {{-- Body: Background soft gray --}}
                 <div class="modal-body p-4" style="background-color: #f8fafc;">
+                    <div id="detail_cancel_banner" class="alert alert-danger mb-4 d-none border-0 shadow-sm" style="border-left: 4px solid #dc2626 !important;">
+                        <div class="d-flex align-items-center mb-1">
+                            <i class="ph-bold ph-warning-circle fs-5 me-2 text-danger"></i>
+                            <strong class="text-danger">This order was canceled on <span id="detail_canceled_date"></span></strong>
+                        </div>
+                        <div class="ms-4 text-dark" style="font-size: 0.9rem;">
+                            <strong>Reason:</strong> <span id="detail_cancel_reason">-</span>
+                        </div>
+                    </div>
 
                     {{-- SEKSI ATAS: Info Dokumen & Tujuan (Tetap Berdampingan) --}}
                     <div class="row g-3 mb-4">
@@ -588,12 +597,12 @@
                 }
             }
 
-            document.addEventListener("DOMContentLoaded", function() {
-                var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-                tooltipTriggerList.map(function(tooltipTriggerEl) {
-                    return new bootstrap.Tooltip(tooltipTriggerEl);
-                });
-            });
+            // document.addEventListener("DOMContentLoaded", function() {
+            //     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            //     tooltipTriggerList.map(function(tooltipTriggerEl) {
+            //         return new bootstrap.Tooltip(tooltipTriggerEl);
+            //     });
+            // });
 
             $(document).ready(function() {
                 const exportDnBaseUrl = "{{ route('logistic-orders.export-dn') }}";
@@ -605,13 +614,11 @@
                     }
                 });
 
-                // INIT FILTER DISTRIBUTOR SELECT2
                 $('.select2-filter').select2({
                     theme: 'bootstrap-5',
                     allowClear: true
                 });
 
-                // Inisialisasi DataTable 1: PENDING
                 sampleTable = $('#sampleTable').DataTable({
                     processing: true,
                     serverSide: true,
@@ -620,7 +627,6 @@
                         url: "{{ route('logistic-orders.index') }}",
                         data: function(d) {
                             d.tab = 'pending';
-                            // Filter distributor tetap dikirim jika memang dibutuhkan
                             d.distributors = $('#filter_distributor').val();
                         }
                     },
@@ -662,7 +668,6 @@
                     ]
                 });
 
-                // Inisialisasi DataTable 2: DOWNLOADED
                 historyTable = $('#historyTable').DataTable({
                     processing: true,
                     serverSide: true,
@@ -673,7 +678,7 @@
                             d.tab = 'downloaded';
                             d.date_from = $('#dn_date_from').val();
                             d.date_to = $('#dn_date_to').val();
-                            d.distributors = $('#filter_distributor').val(); // Kirim data filter
+                            d.distributors = $('#filter_distributor').val();
                         }
                     },
                     columns: [{
@@ -714,11 +719,40 @@
                     ]
                 });
 
-                $('#historyTable').on('draw.dt', function() {
-                    $('[data-bs-toggle="tooltip"]').tooltip();
+                // $('#historyTable').on('draw.dt', function() {
+                //     $('[data-bs-toggle="tooltip"]').tooltip();
+                // });
+
+                function initTooltips() {
+                    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+                    tooltipTriggerList.map(function (tooltipTriggerEl) {
+                        var existingInstance = bootstrap.Tooltip.getInstance(tooltipTriggerEl);
+                        if (existingInstance) existingInstance.dispose();
+                        
+                        return new bootstrap.Tooltip(tooltipTriggerEl, {
+                            trigger: 'hover'
+                        });
+                    });
+                }
+
+                initTooltips();
+
+                $('#sampleTable, #historyTable').on('preDraw.dt', function() {
+                    $('.tooltip').remove(); 
                 });
 
-                // Reload tabel saat filter berubah
+                $('#sampleTable, #historyTable').on('draw.dt', function() {
+                    initTooltips();
+                });
+
+                $(document).on('click', '[data-bs-toggle="tooltip"]', function() {
+                    var tooltipInstance = bootstrap.Tooltip.getInstance(this);
+                    if (tooltipInstance) {
+                        tooltipInstance.hide();
+                    }
+                    $('.tooltip').remove();
+                });
+
                 $('#dn_date_from, #dn_date_to, #filter_distributor').on('change', function() {
                     if (activeTab === 'downloaded') {
                         historyTable.ajax.reload(null, false);
@@ -727,7 +761,6 @@
                     }
                 });
 
-                // Clear date filter & select2
                 $('#btn-clear-dn-date').on('click', function() {
                     $('#dn_date_from').val('');
                     $('#dn_date_to').val('');
@@ -1012,10 +1045,25 @@
 
                         if (data.note) {
                             $('#detail_do_no').text(data.note.delivery_order_no || '-');
-                            let statusHtml = data.note.status === 'Downloaded' ?
-                                `<span class="badge bg-success text-white border border-success px-3 py-1 rounded-pill fw-bold shadow-sm"><i class="ph-bold ph-check-circle me-1"></i> Download</span>` :
-                                `<span class="badge bg-warning text-dark border border-warning px-3 py-1 rounded-pill fw-bold shadow-sm"><i class="ph-bold ph-clock me-1"></i> Pending</span>`;
+                            
+                            let statusHtml = '';
+                            if (data.note.status === 'Canceled') {
+                                statusHtml = `<span class="badge bg-danger text-white border border-danger px-3 py-1 rounded-pill fw-bold shadow-sm"><i class="ph-bold ph-x-circle me-1"></i> Canceled</span>`;
+                            } else if (data.note.status === 'Downloaded') {
+                                statusHtml = `<span class="badge bg-success text-white border border-success px-3 py-1 rounded-pill fw-bold shadow-sm"><i class="ph-bold ph-check-circle me-1"></i> Download</span>`;
+                            } else {
+                                statusHtml = `<span class="badge bg-warning text-dark border border-warning px-3 py-1 rounded-pill fw-bold shadow-sm"><i class="ph-bold ph-clock me-1"></i> Pending</span>`;
+                            }
                             $('#detail_status').html(statusHtml);
+
+                            if (data.note.status === 'Canceled') {
+                                let cancelDate = data.canceled_at ? new Date(data.canceled_at).toLocaleString('id-ID') : '-';
+                                $('#detail_canceled_date').text(cancelDate);
+                                $('#detail_cancel_reason').text(data.cancel_reason || '-');
+                                $('#detail_cancel_banner').removeClass('d-none');
+                            } else {
+                                $('#detail_cancel_banner').addClass('d-none');
+                            }
                         }
 
                         $('#detail_delivery_date').text(data.delivery_date || '-');
@@ -1146,7 +1194,8 @@
                                 method: "POST",
                                 data: { reason: result.value },
                                 success: function(res) {
-                                    historyTable.ajax.reload(null, false); 
+                                    if (typeof historyTable !== 'undefined') historyTable.ajax.reload(null, false);
+                                    if (typeof sampleTable !== 'undefined') sampleTable.ajax.reload(null, false);
 
                                     Swal.fire({
                                         title: 'Success Cancelled!',

@@ -175,6 +175,7 @@ class LogisticOrderController extends Controller
                 ->addColumn('action', function ($row) use ($tab) {
                     if ($tab === 'downloaded') {
                         $btnDetail = '<button type="button" class="btn btn-sm btn-primary text-white btn-detail shadow-sm px-2 rounded-pill flex-fill" data-id="' . $row->id . '" title="Detail DN"><i class="ph-bold ph-eye"></i></button>';
+                        
                         if ($row->note && $row->note->status === 'Canceled') {
                             $btnEdit = '<button type="button" class="btn btn-sm btn-warning text-dark btn-edit shadow-sm px-2 rounded-pill flex-fill" data-id="' . $row->id . '" title="Revise/Resubmit Order"><i class="ph-bold ph-pencil-simple"></i></button>';
                             return '<div class="d-flex flex-row gap-1 align-items-center w-100">' . $btnDetail . $btnEdit . '</div>';
@@ -185,14 +186,10 @@ class LogisticOrderController extends Controller
                         }
                     }
 
-                    return '<button
-                                class="btn btn-sm btn-primary text-white btn-detail shadow-sm px-3 rounded-pill"
-                                data-id="' . $row->id . '"
-                                data-bs-toggle="tooltip"
-                                data-bs-placement="top"
-                                title="Detail">
-                                <i class="ph-bold ph-eye"></i>
-                            </button>';
+                    $btnDetail = '<button type="button" class="btn btn-sm btn-primary text-white btn-detail shadow-sm px-2 rounded-pill flex-fill" data-id="' . $row->id . '" title="Detail"><i class="ph-bold ph-eye"></i></button>';
+                    $btnCancel = '<button type="button" class="btn btn-sm btn-danger text-white btn-cancel shadow-sm px-2 rounded-pill flex-fill" data-id="' . $row->id . '" title="Cancel Order"><i class="ph-bold ph-x-circle"></i></button>';
+                    
+                    return '<div class="d-flex flex-row gap-1 align-items-center w-100">' . $btnDetail . $btnCancel . '</div>';
                 })
                 ->rawColumns(['logistic_order_no', 'do_no', 'status_badge', 'action'])
                 ->make(true);
