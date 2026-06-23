@@ -78,7 +78,9 @@ class LogisticOrderController extends Controller
             $data = LogisticOrder::with(['distributor', 'customer', 'customerShipTo', 'note'])
                 ->whereHas('note', function ($q) use ($tab) {
                     if ($tab === 'downloaded') {
-                        $q->whereIn('status', ['Downloaded', 'Canceled']);
+                        $q->where('status', 'Downloaded');
+                    } elseif ($tab === 'canceled') {
+                        $q->where('status', 'Canceled');
                     } else {
                         $q->where('status', 'Pending Download');
                     }
@@ -90,7 +92,7 @@ class LogisticOrderController extends Controller
                 $data->where('created_by', $user->id);
             }
 
-            if ($tab === 'downloaded' && !empty($dateFrom) && !empty($dateTo)) {
+            if (!empty($dateFrom) && !empty($dateTo)) {
                 $data->whereBetween('delivery_date', [$dateFrom, $dateTo]);
             }
 
@@ -98,7 +100,7 @@ class LogisticOrderController extends Controller
                 $data->whereIn('distributor_id', $filterDistributors);
             }
 
-            if ($tab === 'downloaded') {
+            if ($tab === 'downloaded' || $tab === 'canceled') {
                 $data->orderBy('updated_at', 'desc');
             } else {
                 $data->orderBy('created_at', 'desc');
@@ -136,7 +138,7 @@ class LogisticOrderController extends Controller
                     return $row->customerShipTo->ship_to_name ?? '-';
                 })
                 ->addColumn('status_badge', function ($row) use ($tab) {
-                    if ($row->note && $row->note->status === 'Canceled') {
+                    if ($tab === 'canceled') {
                         $cancelTime = $row->canceled_at ? Carbon::parse($row->canceled_at)->format('d M Y, H:i') : '-';
                         return '
                             <div class="d-flex flex-column align-items-start">
@@ -173,20 +175,24 @@ class LogisticOrderController extends Controller
                     return '<span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-3 py-1 rounded-pill"><i class="ph-bold ph-clock me-1"></i> Pending</span>';
                 })
                 ->addColumn('action', function ($row) use ($tab) {
+                    $btnDetail = '<button type="button" class="btn btn-sm btn-primary text-white btn-detail shadow-sm px-2 rounded-pill flex-fill" data-id="' . $row->id . '" title="Detail Document"><i class="ph-bold ph-eye"></i></button>';
+
+                    // TAB DOWNLOADED (Delivery Notes)
                     if ($tab === 'downloaded') {
-                        $btnDetail = '<button type="button" class="btn btn-sm btn-primary text-white btn-detail shadow-sm px-2 rounded-pill flex-fill" data-id="' . $row->id . '" title="Detail DN"><i class="ph-bold ph-eye"></i></button>';
+                        $btnDownload = '<a href="' . URL::signedRoute('public.lo.download', ['id' => $row->id, 'fromEmail' => 0]) . '" target="_blank" class="btn btn-sm btn-success text-white shadow-sm px-2 rounded-pill flex-fill" title="Download DN & PO"><i class="ph-bold ph-printer"></i></a>';
+                        $btnCancel = '<button type="button" class="btn btn-sm btn-danger text-white btn-cancel shadow-sm px-2 rounded-pill flex-fill" data-id="' . $row->id . '" title="Cancel Order"><i class="ph-bold ph-x-circle"></i></button>';
                         
-                        if ($row->note && $row->note->status === 'Canceled') {
-                            $btnEdit = '<button type="button" class="btn btn-sm btn-warning text-dark btn-edit shadow-sm px-2 rounded-pill flex-fill" data-id="' . $row->id . '" title="Revise/Resubmit Order"><i class="ph-bold ph-pencil-simple"></i></button>';
-                            return '<div class="d-flex flex-row gap-1 align-items-center w-100">' . $btnDetail . $btnEdit . '</div>';
-                        } else {
-                            $btnDownload = '<a href="' . URL::signedRoute('public.lo.download', ['id' => $row->id, 'fromEmail' => 0]) . '" target="_blank" class="btn btn-sm btn-success text-white shadow-sm px-2 rounded-pill flex-fill" title="Download DN & PO"><i class="ph-bold ph-printer"></i></a>';
-                            $btnCancel = '<button type="button" class="btn btn-sm btn-danger text-white btn-cancel shadow-sm px-2 rounded-pill flex-fill" data-id="' . $row->id . '" title="Cancel Order"><i class="ph-bold ph-x-circle"></i></button>';
-                            return '<div class="d-flex flex-row gap-1 align-items-center w-100">' . $btnDetail . $btnDownload . $btnCancel . '</div>';
-                        }
+                        return '<div class="d-flex flex-row gap-1 align-items-center w-100">' . $btnDetail . $btnDownload . $btnCancel . '</div>';
+                    } 
+                    
+                    // TAB CANCELED
+                    if ($tab === 'canceled') {
+                        $btnEdit = '<button type="button" class="btn btn-sm btn-warning text-dark btn-edit shadow-sm px-2 rounded-pill flex-fill" data-id="' . $row->id . '" title="Revise/Resubmit Order"><i class="ph-bold ph-pencil-simple"></i></button>';
+                        
+                        return '<div class="d-flex flex-row gap-1 align-items-center w-100">' . $btnDetail . $btnEdit . '</div>';
                     }
 
-                    $btnDetail = '<button type="button" class="btn btn-sm btn-primary text-white btn-detail shadow-sm px-2 rounded-pill flex-fill" data-id="' . $row->id . '" title="Detail"><i class="ph-bold ph-eye"></i></button>';
+                    // TAB PENDING (Logistic Orders)
                     $btnCancel = '<button type="button" class="btn btn-sm btn-danger text-white btn-cancel shadow-sm px-2 rounded-pill flex-fill" data-id="' . $row->id . '" title="Cancel Order"><i class="ph-bold ph-x-circle"></i></button>';
                     
                     return '<div class="d-flex flex-row gap-1 align-items-center w-100">' . $btnDetail . $btnCancel . '</div>';
@@ -489,14 +495,14 @@ class LogisticOrderController extends Controller
                 $order->note->update(['status' => 'Canceled']);
             }
 
-            $distEmail = $order->distributor->email ?? null;
-            if ($distEmail) {
-                dispatch(new SendLogisticOrderEmailJob($order, $distEmail, 'cancel'));
+            $distributorMail = $order->distributor->email ?? null;
+            if ($distributorMail) {
+                dispatch(new SendLogisticOrderEmailJob($order, $distributorMail, 'cancel'));
             }
 
-            $superiorEmail = Auth::user()->manager->email ?? 'atasan@sinarmeadow.com'; 
-            if ($superiorEmail) {
-                dispatch(new SendLogisticOrderEmailJob($order, $superiorEmail, 'cancel'));
+            $atasanMail = Auth::user()->atasan->email ?? [EMAIL_ADDRESS]; 
+            if ($atasanMail) {
+                dispatch(new SendLogisticOrderEmailJob($order, $atasanMail, 'cancel'));
             }
 
             return response()->json(['success' => true, 'message' => 'Order canceled successfully!']);
@@ -514,8 +520,8 @@ class LogisticOrderController extends Controller
                 'date_of_po'          => $request->date_of_po,
                 'no_po'               => $request->no_po,
                 'delivery_date'       => $request->delivery_date,
-                'cancel_reason'       => null,
-                'canceled_at'         => null,
+                'cancel_reason'       => $request->reason,
+                'canceled_at'         => $order->canceled_at,
             ]);
 
             $order->items()->delete();

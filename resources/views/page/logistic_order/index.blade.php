@@ -42,6 +42,10 @@
             .title { font-size: 0.98rem; }
             .subtitle { font-size: 0.82rem; }
         }
+
+        #btn-tab-canceled.active { background: linear-gradient(90deg, #fef2f2, #fee2e2); border: 1px solid #fca5a5; box-shadow: 0 12px 30px rgba(239, 68, 68, 0.08); }
+        #btn-tab-canceled .icon-box { background: linear-gradient(135deg, #fef2f2, #fecaca); color: #991b1b; }
+        #btn-tab-canceled .icon-box i { color: #dc2626; }
     </style>
 
     <div class="row m-1">
@@ -74,24 +78,30 @@
 
     {{-- 2. TOGGLE MENU CARDS --}}
     <div class="row m-1 mb-3">
-        {{-- Card: Logistic Orders (Pending) --}}
-        <div class="col-md-6">
+        <div class="col-md-4 mb-2 mb-md-0">
             <div class="toggle-card active" id="btn-tab-pending" onclick="switchTab('pending')">
                 <div class="icon-box"><i class="ph-bold ph-file-text"></i></div>
                 <div>
                     <h6 class="title text-black">Logistic Orders</h6>
-                    <p class="subtitle">New orders waiting for DN printing process.</p>
+                    <p class="subtitle">New orders waiting for DN process.</p>
                 </div>
             </div>
         </div>
-
-        {{-- Card: Delivery Notes (Selesai) --}}
-        <div class="col-md-6">
+        <div class="col-md-4 mb-2 mb-md-0">
             <div class="toggle-card" id="btn-tab-downloaded" onclick="switchTab('downloaded')">
                 <div class="icon-box"><i class="ph-bold ph-check-circle"></i></div>
                 <div>
                     <h6 class="title text-black">Delivery Notes</h6>
-                    <p class="subtitle">Delivery Order archives that have been downloaded (Completed).</p>
+                    <p class="subtitle">Downloaded and completed notes.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="toggle-card" id="btn-tab-canceled" onclick="switchTab('canceled')">
+                <div class="icon-box"><i class="ph-bold ph-x-circle"></i></div>
+                <div>
+                    <h6 class="title text-black">Canceled Orders</h6>
+                    <p class="subtitle">Orders that have been canceled.</p>
                 </div>
             </div>
         </div>
@@ -118,8 +128,8 @@
                     </button>
                 </div>
 
-                {{-- AREA FILTER + EXPORT (Layout Grid Baru yang Rapih) --}}
-                <div id="dn-export-area" class="d-none bg-light bg-opacity-50 border rounded-3 p-3 mb-4 shadow-sm">
+                {{-- AREA FILTER + EXPORT --}}
+                <div id="dn-export-area" class="bg-light bg-opacity-50 border rounded-3 p-3 mb-4 shadow-sm">
                     <div class="row g-3 align-items-end">
 
                         {{-- FILTER DISTRIBUTOR (MULTIPLE) --}}
@@ -146,17 +156,21 @@
                             <input type="date" class="form-control" style="height: 38px;" id="dn_date_to">
                         </div>
 
-                        {{-- TOMBOL EXPORT PDF & EXCEL --}}
-                        <div class="col-md-6 col-lg-3 d-flex gap-2 mt-3 mt-lg-0 justify-content-md-end">
-                            <button type="button" class="btn btn-light border px-3 rounded-3 fw-semibold shadow-sm flex-fill" style="height: 38px;" id="btn-clear-dn-date" data-bs-toggle="tooltip" title="Reset Filter">
+                        {{-- TOMBOL ACTION --}}
+                        <div class="col-md-12 col-lg-3 d-flex gap-2 mt-3 mt-lg-0 justify-content-md-end flex-fill">
+                            <button type="button" class="btn btn-light border px-3 rounded-3 fw-semibold shadow-sm" style="height: 38px;" id="btn-clear-dn-date" data-bs-toggle="tooltip" title="Reset Filter">
                                 <i class="ph-bold ph-arrows-clockwise text-secondary"></i>
                             </button>
-                            <button class="btn btn-danger px-3 rounded-3 fw-semibold shadow-sm flex-fill" style="height: 38px;" id="btn-export-pdf" data-bs-toggle="tooltip" title="Export PDF Report">
-                                <i class="ph-bold ph-file-pdf"></i> PDF
-                            </button>
-                            <button class="btn btn-success px-3 rounded-3 fw-semibold shadow-sm flex-fill" style="height: 38px;" id="btn-export-dn" data-bs-toggle="tooltip" title="Export Excel Data">
-                                <i class="ph-bold ph-file-xls"></i> Excel
-                            </button>
+                            
+                            {{-- Wrapper untuk Export yang bisa di hide/show (Default: Sembunyi) --}}
+                            <div id="export-action-buttons" class="d-none d-flex gap-2 flex-fill">
+                                <button class="btn btn-danger px-3 rounded-3 fw-semibold shadow-sm flex-fill" style="height: 38px;" id="btn-export-pdf" data-bs-toggle="tooltip" title="Export PDF Report">
+                                    <i class="ph-bold ph-file-pdf"></i> PDF
+                                </button>
+                                <button class="btn btn-success px-3 rounded-3 fw-semibold shadow-sm flex-fill" style="height: 38px;" id="btn-export-dn" data-bs-toggle="tooltip" title="Export Excel Data">
+                                    <i class="ph-bold ph-file-xls"></i> Excel
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -181,6 +195,23 @@
                 {{-- Tabel Downloaded (Sembunyikan via d-none default) --}}
                 <div id="wrapper-downloaded" class="table-responsive d-none">
                     <table class="table table-hover w-100 align-middle" id="historyTable">
+                        <thead>
+                            <tr>
+                                <th>No</th>
+                                <th width="15%">DN Info</th>
+                                <th width="20%">Customer</th>
+                                <th width="20%">Distributor</th>
+                                <th width="15%">Ship To</th>
+                                <th width="15%">Status</th>
+                                <th width="12%" class="text-center">Action</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+
+                {{-- Tabel Canceled --}}
+                <div id="wrapper-canceled" class="table-responsive d-none">
+                    <table class="table table-hover w-100 align-middle" id="canceledTable">
                         <thead>
                             <tr>
                                 <th>No</th>
@@ -557,7 +588,7 @@
     @push('scripts')
         <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
         <script>
-            let sampleTable, historyTable;
+            let sampleTable, historyTable, canceledTable;
             let activeLogisticFee = 0;
             let cachedShipTos = [];
             let activeTab = 'pending';
@@ -606,7 +637,7 @@
 
             $(document).ready(function() {
                 const exportDnBaseUrl = "{{ route('logistic-orders.export-dn') }}";
-                const exportPdfBaseUrl = "{{ route('logistic-orders.export-pdf') ?? '#' }}"; // Pastikan route sudah didaftarkan
+                const exportPdfBaseUrl = "{{ route('logistic-orders.export-pdf') ?? '#' }}";
 
                 $.ajaxSetup({
                     headers: {
@@ -627,6 +658,8 @@
                         url: "{{ route('logistic-orders.index') }}",
                         data: function(d) {
                             d.tab = 'pending';
+                            d.date_from = $('#dn_date_from').val();
+                            d.date_to = $('#dn_date_to').val();
                             d.distributors = $('#filter_distributor').val();
                         }
                     },
@@ -719,6 +752,30 @@
                     ]
                 });
 
+                canceledTable = $('#canceledTable').DataTable({
+                    processing: true,
+                    serverSide: true,
+                    autoWidth: false,
+                    ajax: {
+                        url: "{{ route('logistic-orders.index') }}",
+                        data: function(d) {
+                            d.tab = 'canceled';
+                            d.date_from = $('#dn_date_from').val();
+                            d.date_to = $('#dn_date_to').val();
+                            d.distributors = $('#filter_distributor').val();
+                        }
+                    },
+                    columns: [
+                        { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
+                        { data: 'do_no', name: 'note.delivery_order_no', className: 'fw-bold text-danger' },
+                        { data: 'customer_name', name: 'customer.name', className: 'fw-semibold' },
+                        { data: 'distributor_name', name: 'distributor.name' },
+                        { data: 'ship_to', name: 'customerShipTo.ship_to_name' },
+                        { data: 'status_badge', name: 'note.status' },
+                        { data: 'action', name: 'action', orderable: false, searchable: false, className: 'text-center' }
+                    ]
+                });
+
                 // $('#historyTable').on('draw.dt', function() {
                 //     $('[data-bs-toggle="tooltip"]').tooltip();
                 // });
@@ -754,23 +811,18 @@
                 });
 
                 $('#dn_date_from, #dn_date_to, #filter_distributor').on('change', function() {
-                    if (activeTab === 'downloaded') {
-                        historyTable.ajax.reload(null, false);
-                    } else {
-                        sampleTable.ajax.reload(null, false);
-                    }
+                    if (activeTab === 'downloaded') historyTable.ajax.reload(null, false);
+                    else if (activeTab === 'canceled') canceledTable.ajax.reload(null, false);
+                    else sampleTable.ajax.reload(null, false);
                 });
 
                 $('#btn-clear-dn-date').on('click', function() {
                     $('#dn_date_from').val('');
                     $('#dn_date_to').val('');
                     $('#filter_distributor').val(null).trigger('change');
-
-                    if (activeTab === 'downloaded') {
-                        historyTable.ajax.reload(null, false);
-                    } else {
-                        sampleTable.ajax.reload(null, false);
-                    }
+                    if (activeTab === 'downloaded') historyTable.ajax.reload(null, false);
+                    else if (activeTab === 'canceled') canceledTable.ajax.reload(null, false);
+                    else sampleTable.ajax.reload(null, false);
                 });
 
                 function executeExport(baseUrl) {
@@ -1146,7 +1198,7 @@
                         }
 
                         let downloadUrl = "{{ url('/public/lo/download') }}/" + data.id +
-                            "/0"; // Sesuaikan base URL nya
+                            "/0";
                         if (data.note && data.note.status === 'Downloaded') {
                             $('#admin-download-wrapper').html(`
                             <a href="${data.download_url}" target="_blank" class="btn btn-success px-4 py-2 rounded-pill fw-bold shadow-sm">
@@ -1196,16 +1248,20 @@
                                 success: function(res) {
                                     if (typeof historyTable !== 'undefined') historyTable.ajax.reload(null, false);
                                     if (typeof sampleTable !== 'undefined') sampleTable.ajax.reload(null, false);
+                                    if (typeof canceledTable !== 'undefined') canceledTable.ajax.reload(null, false);
 
                                     Swal.fire({
                                         title: 'Success Cancelled!',
-                                        text: 'Data has been cancelled and emails have been sent to the Supervisor and Distributor.',
+                                        text: 'Data has been cancelled. You can revise the data by clicking the "Revise Data" button.',
                                         icon: 'success',
                                         showCancelButton: true,
-                                        confirmButtonText: '<i class="ph-bold ph-pencil-simple me-1"></i> Continue to Revise Data',
+                                        confirmButtonText: '<i class="ph-bold ph-pencil-simple text-white me-1"></i> Revise Data',
                                         cancelButtonText: 'Close',
                                         reverseButtons: true,
-                                        customClass: { confirmButton: 'btn btn-primary px-4', cancelButton: 'btn btn-secondary px-4' },
+                                        customClass: { 
+                                            confirmButton: 'btn btn-primary px-4 ms-2 shadow-sm', 
+                                            cancelButton: 'btn btn-secondary px-4 me-2 shadow-sm' 
+                                        },
                                         buttonsStyling: false
                                     }).then((res2) => {
                                         if (res2.isConfirmed) {
@@ -1259,26 +1315,27 @@
                 $('.toggle-card').removeClass('active');
                 $('#btn-tab-' + tabName).addClass('active');
 
-                if (tabName === 'pending') {
-                    $('#wrapper-downloaded').addClass('d-none');
-                    $('#wrapper-pending').removeClass('d-none');
+                $('#wrapper-pending, #wrapper-downloaded, #wrapper-canceled').addClass('d-none');
+                $('#wrapper-' + tabName).removeClass('d-none');
 
+                if (tabName === 'pending') {
                     $('#dynamic-table-title').html('<i class="ph-fill ph-stack text-primary me-2"></i> List Logistic Order');
                     $('#dynamic-table-subtitle').text('Displaying orders with Pending status.');
                     $('#btn-create-order').removeClass('d-none');
-                    $('#dn-export-area').addClass('d-none');
+                    $('#export-action-buttons').addClass('d-none');
                     sampleTable.ajax.reload(null, false);
-                } else {
-                    $('#wrapper-pending').addClass('d-none');
-                    $('#wrapper-downloaded').removeClass('d-none');
-
-                    $('#dynamic-table-title').html(
-                        '<i class="ph-fill ph-check-circle text-success me-2"></i> Archive Delivery No');
+                } else if (tabName === 'downloaded') {
+                    $('#dynamic-table-title').html('<i class="ph-fill ph-check-circle text-success me-2"></i> Archive Delivery No');
                     $('#dynamic-table-subtitle').text('Displaying Delivery Notes that have been downloaded (Completed).');
                     $('#btn-create-order').addClass('d-none');
-                    $('#dn-export-area').removeClass('d-none');
-
+                    $('#export-action-buttons').removeClass('d-none'); // TAMPILKAN EXPORT
                     historyTable.ajax.reload(null, false);
+                } else {
+                    $('#dynamic-table-title').html('<i class="ph-fill ph-x-circle text-danger me-2"></i> Canceled Orders');
+                    $('#dynamic-table-subtitle').text('Displaying orders that have been canceled.');
+                    $('#btn-create-order').addClass('d-none');
+                    $('#export-action-buttons').addClass('d-none');
+                    canceledTable.ajax.reload(null, false);
                 }
             }
 
