@@ -407,11 +407,8 @@
     {{-- MODAL DETAIL PESANAN (WIDE LAYOUT - SIDE BY SIDE) --}}
     {{-- ================================================================= --}}
     <div class="modal fade" id="modalDetail" tabindex="-1">
-        {{-- Gunakan modal-xl untuk memberikan ruang lebar ke samping --}}
         <div class="modal-dialog modal-xl modal-dialog-centered">
             <div class="modal-content border-0 rounded-4 shadow-lg">
-
-                {{-- Header: Blue Gradient Theme --}}
                 <div class="modal-header border-bottom-0 p-4">
                     <div class="d-flex align-items-center gap-3">
                         <div class="bg-white bg-opacity-25 text-white border border-white border-opacity-25 d-flex align-items-center justify-content-center rounded-3 shadow-sm"
@@ -431,7 +428,6 @@
                         aria-label="Close"></button>
                 </div>
 
-                {{-- Body: Background soft gray --}}
                 <div class="modal-body p-4" style="background-color: #f8fafc;">
                     <div id="detail_cancel_banner" class="alert alert-danger mb-4 d-none border-0 shadow-sm" style="border-left: 4px solid #dc2626 !important;">
                         <div class="d-flex align-items-center mb-1">
@@ -443,9 +439,7 @@
                         </div>
                     </div>
 
-                    {{-- SEKSI ATAS: Info Dokumen & Tujuan (Tetap Berdampingan) --}}
                     <div class="row g-3 mb-4">
-                        {{-- Kiri: Info Utama --}}
                         <div class="col-md-5">
                             <div class="bg-white border rounded-4 p-4 h-100 shadow-sm">
                                 <h6 class="fw-bold text-secondary text-uppercase mb-3"
@@ -488,7 +482,6 @@
                             </div>
                         </div>
 
-                        {{-- Kanan: Ship To --}}
                         <div class="col-md-7">
                             <div class="bg-white border rounded-4 p-4 h-100 shadow-sm"
                                 style="border-top: 4px solid #3b82f6 !important;">
@@ -520,9 +513,7 @@
                         </div>
                     </div>
 
-                    {{-- SEKSI BAWAH: Rincian Barang & Tracking (BERDAMPINGAN) --}}
                     <div class="row g-3">
-                        {{-- Samping Kiri: Rincian Barang (7/12 area) --}}
                         <div class="col-lg-7">
                             <div class="bg-white border rounded-4 p-4 shadow-sm h-100">
                                 <h6 class="fw-bold text-secondary text-uppercase mb-3"
@@ -547,7 +538,6 @@
                             </div>
                         </div>
 
-                        {{-- Samping Kanan: Riwayat Tracking (5/12 area) --}}
                         <div class="col-lg-5">
                             <div class="bg-white border rounded-4 p-4 shadow-sm h-100">
                                 <h6 class="fw-bold text-secondary text-uppercase mb-3"
@@ -1135,7 +1125,6 @@
                             $('#detail_sales_pic').text(st.user ? st.user.name : '-');
                         }
 
-                        // --- RENDER TABEL ITEM BARANG ---
                         let tbody = $('#detail_items_table');
                         tbody.empty();
                         if (data.items && data.items.length > 0) {
@@ -1158,7 +1147,6 @@
                             );
                         }
 
-                        // --- RENDER TABEL RIWAYAT UNDUHAN (TRACKING) ---
                         let logTbody = $('#detail_download_logs_table');
                         logTbody.empty();
                         if (data.download_logs && data.download_logs.length > 0) {
@@ -1328,7 +1316,7 @@
                     $('#dynamic-table-title').html('<i class="ph-fill ph-check-circle text-success me-2"></i> Archive Delivery No');
                     $('#dynamic-table-subtitle').text('Displaying Delivery Notes that have been downloaded (Completed).');
                     $('#btn-create-order').addClass('d-none');
-                    $('#export-action-buttons').removeClass('d-none'); // TAMPILKAN EXPORT
+                    $('#export-action-buttons').removeClass('d-none');
                     historyTable.ajax.reload(null, false);
                 } else {
                     $('#dynamic-table-title').html('<i class="ph-fill ph-x-circle text-danger me-2"></i> Canceled Orders');

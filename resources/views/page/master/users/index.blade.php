@@ -3,6 +3,8 @@
         Users List
     @endsection
 
+    @include('components.sample-table-styles')
+
     @push('css')
         <!-- Select2 CSS -->
         <link href="{{ asset('assets/vendor/select/select2.min.css') }}" rel="stylesheet" type="text/css">
@@ -37,7 +39,7 @@
             <div class="card">
                 <div class="card-body p-0">
                     <div class="app-scroll table-responsive app-datatable-default">
-                        <table class="w-100 display" id="users-table">
+                        <table class="w-100 display" id="sampleTable">
                             <thead>
                                 <tr>
                                     <th>Nik</th>
@@ -221,7 +223,7 @@
 
             $(document).ready(function() {
                 // === DataTable ===
-                $('#users-table').DataTable({
+                $('#sampleTable').DataTable({
                     processing: true,
                     serverSide: true,
                     ajax: {
@@ -389,7 +391,7 @@
                         contentType: false,
                         success: function(res) {
                             $('#userModal').modal('hide');
-                            $('#users-table').DataTable().ajax.reload(null, false);
+                            $('#sampleTable').DataTable().ajax.reload(null, false);
                             successMessage((mode === 'create') ? 'User created successfully' :
                                 'User updated successfully');
                         },
@@ -422,7 +424,7 @@
                                     _token: '{{ csrf_token() }}'
                                 },
                                 success: function(res) {
-                                    $('#users-table').DataTable().ajax.reload(null, false);
+                                    $('#sampleTable').DataTable().ajax.reload(null, false);
                                     successMessage(res.message ||
                                         'User deleted successfully!');
                                 },

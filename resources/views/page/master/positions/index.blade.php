@@ -3,6 +3,8 @@
         Position
     @endsection
 
+    @include('components.sample-table-styles')
+
     <!-- Breadcrumb -->
     <div class="row m-1">
         <div class="col-12 ">
@@ -32,7 +34,7 @@
             <div class="card">
                 <div class="card-body p-0">
                     <div class="app-scroll table-responsive app-datatable-default">
-                        <table class="w-100 display" id="positions-table">
+                        <table class="w-100 display" id="sampleTable">
                             <thead>
                                 <tr>
                                     <th>Position Name</th>
@@ -126,7 +128,7 @@
 
             $(document).ready(function() {
                 // === DataTable ===
-                $('#positions-table').DataTable({
+                $('#sampleTable').DataTable({
                     processing: true,
                     serverSide: true,
                     ajax: {
@@ -179,7 +181,7 @@
                         data: formData,
                         success: function(res) {
                             $('#positionModal').modal('hide');
-                            $('#positions-table').DataTable().ajax.reload(null, false);
+                            $('#sampleTable').DataTable().ajax.reload(null, false);
                             successMessage((mode === 'create') ? 'Position created successfully' : 'Position updated successfully');
                         },
                         error: function(xhr) {
@@ -211,7 +213,7 @@
                                     _token: '{{ csrf_token() }}'
                                 },
                                 success: function(res) {
-                                    $('#positions-table').DataTable().ajax.reload(null, false);
+                                    $('#sampleTable').DataTable().ajax.reload(null, false);
                                     successMessage(res.message || 'Position deleted successfully!');
                                 },
                                 error: function(xhr) {
