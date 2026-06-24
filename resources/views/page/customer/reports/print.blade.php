@@ -41,6 +41,8 @@
             border: 1px solid #000000; 
             padding: 6px 10px; 
             vertical-align: middle; 
+            word-break: break-word;
+            overflow-wrap: break-word;
         }
         .logo-text { 
             font-size: 14pt; 
@@ -72,6 +74,8 @@
             padding: 4px 6px; /* Dirapetin agar tidak ada jarak berlebih */
             vertical-align: middle; 
             color: #000000; /* Warna biru sesuai gambar contoh */
+            word-break: break-word;
+            overflow-wrap: break-word;
         }
         .doc-control td.label { 
             font-weight: bold; 
@@ -121,6 +125,8 @@
             padding: 5px 8px;
             border: 1px solid #000000; 
             vertical-align: top;
+            word-break: break-word;
+            overflow-wrap: break-word;
         }
         
         /* Shaded Label Cell Style */
@@ -174,6 +180,8 @@
             color: #000000;
             border: 1px solid #000000;
             vertical-align: middle;
+            word-break: break-word;
+            overflow-wrap: break-word;
         }
         table.data-table tbody tr:nth-child(even) td { 
             background-color: #f8fafc; 
