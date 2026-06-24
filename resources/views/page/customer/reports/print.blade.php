@@ -259,7 +259,7 @@
                         </tr>
                         <tr>
                             <td class="label" style="border-right: 1px solid #000000;">Dated</td>
-                            <td>: {{ $revision->revision_date ? \Carbon\Carbon::parse($revision->revision_date)->format('d-M-y') : '21-Jan-26' }}</td>
+                            <td>: {{ $revision->revision_date ? \Carbon\Carbon::parse($revision->revision_date)->locale('id')->translatedFormat('d F Y') : '-' }}</td>
                         </tr>
                     </table>
                 </td>
@@ -295,23 +295,23 @@
                     <td class="lbl-cell">Account Group:</td>
                     <td class="val-cell">{{ $customer->accountGroup ? strtoupper($customer->accountGroup->name_account_group) : strtoupper($customer->account_group ?? '-') }}</td>
                     <td class="lbl-cell">Join Date:</td>
-                    <td class="val-cell">{{ $customer->join_date ? \Carbon\Carbon::parse($customer->join_date)->format('d M Y') : '-' }}</td>
+                    <td class="val-cell">{{ $customer->join_date ? \Carbon\Carbon::parse($customer->join_date)->locale('id')->translatedFormat('d F Y') : '-' }}</td>
                 </tr>
                 <tr>
                     <td class="lbl-cell">Account Status:</td>
                     <td class="val-cell" colspan="3">
-                        <span class="status-badge bg-approved" style="font-size: 7.5pt;">{{ strtoupper($customer->status ?? 'ACTIVE') }}</span>
+                        <span class="font-bold" style="font-size: 7.5pt;">{{ strtoupper($customer->status ?? '-') }}</span>
                     </td>
                 </tr>
                 <tr>
                     <td class="lbl-cell">Main Office Address</td>
                     <td class="val-cell" colspan="3">
-                        <span style="font-weight: bold;">{{ strtoupper($customer->address1) }}</span><br>
-                        {{ trim($customer->address2 . ' ' . $customer->address3) }}<br>
+                        <span style="font-weight: bold;">{{ strtoupper($customer->address1 ?? '-') }}
+                        {{ trim($customer->address2 . ' ' . $customer->address3 ?? '-') }}<br></span>
                         <span style="font-weight: normal;">
                             <strong>City:</strong> {{ $customer->city ?? '-' }} &nbsp;|&nbsp; 
                             <strong>Postal Code:</strong> {{ $customer->postal_code ?? '-' }} &nbsp;|&nbsp; 
-                            <strong>Country:</strong> {{ strtoupper($customer->country ?? 'Indonesia') }}
+                            <strong>Country:</strong> {{ strtoupper($customer->country ?? '-') }}
                         </span>
                     </td>
                 </tr>
@@ -368,12 +368,12 @@
                     <td class="lbl-cell">Tax ID (NPWP:)</td>
                     <td class="val-cell">
                         <span style="font-weight: 700;">{{ $customer->npwp ?? '-' }}</span><br>
-                        <span style="font-weight: normal;">Reg Date: {{ $customer->tanggal_npwp ? \Carbon\Carbon::parse($customer->tanggal_npwp)->format('d M Y') : '-' }}</span>
+                        <span style="font-weight: normal;">Reg Date: {{ $customer->tanggal_npwp ? \Carbon\Carbon::parse($customer->tanggal_npwp)->locale('id')->translatedFormat('d F Y') : '-' }}</span>
                     </td>
                     <td class="lbl-cell">NPPKP / PKP:</td>
                     <td class="val-cell">
                         <span style="font-weight: 700;">{{ $customer->nppkp ?? '-' }}</span><br>
-                        <span style="font-weight: normal;">Reg Date: {{ $customer->tanggal_nppkp ? \Carbon\Carbon::parse($customer->tanggal_nppkp)->format('d M Y') : '-' }}</span>
+                        <span style="font-weight: normal;">Reg Date: {{ $customer->tanggal_nppkp ? \Carbon\Carbon::parse($customer->tanggal_nppkp)->locale('id')->translatedFormat('d F Y') : '-' }}</span>
                     </td>
                 </tr>
                 <tr>
@@ -499,7 +499,7 @@
                         </tr>
                         <tr>
                             <td class="label" style="border-right: 1px solid #000000;">Dated</td>
-                            <td>: {{ $revision->revision_date ? \Carbon\Carbon::parse($revision->revision_date)->format('d-M-y') : '21-Jan-26' }}</td>
+                            <td>: {{ $revision->revision_date ? \Carbon\Carbon::parse($revision->revision_date)->locale('id')->translatedFormat('d F Y') : '-' }}</td>
                         </tr>
                     </table>
                 </td>
@@ -541,7 +541,7 @@
                                 <span class="status-badge {{ $statusClass }}">{{ $statusText }}</span>
                             </td>
                             <td style="text-align: center; font-size: 7.5pt;">
-                                {{ $log->updated_at ? \Carbon\Carbon::parse($log->updated_at)->format('d M Y - H:i') : '-' }}
+                                {{ $log->updated_at ? \Carbon\Carbon::parse($log->updated_at)->locale('id')->translatedFormat('d F Y - H:i') : '-' }}
                             </td>
                             <td style="font-size: 7.5pt; font-style: italic;">{{ $log->notes ?? '-' }}</td>
                         </tr>
