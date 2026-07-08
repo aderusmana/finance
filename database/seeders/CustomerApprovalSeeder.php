@@ -18,20 +18,20 @@ class CustomerApprovalSeeder extends Seeder
         // A. Urutan untuk CBD
         $rolesCBD = [
             'atasan',
-            'manager-finance',
-            'head-snm',
+            'head-SNM',
             'head-finance',
+            'manager-finance',
             'it'
         ];
 
         // B. Urutan untuk General / Non-Category
         $rolesGeneral = [
             'atasan',
-            'manager-finance',
             'head-finance',
+            'manager-finance',
             'it'
         ];
-        
+
         $allRoles = array_unique(array_merge($rolesCBD, $rolesGeneral));
 
         foreach ($allRoles as $roleName) {
@@ -57,7 +57,7 @@ class CustomerApprovalSeeder extends Seeder
         ApprovalPath::updateOrCreate(
             [
                 'category'     => 'Customer',
-                'sub_category' => null, 
+                'sub_category' => null,
             ],
             [
                 'sequence_approvers' => $rolesGeneral,

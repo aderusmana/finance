@@ -146,7 +146,7 @@
                         method = "POST";
                     } else {
                         // Pastikan URL update sesuai route resource
-                        url = "{{ url('master/customer-classes') }}/" + classId;
+                        url = "{{ url('customer-classes') }}/" + classId;
                         method = "POST"; // Laravel spoofing nanti via _method=PUT
                     }
 

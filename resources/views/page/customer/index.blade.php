@@ -27,15 +27,15 @@
                 <div class="d-none d-md-flex align-items-center gap-2 mb-3">
                     <span class="text-muted fw-bold me-1"><i class="ph-bold ph-funnel"></i> Filter:</span>
 
-                    <select id="statusFilter" class="form-select select2" style="width: 150px;">
+                    <select id="statusFilter" class="form-select select2" style="width: 9.375rem;">
                         <option value="all">All Account</option>
                         <option value="Active">Active (BG)</option>
                         <option value="Inactive">Inactive (BG)</option>
                     </select>
 
-                    <select id="approvalStatusFilter" class="form-select select2" style="width: 175px;">
+                    <select id="approvalStatusFilter" class="form-select select2" style="width: 10.9375rem;">
                         <option value="all">All Approval</option>
-                        @foreach($approvalStatuses as $status)
+                        @foreach ($approvalStatuses as $status)
                             <option value="{{ $status }}">{{ $status }}</option>
                         @endforeach
                     </select>
@@ -45,11 +45,19 @@
                     </button>
                 </div>
 
-                <div class="ms-auto d-flex">
-                    <button class="btn btn-primary" type="button" id="btn-create-customer">
-                        <i class="ph-bold ph-plus"></i>
-                        <span>New Customer</span>
-                    </button>
+                <div class="ms-auto d-flex gap-2">
+                    @can('import customer')
+                        <button class="btn btn-success" type="button" data-bs-toggle="modal" data-bs-target="#importModal">
+                            <i class="ph-bold ph-file-csv"></i>
+                            <span class="d-none d-sm-inline">Import CSV</span>
+                        </button>
+                    @endcan
+                    @can('create customer')
+                        <button class="btn btn-primary" type="button" id="btn-create-customer">
+                            <i class="ph-bold ph-plus"></i>
+                            <span>New Customer</span>
+                        </button>
+                    @endcan
                 </div>
             </div>
 
@@ -65,8 +73,10 @@
                     </div>
 
                     <div class="d-none d-md-flex gap-4 text-white align-items-center pe-2">
-                        <div class="d-flex align-items-center gap-2" data-bs-toggle="tooltip" title="Waiting for Approval">
-                            <div class="bg-white bg-opacity-25 rounded-circle p-1 d-flex justify-content-center align-items-center" style="width: 32px; height: 32px;">
+                        <div class="d-flex align-items-center gap-2" data-bs-toggle="tooltip"
+                            title="Waiting for Approval">
+                            <div class="bg-white bg-opacity-25 rounded-circle p-1 d-flex justify-content-center align-items-center"
+                                style="width: 2rem; height: 2rem;">
                                 <i class="ph-fill ph-clock-countdown text-warning f-s-18"></i>
                             </div>
                             <div class="d-flex flex-column line-height-sm">
@@ -76,7 +86,8 @@
                         </div>
 
                         <div class="d-flex align-items-center gap-2" data-bs-toggle="tooltip" title="Processing">
-                            <div class="bg-white bg-opacity-25 rounded-circle p-1 d-flex justify-content-center align-items-center" style="width: 32px; height: 32px;">
+                            <div class="bg-white bg-opacity-25 rounded-circle p-1 d-flex justify-content-center align-items-center"
+                                style="width: 2rem; height: 2rem;">
                                 <i class="ph-fill ph-gear text-info f-s-18"></i>
                             </div>
                             <div class="d-flex flex-column line-height-sm">
@@ -85,8 +96,10 @@
                             </div>
                         </div>
 
-                        <div class="d-flex align-items-center gap-2" data-bs-toggle="tooltip" title="Approved (Administrative)">
-                             <div class="bg-white bg-opacity-25 rounded-circle p-1 d-flex justify-content-center align-items-center" style="width: 32px; height: 32px;">
+                        <div class="d-flex align-items-center gap-2" data-bs-toggle="tooltip"
+                            title="Approved (Administrative)">
+                            <div class="bg-white bg-opacity-25 rounded-circle p-1 d-flex justify-content-center align-items-center"
+                                style="width: 2rem; height: 2rem;">
                                 <i class="ph-fill ph-seal-check text-success f-s-18"></i>
                             </div>
                             <div class="d-flex flex-column line-height-sm">
@@ -95,13 +108,15 @@
                             </div>
                         </div>
 
-                        <div class="vr opacity-100 bg-white" style="height: 50px;"></div>
+                        <div class="vr opacity-100 bg-white" style="height: 3.125rem;"></div>
 
                         {{-- Stat 3: BG Status --}}
                         <div class="d-flex align-items-center gap-4">
 
-                            <div class="d-flex align-items-center gap-2" data-bs-toggle="tooltip" title="Customers with Bank Garansi">
-                                <div class="bg-white bg-opacity-10 rounded-circle p-1 d-flex justify-content-center align-items-center" style="width: 32px; height: 32px;">
+                            <div class="d-flex align-items-center gap-2" data-bs-toggle="tooltip"
+                                title="Customers with Bank Garansi">
+                                <div class="bg-white bg-opacity-10 rounded-circle p-1 d-flex justify-content-center align-items-center"
+                                    style="width: 2rem; height: 2rem;">
                                     <i class="ph-fill ph-file-text text-success f-s-18"></i>
                                 </div>
                                 <div class="d-flex flex-column line-height-sm">
@@ -110,8 +125,10 @@
                                 </div>
                             </div>
 
-                            <div class="d-flex align-items-center gap-2" data-bs-toggle="tooltip" title="Customers without Bank Garansi">
-                                <div class="bg-white bg-opacity-10 rounded-circle p-1 d-flex justify-content-center align-items-center" style="width: 32px; height: 32px;">
+                            <div class="d-flex align-items-center gap-2" data-bs-toggle="tooltip"
+                                title="Customers without Bank Garansi">
+                                <div class="bg-white bg-opacity-10 rounded-circle p-1 d-flex justify-content-center align-items-center"
+                                    style="width: 2rem; height: 2rem;">
                                     <i class="ph-fill ph-prohibit text-danger f-s-18"></i>
                                 </div>
                                 <div class="d-flex flex-column line-height-sm">
@@ -128,7 +145,7 @@
                         <thead>
                             <tr>
                                 <th width="5%" class="text-center">No</th>
-                                <th>Code</th>
+                                <th width="5%">Code</th>
                                 <th>Customer</th>
                                 <th>Credit</th>
                                 <th>TOP</th>
@@ -164,8 +181,10 @@
                             <div class="card-body">
                                 <div class="row">
                                     <div class="col-md-12">
-                                        <label for="user_id" class="form-label">Select User (Requester) <span class="text-danger">*</span></label>
-                                        <select class="form-select select2-styled" id="user_id" name="user_id" style="width: 100%;" required>
+                                        <label for="user_id" class="form-label">Select User (Requester) <span
+                                                class="text-danger">*</span></label>
+                                        <select class="form-select select2-styled" id="user_id" name="user_id"
+                                            style="width: 100%;" required>
                                             <option></option>
                                             @foreach ($sales as $s)
                                                 <option value="{{ $s->user_id }}"
@@ -177,7 +196,8 @@
                                                 </option>
                                             @endforeach
                                         </select>
-                                        <input type="hidden" id="current_user_role" value="{{ Auth::user()->getRoleNames()->first() }}">
+                                        <input type="hidden" id="current_user_role"
+                                            value="{{ Auth::user()->getRoleNames()->first() }}">
                                         <input type="hidden" id="current_user_id" value="{{ Auth::id() }}">
                                     </div>
                                 </div>
@@ -196,13 +216,13 @@
                                         </div>
                                         <div class="col-md-4">
                                             <label class="small text-muted">Branch</label>
-                                            <input type="text" class="form-control form-control-sm" id="user_branch"
-                                                readonly placeholder="Auto-filled">
+                                            <input type="text" class="form-control form-control-sm"
+                                                id="user_branch" readonly placeholder="Auto-filled">
                                         </div>
                                         <div class="col-md-4">
                                             <label class="small text-muted">Region</label>
-                                            <input type="text" class="form-control form-control-sm" id="user_region"
-                                                readonly placeholder="Auto-filled">
+                                            <input type="text" class="form-control form-control-sm"
+                                                id="user_region" readonly placeholder="Auto-filled">
                                         </div>
                                     </div>
                                 </div>
@@ -254,39 +274,63 @@
                                 {{-- D. Documents Upload --}}
                                 <div class="card-body bg-opacity-10">
                                     <div class="row g-3 mb-4">
-                                        <h6 class="fw-bold text-secondary">
-                                            <i class="ph-bold ph-upload-simple"></i> Document Uploads (Auto-fill Support)
-                                        </h6>
-
-                                        {{-- 1. NPWP (REQUIRED) --}}
-                                        <div class="col-md-3">
-                                            <label class="form-label">Upload NPWP <span class="text-danger">*</span></label>
-                                            <input type="file" class="form-control" name="file_npwp" required>
-                                            <small class="text-muted f-s-11">Upload NPWP untuk auto-fill nama & alamat.</small>
-                                            <div id="preview_npwp" class="mt-2" style="display: none;">
-                                                {{-- Preview button container --}}
-                                            </div>
+                                        {{-- Header takes full width --}}
+                                        <div class="col-12">
+                                            <h6 class="fw-bold text-secondary mb-0">
+                                                <i class="ph-bold ph-upload-simple"></i> Document Uploads (Auto-fill
+                                                Support)
+                                            </h6>
                                         </div>
 
-                                        {{-- 2. NIB/SIUP (REQUIRED - REVISI: Tambah Bintang & Required) --}}
-                                        <div class="col-md-3">
-                                            <label class="form-label">Upload NIB/SIUP <span class="text-danger">*</span></label>
-                                            <input type="file" class="form-control" name="file_nib" required>
+                                        {{-- 1. NPWP (REQUIRED) --}}
+                                        <div class="col-md">
+                                            <label class="form-label">Upload NPWP <span
+                                                    class="text-danger">*</span></label>
+                                            <input type="file" class="form-control" name="file_npwp"
+                                                accept=".jpeg,.jpg,.png" required>
+                                            <small class="text-muted f-s-11">Format: JPEG, JPG, PNG. Upload for
+                                                auto-fill name & address.</small>
+                                            <div id="preview_npwp" class="mt-2" style="display: none;"></div>
+                                        </div>
+
+                                        {{-- 2. NIB/SIUP (REQUIRED) --}}
+                                        <div class="col-md">
+                                            <label class="form-label">Upload NIB/SIUP <span
+                                                    class="text-danger">*</span></label>
+                                            <input type="file" class="form-control" name="file_nib"
+                                                accept=".jpeg,.jpg,.png" required>
+                                            <small class="text-muted f-s-11">Format: JPEG, JPG, PNG</small>
                                             <div id="preview_nib" class="mt-2" style="display: none;"></div>
                                         </div>
 
-                                        {{-- 3. KTP (REQUIRED - REVISI: Tambah Bintang & Required) --}}
-                                        <div class="col-md-3">
-                                            <label class="form-label">Upload KTP <span class="text-danger">*</span></label>
-                                            <input type="file" class="form-control" name="file_ktp" required>
+                                        {{-- 3. KTP (REQUIRED) --}}
+                                        <div class="col-md">
+                                            <label class="form-label">Upload KTP <span
+                                                    class="text-danger">*</span></label>
+                                            <input type="file" class="form-control" name="file_ktp"
+                                                accept=".jpeg,.jpg,.png" required>
+                                            <small class="text-muted f-s-11">Format: JPEG, JPG, PNG</small>
                                             <div id="preview_ktp" class="mt-2" style="display: none;"></div>
                                         </div>
 
-                                        {{-- 4. AKTE (NULLABLE - REVISI: Hapus Bintang & Hapus Required) --}}
-                                        <div class="col-md-3">
-                                            <label class="form-label">Upload Akte Pendirian</label> {{-- Hapus span text-danger --}}
-                                            <input type="file" class="form-control" name="file_akte"> {{-- Hapus required --}}
-                                            <div id="preview_akte" class="mt-2" style="display: none;"></div>
+                                        {{-- 4. AKTE (OPTIONAL - PDF ONLY) --}}
+                                        <div class="col-md">
+                                            <label class="form-label">Upload Akte Pendirian</label>
+                                            <input type="file" class="form-control" name="file_akte"
+                                                accept=".pdf">
+                                            <small class="text-muted f-s-11">Format: PDF only</small>
+                                            <div id="preview_akte" class="mt-4"
+                                                style="display: none; position:relative; z-index:2;"></div>
+                                        </div>
+
+                                        {{-- 5. COMPANY PROFILE (OPTIONAL - PDF ONLY) --}}
+                                        <div class="col-md">
+                                            <label class="form-label">Upload Company Profile</label>
+                                            <input type="file" class="form-control" name="file_company_profile"
+                                                accept=".pdf">
+                                            <small class="text-muted f-s-11">Format: PDF only</small>
+                                            <div id="preview_company_profile" class="mt-2"
+                                                style="display: none; position:relative; z-index:2;"></div>
                                         </div>
                                     </div>
                                 </div>
@@ -301,40 +345,54 @@
                                             <label class="form-label">Customer Name <span
                                                     class="text-danger">*</span></label>
                                             <input type="text" class="form-control" name="name" id="name"
-                                                placeholder="e.g. PT. Maju Mundur Cantik" required>
+                                                placeholder="e.g. PT. SINAR MEADOW" required>
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label">Sort Name</label>
-                                            <input type="text" class="form-control" name="sort_name" id="sort_name"
-                                                placeholder="e.g. MMC">
+                                            <input type="text" class="form-control" name="sort_name"
+                                                id="sort_name" placeholder="e.g. SINAR MEADOW">
                                         </div>
                                         <div class="col-md-12">
-                                            <label class="form-label">Address <span class="text-danger">*</span></label>
+                                            <label class="form-label">Address <span
+                                                    class="text-danger">*</span></label>
                                             <input type="text" class="form-control mb-2" name="address1"
                                                 id="address1" placeholder="Address Line 1 (Required)" required>
                                             <input type="text" class="form-control mb-2" name="address2"
                                                 id="address2" placeholder="Address Line 2 (Optional)">
-                                            <input type="text" class="form-control" name="address3" id="address3"
-                                                placeholder="Address Line 3 (Optional)">
+                                            <input type="text" class="form-control" name="address3"
+                                                id="address3" placeholder="Address Line 3 (Optional)">
                                         </div>
-                                        <div class="col-md-6">
-                                            <label class="form-label">Nomor PKD <span class="text-danger">*</span></label>
-                                            <input type="text" class="form-control bg-light" name="no_pkd" id="no_pkd" placeholder="No PKD akan otomatis tergenerate oleh sistem" readonly>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <label class="form-label">Postal Code <span class="text-danger">*</span></label>
+                                        <div class="col-md-4">
+                                            <label class="form-label">Postal Code <span
+                                                    class="text-danger">*</span></label>
                                             <input type="text" class="form-control" name="postal_code"
                                                 id="postal_code" placeholder="e.g. 12345" required>
                                         </div>
-                                        <div class="col-md-6">
+
+                                        <div class="col-md-4">
                                             <label class="form-label">City <span class="text-danger">*</span></label>
                                             <input type="text" class="form-control" name="city" id="city"
                                                 placeholder="e.g. Jakarta Selatan" required>
                                         </div>
+
+                                        <div class="col-md-4">
+                                            <label class="form-label">Country <span
+                                                    class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" name="country" id="country"
+                                                value="Indonesia" placeholder="Country" required>
+                                        </div>
                                         <div class="col-md-6">
-                                            <label class="form-label">Area <span class="text-danger">*</span></label>
-                                            <input type="text" class="form-control" name="area" id="area"
-                                                placeholder="e.g. Jabodetabek" required>
+                                            <label class="form-label">No PKD <span
+                                                    class="text-danger">*</span></label>
+                                            <input type="text" class="form-control bg-light" name="no_pkd"
+                                                id="no_pkd" placeholder="PKD No. will be auto-generated by system"
+                                                readonly>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">Person in Charge (PIC) <span
+                                                    class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" name="pic" id="pic"
+                                                placeholder="e.g. John Doe" required>
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label">Email (General) <span
@@ -343,10 +401,9 @@
                                                 placeholder="e.g. info@company.com" required>
                                         </div>
                                         <div class="col-md-6">
-                                            <label class="form-label">Country <span
-                                                    class="text-danger">*</span></label>
-                                            <input type="text" class="form-control" name="country" id="country"
-                                                value="Indonesia" placeholder="Country" required>
+                                            <label class="form-label">Area <span class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" name="area" id="area"
+                                                placeholder="e.g. Jabodetabek" required>
                                         </div>
                                     </div>
                                 </div>
@@ -370,30 +427,45 @@
                                                 placeholder="Full Shipping Address" required></textarea>
                                         </div>
 
-                                        <div class="col-md-3">
+                                        <div class="col-md-4">
                                             <label class="form-label">Purchasing Mgr Name <span
                                                     class="text-danger">*</span></label>
                                             <input type="text" class="form-control" name="purchasing_manager_name"
                                                 id="purchasing_manager_name" placeholder="Full Name" required>
                                         </div>
-                                        <div class="col-md-3">
+                                        <div class="col-md-4">
                                             <label class="form-label">Purchasing Mgr Email <span
                                                     class="text-danger">*</span></label>
-                                            <input type="email" class="form-control" name="purchasing_manager_email"
-                                                id="purchasing_manager_email" placeholder="email@example.com"
-                                                required>
+                                            <input type="email" class="form-control"
+                                                name="purchasing_manager_email" id="purchasing_manager_email"
+                                                placeholder="email@example.com" required>
                                         </div>
-                                        <div class="col-md-3">
+                                        <div class="col-md-4">
+                                            <label class="form-label">Purchasing Mgr Phone <span
+                                                class="text-danger">*</span></label>
+                                            <input type="text" class="form-control"
+                                            name="purchasing_manager_telepon" id="purchasing_manager_telepon"
+                                            placeholder="Phone Number (digits only)" inputmode="numeric" pattern="[0-9]+" maxlength="50"
+                                            oninput="this.value=this.value.replace(/[^0-9]/g,'');" required>
+                                        </div>
+                                        <div class="col-md-4">
                                             <label class="form-label">Finance Mgr Name <span
                                                     class="text-danger">*</span></label>
                                             <input type="text" class="form-control" name="finance_manager_name"
                                                 id="finance_manager_name" placeholder="Full Name" required>
                                         </div>
-                                        <div class="col-md-3">
+                                        <div class="col-md-4">
                                             <label class="form-label">Finance Mgr Email <span
                                                     class="text-danger">*</span></label>
                                             <input type="email" class="form-control" name="finance_manager_email"
                                                 id="finance_manager_email" placeholder="email@example.com" required>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label">Finance Mgr Phone <span
+                                                class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" name="finance_manager_telepon"
+                                            id="finance_manager_telepon"  placeholder="Phone Number (digits only)" inputmode="numeric" pattern="[0-9]+" maxlength="50"
+                                            oninput="this.value=this.value.replace(/[^0-9]/g,'');" required>
                                         </div>
                                     </div>
                                 </div>
@@ -405,29 +477,30 @@
                                     <div class="row g-3 mb-4">
                                         <h6 class="fw-bold text-secondary">Billing (Penagihan) & Tax</h6>
                                         <div class="col-md-4">
-                                            <label class="form-label">Kontak Penagihan <span
+                                            <label class="form-label">Billing Contact Person <span
                                                     class="text-danger">*</span></label>
                                             <input type="text" class="form-control" name="penagihan_nama_kontak"
                                                 id="penagihan_nama_kontak" placeholder="Contact Person Name" required>
                                         </div>
                                         <div class="col-md-4">
-                                            <label class="form-label">Telepon Penagihan <span
+                                            <label class="form-label">Billing Phone <span
                                                     class="text-danger">*</span></label>
                                             <input type="text" class="form-control" name="penagihan_telepon"
-                                                id="penagihan_telepon" placeholder="e.g. 021-5555xxx" required>
+                                                id="penagihan_telepon" placeholder="Phone Number (digits only)" inputmode="numeric" pattern="[0-9]+" maxlength="50"
+                                            oninput="this.value=this.value.replace(/[^0-9]/g,'');">
                                         </div>
                                         <div class="col-md-4">
-                                            <label class="form-label">Alamat Penagihan <span
+                                            <label class="form-label">Billing Address <span
                                                     class="text-danger">*</span></label>
                                             <textarea class="form-control" name="penagihan_address" id="penagihan_address" rows="1"
-                                                placeholder="Billing Address" required></textarea>
+                                                placeholder="Billing Address"></textarea>
                                         </div>
 
                                         <div class="col-md-12 mt-2">
-                                            <label class="form-label">Alamat Surat Menyurat <span
-                                                    class="text-danger">*</span></label>
-                                            <textarea class="form-control" name="surat_menyurat_address" id="surat_menyurat_address" rows="2"
-                                                placeholder="Correspondence Address" required></textarea>
+                                            <label class="form-label">Billing Email <span
+                                                class="text-danger">*</span></label>
+                                            <input type="email" class="form-control" name="surat_menyurat_address" id="surat_menyurat_address"
+                                            placeholder="email@example.com" inputmode="email" maxlength="191" required>
                                         </div>
 
                                         <div class="col-md-4">
@@ -446,7 +519,8 @@
                                             <label class="form-label">Tax Contact Phone <span
                                                     class="text-danger">*</span></label>
                                             <input type="text" class="form-control" name="tax_contact_phone"
-                                                id="tax_contact_phone" placeholder="Phone Number" required>
+                                                id="tax_contact_phone" placeholder="Phone Number (digits only)" inputmode="numeric" pattern="[0-9]+" maxlength="50"
+                                                oninput="this.value=this.value.replace(/[^0-9]/g,'');" required>
                                         </div>
 
                                         <div class="col-md-3">
@@ -456,7 +530,7 @@
                                                 placeholder="00.000.000.0-000.000" required>
                                         </div>
                                         <div class="col-md-3">
-                                            <label class="form-label">Tanggal NPWP <span
+                                            <label class="form-label">NPWP Date <span
                                                     class="text-danger">*</span></label>
                                             <input type="date" class="form-control" name="tanggal_npwp"
                                                 id="tanggal_npwp" required>
@@ -467,7 +541,7 @@
                                                 placeholder="NPPKP Number">
                                         </div>
                                         <div class="col-md-3">
-                                            <label class="form-label">Tanggal NPPKP</label>
+                                            <label class="form-label">NPPKP Date</label>
                                             <input type="date" class="form-control" name="tanggal_nppkp"
                                                 id="tanggal_nppkp">
                                         </div>
@@ -487,8 +561,10 @@
                                         <h6 class="fw-bold text-secondary">Financial Terms</h6>
 
                                         <div class="col-md-4">
-                                            <label class="form-label">TOP (Term of Payment) <span class="text-danger">*</span></label>
-                                            <select class="form-select select2-styled" name="term_of_payment" id="term_of_payment" style="width:100%" required>
+                                            <label class="form-label">TOP (Term of Payment) <span
+                                                    class="text-danger">*</span></label>
+                                            <select class="form-select select2-styled" name="term_of_payment"
+                                                id="term_of_payment" style="width:100%" required>
                                                 <option></option>
                                                 @foreach ($top as $t)
                                                     <option value="{{ $t->name_top }}">{{ $t->desc_top }}</option>
@@ -497,8 +573,10 @@
                                         </div>
 
                                         <div class="col-md-4">
-                                            <label class="form-label">Output Tax <span class="text-danger">*</span></label>
-                                            <select class="form-select select2-styled" name="output_tax" id="output_tax" style="width:100%" required>
+                                            <label class="form-label">Output Tax <span
+                                                    class="text-danger">*</span></label>
+                                            <select class="form-select select2-styled" name="output_tax"
+                                                id="output_tax" style="width:100%" required>
                                                 <option></option>
                                                 <option value="Terhutang PPN">Terhutang PPN</option>
                                                 <option value="NON-PPN">Tidak Terhutang (NON-PPN)</option>
@@ -509,13 +587,16 @@
                                         <input type="hidden" name="lead_time" id="lead_time" value="0">
 
                                         <div class="col-md-4">
-                                            <label class="form-label">Credit Limit <span class="text-danger">*</span></label>
-                                            <input type="text" class="form-control" name="credit_limit" id="credit_limit" placeholder="Click to calculate" required readonly>
+                                            <label class="form-label">Credit Limit <span
+                                                    class="text-danger">*</span></label>
+                                            <input type="text" class="form-control" name="credit_limit"
+                                                id="credit_limit" placeholder="Click to calculate" required readonly>
                                         </div>
 
                                         <div class="col-md-4">
                                             <label class="form-label">CCAR <span class="text-danger">*</span></label>
-                                            <select class="form-select select2-styled" name="ccar" id="ccar" style="width:100%" required>
+                                            <select class="form-select select2-styled" name="ccar" id="ccar"
+                                                style="width:100%" required>
                                                 <option></option>
                                                 <option value="smd_idr">SMD (IDR)</option>
                                                 <option value="smd_usd">SMD USD</option>
@@ -523,8 +604,10 @@
                                         </div>
 
                                         <div class="col-md-4">
-                                            <label class="form-label">Bank Garansi <span class="text-danger">*</span></label>
-                                            <select class="form-select select2-styled" name="bank_garansi" id="bank_garansi" style="width:100%" required>
+                                            <label class="form-label">Bank Garansi <span
+                                                    class="text-danger">*</span></label>
+                                            <select class="form-select select2-styled" name="bank_garansi"
+                                                id="bank_garansi" style="width:100%" required>
                                                 <option></option>
                                                 <option value="YA">Yes</option>
                                                 <option value="TIDAK">No</option>
@@ -538,29 +621,92 @@
                                 <div class="card-body">
                                     <div class="row g-3 mb-4">
                                         <h6 class="fw-bold text-secondary d-flex align-items-center">
-                                            <i class="ph-bold ph-calendar-check me-2"></i> Financial Schedule (Optional)
+                                            <i class="ph-bold ph-calendar-check me-2"></i> Financial Schedule
+                                            (Optional)
                                         </h6>
                                         <div class="alert alert-light border border-dashed p-2 mb-3 f-s-12 text-muted">
-                                            <i class="ph-bold ph-info me-1"></i> Kolom ini bersifat opsional. Jika dipilih "All", maka berlaku untuk semua hari/tanggal.
+                                            <i class="ph-bold ph-info me-1"></i> Set specific billing and payment
+                                            schedules for this customer. This is optional and can be left blank if not
+                                            needed. If schedules are set, they will override the default system settings
+                                            for this customer.
                                         </div>
 
                                         {{-- CONTAINER INPUT SCHEDULE --}}
                                         <div id="create_schedule_section">
                                             <div class="row g-4">
 
-                                                {{-- LEFT: PAYMENT --}}
+                                                {{-- LEFT: FAKTUR --}}
                                                 <div class="col-md-6 border-end">
-                                                    <h6 class="text-primary fw-bold small text-uppercase mb-2">Payment Schedule</h6>
+                                                    <h6 class="text-success fw-bold small text-uppercase mb-2">Billing
+                                                        Schedule</h6>
+
+                                                    {{-- Faktur Days --}}
+                                                    <div class="mb-3">
+                                                        <label class="form-label small fw-bold">Billing Days</label>
+                                                        <div class="schedule-selector"
+                                                            id="create_faktur_days_container">
+                                                            <div id="create_faktur_days_inputs"></div>
+
+                                                            <button type="button"
+                                                                class="btn btn-sm btn-outline-dark me-1 mb-1 btn-schedule"
+                                                                data-type="faktur_days" data-val="All">All
+                                                                Days</button>
+                                                            @foreach (['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'] as $day)
+                                                                <button type="button"
+                                                                    class="btn btn-sm btn-outline-success mb-1 btn-schedule"
+                                                                    data-type="faktur_days"
+                                                                    data-val="{{ $day }}">{{ $day }}</button>
+                                                            @endforeach
+                                                        </div>
+                                                    </div>
+
+                                                    {{-- Faktur Date --}}
+                                                    <div>
+                                                        <label class="form-label small fw-bold">Billing Date</label>
+                                                        <div class="schedule-selector"
+                                                            id="create_faktur_date_container">
+                                                            <div id="create_faktur_date_inputs"></div>
+
+                                                            <button type="button"
+                                                                class="btn btn-sm btn-outline-dark me-1 mb-2 w-100 btn-schedule"
+                                                                data-type="faktur_date" data-val="All">All Dates
+                                                                (1-31)</button>
+                                                            <div class="d-flex flex-wrap gap-1">
+                                                                @for ($i = 1; $i <= 31; $i++)
+                                                                    <button type="button"
+                                                                        class="btn btn-xs btn-outline-secondary btn-schedule btn-date-box"
+                                                                        style="width: 2.375rem !important; height: 2.375rem !important; padding: 0 !important; display: inline-flex !important; align-items: center; justify-content: center; font-size: 13.6px !important; font-weight: 600; line-height: 1 !important; white-space: nowrap !important;"
+                                                                        data-type="faktur_date"
+                                                                        data-val="{{ $i }}">
+                                                                        {{ $i }}
+                                                                    </button>
+                                                                @endfor
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {{-- RIGHT: PAYMENT --}}
+                                                <div class="col-md-6">
+                                                    <h6 class="text-primary fw-bold small text-uppercase mb-2">Payment
+                                                        Schedule</h6>
 
                                                     {{-- Payment Days --}}
                                                     <div class="mb-3">
                                                         <label class="form-label small fw-bold">Payment Days</label>
-                                                        <div class="schedule-selector" id="create_payment_days_container">
+                                                        <div class="schedule-selector"
+                                                            id="create_payment_days_container">
                                                             <div id="create_payment_days_inputs"></div>
 
-                                                            <button type="button" class="btn btn-sm btn-outline-dark me-1 mb-1 btn-schedule" data-type="payment_days" data-val="All">All Days</button>
-                                                            @foreach(['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'] as $day)
-                                                                <button type="button" class="btn btn-sm btn-outline-primary mb-1 btn-schedule" data-type="payment_days" data-val="{{ $day }}">{{ $day }}</button>
+                                                            <button type="button"
+                                                                class="btn btn-sm btn-outline-dark me-1 mb-1 btn-schedule"
+                                                                data-type="payment_days" data-val="All">All
+                                                                Days</button>
+                                                            @foreach (['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'] as $day)
+                                                                <button type="button"
+                                                                    class="btn btn-sm btn-outline-primary mb-1 btn-schedule"
+                                                                    data-type="payment_days"
+                                                                    data-val="{{ $day }}">{{ $day }}</button>
                                                             @endforeach
                                                         </div>
                                                     </div>
@@ -568,15 +714,19 @@
                                                     {{-- Payment Date --}}
                                                     <div>
                                                         <label class="form-label small fw-bold">Payment Date</label>
-                                                        <div class="schedule-selector" id="create_payment_date_container">
+                                                        <div class="schedule-selector"
+                                                            id="create_payment_date_container">
                                                             <div id="create_payment_date_inputs"></div>
 
-                                                            <button type="button" class="btn btn-sm btn-outline-dark me-1 mb-2 w-100 btn-schedule" data-type="payment_date" data-val="All">All Dates (1-31)</button>
+                                                            <button type="button"
+                                                                class="btn btn-sm btn-outline-dark me-1 mb-2 w-100 btn-schedule"
+                                                                data-type="payment_date" data-val="All">All Dates
+                                                                (1-31)</button>
                                                             <div class="d-flex flex-wrap gap-1">
-                                                                @for($i=1; $i<=31; $i++)
+                                                                @for ($i = 1; $i <= 31; $i++)
                                                                     <button type="button"
                                                                         class="btn btn-xs btn-outline-secondary btn-schedule btn-date-box"
-                                                                        style="width: 38px !important; height: 38px !important; padding: 0 !important; display: inline-flex !important; align-items: center; justify-content: center; font-size: 0.85rem !important; font-weight: 600; line-height: 1 !important; white-space: nowrap !important;"
+                                                                        style="width: 2.375rem !important; height: 2.375rem !important; padding: 0 !important; display: inline-flex !important; align-items: center; justify-content: center; font-size: 13.6px !important; font-weight: 600; line-height: 1 !important; white-space: nowrap !important;"
                                                                         data-type="payment_date"
                                                                         data-val="{{ $i }}">
                                                                         {{ $i }}
@@ -587,44 +737,6 @@
                                                     </div>
                                                 </div>
 
-                                                {{-- RIGHT: FAKTUR --}}
-                                                <div class="col-md-6">
-                                                    <h6 class="text-success fw-bold small text-uppercase mb-2">Faktur Schedule</h6>
-
-                                                    {{-- Faktur Days --}}
-                                                    <div class="mb-3">
-                                                        <label class="form-label small fw-bold">Faktur Days</label>
-                                                        <div class="schedule-selector" id="create_faktur_days_container">
-                                                            <div id="create_faktur_days_inputs"></div>
-
-                                                            <button type="button" class="btn btn-sm btn-outline-dark me-1 mb-1 btn-schedule" data-type="faktur_days" data-val="All">All Days</button>
-                                                            @foreach(['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'] as $day)
-                                                                <button type="button" class="btn btn-sm btn-outline-success mb-1 btn-schedule" data-type="faktur_days" data-val="{{ $day }}">{{ $day }}</button>
-                                                            @endforeach
-                                                        </div>
-                                                    </div>
-
-                                                    {{-- Faktur Date --}}
-                                                    <div>
-                                                        <label class="form-label small fw-bold">Faktur Date</label>
-                                                        <div class="schedule-selector" id="create_faktur_date_container">
-                                                            <div id="create_faktur_date_inputs"></div>
-
-                                                            <button type="button" class="btn btn-sm btn-outline-dark me-1 mb-2 w-100 btn-schedule" data-type="faktur_date" data-val="All">All Dates (1-31)</button>
-                                                            <div class="d-flex flex-wrap gap-1">
-                                                                @for($i=1; $i<=31; $i++)
-                                                                    <button type="button"
-                                                                        class="btn btn-xs btn-outline-secondary btn-schedule btn-date-box"
-                                                                        style="width: 38px !important; height: 38px !important; padding: 0 !important; display: inline-flex !important; align-items: center; justify-content: center; font-size: 0.85rem !important; font-weight: 600; line-height: 1 !important; white-space: nowrap !important;"
-                                                                        data-type="faktur_date"
-                                                                        data-val="{{ $i }}">
-                                                                        {{ $i }}
-                                                                    </button>
-                                                                @endfor
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -659,7 +771,8 @@
                             <div class="opacity-75 f-s-14 mt-1" id="view_header_code">CODE-001</div>
                         </div>
                     </div>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
                 </div>
 
                 <div class="modal-body bg-light p-4" style="max-height: 85vh; overflow-y: auto;">
@@ -672,10 +785,25 @@
                                         <label class="fw-bold text-dark text-uppercase f-s-12 mb-1">Account Status</label>
                                         <div><span id="view_status_badge" class="badge bg-secondary f-s-12 px-3 py-2">STATUS</span></div>
                                     </div>
-                                    <div class="vr" style="height: 40px; opacity: 0.1;"></div>
+                                    <div class="vr" style="height: 2.5rem; opacity: 0.1;"></div>
                                     <div>
                                         <label class="fw-bold text-dark text-uppercase f-s-12 mb-1">Approval Progress</label>
                                         <div id="view_approval_badge" class="fw-bold text-dark f-s-16">Pending</div>
+                                    </div>
+                                </div>
+
+                                <div class="text-start ms-auto" style="min-width: 190px;">
+                                    <div class="text-muted mb-1" style="font-size: 12px;">
+                                        <span class="fw-semibold me-1">No Rev:</span>
+                                        <span id="view_revision_number" class="fw-bold text-primary" style="font-size: 13px;">{{ $latestRevision->revision_number ?? '-' }}</span>
+                                    </div>
+                                    <div class="text-muted mb-1" style="font-size: 12px;">
+                                        <span class="fw-semibold me-1">Revision:</span>
+                                        <span id="view_revision_count" class="fw-bold text-dark" style="font-size: 13px;">{{ $latestRevision->revision_count ?? '0' }}</span>
+                                    </div>
+                                    <div class="text-muted" style="font-size: 12px;">
+                                        <span class="fw-semibold me-1">Date:</span>
+                                        <span id="view_revision_date" class="fw-bold text-dark" style="font-size: 13px;">{{ $latestRevision && $latestRevision->revision_date ? \Carbon\Carbon::parse($latestRevision->revision_date)->format('d-M-y') : '-' }}</span>
                                     </div>
                                 </div>
                             </div>
@@ -691,39 +819,53 @@
                                 <div class="col-md-6 border-end">
                                     <div class="row g-4">
                                         <div class="col-md-12">
-                                            <label class="fw-bold text-secondary text-uppercase f-s-12 mb-1">Customer Name</label>
+                                            <label class="fw-bold text-secondary text-uppercase f-s-12 mb-1">Customer
+                                                Name</label>
                                             <div class="fw-bold text-dark f-s-16" id="view_name">-</div>
                                         </div>
                                         <div class="col-md-6">
-                                            <label class="fw-bold text-secondary text-uppercase f-s-12 mb-1">Sort Name / Alias</label>
+                                            <label class="fw-bold text-secondary text-uppercase f-s-12 mb-1">Sort Name
+                                                / Alias</label>
                                             <div class="fw-bold text-dark f-s-14" id="view_sort_name">-</div>
                                         </div>
                                         <div class="col-md-6">
-                                            <label class="fw-bold text-secondary text-uppercase f-s-12 mb-1">No. PKD</label>
+                                            <label class="fw-bold text-secondary text-uppercase f-s-12 mb-1">Email
+                                                Address</label>
+                                            <div class="fw-bold text-dark f-s-14" id="view_email">-</div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="fw-bold text-secondary text-uppercase f-s-12 mb-1">No.
+                                                PKD</label>
                                             <div class="fw-bold text-dark f-s-14" id="view_no_pkd">-</div>
                                         </div>
-                                        <div class="col-md-12">
-                                            <label class="fw-bold text-secondary text-uppercase f-s-12 mb-1">Email Address</label>
-                                            <div class="fw-bold text-dark f-s-14" id="view_email">-</div>
+                                        <div class="col-md-6">
+                                            <label class="fw-bold text-secondary text-uppercase f-s-12 mb-1">PIC
+                                                (Penanggung Jawab)</label>
+                                            <div class="fw-bold text-dark f-s-14" id="view_pic">-</div>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="col-md-6 ps-md-4">
                                     <div class="row g-4">
                                         <div class="col-12">
-                                            <label class="fw-bold text-secondary text-uppercase f-s-12 mb-1">Main Address</label>
-                                            <div class="fw-bold text-dark f-s-14 lh-base" id="view_full_address">-</div>
+                                            <label class="fw-bold text-secondary text-uppercase f-s-12 mb-1">Main
+                                                Address</label>
+                                            <div class="fw-bold text-dark f-s-14 lh-base" id="view_full_address">-
+                                            </div>
                                         </div>
                                         <div class="col-md-4">
-                                            <label class="fw-bold text-secondary text-uppercase f-s-12 mb-1">City</label>
+                                            <label
+                                                class="fw-bold text-secondary text-uppercase f-s-12 mb-1">City</label>
                                             <div class="fw-bold text-dark f-s-14" id="view_city">-</div>
                                         </div>
                                         <div class="col-md-4">
-                                            <label class="fw-bold text-secondary text-uppercase f-s-12 mb-1">Area</label>
+                                            <label
+                                                class="fw-bold text-secondary text-uppercase f-s-12 mb-1">Area</label>
                                             <div class="fw-bold text-dark f-s-14" id="view_area">-</div>
                                         </div>
                                         <div class="col-md-4">
-                                            <label class="fw-bold text-secondary text-uppercase f-s-12 mb-1">Postal Code</label>
+                                            <label class="fw-bold text-secondary text-uppercase f-s-12 mb-1">Postal
+                                                Code</label>
                                             <div class="fw-bold text-dark f-s-14" id="view_postal_code">-</div>
                                         </div>
                                     </div>
@@ -741,14 +883,18 @@
                                 <div class="card-body p-4">
                                     <div class="d-flex justify-content-between align-items-start mb-3">
                                         <div>
-                                            <label class="text-white text-opacity-75 text-uppercase f-s-12 fw-bold">Credit Limit</label>
+                                            <label
+                                                class="text-white text-opacity-75 text-uppercase f-s-12 fw-bold">Credit
+                                                Limit</label>
                                             <h3 class="mb-0 fw-bold mt-1" id="view_credit_limit">IDR 0</h3>
                                         </div>
                                         <i class="ph-duotone ph-wallet f-s-40 text-white text-opacity-50"></i>
                                     </div>
-                                    <div class="mt-4 pt-3 border-top border-white border-opacity-25 d-flex justify-content-between align-items-center">
+                                    <div
+                                        class="mt-4 pt-3 border-top border-white border-opacity-25 d-flex justify-content-between align-items-center">
                                         <span class="f-s-13 opacity-75">Term of Payment</span>
-                                        <span class="fw-bold f-s-16 bg-warning bg-opacity-20 px-2 py-1 rounded"><span id="view_top">-</span> Days</span>
+                                        <span class="fw-bold f-s-16 bg-warning bg-opacity-20 px-2 py-1 rounded"><span
+                                                id="view_top">-</span> Days</span>
                                     </div>
                                 </div>
                             </div>
@@ -783,15 +929,18 @@
                                 <div class="card-body p-4">
                                     <h6 class="fw-bold text-dark border-bottom pb-3 mb-3">Billing Contact</h6>
                                     <div class="mb-3">
-                                        <label class="fw-bold text-secondary text-uppercase f-s-11 mb-1">Contact Name</label>
+                                        <label class="fw-bold text-secondary text-uppercase f-s-11 mb-1">Contact
+                                            Name</label>
                                         <div class="fw-bold text-dark f-s-15" id="view_penagihan_nama">-</div>
                                     </div>
                                     <div class="mb-3">
-                                        <label class="fw-bold text-secondary text-uppercase f-s-11 mb-1">Phone Number</label>
+                                        <label class="fw-bold text-secondary text-uppercase f-s-11 mb-1">Phone
+                                            Number</label>
                                         <div class="fw-bold text-dark f-s-15" id="view_penagihan_telp">-</div>
                                     </div>
                                     <div>
-                                        <label class="fw-bold text-secondary text-uppercase f-s-11 mb-1">Billing Address</label>
+                                        <label class="fw-bold text-secondary text-uppercase f-s-11 mb-1">Billing
+                                            Address</label>
                                         <div class="fw-bold text-dark f-s-14 lh-sm" id="view_penagihan_addr">-</div>
                                     </div>
                                 </div>
@@ -809,9 +958,14 @@
                                     <table class="table table-hover mb-0 align-middle">
                                         <thead class="bg-light">
                                             <tr>
-                                                <th class="ps-4 py-3 fw-bold text-secondary text-uppercase f-s-12">Position Role</th>
-                                                <th class="py-3 fw-bold text-secondary text-uppercase f-s-12">Full Name</th>
-                                                <th class="py-3 fw-bold text-secondary text-uppercase f-s-12">Email Address</th>
+                                                <th class="ps-4 py-3 fw-bold text-secondary text-uppercase f-s-12">
+                                                    Position Role</th>
+                                                <th class="py-3 fw-bold text-secondary text-uppercase f-s-12">Full Name
+                                                </th>
+                                                <th class="py-3 fw-bold text-secondary text-uppercase f-s-12">Email
+                                                    Address</th>
+                                                <th class="py-3 fw-bold text-secondary text-uppercase f-s-12">Phone
+                                                    Number</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -819,16 +973,20 @@
                                                 <td class="ps-4 text-secondary fw-bold">Purchasing Mgr</td>
                                                 <td class="fw-bold text-dark" id="view_purc_name">-</td>
                                                 <td class="text-dark" id="view_purc_email">-</td>
+                                                <td class="text-dark" id="view_purc_phone">-</td>
+
                                             </tr>
                                             <tr>
                                                 <td class="ps-4 text-secondary fw-bold">Finance Mgr</td>
                                                 <td class="fw-bold text-dark" id="view_fin_name">-</td>
                                                 <td class="text-dark" id="view_fin_email">-</td>
+                                                <td class="text-dark" id="view_fin_phone">-</td>
                                             </tr>
                                             <tr>
                                                 <td class="ps-4 text-secondary fw-bold">Tax Contact</td>
                                                 <td class="fw-bold text-dark" id="view_tax_name">-</td>
                                                 <td class="text-dark" id="view_tax_email">-</td>
+                                                <td class="text-dark" id="view_tax_phone">-</td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -837,20 +995,118 @@
                         </div>
 
                         <div class="col-md-4">
-                            <div class="card border-0 shadow-sm h-100 bg-warning bg-opacity-10 border-warning border-opacity-25">
+                            <div
+                                class="card border-0 shadow-sm h-100 bg-warning bg-opacity-10 border-warning border-opacity-25">
                                 <div class="card-body p-4">
-                                    <h6 class="fw-bold text-dark mb-3 pb-2 border-bottom border-warning border-opacity-25">
+                                    <h6
+                                        class="fw-bold text-dark mb-3 pb-2 border-bottom border-warning border-opacity-25">
                                         <i class="ph-fill ph-truck me-2 text-warning"></i>Shipping Destination
                                     </h6>
 
                                     <div class="mb-3">
-                                        <label class="fw-bold text-secondary text-uppercase f-s-11 mb-1">Recipient Name</label>
+                                        <label class="fw-bold text-secondary text-uppercase f-s-11 mb-1">Recipient
+                                            Name</label>
                                         <div class="fw-bold text-dark f-s-16" id="view_shipping_name">-</div>
                                     </div>
 
                                     <div>
-                                        <label class="fw-bold text-secondary text-uppercase f-s-11 mb-1">Shipping Address</label>
-                                        <div class="fw-bold text-dark f-s-14 lh-base" id="view_shipping_address">-</div>
+                                        <label class="fw-bold text-secondary text-uppercase f-s-11 mb-1">Shipping
+                                            Address</label>
+                                        <div class="fw-bold text-dark f-s-14 lh-base" id="view_shipping_address">-
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h5 class="fw-bold text-primary mb-3 d-flex align-items-center">
+                        <i class="ph-fill ph-calendar-check me-2"></i> Payment & Faktur Schedule
+                    </h5>
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-body p-4">
+                            <div class="row g-4">
+                                <div class="col-md-6 border-end">
+                                    <h6 class="text-primary fw-bold small text-uppercase mb-2">Payment Schedule</h6>
+
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-bold">Payment Days</label>
+                                        <div class="schedule-selector" id="view_payment_days_container">
+                                            <div id="view_payment_days_inputs"></div>
+                                            <button type="button"
+                                                class="btn btn-sm btn-outline-dark me-1 mb-1 btn-schedule"
+                                                data-type="payment_days" data-val="All" disabled>All Days</button>
+                                            @foreach (['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'] as $day)
+                                                <button type="button"
+                                                    class="btn btn-sm btn-outline-primary mb-1 btn-schedule"
+                                                    data-type="payment_days" data-val="{{ $day }}"
+                                                    disabled>{{ $day }}</button>
+                                            @endforeach
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label class="form-label small fw-bold">Payment Date</label>
+                                        <div class="schedule-selector" id="view_payment_date_container">
+                                            <div id="view_payment_date_inputs"></div>
+                                            <button type="button"
+                                                class="btn btn-sm btn-outline-dark me-1 mb-2 w-100 btn-schedule"
+                                                data-type="payment_date" data-val="All" disabled>All Dates
+                                                (1-31)</button>
+                                            <div class="d-flex flex-wrap gap-1" id="view_payment_date_boxes">
+                                                @for ($i = 1; $i <= 31; $i++)
+                                                    <button type="button"
+                                                        class="btn btn-xs btn-outline-secondary btn-schedule btn-date-box"
+                                                        style="width: 2.375rem !important; height: 2.375rem !important; padding: 0 !important; display: inline-flex !important; align-items: center; justify-content: center; font-size: 13.6px !important; font-weight: 600; line-height: 1 !important; white-space: nowrap !important;"
+                                                        data-type="payment_date" data-val="{{ $i }}"
+                                                        disabled>
+                                                        {{ $i }}
+                                                    </button>
+                                                @endfor
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6 ps-md-4">
+                                    <h6 class="text-success fw-bold small text-uppercase mb-2">Faktur Schedule</h6>
+
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-bold">Faktur Days</label>
+                                        <div class="schedule-selector" id="view_faktur_days_container">
+                                            <div id="view_faktur_days_inputs"></div>
+                                            <button type="button"
+                                                class="btn btn-sm btn-outline-dark me-1 mb-1 btn-schedule"
+                                                data-type="faktur_days" data-val="All" disabled>All Days</button>
+                                            @foreach (['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'] as $day)
+                                                <button type="button"
+                                                    class="btn btn-sm btn-outline-success mb-1 btn-schedule"
+                                                    data-type="faktur_days" data-val="{{ $day }}"
+                                                    disabled>{{ $day }}</button>
+                                            @endforeach
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label class="form-label small fw-bold">Faktur Date</label>
+                                        <div class="schedule-selector" id="view_faktur_date_container">
+                                            <div id="view_faktur_date_inputs"></div>
+                                            <button type="button"
+                                                class="btn btn-sm btn-outline-dark me-1 mb-2 w-100 btn-schedule"
+                                                data-type="faktur_date" data-val="All" disabled>All Dates
+                                                (1-31)</button>
+                                            <div class="d-flex flex-wrap gap-1" id="view_faktur_date_boxes">
+                                                @for ($i = 1; $i <= 31; $i++)
+                                                    <button type="button"
+                                                        class="btn btn-xs btn-outline-secondary btn-schedule btn-date-box"
+                                                        style="width: 2.375rem !important; height: 2.375rem !important; padding: 0 !important; display: inline-flex !important; align-items: center; justify-content: center; font-size: 13.6px !important; font-weight: 600; line-height: 1 !important; white-space: nowrap !important;"
+                                                        data-type="faktur_date" data-val="{{ $i }}"
+                                                        disabled>
+                                                        {{ $i }}
+                                                    </button>
+                                                @endfor
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -861,8 +1117,9 @@
                         <i class="ph-fill ph-files me-2"></i> Documents
                     </h5>
                     <div class="row g-3" id="document_grid">
-                        </div>
-                    <div id="no_documents" class="text-center py-5 text-muted border border-dashed rounded bg-white" style="display:none;">
+                    </div>
+                    <div id="no_documents" class="text-center py-5 text-muted border border-dashed rounded bg-white"
+                        style="display:none;">
                         <i class="ph-duotone ph-folder-notch-open f-s-48 mb-3 opacity-50"></i>
                         <p class="mb-0 f-s-16">No documents uploaded for this customer.</p>
                     </div>
@@ -870,7 +1127,8 @@
                 </div>
 
                 <div class="modal-footer bg-white border-top py-3">
-                    <button type="button" class="btn btn-secondary px-5 rounded-pill" data-bs-dismiss="modal">Close Detail</button>
+                    <button type="button" class="btn btn-secondary px-5 rounded-pill" data-bs-dismiss="modal">Close
+                        Detail</button>
                 </div>
             </div>
         </div>
@@ -883,11 +1141,14 @@
                     <h6 class="modal-title text-white fw-bold f-s-14" id="fileViewerTitle">
                         FILE PREVIEW
                     </h6>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
                 </div>
-                <div class="modal-body p-0 d-flex align-items-center justify-content-center" style="min-height: 500px; background-color: #1a1a1a;">
-                    <div id="fileContentArea" class="w-100 h-100 d-flex align-items-center justify-content-center">
-                        </div>
+                <div class="modal-body p-0 d-flex align-items-center justify-content-center"
+                    style="min-height: 31.25rem; background-color: #1a1a1a;">
+                    <div id="fileContentArea" class="w-100 h-100 d-flex align-items-center justify-content-center"
+                        style="margin-top:80px;">
+                    </div>
                 </div>
             </div>
         </div>
@@ -903,7 +1164,7 @@
                             <i class="ph-bold ph-arrow-u-up-left f-s-24"></i>
                         </div>
                         <div>
-                            <h5 class="modal-title fw-bold mb-0">Recall Submission</h5>
+                            <h5 class="modal-title fw-bold mb-0">Re Submission</h5>
                             <small class="opacity-75">Perbaiki data yang ditolak dan ajukan ulang.</small>
                         </div>
                     </div>
@@ -918,14 +1179,17 @@
 
                     <div class="modal-body bg-light p-0">
 
-                        <div class="alert alert-warning border-0 rounded-0 mb-0 d-flex align-items-center px-4 py-3" role="alert">
+                        <div class="alert alert-warning border-0 rounded-0 mb-0 d-flex align-items-center px-4 py-3"
+                            role="alert">
                             <i class="ph-fill ph-info f-s-24 me-3"></i>
                             <div>
-                                <strong>Note:</strong> Proses Recall akan mereset status menjadi <strong>Pending</strong> (Level 1).
+                                <strong>Note:</strong> Proses Resubmit akan mereset status menjadi
+                                <strong>Pending</strong> (Level 1).
                             </div>
                         </div>
 
-                        <div class="alert alert-danger border-0 rounded-0 mb-0 d-flex align-items-start px-4 py-3" role="alert" id="recall_reject_alert" style="display: none;">
+                        <div class="alert alert-danger border-0 rounded-0 mb-0 d-flex align-items-start px-4 py-3"
+                            role="alert" id="recall_reject_alert" style="display: none;">
                             <i class="ph-fill ph-warning-circle f-s-24 me-3 mt-1"></i>
                             <div>
                                 <strong class="d-block mb-1">Alasan Ditolak (Rejection Note):</strong>
@@ -934,64 +1198,95 @@
                         </div>
 
                         <div class="d-flex align-items-start">
-                            <div class="nav flex-column nav-pills me-3 bg-white h-100 p-3 border-end" style="min-width: 200px;" id="v-pills-tab" role="tablist" aria-orientation="vertical">
-                                <button class="nav-link active text-start fw-bold mb-2" id="v-pills-home-tab" data-bs-toggle="pill" data-bs-target="#tab-recall-general" type="button" role="tab">
+                            <div class="nav flex-column nav-pills me-3 bg-white h-100 p-3 border-end"
+                                style="min-width: 12.5rem;" id="v-pills-tab" role="tablist"
+                                aria-orientation="vertical">
+                                <button class="nav-link active text-start fw-bold mb-2" id="v-pills-home-tab"
+                                    data-bs-toggle="pill" data-bs-target="#tab-recall-general" type="button"
+                                    role="tab">
                                     <i class="ph-bold ph-user-circle me-2"></i> General Info
                                 </button>
-                                <button class="nav-link text-start fw-bold mb-2" id="v-pills-items-tab" data-bs-toggle="pill" data-bs-target="#tab-recall-items" type="button" role="tab">
+                                <button class="nav-link text-start fw-bold mb-2" id="v-pills-items-tab"
+                                    data-bs-toggle="pill" data-bs-target="#tab-recall-items" type="button"
+                                    role="tab">
                                     <i class="ph-bold ph-shopping-cart me-2"></i> Items / Product
                                 </button>
-                                <button class="nav-link text-start fw-bold mb-2" id="v-pills-finance-tab" data-bs-toggle="pill" data-bs-target="#tab-recall-finance" type="button" role="tab">
+                                <button class="nav-link text-start fw-bold mb-2" id="v-pills-finance-tab"
+                                    data-bs-toggle="pill" data-bs-target="#tab-recall-finance" type="button"
+                                    role="tab">
                                     <i class="ph-bold ph-currency-circle-dollar me-2"></i> Financial
                                 </button>
-                                <button class="nav-link text-start fw-bold mb-2" id="v-pills-mgmt-tab" data-bs-toggle="pill" data-bs-target="#tab-recall-mgmt" type="button" role="tab">
+                                <button class="nav-link text-start fw-bold mb-2" id="v-pills-mgmt-tab"
+                                    data-bs-toggle="pill" data-bs-target="#tab-recall-mgmt" type="button"
+                                    role="tab">
                                     <i class="ph-bold ph-users-three me-2"></i> Management
                                 </button>
-                                <button class="nav-link text-start fw-bold mb-2" id="v-pills-docs-tab" data-bs-toggle="pill" data-bs-target="#tab-recall-docs" type="button" role="tab">
+                                <button class="nav-link text-start fw-bold mb-2" id="v-pills-docs-tab"
+                                    data-bs-toggle="pill" data-bs-target="#tab-recall-docs" type="button"
+                                    role="tab">
                                     <i class="ph-bold ph-files me-2"></i> Documents
                                 </button>
                             </div>
 
-                            <div class="tab-content p-4 w-100" id="v-pills-tabContent" style="max-height: 70vh; overflow-y: auto;">
+                            <div class="tab-content p-4 w-100" id="v-pills-tabContent"
+                                style="max-height: 70vh; overflow-y: auto;">
 
                                 <div class="tab-pane fade show active" id="tab-recall-general" role="tabpanel">
-                                    <h6 class="fw-bold text-primary border-bottom pb-2 mb-3">Informasi Utama Customer</h6>
+                                    <h6 class="fw-bold text-primary border-bottom pb-2 mb-3">Informasi Utama Customer
+                                    </h6>
                                     <div class="row g-3">
                                         <div class="col-md-6">
                                             <label class="form-label small fw-bold text-dark">Customer Name</label>
-                                            <input type="text" class="form-control" name="name" id="recall_name" required>
+                                            <input type="text" class="form-control" name="name"
+                                                id="recall_name" required>
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label small fw-bold text-dark">Sort Name / Alias</label>
-                                            <input type="text" class="form-control" name="sort_name" id="recall_sort_name">
+                                            <input type="text" class="form-control" name="sort_name"
+                                                id="recall_sort_name">
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label small fw-bold text-dark">Email</label>
-                                            <input type="email" class="form-control" name="email" id="recall_email" required>
+                                            <input type="email" class="form-control" name="email"
+                                                id="recall_email" required>
                                         </div>
                                         <div class="col-md-6">
-                                            <label class="form-label small fw-bold text-dark">No PKD (Readonly)</label>
-                                            <input type="text" class="form-control bg-light" name="no_pkd" id="recall_no_pkd" readonly>
+                                            <label class="form-label small fw-bold text-dark">No PKD
+                                                (Readonly)</label>
+                                            <input type="text" class="form-control bg-light" name="no_pkd"
+                                                id="recall_no_pkd" readonly>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-bold text-dark">PIC (Penanggung
+                                                Jawab)</label>
+                                            <input type="text" class="form-control" name="pic"
+                                                id="recall_pic" required>
                                         </div>
                                         <div class="col-12">
                                             <label class="form-label small fw-bold text-dark">Main Address</label>
-                                            <input type="text" class="form-control mb-2" name="address1" id="recall_address1" placeholder="Line 1" required>
+                                            <input type="text" class="form-control mb-2" name="address1"
+                                                id="recall_address1" placeholder="Line 1" required>
                                             <div class="d-flex gap-2">
-                                                <input type="text" class="form-control" name="address2" id="recall_address2" placeholder="Line 2">
-                                                <input type="text" class="form-control" name="address3" id="recall_address3" placeholder="Line 3">
+                                                <input type="text" class="form-control" name="address2"
+                                                    id="recall_address2" placeholder="Line 2">
+                                                <input type="text" class="form-control" name="address3"
+                                                    id="recall_address3" placeholder="Line 3">
                                             </div>
                                         </div>
                                         <div class="col-md-4">
                                             <label class="form-label small fw-bold text-dark">City</label>
-                                            <input type="text" class="form-control" name="city" id="recall_city" required>
+                                            <input type="text" class="form-control" name="city"
+                                                id="recall_city" required>
                                         </div>
                                         <div class="col-md-4">
                                             <label class="form-label small fw-bold text-dark">Area</label>
-                                            <input type="text" class="form-control" name="area" id="recall_area" required>
+                                            <input type="text" class="form-control" name="area"
+                                                id="recall_area" required>
                                         </div>
                                         <div class="col-md-4">
                                             <label class="form-label small fw-bold text-dark">Postal Code</label>
-                                            <input type="text" class="form-control" name="postal_code" id="recall_postal_code" required>
+                                            <input type="text" class="form-control" name="postal_code"
+                                                id="recall_postal_code" required>
                                         </div>
                                     </div>
                                 </div>
@@ -999,7 +1294,8 @@
                                 <div class="tab-pane fade" id="tab-recall-items" role="tabpanel">
                                     <div class="d-flex justify-content-between align-items-center mb-3">
                                         <h6 class="fw-bold text-primary mb-0">Daftar Item / Produk</h6>
-                                        <button type="button" class="btn btn-sm btn-primary rounded-pill px-3" id="btn-recall-add-item">
+                                        <button type="button" class="btn btn-sm btn-primary rounded-pill px-3"
+                                            id="btn-recall-add-item">
                                             <i class="ph-bold ph-plus me-1"></i> Tambah Item
                                         </button>
                                     </div>
@@ -1010,13 +1306,15 @@
                                                     <th class="ps-4 fw-bold text-dark" width="40%">Nama Item</th>
                                                     <th class="fw-bold text-dark" width="20%">Qty</th>
                                                     <th class="fw-bold text-dark" width="30%">Harga (Est)</th>
-                                                    <th width="10%" class="text-center fw-bold text-dark">Aksi</th>
+                                                    <th width="10%" class="text-center fw-bold text-dark">Aksi
+                                                    </th>
                                                 </tr>
                                             </thead>
                                             <tbody id="recall_items_body"></tbody>
                                         </table>
                                     </div>
-                                    <div id="recall_no_items" class="text-center py-5 text-muted bg-white border rounded mt-2">
+                                    <div id="recall_no_items"
+                                        class="text-center py-5 text-muted bg-white border rounded mt-2">
                                         <i class="ph-duotone ph-basket f-s-32 mb-2"></i>
                                         <p class="mb-0">Belum ada item ditambahkan.</p>
                                     </div>
@@ -1027,23 +1325,29 @@
                                     <div class="row g-3">
                                         <div class="col-md-6">
                                             <label class="form-label small fw-bold text-dark">Account Group</label>
-                                            <select class="form-select select2-recall" id="recall_account_group" name="account_group" style="width: 100%;" required>
+                                            <select class="form-select select2-recall" id="recall_account_group"
+                                                name="account_group" style="width: 100%;" required>
                                                 @foreach ($accountgroup as $ag)
-                                                    <option value="{{ $ag->id }}" data-bank_garansi="{{ $ag->bank_garansi }}">{{ $ag->name_account_group }}</option>
+                                                    <option value="{{ $ag->id }}"
+                                                        data-bank_garansi="{{ $ag->bank_garansi }}">
+                                                        {{ $ag->name_account_group }}</option>
                                                 @endforeach
                                             </select>
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label small fw-bold text-dark">Customer Class</label>
-                                            <select class="form-select select2-recall" id="recall_customer_class" name="customer_class" style="width: 100%;" required>
+                                            <select class="form-select select2-recall" id="recall_customer_class"
+                                                name="customer_class" style="width: 100%;" required>
                                                 @foreach ($customerClass as $cc)
-                                                    <option value="{{ $cc->id }}">{{ $cc->name_class }}</option>
+                                                    <option value="{{ $cc->id }}">{{ $cc->name_class }}
+                                                    </option>
                                                 @endforeach
                                             </select>
                                         </div>
                                         <div class="col-md-4">
                                             <label class="form-label small fw-bold text-dark">Term of Payment</label>
-                                            <select class="form-select select2-recall" name="term_of_payment" id="recall_term_of_payment" style="width:100%" required>
+                                            <select class="form-select select2-recall" name="term_of_payment"
+                                                id="recall_term_of_payment" style="width:100%" required>
                                                 @foreach ($top as $t)
                                                     <option value="{{ $t->name_top }}">{{ $t->desc_top }}</option>
                                                 @endforeach
@@ -1051,18 +1355,21 @@
                                         </div>
                                         <div class="col-md-4">
                                             <label class="form-label small fw-bold text-dark">Credit Limit</label>
-                                            <input type="text" class="form-control" name="credit_limit" id="recall_credit_limit" required>
+                                            <input type="text" class="form-control" name="credit_limit"
+                                                id="recall_credit_limit" required>
                                         </div>
                                         <div class="col-md-4">
                                             <label class="form-label small fw-bold text-dark">Bank Garansi</label>
-                                            <select class="form-select select2-recall" name="bank_garansi" id="recall_bank_garansi" style="width:100%" required>
+                                            <select class="form-select select2-recall" name="bank_garansi"
+                                                id="recall_bank_garansi" style="width:100%" required>
                                                 <option value="YA">Yes</option>
                                                 <option value="TIDAK">No</option>
                                             </select>
                                         </div>
                                         <div class="col-md-4">
                                             <label class="form-label small fw-bold text-dark">Output Tax</label>
-                                            <select class="form-select select2-recall" name="output_tax" id="recall_output_tax" style="width:100%" required>
+                                            <select class="form-select select2-recall" name="output_tax"
+                                                id="recall_output_tax" style="width:100%" required>
                                                 <option value="Terhutang PPN">Terhutang PPN</option>
                                                 <option value="NON-PPN">Tidak Terhutang (NON-PPN)</option>
                                                 <option value="PPN">PPN</option>
@@ -1070,65 +1377,89 @@
                                         </div>
                                         <div class="col-md-4">
                                             <label class="form-label small fw-bold text-dark">CCAR</label>
-                                            <select class="form-select select2-recall" name="ccar" id="recall_ccar" style="width:100%" required>
+                                            <select class="form-select select2-recall" name="ccar"
+                                                id="recall_ccar" style="width:100%" required>
                                                 <option value="smd_idr">SMD (IDR)</option>
                                                 <option value="smd_usd">SMD USD</option>
                                             </select>
                                         </div>
 
                                         <div class="col-12 mt-4">
-                                            <h6 class="fw-bold text-dark border-bottom pb-2 mb-3"><i class="ph-bold ph-receipt me-2"></i>Billing Information</h6>
+                                            <h6 class="fw-bold text-dark border-bottom pb-2 mb-3"><i
+                                                    class="ph-bold ph-receipt me-2"></i>Billing Information</h6>
                                         </div>
                                         <div class="col-md-6">
-                                            <label class="form-label fw-bold small text-dark text-uppercase">Billing Contact Name</label>
-                                            <input type="text" class="form-control" name="penagihan_nama_kontak" id="recall_penagihan_nama_kontak">
+                                            <label class="form-label fw-bold small text-dark text-uppercase">Billing
+                                                Contact Name</label>
+                                            <input type="text" class="form-control"
+                                                name="penagihan_nama_kontak" id="recall_penagihan_nama_kontak">
                                         </div>
                                         <div class="col-md-6">
-                                            <label class="form-label fw-bold small text-dark text-uppercase">Billing Phone</label>
-                                            <input type="text" class="form-control" name="penagihan_telepon" id="recall_penagihan_telepon">
+                                            <label class="form-label fw-bold small text-dark text-uppercase">Billing
+                                                Phone</label>
+                                            <input type="text" class="form-control" name="penagihan_telepon"
+                                                id="recall_penagihan_telepon">
                                         </div>
                                         <div class="col-12">
-                                            <label class="form-label fw-bold small text-dark text-uppercase">Billing Address</label>
+                                            <label class="form-label fw-bold small text-dark text-uppercase">Billing
+                                                Address</label>
                                             <textarea class="form-control" name="penagihan_address" id="recall_penagihan_address" rows="2"></textarea>
                                         </div>
                                         <div class="col-12">
-                                            <label class="form-label fw-bold small text-dark text-uppercase">Correspondence Address</label>
+                                            <label
+                                                class="form-label fw-bold small text-dark text-uppercase">Correspondence
+                                                Address</label>
                                             <textarea class="form-control" name="surat_menyurat_address" id="recall_surat_menyurat_address" rows="2"></textarea>
                                         </div>
 
 
                                         <div class="col-12 mt-4">
-                                            <h6 class="fw-bold text-dark border-bottom pb-2 mb-3"><i class="ph-bold ph-calculator me-2"></i>Tax Information</h6>
+                                            <h6 class="fw-bold text-dark border-bottom pb-2 mb-3"><i
+                                                    class="ph-bold ph-calculator me-2"></i>Tax Information</h6>
                                         </div>
 
                                         <div class="col-md-3">
-                                            <label class="form-label fw-bold small text-dark text-uppercase">NPWP Number</label>
-                                            <input type="text" class="form-control" name="npwp" id="recall_npwp" placeholder="00.000.000.0-000.000">
+                                            <label class="form-label fw-bold small text-dark text-uppercase">NPWP
+                                                Number</label>
+                                            <input type="text" class="form-control" name="npwp"
+                                                id="recall_npwp" placeholder="00.000.000.0-000.000">
                                         </div>
                                         <div class="col-md-3">
-                                            <label class="form-label fw-bold small text-dark text-uppercase">NPWP Date</label>
-                                            <input type="date" class="form-control" name="tanggal_npwp" id="recall_tanggal_npwp">
+                                            <label class="form-label fw-bold small text-dark text-uppercase">NPWP
+                                                Date</label>
+                                            <input type="date" class="form-control" name="tanggal_npwp"
+                                                id="recall_tanggal_npwp">
                                         </div>
                                         <div class="col-md-3">
-                                            <label class="form-label fw-bold small text-dark text-uppercase">NPPKP Number</label>
-                                            <input type="text" class="form-control" name="nppkp" id="recall_nppkp">
+                                            <label class="form-label fw-bold small text-dark text-uppercase">NPPKP
+                                                Number</label>
+                                            <input type="text" class="form-control" name="nppkp"
+                                                id="recall_nppkp">
                                         </div>
                                         <div class="col-md-3">
-                                            <label class="form-label fw-bold small text-dark text-uppercase">NPPKP Date</label>
-                                            <input type="date" class="form-control" name="tanggal_nppkp" id="recall_tanggal_nppkp">
+                                            <label class="form-label fw-bold small text-dark text-uppercase">NPPKP
+                                                Date</label>
+                                            <input type="date" class="form-control" name="tanggal_nppkp"
+                                                id="recall_tanggal_nppkp">
                                         </div>
 
                                         <div class="col-md-4 mt-3">
-                                            <label class="form-label fw-bold small text-dark text-uppercase">Tax Contact Name</label>
-                                            <input type="text" class="form-control" name="tax_contact_name" id="recall_tax_contact_name">
+                                            <label class="form-label fw-bold small text-dark text-uppercase">Tax
+                                                Contact Name</label>
+                                            <input type="text" class="form-control" name="tax_contact_name"
+                                                id="recall_tax_contact_name">
                                         </div>
                                         <div class="col-md-4 mt-3">
-                                            <label class="form-label fw-bold small text-dark text-uppercase">Tax Email</label>
-                                            <input type="email" class="form-control" name="tax_contact_email" id="recall_tax_contact_email">
+                                            <label class="form-label fw-bold small text-dark text-uppercase">Tax
+                                                Email</label>
+                                            <input type="email" class="form-control" name="tax_contact_email"
+                                                id="recall_tax_contact_email">
                                         </div>
                                         <div class="col-md-4 mt-3">
-                                            <label class="form-label fw-bold small text-dark text-uppercase">Tax Phone</label>
-                                            <input type="text" class="form-control" name="tax_contact_phone" id="recall_tax_contact_phone">
+                                            <label class="form-label fw-bold small text-dark text-uppercase">Tax
+                                                Phone</label>
+                                            <input type="text" class="form-control" name="tax_contact_phone"
+                                                id="recall_tax_contact_phone">
                                         </div>
                                     </div>
                                 </div>
@@ -1137,26 +1468,56 @@
                                     <h6 class="fw-bold text-primary border-bottom pb-2 mb-3">Management Personnel</h6>
                                     <div class="row g-3">
                                         <div class="col-md-6">
-                                            <label class="form-label small fw-bold text-dark">Purchasing Manager Name</label>
-                                            <input type="text" class="form-control" name="purchasing_manager_name" id="recall_purchasing_manager_name">
+                                            <label class="form-label small fw-bold text-dark">Purchasing Manager
+                                                Name</label>
+                                            <input type="text" class="form-control"
+                                                name="purchasing_manager_name" id="recall_purchasing_manager_name">
                                         </div>
                                         <div class="col-md-6">
-                                            <label class="form-label small fw-bold text-dark">Purchasing Manager Email</label>
-                                            <input type="email" class="form-control" name="purchasing_manager_email" id="recall_purchasing_manager_email">
+                                            <label class="form-label small fw-bold text-dark">Purchasing Manager
+                                                Email</label>
+                                            <input type="email" class="form-control"
+                                                name="purchasing_manager_email"
+                                                id="recall_purchasing_manager_email">
                                         </div>
                                         <div class="col-md-6">
-                                            <label class="form-label small fw-bold text-dark">Finance Manager Name</label>
-                                            <input type="text" class="form-control" name="finance_manager_name" id="recall_finance_manager_name">
-                                        </div>
-                                        <div class="col-md-6">
-                                            <label class="form-label small fw-bold text-dark">Finance Manager Email</label>
-                                            <input type="email" class="form-control" name="finance_manager_email" id="recall_finance_manager_email">
+                                            <label class="form-label small fw-bold text-dark">Purchasing Manager
+                                                Telpon</label>
+                                            <input type="text" class="form-control"
+                                                name="purchasing_manager_telepon"
+                                                id="recall_purchasing_manager_telepon" inputmode="numeric" pattern="[0-9]+" maxlength="50"
+                                                oninput="this.value=this.value.replace(/[^0-9]/g,'');">
                                         </div>
 
-                                        <div class="col-12 mt-3"><h6 class="fw-bold text-secondary border-bottom pb-1">Shipping Info</h6></div>
                                         <div class="col-md-6">
-                                            <label class="form-label small fw-bold text-dark">Shipping Recipient Name</label>
-                                            <input type="text" class="form-control" name="shipping_to_name" id="recall_shipping_to_name">
+                                            <label class="form-label small fw-bold text-dark">Finance Manager
+                                                Name</label>
+                                            <input type="text" class="form-control" name="finance_manager_name"
+                                                id="recall_finance_manager_name">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-bold text-dark">Finance Manager
+                                                Email</label>
+                                            <input type="email" class="form-control"
+                                                name="finance_manager_email" id="recall_finance_manager_email">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-bold text-dark">Finance Manager
+                                                Telpon</label>
+                                            <input type="text" class="form-control"
+                                                name="finance_manager_telepon"
+                                                id="recall_finance_manager_telepon" inputmode="numeric" pattern="[0-9]+" maxlength="50"
+                                                oninput="this.value=this.value.replace(/[^0-9]/g,'');">
+                                        </div>
+
+                                        <div class="col-12 mt-3">
+                                            <h6 class="fw-bold text-secondary border-bottom pb-1">Shipping Info</h6>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-bold text-dark">Shipping Recipient
+                                                Name</label>
+                                            <input type="text" class="form-control" name="shipping_to_name"
+                                                id="recall_shipping_to_name">
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label small fw-bold text-dark">Shipping Address</label>
@@ -1172,7 +1533,8 @@
                                             <label class="fw-bold small mb-0 text-dark">NPWP</label>
                                             <div id="recall_preview_npwp"></div>
                                         </div>
-                                        <input type="file" class="form-control form-control-sm" name="file_npwp">
+                                        <input type="file" class="form-control form-control-sm"
+                                            name="file_npwp">
                                     </div>
 
                                     <div class="mb-3 border rounded p-2 bg-white">
@@ -1180,7 +1542,8 @@
                                             <label class="fw-bold small mb-0 text-dark">NIB / SIUP</label>
                                             <div id="recall_preview_nib"></div>
                                         </div>
-                                        <input type="file" class="form-control form-control-sm" name="file_nib">
+                                        <input type="file" class="form-control form-control-sm"
+                                            name="file_nib">
                                     </div>
 
                                     <div class="mb-0 border rounded p-2 bg-white">
@@ -1188,7 +1551,18 @@
                                             <label class="fw-bold small mb-0 text-dark">KTP Penanggung Jawab</label>
                                             <div id="recall_preview_ktp"></div>
                                         </div>
-                                        <input type="file" class="form-control form-control-sm" name="file_ktp">
+                                        <input type="file" class="form-control form-control-sm"
+                                            name="file_ktp">
+                                    </div>
+
+                                    <div class="mb-3 border rounded p-2 bg-white">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <label class="fw-bold small mb-0 text-dark">Company Profile</label>
+                                            <div id="recall_preview_company_profile"></div>
+                                        </div>
+                                        <input type="file" class="form-control form-control-sm"
+                                            name="file_company_profile" accept=".pdf">
+                                        <small class="text-muted f-s-11">Format: PDF saja</small>
                                     </div>
                                 </div>
 
@@ -1197,7 +1571,8 @@
                     </div>
 
                     <div class="modal-footer bg-white border-top py-3">
-                        <button type="button" class="btn btn-light border text-muted px-4" data-bs-dismiss="modal">Batal</button>
+                        <button type="button" class="btn btn-light border text-muted px-4"
+                            data-bs-dismiss="modal">Batal</button>
                         <button type="submit" class="btn btn-warning px-4 fw-bold shadow-sm">
                             <i class="ph-bold ph-paper-plane-tilt me-2"></i> Submit & Resend Approval
                         </button>
@@ -1207,13 +1582,54 @@
         </div>
     </div>
 
+    <div class="modal fade" id="importModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white py-3">
+                    <h5 class="modal-title fw-bold"><i class="ph-bold ph-upload-simple me-2"></i> Import Data
+                        Customers</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <form id="importForm" enctype="multipart/form-data">
+                    @csrf
+                    <div class="card modal-body p-4">
+                        <div class="alert alert-info border-0 shadow-sm f-s-13">
+                            <i class="ph-fill ph-info me-2"></i> Gunakan format CSV standar untuk memigrasi data. Data
+                            yang di-import akan langsung masuk sebagai <strong>Active</strong> &
+                            <strong>Approved</strong>.
+                        </div>
+
+                        <div class="mb-4 text-center">
+                            <a href="{{ route('customers.template') }}"
+                                class="btn btn-sm btn-outline-primary rounded-pill px-4">
+                                <i class="ph-bold ph-download-simple me-1"></i> Download Template CSV
+                            </a>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Pilih File CSV <span
+                                    class="text-danger">*</span></label>
+                            <input type="file" class="form-control" name="file" accept=".csv" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-white">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-success fw-bold"><i
+                                class="ph-bold ph-check me-1"></i> Mulai Import</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     @push('scripts')
         <script src="{{ asset('assets/vendor/select/select2.min.js') }}"></script>
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.5/dist/tesseract.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
         <script>
             $(document).ready(function() {
-                // 1. Initialize Select2
                 $('.select2').select2({
                     theme: 'bootstrap-5',
                     minimumResultsForSearch: Infinity
@@ -1230,7 +1646,6 @@
                     placeholder: 'Search & Select User'
                 });
 
-                // Inisialisasi Select2 untuk Account Group, Class, dan SEMUA Financial Terms
                 $('#account_group, #customer_class, #term_of_payment, #output_tax, #ccar, #bank_garansi').select2({
                     dropdownParent: $('#customerModal'),
                     theme: 'bootstrap-5',
@@ -1277,7 +1692,6 @@
                     }
                 }
 
-                // Event Add Item
                 $('#btn-recall-add-item').on('click', function() {
                     addRecallItemRow();
                 });
@@ -1288,7 +1702,7 @@
                     $('#recall_items_body tr').each(function(idx) {
                         $(this).find('input').each(function() {
                             let name = $(this).attr('name');
-                            if(name) {
+                            if (name) {
                                 const newName = name.replace(/items\[\d+\]/, `items[${idx}]`);
                                 $(this).attr('name', newName);
                             }
@@ -1297,16 +1711,16 @@
                     checkRecallEmptyState();
                 });
 
-                $(document).on('click', '.btn-recall-customer', function() {
+                $(document).on('click', '.btn-resubmit-customer', function() {
                     let btn = $(this);
                     let rawData = btn.attr('data-json');
                     let data = {};
 
                     try {
                         data = JSON.parse(rawData);
-                    } catch(e) {
-                        console.error("Gagal parse data JSON recall:", e);
-                        Swal.fire('Error', 'Gagal memuat data customer.', 'error');
+                    } catch (e) {
+                        console.error("Failed to parse recall JSON data:", e);
+                        Swal.fire('Error', 'Failed to load customer data.', 'error');
                         return;
                     }
 
@@ -1314,7 +1728,8 @@
                     $('#recallCustomerForm')[0].reset();
                     $('#recall_items_body').empty();
 
-                    if (data.reject_note && data.reject_note !== '-' && data.reject_note !== 'Tidak ada catatan rejection.') {
+                    if (data.reject_note && data.reject_note !== '-' && data.reject_note !==
+                        'Tidak ada catatan rejection.') {
                         $('#recall_reject_reason').text(data.reject_note);
                         $('#recall_reject_alert').show(); // Tampilkan alert merah
                     } else {
@@ -1345,6 +1760,7 @@
                     $('#recall_sort_name').val(data.sort_name);
                     $('#recall_email').val(data.email);
                     $('#recall_no_pkd').val(data.no_pkd);
+                    $('#recall_pic').val(data.pic);
 
                     // Address Inputs
                     $('#recall_address1').val(data.address1);
@@ -1361,8 +1777,10 @@
 
                     $('#recall_purchasing_manager_name').val(data.purchasing_manager_name);
                     $('#recall_purchasing_manager_email').val(data.purchasing_manager_email);
+                    $('#recall_purchasing_manager_telepon').val(data.purchasing_manager_telepon);
                     $('#recall_finance_manager_name').val(data.finance_manager_name);
                     $('#recall_finance_manager_email').val(data.finance_manager_email);
+                    $('#recall_finance_manager_telepon').val(data.finance_manager_telepon);
 
                     // Billing & Tax
                     $('#recall_penagihan_nama_kontak').val(data.penagihan_nama_kontak);
@@ -1389,7 +1807,7 @@
 
                     // --- 4. POPULATE FILE PREVIEWS ---
                     function createPreviewBtn(path, title) {
-                        if(path && !path.includes('null')) {
+                        if (path && !path.includes('null')) {
                             return `
                                 <button type="button" class="btn btn-xs btn-primary btn-view-file-trigger rounded-pill"
                                     data-path="${path}"
@@ -1405,17 +1823,33 @@
                     $('#recall_preview_nib').html(createPreviewBtn(data.file_nib_path, 'NIB'));
                     $('#recall_preview_ktp').html(createPreviewBtn(data.file_ktp_path, 'KTP'));
                     $('#recall_preview_akte').html(createPreviewBtn(data.file_akte_path, 'Akte Pendirian'));
+                    $('#recall_preview_company_profile').html(createPreviewBtn(data.file_company_profile_path,
+                        'Company Profile'));
 
                     $('#recallCustomerModal').modal('show');
                 });
 
-                // --- SUBMIT RECALL ---
                 $('#recallCustomerForm').on('submit', function(e) {
                     e.preventDefault();
 
                     const id = $('#recall_customer_id').val();
                     const formData = new FormData(this);
                     const url = `/customers/${id}/recall`;
+
+                    // Normalize credit_limit (Recall form doesn't run HTML5 validity checks)
+                    const topVal = $('#recall_term_of_payment').val();
+                    const bgVal = $('#recall_bank_garansi').val();
+                    let rawCreditLimit = formData.get('credit_limit');
+
+                    if (bgVal === 'YA' || String(topVal).toUpperCase() === 'CBD') {
+                        formData.set('credit_limit', '0');
+                    } else if (rawCreditLimit) {
+                        let cleanCreditLimit = rawCreditLimit.toString().replace(/[^0-9]/g, '');
+                        formData.set('credit_limit', cleanCreditLimit);
+                    }
+
+                    const currentStatusFilter = $('#statusFilter').val();
+                    const currentApprovalFilter = $('#approvalStatusFilter').val();
 
                     Swal.fire({
                         title: 'Konfirmasi Recall',
@@ -1432,7 +1866,9 @@
                                 title: 'Processing...',
                                 html: 'Sedang menyimpan perubahan...',
                                 allowOutsideClick: false,
-                                didOpen: () => { Swal.showLoading(); }
+                                didOpen: () => {
+                                    Swal.showLoading();
+                                }
                             });
 
                             $.ajax({
@@ -1443,7 +1879,8 @@
                                 contentType: false,
                                 success: function(response) {
                                     Swal.close();
-                                    if(response.success) {
+
+                                    if (response.success) {
                                         Swal.fire({
                                             icon: 'success',
                                             title: 'Recall Berhasil!',
@@ -1452,16 +1889,34 @@
                                             showConfirmButton: false
                                         }).then(() => {
                                             $('#recallCustomerModal').modal('hide');
-                                            $('#sampleTable').DataTable().ajax.reload();
+                                            $('#statusFilter').val('all').trigger(
+                                                'change.select2');
+                                            $('#approvalStatusFilter').val('all')
+                                                .trigger('change.select2');
+
+                                            if (typeof table !== 'undefined') {
+                                                table.search('').ajax.reload(null,
+                                                    true);
+                                            } else {
+                                                $('#sampleTable').DataTable()
+                                                    .search('').ajax.reload(null,
+                                                        true);
+                                            }
                                         });
                                     } else {
-                                        Swal.fire('Gagal!', response.message, 'error');
+                                        $('#statusFilter').val(currentStatusFilter).trigger(
+                                            'change.select2');
+                                        $('#approvalStatusFilter').val(
+                                            currentApprovalFilter).trigger(
+                                            'change.select2');
+                                        Swal.fire('Failed!', response.message, 'error');
                                     }
                                 },
                                 error: function(xhr) {
                                     Swal.close();
-                                    let msg = 'Terjadi kesalahan server.';
-                                    if(xhr.responseJSON && xhr.responseJSON.message) msg = xhr.responseJSON.message;
+                                    let msg = 'An error occurred on the server.';
+                                    if (xhr.responseJSON && xhr.responseJSON.message) msg =
+                                        xhr.responseJSON.message;
                                     Swal.fire('Error!', msg, 'error');
                                 }
                             });
@@ -1479,9 +1934,6 @@
                     }
 
                     const formData = new FormData(this);
-
-                    // BERSIHKAN FORMAT RUPIAH SEBELUM KIRIM
-                    // Agar tidak error "credit_limit must be a number"
                     let rawCreditLimit = formData.get('credit_limit');
                     if (rawCreditLimit) {
                         let cleanCreditLimit = rawCreditLimit.toString().replace(/[^0-9]/g, '');
@@ -1489,6 +1941,8 @@
                     }
 
                     const url = "{{ route('customers.store') }}";
+                    const currentStatusFilter = $('#statusFilter').val();
+                    const currentApprovalFilter = $('#approvalStatusFilter').val();
 
                     Swal.fire({
                         title: 'Konfirmasi Penyimpanan',
@@ -1504,7 +1958,9 @@
                                 title: 'Menyimpan Data...',
                                 html: 'Mohon tunggu sebentar.',
                                 allowOutsideClick: false,
-                                didOpen: () => { Swal.showLoading(); }
+                                didOpen: () => {
+                                    Swal.showLoading();
+                                }
                             });
 
                             $.ajax({
@@ -1515,7 +1971,8 @@
                                 contentType: false,
                                 success: function(response) {
                                     Swal.close();
-                                    if(response.success) {
+
+                                    if (response.success) {
                                         Swal.fire({
                                             icon: 'success',
                                             title: 'Berhasil!',
@@ -1524,16 +1981,34 @@
                                             showConfirmButton: false
                                         }).then(() => {
                                             $('#customerModal').modal('hide');
-                                            $('#sampleTable').DataTable().ajax.reload();
+                                            $('#statusFilter').val('all').trigger(
+                                                'change.select2');
+                                            $('#approvalStatusFilter').val('all')
+                                                .trigger('change.select2');
+
+                                            if (typeof table !== 'undefined') {
+                                                table.search('').ajax.reload(null,
+                                                    true);
+                                            } else {
+                                                $('#sampleTable').DataTable()
+                                                    .search('').ajax.reload(null,
+                                                        true);
+                                            }
                                         });
                                     } else {
-                                        Swal.fire('Gagal!', response.message, 'error');
+                                        $('#statusFilter').val(currentStatusFilter).trigger(
+                                            'change.select2');
+                                        $('#approvalStatusFilter').val(
+                                            currentApprovalFilter).trigger(
+                                            'change.select2');
+                                        Swal.fire('Failed!', response.message, 'error');
                                     }
                                 },
                                 error: function(xhr) {
                                     Swal.close();
-                                    let msg = 'Terjadi kesalahan server.';
-                                    if(xhr.responseJSON && xhr.responseJSON.message) msg = xhr.responseJSON.message;
+                                    let msg = 'An error occurred on the server.';
+                                    if (xhr.responseJSON && xhr.responseJSON.message) msg =
+                                        xhr.responseJSON.message;
                                     Swal.fire('Error!', msg, 'error');
                                 }
                             });
@@ -1545,150 +2020,307 @@
                     const file = this.files && this.files[0];
                     if (!file) return;
 
+                    // 1. Kosongkan Form Sebelum Memulai
+                    $('#npwp, #name, #address1, #address2, #address3, #tanggal_npwp').val('');
+
                     const originalBtn = $('#btn-save-customer');
                     originalBtn.prop('disabled', true);
-                    const notice = $('<div class="mt-2 text-info" id="ocr-status"><i class="ph-bold ph-spinner ph-spin me-1"></i> Reading NPWP (Scanning all lines)...</div>');
+
+                    const notice = $(
+                        '<div class="mt-2 text-info" id="ocr-status"><i class="ph-bold ph-spinner ph-spin me-1"></i> Membaca QR Code & Memproses Kartu...</div>'
+                    );
+                    $(this).closest('.card-body').find('#ocr-status').remove(); // Hapus notif lama jika ada
                     $(this).closest('.card-body').append(notice);
 
                     const reader = new FileReader();
-                    reader.onload = function(evt) {
+                    reader.onload = async function(evt) {
+                        const originalDataUrl = evt.target.result;
+                        let qrNpwpFound = false;
+
+                        // ============================================================
+                        // TAHAP 1: BACA QR CODE DENGAN jsQR (Instan)
+                        // ============================================================
                         try {
-                            Tesseract.recognize(evt.target.result, 'eng', { logger: m => console.log(m) })
-                                .then(result => {
-                                    const text = result.data.text || '';
-                                    const lines = text.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+                            const img = new Image();
+                            img.src = originalDataUrl;
+                            await new Promise(r => img.onload = r);
 
-                                    // 1. CARI POSISI BARIS NPWP
-                                    let npwpLineIdx = -1;
-                                    let npwpValue = '';
-                                    const npwpRegexStrict = /\d{2}\.\d{3}\.\d{3}\.\d-\d{3}\.\d{3}/;
-                                    const npwpRegexLoose = /[0-9\.\-\s]{15,25}/;
+                            const canvas = document.createElement('canvas');
+                            const ctx = canvas.getContext('2d');
 
-                                    for (let i = 0; i < lines.length; i++) {
-                                        let match = lines[i].match(npwpRegexStrict);
-                                        if (match) {
-                                            npwpLineIdx = i;
-                                            npwpValue = match[0];
-                                            break;
+                            // Limit dimensi maksimal agar tidak berat di RAM saat scan QR
+                            const maxDim = 1500;
+                            let scale = 1;
+                            if (img.width > maxDim || img.height > maxDim) {
+                                scale = maxDim / Math.max(img.width, img.height);
+                            }
+
+                            canvas.width = Math.floor(img.width * scale);
+                            canvas.height = Math.floor(img.height * scale);
+                            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+                            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                            const code = jsQR(imageData.data, imageData.width, imageData.height, {
+                                inversionAttempts: "dontInvert",
+                            });
+
+                            if (code && code.data) {
+                                console.log("[QR SCAN] Data ditemukan:", code.data);
+                                const match = code.data.match(/\b\d{15,16}\b/);
+
+                                if (match) {
+                                    let digits = match[0];
+                                    let formattedNpwp = "";
+
+                                    if (digits.length === 15) {
+                                        formattedNpwp =
+                                            `${digits.slice(0,2)}.${digits.slice(2,5)}.${digits.slice(5,8)}.${digits.slice(8,9)}-${digits.slice(9,12)}.${digits.slice(12,15)}`;
+                                    } else if (digits.length === 16) {
+                                        formattedNpwp =
+                                            `${digits.slice(0,4)}.${digits.slice(4,8)}.${digits.slice(8,12)}.${digits.slice(12,16)}`;
+                                    }
+
+                                    $('#npwp').val(formattedNpwp);
+                                    qrNpwpFound = true;
+                                    $('#ocr-status').html(
+                                        '<i class="ph-bold ph-check text-success me-1"></i> QR Code terbaca! Mengekstrak Nama & Alamat...'
+                                    );
+                                }
+                            }
+                        } catch (err) {
+                            console.warn("[QR SCAN] Gagal mengeksekusi jsQR:", err);
+                        }
+
+                        // ============================================================
+                        // TAHAP 2: EKSTRAKSI OCR TESSERACT.JS (WORD-CLEANER ENGINE)
+                        // ============================================================
+                        try {
+                            const worker = await Tesseract.createWorker('eng+ind', 1, {
+                                logger: m => {
+                                    if (m.status === 'recognizing text' && $('#ocr-status')
+                                        .length) {
+                                        $('#ocr-status').html(
+                                            `<i class="ph-bold ph-spinner ph-spin me-1"></i> Menyaring Data Kartu... ${Math.round(m.progress * 100)}%`
+                                            );
+                                    }
+                                }
+                            });
+
+                            // PSM 11: Sparse text. Find as much text as possible in no particular order.
+                            // Sangat ampuh untuk kartu di mana ada QR code/foto yang merusak struktur kolom teks (seperti alamat di samping QR)
+                            await worker.setParameters({
+                                tessedit_pageseg_mode: '11'
+                            });
+
+                            const result = await worker.recognize(originalDataUrl);
+                            await worker.terminate();
+
+                            // --- 1. FILTERING SUPER BERSIH (MENGHANCURKAN NOISE QR CODE) ---
+                            let cleanLines = [];
+
+                            // Kita periksa baris demi baris dari hasil asli Tesseract
+                            for (let line of result.data.lines) {
+                                let words = line.text.trim().split(/\s+/);
+                                let goodWords = [];
+
+                                for (let w of words) {
+                                    // 1. Selamatkan format tanggal (meski ada huruf kecil/nempel)
+                                    if (/\d{2}[\/\-\.]\d{2}[\/\-\.]\d{4}/.test(w)) {
+                                        goodWords.push(w);
+                                        continue;
+                                    }
+
+                                    // 2. Selamatkan format NIK / NPWP
+                                    let digitsOnly = w.replace(/\D/g, '');
+                                    if (digitsOnly.length >= 14 || /\d{2}\.\d{3}\.\d{3}/.test(w)) {
+                                        goodWords.push(w);
+                                        continue;
+                                    }
+
+                                    // 3. SAPU BERSIH: Kartu NPWP HANYA pakai huruf KAPITAL.
+                                    // Seringkali Tesseract membaca huruf kapital sebagai huruf kecil (misal: "Sinar" atau "Bungo").
+                                    // Kita konversi semuanya ke huruf kapital agar tidak ada kata valid yang terbuang.
+                                    if (/[a-z]/.test(w)) {
+                                        w = w.toUpperCase(); // Konversi ke kapital tanpa membuang kata
+                                    }
+
+                                    // 4. SAPU BERSIH: Buang kata sampah 1-2 huruf tanpa membuang kata valid
+                                    let cleanW = w.replace(/[^A-Z0-9]/g, '');
+                                    // Pengecualian untuk singkatan awalan nama/jalan yang umum (CV, PT, JL, H, M, dll)
+                                    if (cleanW.length <= 2 && !/^(PT|CV|UD|PD|JL|JLN|RT|RW|NO|DI|GG|M|H|TB|KAV)$/.test(
+                                            cleanW) && !/\d/.test(cleanW)) continue;
+
+                                    goodWords.push(w);
+                                }
+
+                                // Gabungkan kata yang selamat menjadi baris baru yang suci dari noise
+                                let cleanedLine = goodWords.join(' ').replace(
+                                    /[^a-zA-Z0-9\s\.\,\/\-:]/g, '').trim();
+                                if (cleanedLine.length > 3) cleanLines.push(cleanedLine);
+                            }
+
+                            console.log("[DEBUG] Baris Setelah Disaring:", cleanLines);
+
+                            // --- 2. AMBIL TANGGAL DAN NPWP ---
+                            let tgl = '';
+                            let npwp15 = '';
+                            let npwp16 = '';
+                            let npwpTesseract = '';
+
+                            for (let l of cleanLines) {
+                                // Cari Tanggal
+                                let dm = l.replace(/[Oo]/g, '0').match(
+                                    /(\d{2})\s*[\/\-\.]\s*(\d{2})\s*[\/\-\.]\s*(\d{4})/);
+                                if (dm) tgl = `${dm[3]}-${dm[2]}-${dm[1]}`;
+
+                                // Perbaiki salah baca OCR umum pada angka sebelum mengekstrak NPWP
+                                let textForNpwp = l.replace(/[Oo]/g, '0').replace(/[Il]/g, '1');
+
+                                // Cari NPWP Lama (15 digit)
+                                let npwpLama = textForNpwp.match(
+                                    /(?:^|\D)(\d{2})[\.\s]*(\d{3})[\.\s]*(\d{3})[\.\s]*(\d{1})[\-\.\s]*(\d{3})[\.\s]*(\d{3})(?:\D|$)/
+                                );
+                                
+                                // Cari NPWP Baru (16 digit) dengan menghapus spasi/titik/strip terlebih dahulu
+                                let cleanFor16 = textForNpwp.replace(/[\s\.\-]/g, '');
+                                let npwpBaru = cleanFor16.match(/(?:^|\D)(\d{16})(?:\D|$)/);
+
+                                if (npwpLama) {
+                                    npwp15 = `${npwpLama[1]}.${npwpLama[2]}.${npwpLama[3]}.${npwpLama[4]}-${npwpLama[5]}.${npwpLama[6]}`;
+                                }
+                                if (npwpBaru) {
+                                    npwp16 = `${npwpBaru[1].slice(0,4)}.${npwpBaru[1].slice(4,8)}.${npwpBaru[1].slice(8,12)}.${npwpBaru[1].slice(12,16)}`;
+                                }
+                            }
+                            
+                            // Prioritaskan NPWP 16 digit jika ditemukan, jika tidak gunakan 15 digit
+                            if (npwp16) {
+                                npwpTesseract = npwp16;
+                            } else if (npwp15) {
+                                npwpTesseract = npwp15;
+                            }
+
+                            if (tgl) $('#tanggal_npwp').val(tgl);
+
+                            // Tulis NPWP (Prioritaskan hasil QR dari Tahap 1, jika gagal pakai Tesseract)
+                            let finalNpwp = qrNpwpFound ? $('#npwp').val() : npwpTesseract;
+                            if (finalNpwp) $('#npwp').val(finalNpwp);
+
+                            // --- 3. IDENTIFIKASI NAMA & ALAMAT ---
+                            let dataSisa = [];
+                            const stopWords =
+                                /(KEMENTERIAN|KEUANGAN|DIREKTORAT|JENDERAL|PAJAK|KPP|PRATAMA|KANTOR|PELAYANAN|TANGGAL|TERDAFTAR|NPWP)/i;
+                            let activeNpwpDigit = ($('#npwp').val() || '').replace(/\D/g, '');
+
+                            // Buang semua baris yang berisi Header Instansi, Tanggal, dan Nomor NPWP
+                            for (let l of cleanLines) {
+                                if (stopWords.test(l)) continue;
+                                
+                                // Jangan buang seluruh baris jika ada pola tanggal! (Antisipasi Tesseract menggabung Alamat dan Tanggal).
+                                // Ekstrak hapus bagian teks tanggalnya saja agar sisa alamatnya selamat.
+                                let isDateLine = /(\d{2})\s*[\/\-\.]\s*(\d{2})\s*[\/\-\.]\s*(\d{4})/.test(l.replace(/[Oo]/g, '0'));
+                                if (isDateLine) {
+                                    l = l.replace(/TANGGAL\s*TERDAFTAR\s*/i, '')
+                                         .replace(/\b\d{2}\s*[\/\-\.]\s*\d{2}\s*[\/\-\.]\s*\d{4}\b/g, '')
+                                         .trim();
+                                    if (l.length < 3) continue; // Jika sisa baris kosong, baru buang
+                                }
+
+                                // Jangan hapus seluruh baris jika baris tersebut mengandung NPWP (untuk antisipasi OCR menggabung baris).
+                                // Cukup hapus teks NPWP-nya saja agar sisa namanya (jika ada) bisa diselamatkan.
+                                l = l.replace(/\b\d{4}\s*\d{4}\s*\d{4}\s*\d{4}\b/g, '') // Hapus format NPWP baru 16 digit (berspasi)
+                                     .replace(/\b\d{2}[\.\s]*\d{3}[\.\s]*\d{3}[\.\s]*\d{1}[\-\.\s]*\d{3}[\.\s]*\d{3}\b/g, '') // Hapus NPWP lama
+                                     .replace(/\b\d{15,16}\b/g, '') // Hapus deretan angka nempel
+                                     .trim();
+
+                                if (l.length < 3) continue; // Jika setelah NPWP dihapus baris jadi kosong, buang
+
+                                dataSisa.push(l);
+                            }
+
+                            // Bersihkan noise logo atas yang sering salah baca menjadi kata aneh
+                            while (dataSisa.length > 0) {
+                                if (/^(NENI|NPW|NPNP|RE|NA|NON|KEMENTRIAN|DJR)$/i.test(dataSisa[0])) {
+                                    dataSisa.shift();
+                                } else {
+                                    break;
+                                }
+                            }
+
+                            console.log("[DEBUG] Sisa Teks (Murni Nama & Alamat):", dataSisa);
+
+                            if (dataSisa.length > 0) {
+                                // A. Ekstrak NAMA (Sudah pasti berada di baris pertama sisa data)
+                                let safeName = dataSisa[0].replace(/[^a-zA-Z\s\.\,\(\)\-\&]/g, '')
+                                .trim();
+
+                                // Jika kebetulan nama menyatu dengan alamat dalam 1 baris karena format foto
+                                const addrStarter =
+                                    /\b(JL|JLN|JALAN|KOTA|KAB|KAV|BLOK|RT|RW|TAMAN|PERUM|KAMPUNG|DESA)\b/i;
+                                let match = safeName.match(addrStarter);
+                                if (match && match.index > 5) {
+                                    // Potong dan lempar sisanya ke array alamat
+                                    dataSisa.splice(1, 0, safeName.substring(match.index));
+                                    safeName = safeName.substring(0, match.index).trim();
+                                }
+
+                                $('#name').val(safeName);
+                                if (typeof generatePkdNumber === 'function' && ($('#bank_garansi')
+                                    .val() === 'YA' || $('#bank_garansi').val() === '1')) {
+                                    generatePkdNumber(safeName);
+                                }
+
+                                // B. Ekstrak ALAMAT (Semua baris sisanya digabung)
+                                if (dataSisa.length > 1) {
+                                    let rawAddr = dataSisa.slice(1).join(' ');
+
+                                    // Perbaiki typo OCR umum
+                                    rawAddr = rawAddr
+                                        .replace(/\bJI\b|\bJl\b|\bJIn\b/g, 'JL')
+                                        .replace(/\bRW\.?[Oo0]+\b/g, 'RW.000')
+                                        .replace(/\bRT\.?[Oo0]+\b/g, 'RT.000')
+                                        .replace(/\s+/g, ' ')
+                                        .trim();
+
+                                    // Word Wrap 36 Karakter
+                                    const words = rawAddr.split(' ');
+                                    const out = ['', '', ''];
+                                    let lineCount = 0;
+
+                                    for (let w of words) {
+                                        if (lineCount > 2) break;
+                                        if ((out[lineCount] + w).length <= 36) out[lineCount] += (out[
+                                            lineCount] ? ' ' : '') + w;
+                                        else {
+                                            lineCount++;
+                                            if (lineCount <= 2) out[lineCount] = w;
                                         }
                                     }
-                                    // Fallback search
-                                    if (npwpLineIdx === -1) {
-                                        for (let i = 0; i < lines.length; i++) {
-                                            if (npwpRegexLoose.test(lines[i]) && lines[i].replace(/\D/g, '').length >= 15) {
-                                                npwpLineIdx = i;
-                                                npwpValue = lines[i].match(npwpRegexLoose)[0];
-                                                break;
-                                            }
-                                        }
-                                    }
 
-                                    if (npwpValue) {
-                                        $('#npwp').val(npwpValue.trim());
-                                    }
+                                    if ($('#address1').length) $('#address1').val(out[0]);
+                                    if ($('#address2').length) $('#address2').val(out[1]);
+                                    if ($('#address3').length) $('#address3').val(out[2]);
+                                }
+                            }
 
-                                    if (npwpLineIdx !== -1 && lines.length > npwpLineIdx + 1) {
-                                        let rawName = lines[npwpLineIdx + 1];
-                                        rawName = rawName.replace(/^(Nama|Name)\s*[:.]?\s*/i, '').trim();
-                                        let safeName = rawName.replace(/[^a-zA-Z0-9\s\.\,\(\)\-\&]/g, '').trim();
+                            $('#ocr-status').remove();
+                            originalBtn.prop('disabled', false);
 
-                                        $('#name').val(safeName);
-                                        // Only auto-generate No PKD when Bank Garansi is YES
-                                        const bgStatusAfterOcr = $('#bank_garansi').val();
-                                        if (bgStatusAfterOcr === 'YA' || bgStatusAfterOcr === '1') {
-                                            generatePkdNumber(safeName);
-                                        } else {
-                                            // If Bank Garansi is NO or unset, ensure PKD is empty and hint
-                                            $('#no_pkd').val('').attr('placeholder', 'Tidak perlu No PKD (Non-BG)').prop('readonly', true);
-                                        let bgStatus = $('#bank_garansi').val();
+                            console.log("=== HASIL AKHIR OCR ===");
+                            console.log({
+                                NPWP: $('#npwp').val(),
+                                Nama: $('#name').val(),
+                                Alamat_1: $('#address1').val(),
+                                Alamat_2: $('#address2').val(),
+                                Alamat_3: $('#address3').val(),
+                                Tanggal: $('#tanggal_npwp').val()
+                            });
 
-                                        if (bgStatus === 'YA' || bgStatus === '1') {
-                                            generatePkdNumber(safeName);
-                                        } else {
-                                            $('#no_pkd').val('');
-                                            console.log('Skip generate PKD karena Bank Garansi = NO');
-                                        }
-                                    }
-
-                                    // 3. AMBIL ALAMAT (LOOPING SAMPAI KETEMU "FOOTER")
-                                    let rawAddress = '';
-                                    if (npwpLineIdx !== -1) {
-                                        let addressLines = [];
-                                        let startIndex = npwpLineIdx + 2;
-
-                                        // Loop dari baris alamat pertama sampai habis array
-                                        for (let i = startIndex; i < lines.length; i++) {
-                                            let currentLine = lines[i];
-
-                                            // Jika ketemu kata "Penerbit", "Terdaftar", "KPP", stop pengambilan alamat
-                                            if (currentLine.match(/(Penerbit|Terdaftar|KPP|Pratama|Kanwil|Direktorat)/i)) {
-                                                break;
-                                            }
-
-                                            // Abaikan jika baris terlalu pendek (misal sampah OCR: ".")
-                                            if (currentLine.length > 2) {
-                                                addressLines.push(currentLine);
-                                            }
-                                        }
-
-                                        // Gabungkan semua baris alamat yang ditemukan jadi satu string panjang
-                                        rawAddress = addressLines.join(' ');
-
-                                        // Bersihkan label "Alamat :" atau "Jalan" di awal (jika ada)
-                                        rawAddress = rawAddress.replace(/^(Alamat|Address|Jalan|Jl)\s*[:.]?\s*/i, '').trim();
-                                    }
-
-                                    // Fungsi Chunking (Max 36 Karakter per Input)
-                                    function splitChunksWordWrap(str, len) {
-                                        if (!str) return [];
-                                        str = str.replace(/\s+/g, ' ').trim(); // Normalisasi spasi
-                                        const words = str.split(' ');
-                                        const out = [];
-                                        let line = '';
-                                        words.forEach(w => {
-                                            if ((line + ' ' + w).trim().length <= len) {
-                                                line = (line + ' ' + w).trim();
-                                            } else {
-                                                if (line) out.push(line);
-                                                // Handle kata yang lebih panjang dari limit (36)
-                                                if (w.length > len) {
-                                                    for (let i = 0; i < w.length; i += len) {
-                                                        out.push(w.substr(i, len));
-                                                    }
-                                                    line = '';
-                                                } else {
-                                                    line = w;
-                                                }
-                                            }
-                                        });
-                                        if (line) out.push(line);
-                                        return out;
-                                    }
-
-                                    // Distribusi ke Input Address 1, 2, 3
-                                    const chunks = splitChunksWordWrap(rawAddress || '', 36);
-
-                                    try {
-                                        // Reset field
-                                        $('#address1, #address2, #address3').val('');
-
-                                        if ($('#address1').length) $('#address1').val(chunks[0] || '');
-                                        if ($('#address2').length) $('#address2').val(chunks[1] || '');
-                                        if ($('#address3').length) $('#address3').val(chunks[2] || '');
-                                    } catch (e) {
-                                        console.error('Error setting address fields', e);
-                                    }
-
-                                    $('#ocr-status').remove();
-                                    originalBtn.prop('disabled', false);
-                                })
-                                .catch(err => {
-                                    console.error('OCR error', err);
-                                    $('#ocr-status').text('OCR failed (Manual Input Required)').addClass('text-danger');
-                                    originalBtn.prop('disabled', false);
-                                });
                         } catch (e) {
-                            $('#ocr-status').text('Error processing file').addClass('text-danger');
+                            console.error('[NPWP OCR] Error:', e);
+                            $('#ocr-status').html(
+                                '<span class="text-danger mt-1">Gagal memproses gambar. Silakan input manual.</span>'
+                                );
                             originalBtn.prop('disabled', false);
                         }
                     };
@@ -1715,7 +2347,8 @@
                         },
                         success: function(response) {
                             if (response.success) {
-                                $('#no_pkd').val(response.number).removeClass('text-muted').addClass('fw-bold');
+                                $('#no_pkd').val(response.number).removeClass('text-muted').addClass(
+                                    'fw-bold');
                             } else {
                                 console.warn('Generate Failed:', response);
                                 $('#no_pkd').val('').attr('');
@@ -1725,7 +2358,7 @@
                             console.error('AJAX Error:', status, error);
                             console.error('Response:', xhr.responseText);
 
-                            if(xhr.status === 403) {
+                            if (xhr.status === 403) {
                                 $('#no_pkd').val('Error: Unauthorized (403)');
                             } else {
                                 $('#no_pkd').val('').attr('placeholder', '(Failed to generate)');
@@ -1737,6 +2370,7 @@
                 const table = $('#sampleTable').DataTable({
                     processing: true,
                     serverSide: true,
+                    // responsive: true,
                     ajax: {
                         url: "{{ route('customers.index') }}",
                         data: function(d) {
@@ -1744,48 +2378,49 @@
                             d.approval_status = $('#approvalStatusFilter').val();
                         }
                     },
-                    order: [[8, 'desc']],
-                    columns: [
-                        {
+                    language: {
+                        search: "_INPUT_",
+                        searchPlaceholder: "🔍 Search customer..."
+                    },
+                    order: [
+                        [8, 'desc']
+                    ],
+                    columns: [{
                             data: 'DT_RowIndex',
                             name: 'DT_RowIndex',
                             orderable: false,
                             searchable: false,
-                            className: 'text-center dt-no-wrap'
+                            className: 'text-center align-middle'
                         },
                         {
                             data: 'code',
                             name: 'customers.code',
-                            className: 'dt-no-wrap fw-bold',
-                            render: function(data) {
-                                return data && data.trim() !== '' ? `<span class="fw-bold text-dark">${data}</span>` : `<span class="text-muted fst-italic">Auto-generated</span>`;
-                            }
+                            className: 'dt-no-wrap align-middle'
                         },
                         {
                             data: 'name',
                             name: 'customers.name',
-                            className: 'dt-no-wrap fw-bold',
-                            render: function(data) { return `<span class="fw-bold text-dark">${data}</span>`; }
+                            className: 'dt-no-wrap align-middle'
                         },
                         {
                             data: 'credit_limit',
                             name: 'customers.credit_limit',
-                            className: 'dt-wrap'
+                            className: 'dt-wrap align-middle'
                         },
                         {
                             data: 'financial_info',
                             name: 'customers.term_of_payment',
-                            className: 'dt-no-wrap text-center'
+                            className: 'dt-no-wrap align-middle'
                         },
                         {
                             data: 'status_approval',
                             name: 'customers.status_approval',
-                            className: 'text-center dt-no-wrap'
+                            className: 'text-center dt-no-wrap align-middle'
                         },
                         {
                             data: 'route_to',
                             name: 'customers.route_to',
-                            className: 'text-center dt-wrap',
+                            className: 'text-center dt-wrap align-middle',
                             width: '15%'
                         },
                         {
@@ -1793,7 +2428,7 @@
                             name: 'action',
                             orderable: false,
                             searchable: false,
-                            className: 'text-center dt-no-wrap'
+                            className: 'text-center dt-no-wrap align-middle'
                         },
                         {
                             data: 'updated_at',
@@ -1805,6 +2440,110 @@
                     autoWidth: false
                 });
 
+                $(document).on('submit', 'form.delete-form.delete-customer-btn', function(e) {
+                    e.preventDefault();
+
+                    const form = this;
+                    const $form = $(form);
+
+                    Swal.fire({
+                        title: 'Delete customer?',
+                        text: 'Data will be permanently deleted and cannot be recovered.',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonText: 'Yes, delete',
+                        cancelButtonText: 'Cancel',
+                        reverseButtons: true
+                    }).then((result) => {
+                        if (!result.isConfirmed) return;
+                        Swal.fire({
+                            title: 'Deleting... ',
+                            text: 'Please wait a moment.',
+                            allowOutsideClick: false,
+                            allowEscapeKey: false,
+                            didOpen: () => {
+                                Swal.showLoading();
+                            }
+                        });
+
+                        $.ajax({
+                                url: $form.attr('action'),
+                                method: 'POST',
+                                data: $form.serialize(),
+                                dataType: 'json'
+                            })
+                            .done(function(response) {
+                                Swal.close();
+
+                                if (response && response.success) {
+                                    Swal.fire('Success!', response.message ||
+                                            'Customer deleted successfully.', 'success')
+                                        .then(() => {
+                                            try {
+                                                if (typeof table !== 'undefined') {
+                                                    table.ajax.reload(null, false);
+                                                } else if ($('#sampleTable').length) {
+                                                    $('#sampleTable').DataTable().ajax.reload(
+                                                        null, false);
+                                                }
+                                            } catch (err) {
+                                                console.warn('Reload DataTable failed', err);
+                                            }
+                                        });
+                                    return;
+                                }
+
+                                Swal.fire('Failed!', (response && response.message) ? response
+                                    .message : 'Failed to delete customer.', 'error');
+                            })
+                            .fail(function(xhr) {
+                                Swal.close();
+
+                                let msg = 'An error occurred while deleting data.';
+
+                                if (xhr && xhr.status === 419) {
+                                    msg = 'Session expired. Please refresh the page and try again.';
+                                } else if (xhr && xhr.responseJSON && xhr.responseJSON.message) {
+                                    msg = xhr.responseJSON.message;
+                                }
+
+                                Swal.fire('Error!', msg, 'error');
+                            });
+                    });
+                });
+
+                (function() {
+                    const modalSelector = '#customerModal, #recallCustomerModal';
+
+                    $(document).on('show.bs.modal', modalSelector, function() {
+                        const saved = {
+                            status: $('#statusFilter').val(),
+                            approval: $('#approvalStatusFilter').val(),
+                            search: (typeof table !== 'undefined') ? table.search() : ($(
+                                '#sampleTable_filter input').val() || '')
+                        };
+                        $(this).data('savedFilters', saved);
+                    });
+
+                    $(document).on('shown.bs.modal', modalSelector, function() {
+                        const saved = $(this).data('savedFilters');
+                        if (!saved) return;
+
+                        $('#statusFilter').val(saved.status).trigger('change');
+                        $('#approvalStatusFilter').val(saved.approval).trigger('change');
+
+                        try {
+                            if (typeof table !== 'undefined') {
+                                table.search(saved.search).draw(false);
+                            } else if ($('#sampleTable').length) {
+                                $('#sampleTable').DataTable().search(saved.search).draw(false);
+                            }
+                        } catch (e) {
+                            console.warn('Restore search failed', e);
+                        }
+                    });
+                })();
+
                 $('#statusFilter, #approvalStatusFilter').on('change', function() {
                     table.draw();
                 });
@@ -1812,8 +2551,6 @@
                 $('#resetFilters').on('click', function() {
                     $('#statusFilter').val('all').trigger('change');
                     $('#approvalStatusFilter').val('all').trigger('change');
-
-                    // table.draw() akan terpanggil otomatis karena trigger('change') di atas
                 });
 
                 $('#user_id').on('change', function() {
@@ -1821,7 +2558,6 @@
                     const userId = selected.val();
 
                     if (userId) {
-                        // Isi Info Posisi/Branch (Existing)
                         $('#user_position').val(selected.data('pos') || '-');
                         $('#user_branch').val(selected.data('branch') || '-');
                         $('#user_region').val(selected.data('region') || '-');
@@ -1832,13 +2568,12 @@
                         const linkedAgId = selected.data('account-group-id');
                         if (linkedAgId) {
                             $('#account_group').val(linkedAgId).trigger('change');
-                            // Jika ingin Account Group tidak bisa diganti oleh Sales, uncomment baris bawah:
                             // $('#account_group').select2({ disabled: true, theme: 'bootstrap-5' });
                         }
 
                         $('#user-info-section').slideDown();
                         $('#main-form-section').slideDown();
-                        $('#btn-save-customer').prop('disabled', true); // Tetap disable sampai AG & Class terisi
+                        $('#btn-save-customer').prop('disabled', true);
                     } else {
                         $('#user-info-section').slideUp();
                         $('#main-form-section').slideUp();
@@ -1846,7 +2581,6 @@
                     }
                 });
 
-                // --- 3. EVENT SAAT ACCOUNT GROUP BERUBAH (MODIFIKASI: SET BG OTOMATIS) ---
                 $('#account_group, #customer_class').on('change', function() {
                     const ag = $('#account_group').val();
                     const cc = $('#customer_class').val();
@@ -1856,14 +2590,14 @@
                         let rawBg = selectedAg.data('bank_garansi');
                         let rawCcar = selectedAg.data('ccar');
 
-                        let bgValue = (rawBg == 1 || rawBg === true || rawBg === '1' || rawBg === 'YA') ? 'YA' : 'TIDAK';
+                        let bgValue = (rawBg == 1 || rawBg === true || rawBg === '1' || rawBg === 'YA') ? 'YA' :
+                            'TIDAK';
 
                         $('#bank_garansi').val(bgValue).trigger('change');
 
                         $('#ccar').val(rawCcar).trigger('change');
                     }
 
-                    // Cek validasi tombol save
                     if (ag && cc) {
                         $('#btn-save-customer').prop('disabled', false);
                     } else {
@@ -1872,8 +2606,8 @@
                 });
 
                 function checkCreditLimitAccess() {
-                    const bgVal = $('#bank_garansi').val(); // YA / TIDAK
-                    const topVal = $('#term_of_payment').val(); // 7, 14, 30, CBD, dll
+                    const bgVal = $('#bank_garansi').val();
+                    const topVal = $('#term_of_payment').val();
                     const clInput = $('#credit_limit');
                     const pkdInput = $('#no_pkd');
 
@@ -1889,21 +2623,66 @@
                         if (bgVal === 'YA') msg = 'Credit Limit otomatis 0 (BG Aktif).';
                         else if (topVal === 'CBD') msg = 'Credit Limit otomatis 0 (Cash Before Delivery).';
 
-                        clInput.after(`<small class="cl-status-note text-info fw-bold mt-1 d-block"><i class="ph-bold ph-info me-1"></i> ${msg}</small>`);
+                        clInput.after(
+                            `<small class="cl-status-note text-info fw-bold mt-1 d-block"><i class="ph-bold ph-info me-1"></i> ${msg}</small>`
+                        );
 
-                    }
-                    else {
+                    } else {
                         clInput.prop('readonly', true)
                             .removeClass('bg-light').addClass('bg-white cursor-pointer border-danger')
-                            .attr('placeholder', 'Klik disini untuk menghitung (Wajib)');
+                            .attr('placeholder', 'Click to calculate');
 
-                        clInput.after('<small class="cl-status-note text-danger fw-bold mt-1 d-block"><i class="ph-bold ph-calculator me-1"></i> Wajib: Klik kolom ini untuk hitung limit.</small>');
+                        clInput.after(
+                            '<small class="cl-status-note text-danger fw-bold mt-1 d-block"><i class="ph-bold ph-calculator me-1"></i> Click to calculate</small>'
+                        );
                     }
                 }
 
-                // Event Listener saat TOP Berubah
+                function checkRecallCreditLimitAccess() {
+                    const bgVal = $('#recall_bank_garansi').val();
+                    const topVal = $('#recall_term_of_payment').val();
+                    const clInput = $('#recall_credit_limit');
+
+                    if (!clInput.length) return;
+
+                    clInput.parent().find('.recall-cl-status-note').remove();
+
+                    if (bgVal === 'YA' || String(topVal).toUpperCase() === 'CBD') {
+                        clInput.val(0).prop('readonly', true).addClass('bg-light');
+
+                        let msg = '';
+                        if (bgVal === 'YA') msg = 'Credit Limit otomatis 0 (BG Aktif).';
+                        else msg = 'Credit Limit otomatis 0 (Cash Before Delivery).';
+
+                        clInput.after(
+                            `<small class="recall-cl-status-note text-info fw-bold mt-1 d-block"><i class="ph-bold ph-info me-1"></i> ${msg}</small>`
+                        );
+                    } else {
+                        if (String(clInput.val()).trim() === '0') {
+                            clInput.val('');
+                        }
+                        clInput.prop('readonly', false).removeClass('bg-light');
+                    }
+                }
+
                 $('#term_of_payment').on('change', function() {
                     checkCreditLimitAccess();
+                    const v = $(this).val();
+
+                    if ($('#calc_top').length && $('#calc_top').val() !== v) {
+                        $('#calc_top').val(v).trigger('change');
+                    }
+
+                    const modalVisible = $('#creditCalcModal').hasClass('show') || $('#creditCalcModal').is(
+                        ':visible');
+                    if ($('#calc_top').length && modalVisible) {
+                        const r = computeCreditValues();
+                        $('#calc_preview_formatted').val(formatRupiah(Math.round(r.valFinal || 0)));
+                    }
+                });
+
+                $('#recall_term_of_payment, #recall_bank_garansi').on('change', function() {
+                    checkRecallCreditLimitAccess();
                 });
 
                 $('#bank_garansi').on('change', function() {
@@ -1915,13 +2694,15 @@
 
                     if (val === 'TIDAK') {
                         pkdInput.val('').prop('readonly', true).removeClass('fw-bold');
-                        pkdInput.after('<small class="pkd-status-note text-danger fw-bold mt-1 d-block"><i class="ph-bold ph-info me-1"></i> Customer ini tidak menggunakan Bank Garansi.</small>');
+                        pkdInput.after(
+                            '<small class="pkd-status-note text-danger fw-bold mt-1 d-block"><i class="ph-bold ph-info me-1"></i> This Customer does not use Bank Guarantee.</small>'
+                        );
                     } else {
                         pkdInput.prop('readonly', true).addClass('fw-bold');
                         if (customerName && customerName.length > 3) {
                             generatePkdNumber(customerName);
                         } else {
-                            pkdInput.val('').attr('placeholder', 'Isi Nama Customer untuk Generate PKD...');
+                            pkdInput.val('').attr('placeholder', 'Enter Customer Name to Generate PKD...');
                         }
                     }
 
@@ -1932,31 +2713,31 @@
                     let val = $(this).val();
                     let bgStatus = $('#bank_garansi').val();
 
-                    if(val.length > 3 && (bgStatus === 'YA' || bgStatus === '1')) {
+                    if (val.length > 3 && (bgStatus === 'YA' || bgStatus === '1')) {
                         generatePkdNumber(val);
                     }
                 });
 
-                $(document).on('click focus', '#credit_limit', function(e) {
-                    e.preventDefault();
+                $(document).on('focus', '#credit_limit', function(e) {
 
                     const bgStatus = $('#bank_garansi').val();
                     const topVal = $('#term_of_payment').val();
+                    const termString = $('#term_of_payment').val();
+
+                    if (!topVal) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Term of Payment Required',
+                            text: 'Please select Term of Payment first before calculating the limit.'
+                        });
+                        $('#term_of_payment').select2('open');
+                        return;
+                    }
 
                     if (bgStatus === 'YA' || topVal === 'CBD') {
                         return;
                     }
 
-                    const termString = $('#term_of_payment').val();
-                    if (!termString) {
-                        Swal.fire({
-                            icon: 'warning',
-                            title: 'TOP belum dipilih',
-                            text: 'Harap pilih Term of Payment terlebih dahulu sebelum menghitung limit.'
-                        });
-                        $('#term_of_payment').select2('open');
-                        return;
-                    }
 
                     $('#calc_products').empty();
 
@@ -1967,12 +2748,12 @@
                         let nameAttr = $(this).attr('name');
                         let matches = nameAttr.match(/items\[(\d+)\]\[(\w+)\]/);
 
-                        if(matches) {
+                        if (matches) {
                             hasItems = true;
                             let index = matches[1];
                             let field = matches[2];
 
-                            if(!existingItems[index]) existingItems[index] = {};
+                            if (!existingItems[index]) existingItems[index] = {};
                             existingItems[index][field] = $(this).val();
                         }
                     });
@@ -1986,17 +2767,11 @@
                         addCalcRow();
                     }
 
-                    let topDays = 0;
-                    const numberMatch = termString.match(/(\d+)/);
-                    if (numberMatch && numberMatch[0]) {
-                        topDays = parseInt(numberMatch[0]);
-                    }
-                    $('#calc_top').val(topDays);
+                    $('#calc_top').val(termString).trigger('change');
 
                     let ltVal = parseFloat($('#lead_time').val()) || 0;
                     $('#calc_lt').val(ltVal);
 
-                    // Hitung ulang preview saat modal dibuka
                     const initialR = computeCreditValues();
                     $('#calc_preview_formatted').val(formatRupiah(Math.round(initialR.valFinal || 0)));
 
@@ -2004,32 +2779,154 @@
                 });
 
                 $('#btn-create-customer').on('click', function() {
-                    // 1. Reset Form Biasa
                     $('#customerForm')[0].reset();
                     $('.select2-styled').val(null).trigger('change');
 
-                    // 2. Reset Readonly & Disabled States
                     $('#customerForm').find('input, textarea, select').prop('disabled', false);
                     $('#credit_limit').prop('readonly', true);
                     $('#no_pkd').val('').prop('readonly', true);
 
-                    // 3. Reset Schedule Buttons (PENTING!)
-                    $('.btn-schedule').removeClass('active btn-dark btn-primary btn-success btn-info text-white');
+                    let currentUserId = $('#current_user_id').val();
+                    let isUserInList = $('#user_id option[value="' + currentUserId + '"]').length > 0;
 
-                    // Kembalikan ke Outline Default
+                    $('#hidden_user_id').remove();
+
+                    if (isUserInList) {
+                        $('#user_id').val(currentUserId).trigger('change');
+                        $('#user_id').prop('disabled', true);
+
+                        $('<input>').attr({
+                            type: 'hidden',
+                            id: 'hidden_user_id',
+                            name: 'user_id',
+                            value: currentUserId
+                        }).appendTo('#customerForm');
+                    } else {
+                        $('#user_id').prop('disabled', false);
+                    }
+
+                    $('.btn-schedule').removeClass(
+                        'active btn-dark btn-primary btn-success btn-info text-white');
+
                     $('.btn-schedule[data-val="All"]').addClass('btn-outline-dark');
                     $('.btn-date-box').addClass('btn-outline-secondary').removeClass('btn-info');
 
                     $('[data-type="payment_days"]').not('[data-val="All"]').addClass('btn-outline-primary');
                     $('[data-type="faktur_days"]').not('[data-val="All"]').addClass('btn-outline-success');
 
-                    // Kosongkan Hidden Inputs
-                    $('#create_payment_days_inputs, #create_payment_date_inputs, #create_faktur_days_inputs, #create_faktur_date_inputs').empty();
+                    $('#create_payment_days_inputs, #create_payment_date_inputs, #create_faktur_days_inputs, #create_faktur_date_inputs')
+                        .empty();
 
-                    // 4. Setup Tampilan Awal
                     $('#customerModalLabel').text('Create New Customer');
                     $('#customerModal').modal('show');
                 });
+
+                function normalizeSelected(val) {
+                    if (!val && val !== 0) return [];
+                    if (Array.isArray(val)) return val.map(String);
+                    if (typeof val === 'object') return Object.values(val).map(String);
+                    if (typeof val === 'string') {
+                        try {
+                            const parsed = JSON.parse(val);
+                            if (Array.isArray(parsed)) return parsed.map(String);
+                            if (parsed === null) return [];
+                        } catch (e) {
+                            // not JSON
+                        }
+                        if (val.indexOf(',') !== -1) return val.split(',').map(s => s.trim());
+                        return [val];
+                    }
+                    return [String(val)];
+                }
+
+                function renderDaySelector(containerSelector, rawVal, isPayment) {
+                    const selected = normalizeSelected(rawVal);
+                    const $container = $(containerSelector);
+                    $container.find('[data-type]').each(function() {
+                        const $b = $(this);
+                        const val = String($b.data('val'));
+                        if (val === 'All') {
+                            if (selected.length === 1 && (selected[0] === 'All' || selected[0] === 'all')) {
+                                $b.removeClass('btn-outline-dark').addClass('btn-dark');
+                            } else {
+                                $b.removeClass('btn-dark').addClass('btn-outline-dark');
+                            }
+                        } else {
+                            const isSelected = selected.includes(val);
+                            if (isPayment) {
+                                if (isSelected) $b.removeClass('btn-outline-primary').addClass(
+                                    'btn-primary text-white');
+                                else $b.removeClass('btn-primary text-white').addClass('btn-outline-primary');
+                            } else {
+                                if (isSelected) $b.removeClass('btn-outline-success').addClass(
+                                    'btn-success text-white');
+                                else $b.removeClass('btn-success text-white').addClass('btn-outline-success');
+                            }
+                        }
+                    });
+                }
+
+                function renderDateBoxes(boxesSelector, rawVal) {
+                    const selected = normalizeSelected(rawVal).map(String);
+                    const $boxes = $(boxesSelector).find('.btn-date-box');
+                    if (typeof rawVal === 'string' && rawVal.toLowerCase() === 'all') {
+                        $(boxesSelector).siblings('button[data-val="All"]').removeClass('btn-outline-dark').addClass(
+                            'btn-dark');
+                        $boxes.each(function() {
+                            $(this).removeClass('btn-info text-white').addClass('btn-outline-secondary');
+                        });
+                        return;
+                    } else {
+                        $(boxesSelector).siblings('button[data-val="All"]').removeClass('btn-dark').addClass(
+                            'btn-outline-dark');
+                    }
+
+                    $boxes.each(function() {
+                        const $b = $(this);
+                        const val = String($b.data('val'));
+                        if (selected.includes(val)) {
+                            $b.removeClass('btn-outline-secondary').addClass('btn-info text-white');
+                        } else {
+                            $b.removeClass('btn-info text-white').addClass('btn-outline-secondary');
+                        }
+                    });
+                }
+
+                const REV_MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+                function pad2(n) {
+                    const num = Number(n);
+                    return num < 10 ? '0' + num : String(num);
+                }
+
+                function formatRevisionDate(value) {
+                    if (value === undefined || value === null) return '-';
+
+                    const s = String(value).trim();
+                    if (!s || s === '-' || s.toLowerCase() === 'null') return '-';
+
+                    // Prefer manual parsing for YYYY-MM-DD to avoid timezone shifts
+                    const m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+                    if (m) {
+                        const year = Number(m[1]);
+                        const month = Number(m[2]);
+                        const day = Number(m[3]);
+                        if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+                            return `${pad2(day)}-${REV_MONTHS[month - 1]}-${String(year).slice(-2)}`;
+                        }
+                    }
+
+                    // Fallback: try Date parsing
+                    const d = new Date(s);
+                    if (!Number.isNaN(d.getTime())) {
+                        const day = d.getDate();
+                        const month = d.getMonth() + 1;
+                        const year = d.getFullYear();
+                        return `${pad2(day)}-${REV_MONTHS[month - 1]}-${String(year).slice(-2)}`;
+                    }
+
+                    return s;
+                }
 
                 $(document).on('click', '.btn-show-customer', function() {
                     const btn = $(this);
@@ -2044,18 +2941,25 @@
 
                     const approval = btn.data('status_approval');
                     let approvalColor = 'text-muted';
-                    if(approval === 'Approved') approvalColor = 'text-success';
-                    if(approval === 'Rejected') approvalColor = 'text-danger';
-                    if(approval === 'Processing') approvalColor = 'text-primary';
+                    if (approval === 'Approved') approvalColor = 'text-success';
+                    if (approval === 'Rejected') approvalColor = 'text-danger';
+                    if (approval === 'Processing') approvalColor = 'text-primary';
                     $('#view_approval_badge').text(approval).attr('class', 'fw-bold ' + approvalColor);
 
-                    // (Opsional) Tambahkan created_at/updated_at jika ada datanya di controller
+                    $('#view_revision_number').text(btn.data('revision_number') || '-');
+                    $('#view_revision_count').text(btn.data('revision_count') || '0');
+
+                    const revDateRaw = btn.data('revision_date');
+                    $('#view_revision_date')
+                        .text(formatRevisionDate(revDateRaw))
+                        .attr('title', revDateRaw ?? '-');
                     // $('#view_updated_at').text(btn.data('updated_at') || '-');
 
                     $('#view_name').text(btn.data('name'));
                     $('#view_sort_name').text(btn.data('sort_name') || '-');
                     $('#view_email').text(btn.data('email'));
                     $('#view_no_pkd').text(btn.data('no_pkd') || '-');
+                    $('#view_pic').text(btn.data('pic') || '-');
 
                     const addr1 = btn.data('address1') || '';
                     const addr2 = btn.data('address2') ? ', ' + btn.data('address2') : '';
@@ -2080,30 +2984,61 @@
                     $('#view_penagihan_telp').text(btn.data('penagihan_telepon'));
                     $('#view_penagihan_addr').text(btn.data('penagihan_address'));
 
-                    // 4. MANAGEMENT
                     $('#view_purc_name').text(btn.data('purchasing_manager_name'));
                     $('#view_purc_email').text(btn.data('purchasing_manager_email'));
+                    $('#view_purc_phone').text(btn.data('purchasing_manager_telepon'));
                     $('#view_fin_name').text(btn.data('finance_manager_name'));
                     $('#view_fin_email').text(btn.data('finance_manager_email'));
+                    $('#view_fin_phone').text(btn.data('finance_manager_telepon'));
                     $('#view_tax_name').text(btn.data('tax_contact_name'));
+                    $('#view_tax_phone').text(btn.data('tax_contact_phone'));
                     $('#view_tax_email').text(btn.data('tax_contact_email'));
-
                     $('#view_shipping_name').text(btn.data('shipping_to_name'));
                     $('#view_shipping_address').text(btn.data('shipping_to_address'));
 
-                    // 5. DOCUMENTS
-                    const docs = [
-                        { name: 'NPWP Document', path: btn.data('file_npwp_path'), icon: 'ph-file-text' },
-                        { name: 'NIB / SIUP', path: btn.data('file_nib_path'), icon: 'ph-file-code' },
-                        { name: 'KTP Penanggung Jawab', path: btn.data('file_ktp_path'), icon: 'ph-cardholder' },
-                        { name: 'Akte Pendirian', path: btn.data('file_akte_path'), icon: 'ph-scroll' }
+                    const paymentDaysRaw = btn.attr('data-payment_days') || btn.data('payment_days');
+                    const paymentDateRaw = btn.attr('data-payment_date') || btn.data('payment_date');
+                    const fakturDaysRaw = btn.attr('data-faktur_days') || btn.data('faktur_days');
+                    const fakturDateRaw = btn.attr('data-faktur_date') || btn.data('faktur_date');
+
+                    renderDaySelector('#view_payment_days_container', paymentDaysRaw, true);
+                    renderDateBoxes('#view_payment_date_boxes', paymentDateRaw);
+                    renderDaySelector('#view_faktur_days_container', fakturDaysRaw, false);
+                    renderDateBoxes('#view_faktur_date_boxes', fakturDateRaw);
+
+                    const docs = [{
+                            name: 'NPWP Document',
+                            path: btn.data('file_npwp_path'),
+                            icon: 'ph-file-text'
+                        },
+                        {
+                            name: 'NIB / SIUP',
+                            path: btn.data('file_nib_path'),
+                            icon: 'ph-file-code'
+                        },
+                        {
+                            name: 'KTP Penanggung Jawab',
+                            path: btn.data('file_ktp_path'),
+                            icon: 'ph-cardholder'
+                        },
+                        {
+                            name: 'Akte Pendirian',
+                            path: btn.data('file_akte_path'),
+                            icon: 'ph-scroll'
+                        },
+                        {
+                            name: 'Company Profile',
+                            path: btn.data('file_company_profile_path'),
+                            icon: 'ph-buildings'
+                        }
                     ];
 
                     let docHtml = '';
                     let hasDoc = false;
 
                     docs.forEach(doc => {
-                        if(doc.path && typeof doc.path === 'string' && doc.path.length > 20 && !doc.path.includes('null')) {
+                        if (doc.path && typeof doc.path === 'string' && doc.path.length > 20 && !doc
+                            .path.includes('null')) {
                             hasDoc = true;
                             docHtml += `
                                 <div class="col-md-4">
@@ -2125,7 +3060,7 @@
                         }
                     });
 
-                    if(hasDoc) {
+                    if (hasDoc) {
                         $('#document_grid').html(docHtml).show();
                         $('#no_documents').hide();
                     } else {
@@ -2133,7 +3068,6 @@
                         $('#no_documents').show();
                     }
 
-                    // Show Modal
                     $('#customerDetailModal').modal('show');
                 });
 
@@ -2148,9 +3082,19 @@
                 $(document).on('keyup', '.calc-price', function() {
                     let val = $(this).val();
                     $(this).val(formatRupiah(val));
-                    $('#calc_products').trigger('input');
+                    const r = computeCreditValues();
+                    $('#calc_preview_formatted').val(formatRupiah(Math.round(r.valFinal || 0)));
                 });
 
+                // Compute credit limit preview using formula provided:
+                // For payment X days:
+                //   Credit = ((TOP + LT) * sum(QTY * HARGA)) / DIVIDER
+                // Where DIVIDER =
+                //   45 -> 45
+                //   30 -> 30
+                //   7  -> 30/4 = 7.5
+                //   14 -> 30/2 = 15
+                // This matches the formulas: (TOP+LT)*(QTY*HARGA)*100%/DIVIDER
                 function computeCreditValues() {
                     let totalValue = 0;
                     $('#calc_products .calc-row').each(function() {
@@ -2160,7 +3104,11 @@
                         totalValue += (q * p);
                     });
 
-                    const top = parseFloat($('#calc_top').val()) || 0;
+                    // Extract numeric days from selected TOP (supports values like '30' or 'CBD')
+                    const calcTopRaw = $('#calc_top').val();
+                    let top = 0;
+                    const m = String(calcTopRaw).match(/(\d+)/);
+                    if (m && m[0]) top = parseFloat(m[0]) || 0;
                     const lt = parseFloat($('#calc_lt').val()) || 0;
                     const base = (top + lt) * totalValue;
 
@@ -2169,7 +3117,11 @@
                     else if (top === 14) divider = 15;
                     if (divider === 0) divider = 1;
 
-                    return { base, totalValue, valFinal: base / divider };
+                    return {
+                        base,
+                        totalValue,
+                        valFinal: base / divider
+                    };
                 }
 
                 function formatRupiah(angka, prefix) {
@@ -2209,9 +3161,45 @@
                     $('#calc_products').append(row);
                 }
 
-                $(document).on('input', '#calc_products .calc-qty, #calc_products .calc-price, #calc_top, #calc_lt', function() {
+                $(document).on('input change',
+                    '#calc_products .calc-qty, #calc_products .calc-price, #calc_lt, #calc_top',
+                    function() {
+                        const r = computeCreditValues();
+                        $('#calc_preview_formatted').val(formatRupiah(Math.round(r.valFinal || 0)));
+                    });
+
+                // When calc_top changes in modal, sync back to main TOP select and recalc
+                $(document).on('change', '#calc_top', function() {
+                    const v = $(this).val();
+                    if ($('#term_of_payment').val() !== v) {
+                        $('#term_of_payment').val(v).trigger('change');
+                    }
+
                     const r = computeCreditValues();
-                    $('#calc_preview_formatted').val(formatRupiah(Math.round(r.valFinal || 0)));
+                    const computed = Math.round(r.valFinal || 0);
+                    $('#calc_preview_formatted').val(formatRupiah(computed));
+
+                    // If Bank Garansi active or TOP is CBD, credit limit stays 0
+                    const bgStatus = $('#bank_garansi').val();
+                    if (bgStatus === 'YA' || String(v).toUpperCase() === 'CBD') {
+                        $('#credit_limit').val(formatRupiah(0));
+                    } else {
+                        // Apply computed value directly to credit_limit field (dynamic behavior requested)
+                        $('#credit_limit').val(formatRupiah(computed));
+                    }
+
+                    // Update lead_time and hidden top_calc so main form reflects change
+                    const ltVal = $('#calc_lt').val() || 0;
+                    $('#lead_time').val(ltVal);
+
+                    if ($('#top_calc_hidden').length === 0) {
+                        $('<input>').attr({
+                            type: 'hidden',
+                            id: 'top_calc_hidden',
+                            name: 'top_calc'
+                        }).appendTo('#customerForm');
+                    }
+                    $('#top_calc_hidden').val(v);
                 });
 
                 $(document).on('click', '#addCalcRow', function() {
@@ -2220,7 +3208,8 @@
 
                 $(document).on('click', '.btn-remove-row', function() {
                     $(this).closest('.calc-row').remove();
-                    $('#calc_products').trigger('input');
+                    const r = computeCreditValues();
+                    $('#calc_preview_formatted').val(formatRupiah(Math.round(r.valFinal || 0)));
                 });
 
                 $(document).ready(function() {
@@ -2235,20 +3224,21 @@
                         if (!filePath || filePath.trim() === '' || filePath.endsWith('/storage/')) {
                             Swal.fire({
                                 icon: 'warning',
-                                title: 'File Kosong',
-                                text: 'Belum ada dokumen fisik yang diupload untuk data ini.',
+                                title: 'No File Available',
+                                text: 'File path is empty or invalid.',
                                 confirmButtonColor: '#3085d6'
                             });
                             return;
                         }
 
-                        $('#fileViewerTitle').html(`<i class="ph-bold ph-eye me-2"></i> ${title.toUpperCase()}`);
+                        $('#fileViewerTitle').html(
+                            `<i class="ph-bold ph-eye me-2"></i> ${title.toUpperCase()}`);
                         let container = $('#fileContentArea');
 
                         container.html(`
                             <div class="text-center py-5">
                                 <div class="spinner-border text-light mb-3" role="status"></div>
-                                <div class="text-white-50">Sedang memuat file...</div>
+                                <div class="text-white-50">Loading file...</div>
                             </div>
                         `);
 
@@ -2267,13 +3257,12 @@
                                 container.html(`
                                     <img src="${filePath}"
                                         class="d-block shadow-lg rounded"
-                                        style="max-height: 85vh; max-width: 90vw; border: 1px solid #555;"
+                                        style="max-height: 85vh; max-width: 90vw; border: .0625rem solid #555;"
                                         alt="Preview"
-                                        onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'text-center py-5\'><i class=\'ph-duotone ph-warning-circle text-danger f-s-48 mb-3\'></i><h5 class=\'text-white\'>Gagal Memuat Gambar</h5><p class=\'text-white-50 small\'>File tidak ditemukan di server.<br>Coba jalankan: <code>php artisan storage:link</code></p></div>';"
+                                        onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'text-center py-5\'><i class=\'ph-duotone ph-warning-circle text-danger f-s-48 mb-3\'></i><h5 class=\'text-white\'>Failed to Load Image</h5><p class=\'text-white-50 small\'>File not found on the server.<br>Please run: <code>php artisan storage:link</code></p></div>';"
                                     >
                                 `);
-                            }
-                            else if (extension === 'pdf') {
+                            } else if (extension === 'pdf') {
                                 dialog.addClass('modal-xl');
                                 container.html(`
                                     <iframe src="${filePath}"
@@ -2281,8 +3270,7 @@
                                             allowfullscreen>
                                     </iframe>
                                 `);
-                            }
-                            else {
+                            } else {
                                 dialog.addClass('modal-lg');
                                 container.html(`
                                     <div class="text-center py-5 text-white">
@@ -2297,14 +3285,14 @@
                         }, 300);
                     });
 
-                    $('#fileViewerModal').on('show.bs.modal', function () {
+                    $('#fileViewerModal').on('show.bs.modal', function() {
                         $(this).css('z-index', '1060');
                         setTimeout(function() {
                             $('.modal-backdrop').last().css('z-index', '1055');
                         }, 10);
                     });
 
-                    $('#fileViewerModal').on('hidden.bs.modal', function () {
+                    $('#fileViewerModal').on('hidden.bs.modal', function() {
                         if ($('.modal.show').length > 0) {
                             $('body').addClass('modal-open');
                         }
@@ -2318,23 +3306,20 @@
                     const container = $(`#create_${type}_container`);
                     const isAll = value === 'All';
 
-                    // Definisi Warna Solid vs Outline
                     const colorClass = type.includes('faktur') ? 'btn-success' : 'btn-primary';
-                    const outlineClass = type.includes('faktur') ? 'btn-outline-success' : 'btn-outline-primary';
+                    const outlineClass = type.includes('faktur') ? 'btn-outline-success' :
+                        'btn-outline-primary';
                     const dateSolid = 'btn-info';
                     const dateOutline = 'btn-outline-secondary';
 
                     if (isAll) {
-                        // --- LOGIC TOMBOL "ALL" ---
                         const isActive = btn.hasClass('active');
 
                         if (!isActive) {
-                            // AKTIFKAN ALL: Nyalakan semua tombol anak
                             btn.addClass('active btn-dark').removeClass('btn-outline-dark');
 
                             container.find('.btn-schedule').not('[data-val="All"]').each(function() {
                                 $(this).addClass('active text-white');
-                                // Hapus outline, tambah solid
                                 if ($(this).hasClass('btn-date-box')) {
                                     $(this).removeClass(dateOutline).addClass(dateSolid);
                                 } else {
@@ -2342,11 +3327,11 @@
                                 }
                             });
                         } else {
-                            // MATIKAN ALL: Reset semua ke putih
                             btn.removeClass('active btn-dark').addClass('btn-outline-dark');
 
                             container.find('.btn-schedule').not('[data-val="All"]').each(function() {
-                                $(this).removeClass('active text-white btn-dark ' + colorClass + ' ' + dateSolid);
+                                $(this).removeClass('active text-white btn-dark ' + colorClass + ' ' +
+                                    dateSolid);
                                 if ($(this).hasClass('btn-date-box')) {
                                     $(this).addClass(dateOutline);
                                 } else {
@@ -2356,17 +3341,11 @@
                         }
 
                     } else {
-                        // --- LOGIC TOMBOL SPESIFIK ---
-
-                        // 1. Jika tombol 'All' sedang nyala, matikan dulu
                         const allBtn = container.find('[data-val="All"]');
-                        if(allBtn.hasClass('active')) {
+                        if (allBtn.hasClass('active')) {
                             allBtn.removeClass('active btn-dark').addClass('btn-outline-dark');
                         }
-
-                        // 2. Toggle Status Active (Fix Masalah Warna Nyangkut)
                         if (btn.hasClass('active')) {
-                            // KONDISI: Sedang Aktif -> KLIK -> MATIKAN (Jadi Putih Langsung)
                             btn.removeClass('active text-white');
 
                             if (btn.hasClass('btn-date-box')) {
@@ -2375,7 +3354,6 @@
                                 btn.removeClass(colorClass).addClass(outlineClass);
                             }
                         } else {
-                            // KONDISI: Sedang Mati -> KLIK -> NYALAKAN
                             btn.addClass('active text-white');
 
                             if (btn.hasClass('btn-date-box')) {
@@ -2386,10 +3364,7 @@
                         }
                     }
 
-                    // PENTING: Hilangkan fokus browser agar warna hover tidak tertinggal
                     btn.blur();
-
-                    // Update Input Hidden untuk dikirim ke Controller
                     updateCreateHiddenInputs(type);
                 });
 
@@ -2401,10 +3376,18 @@
                     const allBtn = container.find('[data-val="All"]');
 
                     if (allBtn.hasClass('active')) {
-                        $('<input>').attr({type: 'hidden', name: `${type}[]`, value: 'All'}).appendTo(inputContainer);
+                        $('<input>').attr({
+                            type: 'hidden',
+                            name: `${type}[]`,
+                            value: 'All'
+                        }).appendTo(inputContainer);
                     } else {
                         container.find('.btn-schedule.active').not('[data-val="All"]').each(function() {
-                            $('<input>').attr({type: 'hidden', name: `${type}[]`, value: $(this).data('val')}).appendTo(inputContainer);
+                            $('<input>').attr({
+                                type: 'hidden',
+                                name: `${type}[]`,
+                                value: $(this).data('val')
+                            }).appendTo(inputContainer);
                         });
                     }
                 }
@@ -2421,8 +3404,12 @@
 
                     $('#lead_time').val(ltVal);
 
-                    if($('#top_calc_hidden').length === 0) {
-                        $('<input>').attr({type: 'hidden', id: 'top_calc_hidden', name: 'top_calc'}).appendTo('#customerForm');
+                    if ($('#top_calc_hidden').length === 0) {
+                        $('<input>').attr({
+                            type: 'hidden',
+                            id: 'top_calc_hidden',
+                            name: 'top_calc'
+                        }).appendTo('#customerForm');
                     }
                     $('#top_calc_hidden').val(topVal);
 
@@ -2434,7 +3421,7 @@
                         const price = $(this).find('.calc-price').val();
                         const cleanPrice = cleanRupiah(price);
 
-                        if(name && qty) {
+                        if (name && qty) {
                             const container = $('#customerForm');
 
                             $('<input>').attr({
@@ -2473,17 +3460,66 @@
                     $('.modal-backdrop').remove();
                     $('body').removeClass('modal-open');
                 });
+
+                $('#importForm').on('submit', function(e) {
+                    e.preventDefault();
+                    const formData = new FormData(this);
+
+                    Swal.fire({
+                        title: 'Importing...',
+                        html: 'Please wait while the file is being imported.',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    $.ajax({
+                        url: "{{ route('customers.import') }}",
+                        method: 'POST',
+                        data: formData,
+                        processData: false,
+                        contentType: false,
+                        success: function(response) {
+                            if (response.success) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Import Selesai!',
+                                    text: response.message,
+                                    timer: 2500,
+                                    showConfirmButton: false
+                                }).then(() => {
+                                    $('#importModal').modal('hide');
+                                    $('#importForm')[0].reset();
+                                    $('#statusFilter').val('all').trigger('change.select2');
+                                    $('#approvalStatusFilter').val('all').trigger(
+                                        'change.select2');
+                                    if (typeof table !== 'undefined') table.search('').ajax
+                                        .reload(null, true);
+                                });
+                            }
+                        },
+                        error: function(xhr) {
+                            let msg = 'An error occurred during import.';
+                            if (xhr.responseJSON && xhr.responseJSON.message) msg = xhr.responseJSON
+                                .message;
+                            Swal.fire('Error!', msg, 'error');
+                        }
+                    });
+                });
             });
         </script>
     @endpush
 
     <!-- Credit Limit Calculator Modal -->
-    <div class="modal fade" id="creditCalcModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal fade" id="creditCalcModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static"
+        data-bs-keyboard="false">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header bg-primary">
                     <h5 class="modal-title text-white">Credit Limit Calculator</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
                 </div>
                 <form id="creditCalcForm">
                     <div class="modal-body">
@@ -2491,22 +3527,33 @@
                             <label class="form-label">Products</label>
                             <div id="calc_products">
                                 <div class="calc-row d-flex gap-2 mb-2">
-                                    <input type="text" class="form-control calc-product-name" placeholder="Product name" />
-                                    <input type="number" step="1" min="0" class="form-control calc-qty" placeholder="Qty" />
-                                    <input type="number" step="0.01" min="0" class="form-control calc-price" placeholder="Price" />
-                                    <button type="button" class="btn btn-outline-danger btn-remove-row" title="Remove">&minus;</button>
+                                    <input type="text" class="form-control calc-product-name"
+                                        placeholder="Product name" />
+                                    <input type="number" step="1" min="0"
+                                        class="form-control calc-qty" placeholder="Qty" />
+                                    <input type="number" step="0.01" min="0"
+                                        class="form-control calc-price" placeholder="Price" />
+                                    <button type="button" class="btn btn-outline-danger btn-remove-row"
+                                        title="Remove">&minus;</button>
                                 </div>
                             </div>
-                            <button type="button" id="addCalcRow" class="btn btn-sm btn-secondary mt-1">Add product</button>
+                            <button type="button" id="addCalcRow" class="btn btn-sm btn-secondary mt-1">Add
+                                product</button>
                         </div>
                         <div class="row g-2 mt-2">
                             <div class="col-md-6">
                                 <label class="form-label">TOP (days)</label>
-                                <input type="number" step="1" id="calc_top" class="form-control" />
+                                <select id="calc_top" class="form-select">
+                                    <option></option>
+                                    @foreach ($top as $t)
+                                        <option value="{{ $t->name_top }}">{{ $t->desc_top }}</option>
+                                    @endforeach
+                                </select>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Lead Time (LT)</label>
-                                <input type="text" step="1" id="calc_lt" class="form-control" readonly/>
+                                <input type="text" step="1" id="calc_lt" class="form-control"
+                                    readonly />
                             </div>
                         </div>
 

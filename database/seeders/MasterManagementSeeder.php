@@ -53,7 +53,6 @@ class MasterManagementSeeder extends Seeder
             ['branch_name' => 'Branch Medan'],
             ['branch_name' => 'Branch Makassar'],
             ['branch_name' => 'Pusat'],
-
         ];
 
         foreach ($branches as $branch) {
@@ -73,6 +72,12 @@ class MasterManagementSeeder extends Seeder
             ];
         }
 
+        $accountGroups[] = [
+            'name_account_group' => 'EXPORT',
+            'bank_garansi' => false,
+            'ccar' => 'smd_usd',
+        ];
+
         foreach ($accountGroups as $group) {
             AccountGroup::updateOrCreate(
                 ['name_account_group' => $group['name_account_group']],
@@ -82,7 +87,6 @@ class MasterManagementSeeder extends Seeder
                 ]
             );
         }
-
 
         // ==========================================
         // 4. Seed TOP (Terms of Payment)
@@ -100,17 +104,18 @@ class MasterManagementSeeder extends Seeder
         }
 
         // ==========================================
-        // 5. Seed Customer Class
+        // 5. Seed Customer Class (UPDATED)
         // ==========================================
         $classes = [
             ['name_class' => 'Bakery'],
-            ['name_class' => 'Key Account'],
-            ['name_class' => 'Distributor'],
-            ['name_class' => 'Food Service'],
-            ['name_class' => 'HORECA'],
-            ['name_class' => 'Bulk Olein/Oil'],
-            ['name_class' => 'Export'],
-
+            ['name_class' => 'Chain resto'],
+            ['name_class' => 'Chain cafe'],
+            ['name_class' => 'Dist provider'],
+            ['name_class' => 'Bakery manufacturing'],
+            ['name_class' => 'Frying'],
+            ['name_class' => 'Modern trade - bakery'],
+            ['name_class' => 'Retail'],
+            ['name_class' => 'Food ingridient'],
         ];
 
         foreach ($classes as $cls) {
@@ -124,37 +129,20 @@ class MasterManagementSeeder extends Seeder
         $anyBranch = Branch::inRandomOrder()->first();
         $anyAccountGroup = AccountGroup::inRandomOrder()->first();
 
-        $targetUsers = User::whereIn('username', ['staff.sales1', 'head.sales'])->get();
-        $jktRegion = Regions::where('region_name', 'COMMERCIAL')->first();
-        $hoBranch = Branch::where('branch_name', 'Head Office - Jakarta')->first();
-        $distAccountGroup = AccountGroup::where('name_account_group', 'COMMERCIAL')->first();
-        $salesUser = User::where('username', 'staff.sales1')->first();
+        $region = Regions::where('region_name', 'COMMERCIAL')->first() ?? Regions::first();
+        $branch = Branch::where('branch_name', 'Head Office - Jakarta')->first() ?? Branch::first();
+        $accGroup = AccountGroup::first();
+        $headSnmUser = User::where('username', 'head.snm')->first();
 
-        if ($salesUser && $jktRegion && $hoBranch && $distAccountGroup) {
+        if ($headSnmUser && $region && $branch && $accGroup) {
             Sales::updateOrCreate(
-                ['user_id' => $salesUser->id],
+                ['user_id' => $headSnmUser->id], // Kunci pencarian
                 [
-                    'region_id' => $jktRegion->id,
-                    'branch_id' => $hoBranch->id,
-                    'account_group_id' => $distAccountGroup->id,
+                    'region_id' => $region->id,
+                    'branch_id' => $branch->id,
+                    'account_group_id' => $accGroup->id,
                 ]
             );
-            if ($targetUsers->isEmpty()) {
-                $targetUsers = User::limit(2)->get();
-            }
-
-            if ($anyRegion && $anyBranch && $anyAccountGroup) {
-                foreach ($targetUsers as $user) {
-                    Sales::updateOrCreate(
-                        ['user_id' => $user->id],
-                        [
-                            'region_id' => $anyRegion->id,
-                            'branch_id' => $anyBranch->id,
-                            'account_group_id' => $anyAccountGroup->id,
-                        ]
-                    );
-                }
-            }
         }
     }
 }

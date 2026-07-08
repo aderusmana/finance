@@ -23,14 +23,16 @@
     </script>
 
     <div class="container">
-        <div class="row sign-in-content-bg">
+        <div class="row sign-in-content-bg" style="background: rgba(255, 255, 255, 0.719); backdrop-filter: blur(5px); border-radius: 10px; box-shadow: 0 4px 6px rgba(255, 255, 255, 0.1);">
             <div class="col-lg-6 image-contentbox d-none d-lg-block">
                 <div class="form-container">
-                    <div class="signup-content mt-4 text-center">
+                     <div class="signup-content mt-4 text-center">
                         <span class="d-flex justify-content-center gap-4">
-                            <img alt="" class="img-fluid" src="{{ asset('assets') }}/images/logo/sinarmeadow.png" style="width: 90px; height: auto; margin-right: -5px; margin-left: -5px; display: inline-block; vertical-align: middle;">
-                            {{-- <img alt="" class="img-fluid" src="{{ asset('assets') }}/images/logo/logors.png" style="width: 120px; height: auto; margin-right: -5px; margin-left: -5px; display: inline-block; vertical-align: middle;"> --}}
-                            <img alt="" class="img-fluid" src="{{ asset('assets') }}/images/logo/sindy.png" style="width: 90px; height: auto; margin-right: -5px; margin-left: -5px; display: inline-block; vertical-align: middle;">
+                            <img alt="" class="img-fluid" src="{{ asset('assets') }}/images/logo/sinarmeadow.png"
+                                style="width: 90px; height: auto; margin-right: -5px; margin-left: -5px; display: inline-block; vertical-align: middle;">
+                            <img alt="" class="img-fluid" src="{{ asset('assets')}}/images/logo/set-logo.png" style="width: 130px; height: auto; margin-right: -5px; margin-left: -5px; display: inline-block; vertical-align: middle;">
+                            <img alt="" class="img-fluid" src="{{ asset('assets') }}/images/logo/sindy.png"
+                                style="width: 90px; height: auto; margin-right: -5px; margin-left: -5px; display: inline-block; vertical-align: middle;">
                         </span>
                     </div>
                     <div class="signup-bg-img">
@@ -45,8 +47,8 @@
                         <div class="row">
                             <div class="col-12">
                                 <div class="mb-5 text-center">
-                                    <h2 class="text-primary-dark f-w-600">Selamat Datang di Portal Bank Garansi & Customer</h2>
-                                    <p>Masuk menggunakan akun yang terdaftar untuk mengelola Bank Garansi dan pembuatan Customer.</p>
+                                    <img alt="Logo" class="img-fluid mb-3" src="{{ asset('assets/images/logo/logos.png') }}" style="width: 250px; height: auto; display: block; margin: 0 auto;">
+                                    <h2>Welcome to Customer Portal</h2>
                                 </div>
                             </div>
                             <div class="col-12">

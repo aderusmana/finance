@@ -106,7 +106,7 @@
             <td class="col-no">1</td>
             <td class="col-label">NAMA DISTRIBUTOR</td>
             <td class="col-sep">:</td>
-            <td class="col-val">{{ strtoupper($customer->name) }}</td>
+            <td class="col-val">{{ strtoupper($customer->pic) }}</td>
         </tr>
         <tr>
             <td class="col-no">2</td>

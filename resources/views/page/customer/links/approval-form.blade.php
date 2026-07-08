@@ -6,21 +6,21 @@
     <title>Customer Approval : {{ $customer->name }}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    
+
     {{-- CSS INLINE (INTERNAL) --}}
     <style>
         body { font-family: 'Inter', 'Segoe UI', sans-serif; background-color: #f1f5f9; color: #334155; }
         .main-container { display: grid; grid-template-columns: 2.5fr 1fr; gap: 30px; max-width: 1400px; margin: 40px auto; padding: 0 20px; }
-        
+
         /* Card Styles */
         .card { border: none; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); background: white; margin-bottom: 24px; }
         .card-header.main-header { background: linear-gradient(to right, #1e3a8a, #2563eb); color: white; padding: 20px 30px; border-radius: 12px 12px 0 0 !important; }
-        
+
         /* Typography */
         .section-title { font-size: 0.95rem; font-weight: 700; color: #1e3a8a; margin-bottom: 15px; padding-bottom: 8px; border-bottom: 2px solid #e2e8f0; display: flex; align-items: center; letter-spacing: 0.5px; text-transform: uppercase; }
         .info-label { font-size: 0.7rem; text-transform: uppercase; color: #64748b; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 3px; }
         .info-value { font-size: 0.9rem; color: #0f172a; font-weight: 500; word-break: break-word; }
-        
+
         /* Utility Colors */
         .bg-light-info { background-color: #e0f2fe; color: #0284c7; }
         .bg-light-success { background-color: #dcfce7; color: #16a34a; }
@@ -57,6 +57,12 @@
             max-height: 80vh;
             box-shadow: 0 0 20px rgba(0,0,0,0.5);
         }
+
+        /* Class btn-date tetap ada untuk selector JS, style utamanya sudah di-inline */
+        .btn-date {
+            /* Styles handled inline for specific box shape requirements */
+        }
+
         /* Responsive */
         @media (max-width: 992px) { .main-container { grid-template-columns: 1fr; } .action-card { position: static; } }
     </style>
@@ -64,36 +70,57 @@
 <body>
     @php
         $approverUser = \App\Models\User::where('nik', $log->approver_nik)->first();
-        // Permission Check
-        $canAdjust = $approverUser && ($approverUser->hasRole('manager-finance') || $approverUser->hasRole('head-finance'));
+        $canAdjust = $approverUser && ($approverUser->hasRole('manager-finance') || $approverUser->hasRole('head-finance') || $approverUser->hasRole('super-admin'));
         $isIT = $approverUser && $approverUser->hasRole('it');
-        
-        // Ambil File untuk Preview
+
         $doc = $customer->files ? $customer->files->first() : null;
         $npwpPath = ($doc && $doc->npwp_file) ? asset('storage/' . $doc->npwp_file) : null;
         $nibPath  = ($doc && $doc->nib_siup_file) ? asset('storage/' . $doc->nib_siup_file) : null;
         $ktpPath  = ($doc && $doc->ktp_file) ? asset('storage/' . $doc->ktp_file) : null;
         $aktePath = ($doc && $doc->akte_file) ? asset('storage/' . $doc->akte_file) : null;
+        $companyProfilePath = ($doc && $doc->company_profile_file) ? asset('storage/' . $doc->company_profile_file) : null;
+        $latestRevision = \App\Models\Master\Revision::orderBy('created_at', 'desc')->first();
     @endphp
 
     <div class="main-container">
-        
+
         <div class="left-column">
             <div class="card">
                 <div class="card-header main-header">
-                    <div class="d-flex justify-content-between align-items-center">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
                         <div>
                             <h4 class="mb-1 fw-bold">Customer Approval</h4>
-                            <p class="mb-0 opacity-75">{{ $customer->code ?? 'New Customer' }}</p>
+                            <div class="d-flex align-items-start justify-content-between flex-wrap w-100">
+                                <div class="d-flex align-items-center gap-2 text-white opacity-75 mb-2" style="font-size: 0.9rem;">
+                                    <span>{{ $customer->code ?? 'New Customer' }}</span>
+                                    <span class="mx-1">|</span>
+                                    <span class="badge bg-white text-primary px-3 py-2 rounded-pill shadow-sm text-uppercase fw-bold" style="font-size: 0.8rem;">
+                                        {{ $customer->status_approval }}
+                                    </span>
+                                </div>
+                            </div>
                         </div>
-                        <span class="badge bg-white text-primary px-3 py-2 rounded-pill shadow-sm text-uppercase fw-bold" style="font-size: 0.8rem;">
-                            {{ $customer->status_approval }}
-                        </span>
+                        @if($latestRevision)
+                            <div class="text-start ms-auto" style="min-width: 180px;">
+                                <div style="font-size: 12px; color: rgba(255, 255, 255, 0.75); margin-bottom: 4px;">
+                                    <span style="font-weight: 600; margin-right: 4px;">No Rev:</span>
+                                    <span style="font-weight: 700; color: #ffffff; font-size: 13px;">{{ $latestRevision->revision_number }}</span>
+                                </div>
+                                <div style="font-size: 12px; color: rgba(255, 255, 255, 0.75); margin-bottom: 4px;">
+                                    <span style="font-weight: 600; margin-right: 4px;">Revision:</span>
+                                    <span style="font-weight: 700; color: #ffffff; font-size: 13px;">{{ $latestRevision->revision_count }}</span>
+                                </div>
+                                <div style="font-size: 12px; color: rgba(255, 255, 255, 0.75);">
+                                    <span style="font-weight: 600; margin-right: 4px;">Date:</span>
+                                    <span style="font-weight: 700; color: #ffffff; font-size: 13px;">{{ $latestRevision->revision_date ? \Carbon\Carbon::parse($latestRevision->revision_date)->format('d-M-y') : '-' }}</span>
+                                </div>
+                            </div>
+                        @endif
                     </div>
                 </div>
 
                 <div class="card-body p-4 p-md-5">
-                    
+
                     {{-- IT SECTION --}}
                     @if($isIT)
                     <div class="card border-warning mb-5">
@@ -128,10 +155,10 @@
 
                     <h5 class="section-title mt-5"><i class="fas fa-info-circle me-2"></i> General Information</h5>
                     <div class="row g-4 mb-4">
-                        <div class="col-md-6">
+                        <div class="col-md-12">
                             <div class="p-3 bg-light rounded h-100">
                                 <div class="row g-3">
-                                    <div class="col-12">
+                                    <div class="col-6">
                                         <div class="info-label">Main Address</div>
                                         <div class="info-value">{{ $customer->address1 }}</div>
                                         @if($customer->address2) <div class="info-value">{{ $customer->address2 }}</div> @endif
@@ -153,25 +180,19 @@
                                         <div class="info-label">Country</div>
                                         <div class="info-value">{{ $customer->country }}</div>
                                     </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="row g-4">
-                                <div class="col-md-6">
-                                    <div class="info-group">
+                                    <div class="col-md-6">
                                         <div class="info-label">Sort Name / Alias</div>
                                         <div class="info-value">{{ $customer->sort_name ?? '-' }}</div>
                                     </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="info-group">
+                                    <div class="col-md-6">
                                         <div class="info-label">No. PKD</div>
                                         <div class="info-value text-dark fw-bold">{{ $customer->no_pkd ?? '-' }}</div>
                                     </div>
-                                </div>
-                                <div class="col-md-12">
-                                    <div class="info-group">
+                                    <div class="col-md-6">
+                                        <div class="info-label">PIC (Penanggung Jawab)</div>
+                                        <div class="info-value text-dark fw-bold">{{ $customer->pic ?? '-' }}</div>
+                                    </div>
+                                    <div class="col-md-6">
                                         <div class="info-label">General Email</div>
                                         <div class="info-value"><a href="mailto:{{ $customer->email }}">{{ $customer->email }}</a></div>
                                     </div>
@@ -193,6 +214,7 @@
                                             <td>
                                                 <div class="fw-bold">{{ $customer->purchasing_manager_name }}</div>
                                                 <div class="small text-muted">{{ $customer->purchasing_manager_email }}</div>
+                                                <div class="small text-muted">{{ $customer->purchasing_manager_telepon }}</div>
                                             </td>
                                         </tr>
                                         <tr>
@@ -200,6 +222,7 @@
                                             <td>
                                                 <div class="fw-bold">{{ $customer->finance_manager_name }}</div>
                                                 <div class="small text-muted">{{ $customer->finance_manager_email }}</div>
+                                                <div class="small text-muted">{{ $customer->finance_manager_telepon }}</div>
                                             </td>
                                         </tr>
                                     </table>
@@ -299,9 +322,11 @@
                             <div class="p-3 border rounded bg-light h-100">
                                 <label class="info-label mb-2">Lead Time (Days)</label>
                                 @if($canAdjust)
-                                    <input type="number" class="form-control form-control-sm fw-bold editable-field" 
-                                        name="update_lead_time" id="left_lead_time" 
-                                        value="{{ $customer->lead_time }}" form="approvalForm" disabled>
+                                    <input type="number" class="form-control form-control-sm fw-bold editable-field"
+                                        name="update_lead_time" id="left_lead_time"
+                                        value="{{ $customer->lead_time == 0 ? '' : $customer->lead_time }}"
+                                        placeholder="0"
+                                        form="approvalForm" disabled>
                                 @else
                                     <div class="info-value fw-bold">{{ $customer->lead_time }} Days</div>
                                 @endif
@@ -336,8 +361,8 @@
                                     <div class="mb-4">
                                         <label class="info-label mb-2">Virtual Account</label>
                                         @if($canAdjust)
-                                            <input type="text" class="form-control editable-field" 
-                                                name="update_va" value="{{ $customer->virtual_account }}" 
+                                            <input type="text" class="form-control editable-field"
+                                                name="update_va" value="{{ $customer->virtual_account }}"
                                                 form="approvalForm" placeholder="Masukkan Nomor VA" disabled>
                                         @else
                                             <div class="info-value fw-bold">{{ $customer->virtual_account ?? '-' }}</div>
@@ -345,18 +370,75 @@
                                     </div>
 
                                     <div class="row g-4">
-                                        {{-- LEFT: PAYMENT --}}
+                                        {{-- LEFT: BILLING (FAKTUR) --}}
                                         <div class="col-md-6 border-end">
+                                            <h6 class="text-success fw-bold mb-3 border-bottom pb-2">Billing Schedule</h6>
+
+                                            {{-- Billing Days --}}
+                                            <div class="mb-3">
+                                                <label class="info-label mb-2 d-block">Billing Days</label>
+                                                @if($canAdjust)
+                                                    <div class="schedule-selector" id="faktur_days_container">
+                                                        <div id="faktur_days_inputs"></div>
+                                                        <button type="button" class="btn btn-sm btn-outline-dark me-2 mb-1 btn-day" data-val="All" onclick="toggleSchedule(this, 'faktur_days')">All Days</button>
+                                                        @foreach(['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'] as $day)
+                                                            <button type="button" class="btn btn-sm btn-outline-success mb-1 btn-day" data-val="{{ $day }}" onclick="toggleSchedule(this, 'faktur_days')">{{ $day }}</button>
+                                                        @endforeach
+                                                    </div>
+                                                @else
+                                                    <div>
+                                                        @if(is_array($customer->faktur_days) && in_array('All', $customer->faktur_days))
+                                                            <span class="badge bg-dark">All Days</span>
+                                                        @elseif(!empty($customer->faktur_days))
+                                                            @foreach($customer->faktur_days as $d) <span class="badge bg-success">{{ $d }}</span> @endforeach
+                                                        @else <span class="text-muted">-</span> @endif
+                                                    </div>
+                                                @endif
+                                            </div>
+
+                                            {{-- Billing Date --}}
+                                            <div>
+                                                <label class="info-label mb-2 d-block">Billing Date</label>
+                                                @if($canAdjust)
+                                                    <div class="schedule-selector" id="faktur_date_container">
+                                                        <div id="faktur_date_inputs"></div>
+                                                        <button type="button" class="btn btn-sm btn-outline-dark me-2 mb-1 w-100" data-val="All" onclick="toggleSchedule(this, 'faktur_date')">All Dates (1-31)</button>
+                                                        <div class="d-flex flex-wrap gap-1 mt-2">
+                                                            @for($i=1; $i<=31; $i++)
+                                                                <button type="button"
+                                                                    class="btn btn-xs btn-outline-secondary btn-date"
+                                                                    style="width: 38px !important; height: 38px !important; padding: 0 !important; display: inline-flex !important; align-items: center; justify-content: center; font-size: 0.85rem !important; font-weight: 600; line-height: 1 !important; white-space: nowrap !important;"
+                                                                    data-val="{{ $i }}"
+                                                                    onclick="toggleSchedule(this, 'faktur_date')">
+                                                                    {{ $i }}
+                                                                </button>
+                                                            @endfor
+                                                        </div>
+                                                    </div>
+                                                @else
+                                                    <div>
+                                                        @if(is_array($customer->faktur_date) && in_array('All', $customer->faktur_date))
+                                                            <span class="badge bg-dark">All Dates</span>
+                                                        @elseif(!empty($customer->faktur_date))
+                                                            @foreach($customer->faktur_date as $d) <span class="badge bg-info text-dark">{{ $d }}</span> @endforeach
+                                                        @else <span class="text-muted">-</span> @endif
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        </div>
+
+                                        {{-- RIGHT: PAYMENT --}}
+                                        <div class="col-md-6">
                                             <h6 class="text-primary fw-bold mb-3 border-bottom pb-2">Payment Schedule</h6>
-                                            
+
                                             {{-- Payment Days --}}
                                             <div class="mb-3">
                                                 <label class="info-label mb-2 d-block">Payment Days</label>
                                                 @if($canAdjust)
                                                     <div class="schedule-selector" id="payment_days_container">
                                                         {{-- Hidden Input untuk kirim array ke backend --}}
-                                                        <div id="payment_days_inputs"></div> 
-                                                        
+                                                        <div id="payment_days_inputs"></div>
+
                                                         <button type="button" class="btn btn-sm btn-outline-dark me-2 mb-1 btn-day" data-val="All" onclick="toggleSchedule(this, 'payment_days')">All Days</button>
                                                         @foreach(['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'] as $day)
                                                             <button type="button" class="btn btn-sm btn-outline-primary mb-1 btn-day" data-val="{{ $day }}" onclick="toggleSchedule(this, 'payment_days')">{{ $day }}</button>
@@ -383,7 +465,13 @@
                                                         <button type="button" class="btn btn-sm btn-outline-dark me-2 mb-1 w-100" data-val="All" onclick="toggleSchedule(this, 'payment_date')">All Dates (1-31)</button>
                                                         <div class="d-flex flex-wrap gap-1 mt-2">
                                                             @for($i=1; $i<=31; $i++)
-                                                                <button type="button" class="btn btn-xs btn-outline-secondary btn-date" style="width: 32px;" data-val="{{ $i }}" onclick="toggleSchedule(this, 'payment_date')">{{ $i }}</button>
+                                                                <button type="button"
+                                                                    class="btn btn-xs btn-outline-secondary btn-date"
+                                                                    style="width: 38px !important; height: 38px !important; padding: 0 !important; display: inline-flex !important; align-items: center; justify-content: center; font-size: 0.85rem !important; font-weight: 600; line-height: 1 !important; white-space: nowrap !important;"
+                                                                    data-val="{{ $i }}"
+                                                                    onclick="toggleSchedule(this, 'payment_date')">
+                                                                    {{ $i }}
+                                                                </button>
                                                             @endfor
                                                         </div>
                                                     </div>
@@ -393,71 +481,6 @@
                                                             <span class="badge bg-dark">All Dates</span>
                                                         @elseif(!empty($customer->payment_date))
                                                             @foreach($customer->payment_date as $d) <span class="badge bg-info text-dark">{{ $d }}</span> @endforeach
-                                                        @else <span class="text-muted">-</span> @endif
-                                                    </div>
-                                                @endif
-                                            </div>
-                                        </div>
-
-                                        {{-- RIGHT: FAKTUR --}}
-                                        <div class="col-md-6">
-                                            <h6 class="text-success fw-bold mb-3 border-bottom pb-2">Faktur Schedule</h6>
-
-                                            {{-- Faktur Days --}}
-                                            <div class="mb-3">
-                                                <label class="info-label mb-2 d-block">Payment Date</label>
-                                                @if($canAdjust)
-                                                    <div class="schedule-selector" id="payment_date_container">
-                                                        <div id="payment_date_inputs"></div>
-                                                        <button type="button" class="btn btn-sm btn-outline-dark me-2 mb-1 w-100" data-val="All" onclick="toggleSchedule(this, 'payment_date')">All Dates (1-31)</button>
-                                                        <div class="d-flex flex-wrap gap-1 mt-2">
-                                                            @for($i=1; $i<=31; $i++)
-                                                                <button type="button" 
-                                                                    class="btn btn-xs btn-outline-secondary btn-date" 
-                                                                    style="width: 38px !important; height: 38px !important; padding: 0 !important; display: inline-flex !important; align-items: center; justify-content: center; font-size: 0.85rem !important; font-weight: 600; line-height: 1 !important; white-space: nowrap !important;"
-                                                                    data-val="{{ $i }}" 
-                                                                    onclick="toggleSchedule(this, 'payment_date')">
-                                                                    {{ $i }}
-                                                                </button>
-                                                            @endfor
-                                                        </div>
-                                                    </div>
-                                                @else
-                                                    <div>
-                                                        @if(is_array($customer->faktur_days) && in_array('All', $customer->faktur_days))
-                                                            <span class="badge bg-dark">All Days</span>
-                                                        @elseif(!empty($customer->faktur_days))
-                                                            @foreach($customer->faktur_days as $d) <span class="badge bg-success">{{ $d }}</span> @endforeach
-                                                        @else <span class="text-muted">-</span> @endif
-                                                    </div>
-                                                @endif
-                                            </div>
-
-                                            {{-- Faktur Date --}}
-                                            <div>
-                                                <label class="info-label mb-2 d-block">Faktur Date</label>
-                                                @if($canAdjust)
-                                                    <div class="schedule-selector" id="faktur_date_container">
-                                                        <div id="faktur_date_inputs"></div>
-                                                        <button type="button" class="btn btn-sm btn-outline-dark me-2 mb-1 w-100" data-val="All" onclick="toggleSchedule(this, 'faktur_date')">All Dates (1-31)</button>
-                                                        <div class="d-flex flex-wrap gap-1 mt-2">
-                                                            @for($i=1; $i<=31; $i++)
-                                                                <button type="button" 
-                                                                    class="btn btn-xs btn-outline-secondary btn-date" 
-                                                                    style="width: 38px !important; height: 38px !important; padding: 0 !important; display: inline-flex !important; align-items: center; justify-content: center; font-size: 0.85rem !important; font-weight: 600; line-height: 1 !important; white-space: nowrap !important;"
-                                                                    data-val="{{ $i }}" 
-                                                                    onclick="toggleSchedule(this, 'faktur_date')">
-                                                                    {{ $i }}
-                                                                </button>
-                                                            @endfor
-                                                        </div>
-                                                    </div>
-                                                @else
-                                                    <div>
-                                                        @if(is_array($customer->faktur_date) && in_array('All', $customer->faktur_date))
-                                                            <span class="badge bg-dark">All Dates</span>
-                                                        @elseif(!empty($customer->faktur_date))
-                                                            @foreach($customer->faktur_date as $d) <span class="badge bg-info text-dark">{{ $d }}</span> @endforeach
                                                         @else <span class="text-muted">-</span> @endif
                                                     </div>
                                                 @endif
@@ -490,8 +513,8 @@
                                             <tbody>
                                                 @php $totalAmount = 0; @endphp
                                                 @forelse($customer->items as $item)
-                                                    @php 
-                                                        $rowTotal = $item->quantity * $item->price; 
+                                                    @php
+                                                        $rowTotal = $item->quantity * $item->price;
                                                         $totalAmount += $rowTotal;
                                                     @endphp
                                                     <tr>
@@ -532,11 +555,11 @@
                                         <label class="info-label mb-1">NPWP Number</label>
                                         @if($canAdjust)
                                             <div class="input-group">
-                                                <input type="text" class="form-control fw-bold editable-field" 
-                                                    name="update_npwp" id="input_npwp_main" 
-                                                    value="{{ $customer->npwp }}" 
+                                                <input type="text" class="form-control fw-bold editable-field"
+                                                    name="update_npwp" id="input_npwp_main"
+                                                    value="{{ $customer->npwp }}"
                                                     form="approvalForm" disabled>
-                                                
+
                                                 <button type="button" class="btn btn-outline-primary" id="btn-verify-npwp" disabled
                                                     data-bs-toggle="tooltip" title="Lihat File & Edit NPWP">
                                                     <i class="fas fa-search me-1"></i> Verify & Edit
@@ -623,7 +646,7 @@
                             <div class="card doc-card h-100 bg-light">
                                 <div class="card-body text-center p-3">
                                     <i class="fas fa-id-card text-info fs-3 mb-2"></i>
-                                    <h6 class="fw-bold small text-muted text-uppercase mb-2">KTP Penanggung Jawab</h6>
+                                    <h6 class="fw-bold small text-muted text-uppercase mb-2">Responsible Person's ID Card</h6>
                                     @if($ktpPath)
                                         <button type="button" class="btn btn-sm btn-outline-info w-100 btn-preview-doc"
                                             data-file-url="{{ $ktpPath }}"
@@ -641,11 +664,29 @@
                             <div class="card doc-card h-100 bg-light">
                                 <div class="card-body text-center p-3">
                                     <i class="fas fa-scroll text-warning fs-3 mb-2"></i>
-                                    <h6 class="fw-bold small text-muted text-uppercase mb-2">Akte Pendirian</h6>
+                                    <h6 class="fw-bold small text-muted text-uppercase mb-2">Articles of Incorporation</h6>
                                     @if($aktePath)
                                         <button type="button" class="btn btn-sm btn-outline-warning text-dark w-100 btn-preview-doc"
                                             data-file-url="{{ $aktePath }}"
-                                            data-file-title="Akte Pendirian">
+                                            data-file-title="Articles of Incorporation">
+                                            <i class="fas fa-eye me-1"></i> Preview
+                                        </button>
+                                    @else
+                                        <button disabled class="btn btn-sm btn-outline-secondary w-100">Not Uploaded</button>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                        {{-- 5. COMPANY PROFILE --}}
+                        <div class="col-md">
+                            <div class="card doc-card h-100 bg-light">
+                                <div class="card-body text-center p-3">
+                                    <i class="fas fa-building text-secondary fs-3 mb-2"></i>
+                                    <h6 class="fw-bold small text-muted text-uppercase mb-2">Company Profile</h6>
+                                    @if($companyProfilePath)
+                                        <button type="button" class="btn btn-sm btn-outline-secondary text-dark w-100 btn-preview-doc"
+                                            data-file-url="{{ $companyProfilePath }}"
+                                            data-file-title="Company Profile">
                                             <i class="fas fa-eye me-1"></i> Preview
                                         </button>
                                     @else
@@ -673,7 +714,7 @@
                             <div class="form-check p-3 border rounded mb-2 {{ $isIT ? 'bg-light-warning border-warning' : 'bg-light-info' }}">
                                 <input class="form-check-input" type="radio" name="action" id="action_review" value="review" {{ $preSelectedAction == 'review' || $isIT ? 'checked' : '' }}>
                                 <label class="form-check-label fw-bold d-block" for="action_review">
-                                    @if($isIT) <i class="fas fa-keyboard me-2"></i> Input Code & Approve @else <i class="fas fa-edit me-2"></i> Review with Notes @endif
+                                    @if($isIT) <i class="fas fa-keyboard me-2"></i> Input Code & Approve @else <i class="fas fa-edit me-2"></i> Approved with Notes (Optional) @endif
                                 </label>
                                 @if(!$isIT && $canAdjust) <small class="text-muted ms-4 d-block mt-1" style="font-size: 0.75rem;">Allows editing Terms, Limit & NPWP.</small> @endif
                             </div>
@@ -756,22 +797,22 @@
 
                             {{-- RIGHT: Input Form --}}
                             <div class="col-lg-5 p-4 bg-white d-flex flex-column justify-content-center">
-                                <h5 class="fw-bold text-primary mb-3">Koreksi Data NPWP</h5>
+                                <h5 class="fw-bold text-primary mb-3">Verify NPWP Data</h5>
                                 <div class="alert alert-info small mb-3">
-                                    <i class="fas fa-info-circle me-1"></i> Cocokkan data di kiri dengan input di bawah.
+                                    <i class="fas fa-info-circle me-1"></i> Please verify the NPWP number from the uploaded document. If the number is correct, simply click "Confirm & Save". If it needs correction, please edit the number in the input field and then confirm.
                                 </div>
-                                
+
                                 <div class="mb-4">
-                                    <label class="form-label fw-bold text-muted small">NOMOR NPWP (SISTEM)</label>
-                                    <input type="text" id="modal_npwp_input" class="form-control form-control-lg fw-bold text-dark border-primary" 
-                                        value="{{ $customer->npwp }}" placeholder="Masukkan Nomor NPWP yang benar">
+                                    <label class="form-label fw-bold text-muted small">NPWP Number</label>
+                                    <input type="text" id="modal_npwp_input" class="form-control form-control-lg fw-bold text-dark border-primary"
+                                        value="{{ $customer->npwp }}" placeholder="Enter the correct NPWP number">
                                 </div>
 
                                 <div class="d-grid gap-2">
                                     <button type="button" class="btn btn-success btn-lg" id="btn-save-verify">
-                                        <i class="fas fa-check me-2"></i> Konfirmasi & Simpan
+                                        <i class="fas fa-check me-2"></i> Confirm & Save
                                     </button>
-                                    <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Batal</button>
+                                    <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Cancel</button>
                                 </div>
                             </div>
                         </div>
@@ -786,6 +827,17 @@
         <h5 class="mt-3 fw-bold text-primary">Processing...</h5>
     </div>
 
+    <!-- AJAX Success Modal -->
+    <div class="modal fade" id="ajaxSuccessModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0">
+                <div class="modal-body p-3" id="ajaxSuccessModalBody" style="background:transparent;">
+                    <!-- injected HTML -->
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
@@ -798,7 +850,7 @@
             const notesField = document.getElementById('notes');
             const noteAsterisk = document.getElementById('note-asterisk');
             const noteHelper = document.getElementById('note-helper');
-            
+
             const canAdjust = @json($canAdjust);
             const isITMode = document.getElementById('it_code') !== null;
 
@@ -839,31 +891,25 @@
             // ==========================================
             // 2. NEW LOGIC: PAYMENT & FAKTUR SCHEDULE
             // ==========================================
-            
-            // Fungsi ini harus ditempel ke window agar bisa dipanggil via onclick di HTML
+
             window.toggleSchedule = function(btn, type) {
                 const container = document.getElementById(type + '_container');
                 const value = btn.getAttribute('data-val');
                 const isAll = value === 'All';
 
-                // Tentukan Warna berdasarkan Tipe
-                const colorClass = type.includes('faktur') ? 'btn-success' : 'btn-primary'; // Hari (Payment/Faktur)
+                const colorClass = type.includes('faktur') ? 'btn-success' : 'btn-primary';
                 const dateColor = 'btn-info'; // Tanggal
 
                 if (isAll) {
-                    // === LOGIC TOMBOL ALL ===
-                    const isActive = btn.classList.contains('active'); // Status sebelum diklik
+                    const isActive = btn.classList.contains('active');
 
                     if (!isActive) {
-                        // AKTIFKAN ALL: Maka aktifkan juga semua anak-anaknya secara visual
-                        btn.classList.add('active', 'btn-dark'); // Tombol All jadi hitam
+                        btn.classList.add('active', 'btn-dark');
 
-                        // Loop semua tombol lain (selain tombol All)
                         container.querySelectorAll('button:not([data-val="All"])').forEach(b => {
-                            b.classList.add('active', 'text-white'); // Tambah flag active
-                            b.classList.remove('btn-outline-secondary', 'btn-outline-primary', 'btn-outline-success'); // Hapus outline
+                            b.classList.add('active', 'text-white');
+                            b.classList.remove('btn-outline-secondary', 'btn-outline-primary', 'btn-outline-success');
 
-                            // Tambahkan warna solid
                             if (b.classList.contains('btn-date')) {
                                 b.classList.add(dateColor);
                             } else {
@@ -871,35 +917,27 @@
                             }
                         });
                     } else {
-                        // MATIKAN ALL: Reset semua
                         container.querySelectorAll('button').forEach(b => {
                             b.classList.remove('active', 'btn-dark', colorClass, dateColor, 'text-white');
                             if (b.classList.contains('btn-date')) {
                                 b.classList.add('btn-outline-secondary');
                             } else if (b.getAttribute('data-val') !== 'All') {
-                                // Kembalikan outline sesuai tipe
                                 b.classList.add(type.includes('faktur') ? 'btn-outline-success' : 'btn-outline-primary');
                             }
                         });
-                        // Tambahkan outline lagi ke tombol All
                         btn.classList.add('btn-outline-dark');
                     }
 
                 } else {
-                    // === LOGIC TOMBOL SPESIFIK (Senin, 1, 2, dll) ===
-                    
-                    // 1. Matikan tombol 'All' dulu (karena kita mode manual selection)
                     const allBtn = container.querySelector('button[data-val="All"]');
                     if(allBtn) {
                         allBtn.classList.remove('active', 'btn-dark');
                         allBtn.classList.add('btn-outline-dark');
                     }
 
-                    // 2. Toggle tombol yang diklik
                     btn.classList.toggle('active');
-                    
+
                     if (btn.classList.contains('active')) {
-                        // STATE AKTIF (SOLID COLOR)
                         btn.classList.add('text-white');
                         if (btn.classList.contains('btn-date')) {
                             btn.classList.add(dateColor);
@@ -909,7 +947,6 @@
                             btn.classList.remove(type.includes('faktur') ? 'btn-outline-success' : 'btn-outline-primary');
                         }
                     } else {
-                        // STATE NON-AKTIF (OUTLINE)
                         btn.classList.remove('text-white', colorClass, dateColor);
                         if (btn.classList.contains('btn-date')) {
                             btn.classList.add('btn-outline-secondary');
@@ -918,34 +955,31 @@
                         }
                     }
                 }
-                
+
                 updateHiddenInputs(type);
             };
 
             function updateHiddenInputs(type) {
                 const container = document.getElementById(type + '_container');
                 const inputContainer = document.getElementById(type + '_inputs');
-                inputContainer.innerHTML = ''; 
+                inputContainer.innerHTML = '';
 
-                // Cek apakah tombol "All" aktif?
                 const allBtn = container.querySelector('button[data-val="All"]');
-                
+
                 if (allBtn && allBtn.classList.contains('active')) {
-                    // Jika All aktif, kirim value "All" saja ke backend
                     const input = document.createElement('input');
                     input.type = 'hidden';
-                    input.name = `update_${type}[]`; 
+                    input.name = `update_${type}[]`;
                     input.value = 'All';
                     input.setAttribute('form', 'approvalForm');
                     inputContainer.appendChild(input);
                 } else {
-                    // Jika All tidak aktif, kirim item yang aktif satu per satu
                     const activeBtns = container.querySelectorAll('button.active:not([data-val="All"])');
                     activeBtns.forEach(btn => {
                         const val = btn.getAttribute('data-val');
                         const input = document.createElement('input');
                         input.type = 'hidden';
-                        input.name = `update_${type}[]`; 
+                        input.name = `update_${type}[]`;
                         input.value = val;
                         input.setAttribute('form', 'approvalForm');
                         inputContainer.appendChild(input);
@@ -954,7 +988,7 @@
             }
 
             function loadSavedSchedule() {
-                if (!canAdjust) return; 
+                if (!canAdjust) return;
 
                 ['payment_days', 'payment_date', 'faktur_days', 'faktur_date'].forEach(type => {
                     const data = savedData[type];
@@ -962,13 +996,12 @@
                         data.forEach(val => {
                             const btn = document.querySelector(`#${type}_container button[data-val="${val}"]`);
                             if (btn) {
-                                // Trigger logic visual secara manual
                                 if (val === 'All') {
-                                    btn.classList.add('active', 'btn-dark');
+                                    toggleSchedule(btn, type);
                                 } else {
                                     const colorClass = type.includes('faktur') ? 'btn-success' : 'btn-primary';
                                     const dateColor = 'btn-info';
-                                    
+
                                     btn.classList.add('active');
                                     if (btn.classList.contains('btn-date')) {
                                         btn.classList.add(dateColor, 'text-white');
@@ -979,7 +1012,7 @@
                                 }
                             }
                         });
-                        updateHiddenInputs(type); // Generate inputs awal
+                        updateHiddenInputs(type);
                     }
                 });
             }
@@ -991,22 +1024,19 @@
             function updateValidationRules() {
                 const actionReview = document.getElementById('action_review').checked;
                 const actionReject = document.getElementById('action_reject') ? document.getElementById('action_reject').checked : false;
-                
-                // Reset states
+
                 notesField.required = false;
                 noteAsterisk.classList.add('d-none');
                 noteHelper.innerText = "";
-                noteHelper.className = "text-muted f-s-12"; 
+                noteHelper.className = "text-muted f-s-12";
                 if(topMsg) topMsg.classList.add('d-none');
 
-                // 1. REJECT
                 if (actionReject) {
                     notesField.required = true;
                     noteAsterisk.classList.remove('d-none');
-                    noteHelper.innerText = "Alasan penolakan wajib diisi dengan kalimat yang jelas.";
+                    noteHelper.innerText = "Reason is required for rejection and should clearly explain the issues.";
                     noteHelper.classList.add('text-danger');
-                } 
-                // 2. REVIEW/APPROVE (Finance)
+                }
                 else if (actionReview && canAdjust) {
                     const currentTop = inputTop.value;
                     if (currentTop !== initialTop) {
@@ -1016,16 +1046,14 @@
                         noteHelper.classList.add('text-danger');
                         if(topMsg) topMsg.classList.remove('d-none');
                     } else {
-                        noteHelper.innerText = "Notes opsional untuk perubahan Lead Time / NPWP / Schedule.";
+                        noteHelper.innerText = "Notes are optional for changes to Lead Time / NPWP / Schedule.";
                         noteHelper.classList.add('text-success');
                     }
                 }
-                // 3. REVIEW (General/Non-IT)
+                // 3. REVIEW (General/Non-IT) -> Notes optional (no required rule)
                 else if (actionReview && !canAdjust && !isITMode) {
-                    notesField.required = true;
-                    noteAsterisk.classList.remove('d-none');
-                    noteHelper.innerText = "Notes wajib diisi dengan kalimat yang jelas.";
-                    noteHelper.classList.add('text-danger');
+                    noteHelper.innerText = "Notes are optional.";
+                    noteHelper.classList.add('text-success');
                 }
             }
 
@@ -1033,18 +1061,28 @@
                 const selected = document.querySelector('input[name="action"]:checked')?.value;
                 const isReject = selected === 'reject';
 
+                // Reset submit button to a safe default before applying mode-specific styling
+                btnSubmit.classList.remove('btn-danger', 'btn-info', 'btn-success');
+                btnSubmit.classList.add('btn-primary');
+                btnSubmit.innerHTML = 'Submit Decision';
+
                 // --- Logic Existing: Fields ---
                 if (selected === 'review') {
                     if (canAdjust) {
                         editableFields.forEach(el => el.disabled = false);
                         if(btnVerifyNpwp) btnVerifyNpwp.disabled = false;
-                        
+
                         btnSubmit.classList.remove('btn-primary', 'btn-danger');
                         btnSubmit.classList.add('btn-info', 'text-white');
                         btnSubmit.innerHTML = '<i class="fas fa-edit me-2"></i> Submit Review & Changes';
                     } else if (isITMode) {
                         btnSubmit.classList.add('btn-success');
                         btnSubmit.innerHTML = '<i class="fas fa-check-circle me-2"></i> Save Code & Activate';
+                    } else {
+                        // General approval/review (notes optional)
+                        btnSubmit.classList.remove('btn-danger', 'btn-info', 'btn-success');
+                        btnSubmit.classList.add('btn-primary');
+                        btnSubmit.innerHTML = '<i class="fas fa-check me-2"></i> Submit Approval';
                     }
                 } else if (isReject) {
                     editableFields.forEach(el => el.disabled = true);
@@ -1074,7 +1112,11 @@
 
             if (canAdjust) {
                 if(inputTop) inputTop.addEventListener('change', () => { calculateLimit(); updateValidationRules(); });
-                if(inputLead) inputLead.addEventListener('input', updateValidationRules); 
+
+                if(inputLead) inputLead.addEventListener('input', () => {
+                    calculateLimit();
+                    updateValidationRules();
+                });
             }
 
             // Document Preview
@@ -1082,11 +1124,11 @@
                 btn.addEventListener('click', function() {
                     const url = this.getAttribute('data-file-url');
                     const title = this.getAttribute('data-file-title');
-                    
+
                     if(!url) return;
 
                     previewModalTitle.innerHTML = `<i class="fas fa-file me-2"></i> ${title}`;
-                    
+
                     const ext = url.split('.').pop().toLowerCase();
                     let content = '';
 
@@ -1106,7 +1148,7 @@
             // NPWP Verify
             if (btnVerifyNpwp) {
                 btnVerifyNpwp.addEventListener('click', function() {
-                    modalNpwpInput.value = inputNpwpMain.value; 
+                    modalNpwpInput.value = inputNpwpMain.value;
                     verifyModal.show();
                 });
             }
@@ -1115,16 +1157,16 @@
                 btnSaveVerify.addEventListener('click', function() {
                     inputNpwpMain.value = modalNpwpInput.value;
                     verifyModal.hide();
-                    updateValidationRules(); 
+                    updateValidationRules();
                 });
             }
 
-            // Calculator
+            // Calculator (UPDATED LOGIC)
             function calculateLimit() {
                 if (!inputTop || !inputLead) return;
                 const topStr = inputTop.value; // Bisa string "7", "14", "CBD"
                 const lt = parseFloat(inputLead.value) || 0;
-                
+
                 // Jika CBD, set 0
                 if (topStr === 'CBD') {
                     document.getElementById('display_credit_limit').innerText = 'IDR 0';
@@ -1137,18 +1179,18 @@
                 let divider = topDays; // Default pembagi = TOP
 
                 // Logic Pembagi Khusus
-                if (topDays === 7) { 
-                    divider = 7.5; 
-                } else if (topDays === 14) { 
-                    divider = 15; 
+                if (topDays === 7) {
+                    divider = 7.5;
+                } else if (topDays === 14) {
+                    divider = 15;
                 }
-                
+
                 // Safety check
                 if (divider === 0) divider = 30; // Default fallback
 
                 // Hitung Limit: (TOP + LT) * BaseAmount / Divider
                 const result = ((topDays + lt) * baseAmount) / divider;
-                
+
                 document.getElementById('display_credit_limit').innerText = 'IDR ' + new Intl.NumberFormat('id-ID').format(Math.round(result));
                 document.getElementById('final_credit_limit_input').value = Math.round(result);
                 document.getElementById('calc-badge').classList.remove('d-none');
@@ -1164,46 +1206,45 @@
 
                 if (selected === 'reject') {
                     if (!notesValue) {
-                        isValid = false; errorMsg = 'Alasan penolakan wajib diisi.';
+                        isValid = false; errorMsg = 'Reason for rejection is required.';
                     } else if (!meaningfulRegex.test(notesValue)) {
-                        isValid = false; errorMsg = 'Alasan penolakan harus jelas (minimal 2 huruf).';
+                        isValid = false; errorMsg = 'Reason for rejection must be clear (minimum 2 characters).';
                     }
                 }
                 else if (selected === 'review') {
                     if (canAdjust) {
                         if (inputTop.value !== initialTop) {
                             if (!notesValue) {
-                                isValid = false; errorMsg = 'Notes wajib diisi karena Term of Payment berubah.';
+                                isValid = false; errorMsg = 'Notes are required because the Term of Payment has changed.';
                             } else if (!meaningfulRegex.test(notesValue)) {
-                                isValid = false; errorMsg = 'Notes harus jelas (minimal 2 huruf).';
+                                isValid = false; errorMsg = 'Notes must be clear (minimum 2 characters).';
                             }
                         } else {
                             if (notesValue.length > 0 && !meaningfulRegex.test(notesValue)) {
-                                isValid = false; errorMsg = 'Jika mengisi notes, mohon gunakan kalimat yang jelas.';
+                                isValid = false; errorMsg = 'If filling out notes, please use clear sentences.';
                             }
                         }
                     } else if (!isITMode) {
-                        if (!notesValue) {
-                            isValid = false; errorMsg = 'Notes wajib diisi untuk Review.';
-                        } else if (!meaningfulRegex.test(notesValue)) {
-                            isValid = false; errorMsg = 'Notes harus jelas (minimal 2 huruf).';
+                        // Notes optional for review; validate only if user fills it.
+                        if (notesValue.length > 0 && !meaningfulRegex.test(notesValue)) {
+                            isValid = false; errorMsg = 'If filling out notes, please use clear sentences.';
                         }
                     }
                 }
 
                 if (!isValid) {
-                    Swal.fire({ icon: 'warning', title: 'Validasi Gagal', text: errorMsg });
+                    Swal.fire({ icon: 'warning', title: 'Validation Failed', text: errorMsg });
                     return;
                 }
-                
+
                 if (selected === 'review' && canAdjust) {
                     editableFields.forEach(el => el.disabled = false);
-                    inputNpwpMain.disabled = false; 
+                    inputNpwpMain.disabled = false;
                 }
 
                 Swal.fire({
                     title: 'Confirm Submission?',
-                    text: 'Pastikan data sudah benar sebelum mengirim.',
+                    text: 'Please ensure the data is correct before submitting.',
                     icon: 'question',
                     showCancelButton: true,
                     confirmButtonColor: '#3085d6',
@@ -1211,7 +1252,74 @@
                 }).then((result) => {
                     if (result.isConfirmed) {
                         document.getElementById('loading-overlay').style.display = 'flex';
-                        form.submit();
+
+                        const formData = new FormData(form);
+                        const actionUrl = form.getAttribute('action');
+
+                        fetch(actionUrl, {
+                            method: 'POST',
+                            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                            body: formData,
+                            credentials: 'same-origin'
+                        })
+                        .then(async (res) => {
+                            const text = await res.text();
+                            // Try parse JSON first; if response is JSON use it, otherwise treat as HTML
+                            try {
+                                return JSON.parse(text);
+                            } catch (e) {
+                                return { success: true, html: text };
+                            }
+                        })
+                        .then((data) => {
+                            document.getElementById('loading-overlay').style.display = 'none';
+                            if (data && data.success) {
+                                if (data.html) {
+                                    const modalBody = document.getElementById('ajaxSuccessModalBody');
+                                    modalBody.innerHTML = data.html;
+                                    const ajaxModalEl = document.getElementById('ajaxSuccessModal');
+                                    const ajaxModal = new bootstrap.Modal(ajaxModalEl);
+                                    ajaxModal.show();
+
+                                    // start countdown inside modal
+                                    const countdownEl = modalBody.querySelector('#countdown');
+                                    let seconds = 3;
+                                    if (countdownEl) {
+                                        countdownEl.innerText = seconds;
+                                        const iv = setInterval(() => {
+                                            seconds--;
+                                            if (seconds <= 0) {
+                                                clearInterval(iv);
+                                                try { ajaxModal.hide(); } catch(e){}
+                                                // Try to close the window. If browser blocks it, show fallback message.
+                                                try {
+                                                    window.open('', '_self');
+                                                    window.close();
+                                                } catch (e) {}
+
+                                                // Fallback after short delay: replace body with inactive message
+                                                setTimeout(() => {
+                                                    try {
+                                                        document.body.innerHTML = "<div style='display:flex; height:100vh; justify-content:center; align-items:center; color:#64748b;'>Halaman sudah tidak aktif. Silakan tutup tab ini.</div>";
+                                                    } catch(e) {}
+                                                }, 500);
+                                            } else {
+                                                countdownEl.innerText = seconds;
+                                            }
+                                        }, 1000);
+                                    }
+                                } else {
+                                    Swal.fire('Success', data.message || 'Action processed.', 'success').then(() => location.reload());
+                                }
+                            } else {
+                                Swal.fire('Error', data.message || 'Failed to process the action.', 'error');
+                            }
+                        })
+                        .catch((err) => {
+                            document.getElementById('loading-overlay').style.display = 'none';
+                            const msg = (err && err.message) ? err.message : 'Server error';
+                            Swal.fire('Error', msg, 'error');
+                        });
                     }
                 });
             });

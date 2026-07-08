@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
+use App\Models\Customer\LogisticOrder;
+use App\Models\Customer\DeliveryOrderNote;
+use App\Models\Customer\DistributorCustomer;
+use App\Models\Master\LogisticFeeLog;
 use App\Models\BG\BankGaransi;
 use App\Models\Customer\Customer;
 use Illuminate\Http\Request;
@@ -14,7 +17,46 @@ class DashboardController extends Controller
 {
     public function index()
     {
+        $user = Auth::user();
+
+        // if ($user->hasRole('super-admin','manager-finance', 'head-finance')) {
+        //     return view('dashboard');
+        // }
+
+        // if ($user->hasRole(['staff-finance']) || $user->can('view bg dashboard')) {
+        //     return view('dashboard.bg');
+        // }
+
+        // if ($user->hasRole(['staff-sales', 'head-SNM', 'atasan']) || $user->can('view customer dashboard')) {
+        //     return view('dashboard.customer');
+        // }
+        // if ($user->hasRole(['staff-sales', 'head-SNM', 'atasan']) || $user->can('view customer dashboard')) {
+        //     return view('dashboard.customer');
+        // }
+
         return view('dashboard');
+    }
+
+    public function customerIndex()
+    {
+        $user = Auth::user();
+        
+        // if (!$user->hasRole(['super-admin', 'staff-sales', 'head-SNM', 'atasan'])) {
+        //     abort(403, 'Anda tidak memiliki akses ke Dashboard Customer');
+        // }
+
+        return view('dashboard.customer');
+    }
+
+    public function bgIndex()
+    {
+        $user = Auth::user();
+        
+        // if (!$user->hasRole(['super-admin', 'staff-finance', 'manager-finance', 'head-finance'])) {
+        //     abort(403, 'Anda tidak memiliki akses ke Dashboard Bank Garansi');
+        // }
+
+        return view('dashboard.bg');
     }
 
     /**
@@ -22,7 +64,6 @@ class DashboardController extends Controller
      */
     private function parseDateRange($dateString)
     {
-        // JIKA KOSONG -> DEFAULT KE TAHUN INI SAMPAI HARI INI (REALTIME)
         if (empty($dateString)) {
             return [
                 Carbon::now()->startOfYear(), // 1 Jan Tahun ini
@@ -38,7 +79,6 @@ class DashboardController extends Controller
             ];
         }
 
-        // Single Date
         return [
             Carbon::parse($dateString)->startOfDay(),
             Carbon::parse($dateString)->endOfDay()
@@ -71,6 +111,61 @@ class DashboardController extends Controller
         // Parse tanggal
         [$startDate, $endDate] = $this->parseDateRange($request->input('date_range'));
 
+        if ($type === 'all') {
+            $bgData = BankGaransi::query()
+                ->whereBetween('created_at', [$startDate, $endDate])
+                ->select(DB::raw('MONTH(created_at) as month'), DB::raw('count(*) as total'))
+                ->groupBy('month')->pluck('total', 'month')->toArray();
+
+            $custData = Customer::query()
+                ->whereBetween('created_at', [$startDate, $endDate])
+                ->select(DB::raw('MONTH(created_at) as month'), DB::raw('count(*) as total'))
+                ->groupBy('month')->pluck('total', 'month')->toArray();
+
+            $loData = LogisticOrder::query()
+                ->whereBetween('created_at', [$startDate, $endDate])
+                ->select(DB::raw('MONTH(created_at) as month'), DB::raw('count(*) as total'))
+                ->groupBy('month')->pluck('total', 'month')->toArray();
+
+            $bg_total = array_fill(0, 12, 0);
+            $customer_total = array_fill(0, 12, 0);
+            $logistic_total = array_fill(0, 12, 0);
+
+            for ($i = 1; $i <= 12; $i++) {
+                $bg_total[$i - 1] = $bgData[$i] ?? 0;
+                $customer_total[$i - 1] = $custData[$i] ?? 0;
+                $logistic_total[$i - 1] = $loData[$i] ?? 0;
+            }
+
+            return response()->json([
+                'type' => 'all',
+                'bg_total' => $bg_total,
+                'customer_total' => $customer_total,
+                'logistic_total' => $logistic_total
+            ]);
+        }
+
+        if ($type === 'logistic_order') {
+            $data = LogisticOrder::query()->whereBetween('created_at', [$startDate, $endDate])
+                ->select(DB::raw('MONTH(created_at) as month'))->get();
+            $created = array_fill(0, 12, 0);
+            $approved = array_fill(0, 12, 0);
+            $pending  = array_fill(0, 12, 0);
+            $rejected = array_fill(0, 12, 0);
+
+            foreach ($data as $row) {
+                $created[$row->month - 1]++;
+                $approved[$row->month - 1]++; // Simplify for chart representation
+            }
+
+            return response()->json([
+                'created' => $created,
+                'approved' => $approved,
+                'pending' => $pending,
+                'rejected' => $rejected
+            ]);
+        }
+
         // --- PERBAIKAN DI SINI: Switch Query Berdasarkan Tipe ---
         if ($type === 'customer') {
             $query = Customer::query()->whereBetween('created_at', [$startDate, $endDate]);
@@ -79,9 +174,6 @@ class DashboardController extends Controller
         }
 
         // Ambil data status dan bulan
-        // Pastikan model Customer memiliki kolom 'status' (active/pending/dll).
-        // Jika tidak ada, kode ini tetap menghitung 'Created' dengan benar,
-        // tapi Approved/Pending mungkin 0 jika nama statusnya beda.
         $data = $query->select('status', DB::raw('MONTH(created_at) as month'))->get();
 
         $created = array_fill(0, 12, 0);
@@ -91,15 +183,10 @@ class DashboardController extends Controller
 
         foreach ($data as $row) {
             $idx = $row->month - 1;
-
-            // 1. Hitung Created (Semua data yang masuk query = Created)
             $created[$idx]++;
 
-            // 2. Mapping Status (Sesuaikan dengan value di database Anda)
-            // Lowercase agar case-insensitive
             $st = strtolower($row->status ?? '');
 
-            // Logic untuk Bank Garansi & Customer
             if (in_array($st, ['approved', 'completed', 'active', 'verified'])) {
                 $approved[$idx]++;
             } elseif (in_array($st, ['rejected', 'expired', 'returned', 'inactive'])) {
@@ -107,10 +194,7 @@ class DashboardController extends Controller
             } elseif (in_array($st, ['draft', 'pending', 'process', 'new', 'waiting_approval'])) {
                 $pending[$idx]++;
             } else {
-                // Jika status kosong atau null, anggap sebagai Pending atau biarkan hanya masuk Created
                 if($type === 'customer' && $st == '') {
-                    // Opsional: Jika customer tidak punya kolom status, bisa dianggap Approved otomatis
-                    // $approved[$idx]++;
                 } else {
                     $pending[$idx]++;
                 }
@@ -180,42 +264,61 @@ class DashboardController extends Controller
 
         $query = BankGaransi::whereBetween('created_at', [$startDate, $endDate]);
 
-        // Expiring selalu melihat masa depan (H+60 hari), tidak terpengaruh filter tanggal "created_at"
+        $totalValue = (clone $query)->whereIn('status', ['approved', 'active'])->sum('bg_nominal');
+        $activeCount = (clone $query)->whereIn('status', ['approved', 'active'])->count();
         $expiringCount = BankGaransi::whereBetween('exp_date', [now(), now()->addDays(60)])
-                                    ->whereNotIn('status', ['expired', 'returned'])
+                                    ->whereNotIn('status', ['expired', 'returned', 'rejected'])
                                     ->count();
 
+        $largestBg = (clone $query)->whereIn('status', ['approved', 'active'])
+                                   ->orderBy('bg_nominal', 'desc')
+                                   ->first();
+
         return response()->json([
-            'total_value' => $query->sum('bg_nominal'),
+            'total_value' => $totalValue,
+            'active_count' => $activeCount,
             'expiring' => $expiringCount,
+            'largest_bg_nominal' => $largestBg ? $largestBg->bg_nominal : 0,
+            'largest_bg_customer' => $largestBg && $largestBg->customer ? $largestBg->customer->name : '-',
         ]);
     }
 
     /**
      * STAT 4: Customer Metrics Card (Total & Overlimit)
      */
-    public function customerMetrics()
+    public function customerMetrics(Request $request)
     {
-        // Total Customer Global
         $total = Customer::count();
 
-        // Credit Exceeded (Global Check)
-        $creditExceeded = 0;
-        // Optimization: Gunakan raw query atau chunk jika data customer ribuan
-        $customers = Customer::whereNotNull('credit_limit')->where('credit_limit', '>', 0)->get(['id','credit_limit']);
+        $withBg = BankGaransi::whereIn('status', ['approved', 'active', 'completed'])
+                    ->distinct('customer_id')
+                    ->count('customer_id');
 
+        $withoutBg = $total - $withBg;
+
+        $creditExceeded = 0;
+        $customers = Customer::whereNotNull('credit_limit')->where('credit_limit', '>', 0)->get(['id','credit_limit']);
         foreach ($customers as $c) {
             $sumBg = BankGaransi::where('customer_id', $c->id)
-                                ->where('status', 'approved') // Hanya BG aktif
+                                ->whereIn('status', ['approved', 'active'])
                                 ->sum('bg_nominal');
             if ($sumBg > $c->credit_limit) {
                 $creditExceeded++;
             }
         }
 
+        $highestLimit = Customer::orderBy('credit_limit', 'desc')->first(['name', 'credit_limit']);
+
+        $longestJoined = Customer::orderBy('join_date', 'asc')->first() ?? Customer::orderBy('created_at', 'asc')->first();
+
         return response()->json([
             'total' => $total,
+            'with_bg' => $withBg,
+            'without_bg' => $withoutBg,
             'credit_exceeded' => $creditExceeded,
+            'highest_limit_name' => $highestLimit ? $highestLimit->name : '-',
+            'highest_limit_amount' => $highestLimit ? $highestLimit->credit_limit : 0,
+            'longest_joined_name' => $longestJoined ? $longestJoined->name : '-',
         ]);
     }
 
@@ -292,6 +395,90 @@ class DashboardController extends Controller
         return response()->json([
             'count' => $user->unreadNotifications->count(),
             'notifications' => $notifications
+        ]);
+    }
+
+    public function logisticIndex()
+    {
+        $user = Auth::user();
+        // Beri proteksi (opsional, sesuaikan dengan role kamu)
+        if (!$user->hasRole(['super-admin', 'staff-sales', 'head-SNM', 'atasan'])) {
+            // abort(403, 'Anda tidak memiliki akses ke Dashboard Logistic');
+        }
+
+        return view('dashboard.logistic');
+    }
+
+    /**
+     * API Data untuk Dashboard Logistic (Statistik, Chart, dan Tabel)
+     */
+    public function getLogisticStats(Request $request)
+    {
+        // 1. TOP CARDS (Summary)
+        $totalOrders = LogisticOrder::count();
+        $pendingDownloads = DeliveryOrderNote::where('status', 'Pending Download')->count();
+        
+        $activeFees = DistributorCustomer::where('status', 'Approved')->count();
+        $pendingFees = DistributorCustomer::where('status', 'Pending')->count();
+
+        // 2. CHART DATA (Logistic Orders 6 Bulan Terakhir)
+        $chartLabels = [];
+        $chartData = [];
+        for ($i = 5; $i >= 0; $i--) {
+            $month = Carbon::now()->subMonths($i);
+            $chartLabels[] = $month->translatedFormat('M Y');
+            $chartData[] = LogisticOrder::whereMonth('created_at', $month->month)
+                                        ->whereYear('created_at', $month->year)
+                                        ->count();
+        }
+
+        // 3. RECENT LOGISTIC ORDERS
+        $recentOrders = LogisticOrder::with(['distributor', 'customer', 'note'])
+            ->orderBy('created_at', 'desc')
+            ->limit(5)
+            ->get()
+            ->map(function ($order) {
+                return [
+                    'lo_no' => 'LO-' . str_pad($order->id, 4, '0', STR_PAD_LEFT),
+                    'do_no' => $order->note->delivery_order_no ?? '-',
+                    'customer' => $order->customer->name ?? 'N/A',
+                    'distributor' => $order->distributor->name ?? 'N/A',
+                    'status' => $order->note->status ?? 'Pending',
+                    'date' => $order->created_at->format('d M Y'),
+                    'updated_date' => $order->note ? $order->note->updated_at->format('d M y H:i') : $order->updated_at->format('d M y H:i')
+                ];
+            });
+
+        // 4. RECENT FEE LOGS
+        $recentFeeLogs = LogisticFeeLog::with(['distributorCustomer.customer', 'distributorCustomer.distributor', 'user'])
+            ->orderBy('created_at', 'desc')
+            ->limit(5)
+            ->get()
+            ->map(function ($log) {
+                return [
+                    'customer' => $log->distributorCustomer->customer->name ?? 'N/A',
+                    'distributor' => $log->distributorCustomer->distributor->name ?? 'N/A',
+                    'new_fee' => 'Rp ' . number_format($log->new_fee, 0, ',', '.'),
+                    'status' => $log->status,
+                    'action_by' => $log->user->name ?? $log->action_by ?? 'System',
+                    'time' => $log->created_at->diffForHumans()
+                ];
+            });
+
+        return response()->json([
+            'summary' => [
+                'total_orders' => $totalOrders,
+                'pending_downloads' => $pendingDownloads,
+                'active_fees' => $activeFees,
+                'pending_fees' => $pendingFees,
+                'downloaded_dn' => DeliveryOrderNote::where('status', 'Downloaded')->count(),
+            ],
+            'chart' => [
+                'labels' => $chartLabels,
+                'data' => $chartData
+            ],
+            'recent_orders' => $recentOrders,
+            'recent_fee_logs' => $recentFeeLogs
         ]);
     }
 }

@@ -64,7 +64,7 @@
                                     <input class="form-check-input group-{{ Str::slug($lastWord) }}" type="checkbox"
                                         name="permissions[]" id="perm-{{ $permission->id }}"
                                         value="{{ $permission->name }}"
-                                        {{ $role->hasPermissionTo($permission->name) ? 'checked' : '' }}>
+                                        {{ $role->checkPermissionTo($permission->name) ? 'checked' : '' }}>
                                     <label class="form-check-label" for="perm-{{ $permission->id }}">
                                         {{ $permission->name }}
                                     </label>

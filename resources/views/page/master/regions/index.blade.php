@@ -3,6 +3,8 @@
         Region List
     @endsection
 
+    @include('components.sample-table-styles')
+
     <!-- Breadcrumb -->
     <div class="row m-1">
         <div class="col-12 ">
@@ -32,7 +34,7 @@
             <div class="card">
                 <div class="card-body p-0">
                     <div class="app-scroll table-responsive app-datatable-default">
-                        <table class="w-100 display" id="regions-table">
+                        <table class="w-100 display" id="sampleTable">
                             <thead>
                                 <tr>
                                     <th>Region Name</th>
@@ -127,7 +129,7 @@
 
             $(document).ready(function() {
                 // === DataTable ===
-                $('#regions-table').DataTable({
+                $('#sampleTable').DataTable({
                     processing: true,
                     serverSide: true,
                     ajax: {
@@ -184,7 +186,7 @@
                         data: formData,
                         success: function(res) {
                             $('#regionModal').modal('hide');
-                            $('#regions-table').DataTable().ajax.reload(null, false);
+                            $('#sampleTable').DataTable().ajax.reload(null, false);
                             successMessage((mode === 'create') ? 'Region created successfully' : 'Region updated successfully');
                         },
                         error: function(xhr) {
@@ -216,7 +218,7 @@
                                     _token: '{{ csrf_token() }}'
                                 },
                                 success: function(res) {
-                                    $('#regions-table').DataTable().ajax.reload(null, false);
+                                    $('#sampleTable').DataTable().ajax.reload(null, false);
                                     successMessage(res.message || 'Region deleted successfully!');
                                 },
                                 error: function(xhr) {

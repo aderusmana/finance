@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\UploadedFile;
 
 class CustomerRequest extends FormRequest
 {
@@ -20,6 +21,32 @@ class CustomerRequest extends FormRequest
      */
     public function rules(): array
     {
+        $dynamicFileRule = function ($attribute, $value, $fail) {
+            if (!$value instanceof UploadedFile) {
+                return;
+            }
+
+            $extension = strtolower($value->getClientOriginalExtension());
+            $sizeInKb = $value->getSize() / 1024;
+
+            // Validasi Image (JPG, JPEG, PNG) - Max 1MB
+            if (in_array($extension, ['jpg', 'jpeg', 'png'])) {
+                if ($sizeInKb > 1024) {
+                    $fail("File {$attribute} berformat Gambar (JPG/PNG) tidak boleh lebih dari 1MB.");
+                }
+            }
+            // Validasi PDF - Max 5MB
+            elseif ($extension === 'pdf') {
+                if ($sizeInKb > 5120) {
+                    $fail("File {$attribute} berformat PDF tidak boleh lebih dari 5MB.");
+                }
+            }
+            // Format tidak dikenali
+            else {
+                $fail("File {$attribute} harus berformat PDF, JPG, atau PNG.");
+            }
+        };
+
         return [
             // --- 1. Requester Info ---
             'user_id' => 'required|exists:users,id',
@@ -28,11 +55,36 @@ class CustomerRequest extends FormRequest
             'account_group' => 'required|exists:account_groups,id',
             'customer_class' => 'required|exists:customer_classes,id',
 
-            // --- 3. Documents (File Uploads) ---
-            'file_npwp' => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120',
-            'file_nib'  => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120',
-            'file_ktp'  => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120',
-            'file_akte' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            // --- 3. Documents (LOGIC BARU DISINI) ---
+
+            // NPWP: Required + Dynamic Rule
+            'file_npwp' => [
+                'required',
+                'file',
+                $dynamicFileRule
+            ],
+
+            // NIB: Required + Dynamic Rule
+            'file_nib' => [
+                'required',
+                'file',
+                $dynamicFileRule
+            ],
+
+            // KTP: Required + Dynamic Rule
+            'file_ktp' => [
+                'required',
+                'file',
+                $dynamicFileRule
+            ],
+
+            // AKTE: Nullable + PDF Only + Max 5MB
+            'file_akte' => [
+                'nullable',
+                'file',
+                'mimes:pdf', // Hanya PDF
+                'max:5120'   // Max 5MB
+            ],
 
             // --- 4. General Info ---
             'name' => 'required|string|max:255',
@@ -40,6 +92,7 @@ class CustomerRequest extends FormRequest
             'address1' => 'required|string|max:255',
             'address2' => 'nullable|string|max:255',
             'address3' => 'nullable|string|max:255',
+            'pic' => 'required|string|max:255',
             'city' => 'required|string|max:100',
             'postal_code' => 'required|string|max:20',
             'country' => 'required|string|max:100',
@@ -51,8 +104,10 @@ class CustomerRequest extends FormRequest
             'shipping_to_address' => 'required|string',
             'purchasing_manager_name' => 'required|string|max:255',
             'purchasing_manager_email' => 'required|email|max:255',
+            'purchasing_manager_telepon' => 'required|string|max:50',
             'finance_manager_name' => 'required|string|max:255',
             'finance_manager_email' => 'required|email|max:255',
+            'finance_manager_telepon' => 'required|string|max:50',
 
             // --- 6. Billing & Tax ---
             'penagihan_nama_kontak' => 'required|string|max:255',
@@ -71,22 +126,46 @@ class CustomerRequest extends FormRequest
             'no_pengukuhan_kaber' => 'nullable|string|max:255',
 
             // --- 7. Financial Terms ---
-            'term_of_payment' => 'required|string', // Sesuaikan jika ini relasi ID
-            'output_tax' => 'required|in:Terhutang PPN,NON-PPN,PPN', // Sesuaikan opsi
+            'term_of_payment' => 'required|string',
+            'output_tax' => 'required|in:Terhutang PPN,NON-PPN,PPN',
             'credit_limit' => [
-            'required',
-            'numeric',
-            'min:0',
-                function ($attribute, $value, $fail) {
-                    if (request('bank_garansi') === 'TIDAK' && $value <= 0) {
-                        $fail('Jika Bank Garansi NO, Credit Limit harus diisi (lebih dari 0).');
-                    }
-                },
+                'required',
+                'numeric',
+                'min:0',
             ],
             'ccar' => 'required|string',
             'bank_garansi' => 'required|in:YA,TIDAK',
             'lead_time' => 'nullable|numeric|min:0',
         ];
+    }
+
+    protected function prepareForValidation(): void
+    {
+        $top = $this->input('term_of_payment');
+        $bg = $this->input('bank_garansi');
+        $rawCreditLimit = $this->input('credit_limit');
+
+        $creditLimit = $rawCreditLimit;
+        if (is_string($creditLimit)) {
+            $creditLimit = preg_replace('/[^0-9]/', '', $creditLimit);
+            if ($creditLimit === '') {
+                $creditLimit = null;
+            }
+        }
+
+        // CBD (Cash Before Delivery) tidak memiliki kredit, jadi Credit Limit harus 0
+        if (is_string($top) && strtoupper($top) === 'CBD') {
+            $creditLimit = 0;
+        }
+
+        // Jika Bank Garansi TIDAK, Credit Limit harus 0
+        if (is_string($bg) && strtoupper($bg) === 'YES') {
+            $creditLimit = 0;
+        }
+
+        $this->merge([
+            'credit_limit' => $creditLimit,
+        ]);
     }
 
     /**
@@ -106,22 +185,22 @@ class CustomerRequest extends FormRequest
             // --- 3. Documents (Files) ---
             // NPWP
             'file_npwp.required' => 'Dokumen NPWP wajib diupload.',
-            'file_npwp.mimes'    => 'Format file NPWP harus PDF, JPG, atau PNG.',
-            'file_npwp.max'      => 'Ukuran file NPWP maksimal 5MB.',
-            // NIB/SIUP
-            'file_nib.mimes'    => 'Format file NIB/SIUP harus PDF, JPG, atau PNG.',
-            'file_nib.max'      => 'Ukuran file NIB/SIUP maksimal 5MB.',
-            // KTP
-            'file_ktp.mimes'    => 'Format file KTP harus PDF, JPG, atau PNG.',
-            'file_ktp.max'      => 'Ukuran file KTP maksimal 5MB.',
-            // Akte Pendirian
-            'file_akte.mimes'    => 'Format Akte harus PDF, JPG, atau PNG.',
+            'file_npwp.file'     => 'Dokumen NPWP harus berupa file yang valid.',
+
+            'file_nib.required'  => 'Dokumen NIB/SIUP wajib diupload.',
+            'file_nib.file'      => 'Dokumen NIB/SIUP harus berupa file yang valid.',
+
+            'file_ktp.required'  => 'Dokumen KTP wajib diupload.',
+            'file_ktp.file'      => 'Dokumen KTP harus berupa file yang valid.',
+
+            'file_akte.mimes'    => 'Format Akte harus PDF.',
             'file_akte.max'      => 'Ukuran file Akte maksimal 5MB.',
 
             // --- 4. General Info ---
             'name.required'        => 'Nama Customer wajib diisi.',
             'address1.required'    => 'Alamat baris 1 wajib diisi.',
             'city.required'        => 'Kota wajib diisi.',
+            'pic.required'         => 'PIC wajib diisi.',
             'postal_code.required' => 'Kode Pos wajib diisi.',
             'country.required'     => 'Negara wajib diisi.',
             'email.required'       => 'Email general wajib diisi.',
@@ -135,10 +214,12 @@ class CustomerRequest extends FormRequest
             'purchasing_manager_name.required'  => 'Nama Purchasing Manager wajib diisi.',
             'purchasing_manager_email.required' => 'Email Purchasing Manager wajib diisi.',
             'purchasing_manager_email.email'    => 'Format email Purchasing Manager tidak valid.',
+            'purchasing_manager_telepon.required' => 'Telepon Purchasing Manager wajib diisi.',
 
             'finance_manager_name.required'  => 'Nama Finance Manager wajib diisi.',
             'finance_manager_email.required' => 'Email Finance Manager wajib diisi.',
             'finance_manager_email.email'    => 'Format email Finance Manager tidak valid.',
+            'finance_manager_telepon.required' => 'Telepon Finance Manager wajib diisi.',
 
             // --- 6. Billing & Tax ---
             'penagihan_nama_kontak.required'  => 'Nama kontak penagihan wajib diisi.',

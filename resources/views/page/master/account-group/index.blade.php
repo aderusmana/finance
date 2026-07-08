@@ -3,6 +3,8 @@
         Account Group
     @endsection
 
+    @include('components.sample-table-styles')
+
     <!-- Breadcrumb -->
     <div class="row m-1">
         <div class="col-12 ">
@@ -32,7 +34,7 @@
             <div class="card">
                 <div class="card-body p-0">
                     <div class="app-scroll table-responsive app-datatable-default">
-                        <table class="w-100 display" id="account-groups-table">
+                        <table class="w-100 display" id="sampleTable">
                             <thead>
                                 <tr>
                                     <th>Name Account Group</th>
@@ -143,7 +145,7 @@
 
             $(document).ready(function() {
                 // === DataTable ===
-                $('#account-groups-table').DataTable({
+                $('#sampleTable').DataTable({
                     processing: true,
                     serverSide: true,
                     ajax: {
@@ -221,7 +223,7 @@
                         data: formData,
                         success: function(res) {
                             $('#accountGroupModal').modal('hide');
-                            $('#account-groups-table').DataTable().ajax.reload(null, false);
+                            $('#sampleTable').DataTable().ajax.reload(null, false);
                             successMessage((mode === 'create') ? 'Account Group created successfully' : 'Account Group updated successfully');
                         },
                         error: function(xhr) {
@@ -253,7 +255,7 @@
                                     _token: '{{ csrf_token() }}'
                                 },
                                 success: function(res) {
-                                    $('#account-groups-table').DataTable().ajax.reload(null, false);
+                                    $('#sampleTable').DataTable().ajax.reload(null, false);
                                     successMessage(res.message || 'Account Group deleted successfully!');
                                 },
                                 error: function(xhr) {

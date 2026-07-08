@@ -10,6 +10,7 @@ use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 use App\Models\Customer\Customer;
 use App\Models\User;
+use Illuminate\Mail\Mailables\Attachment;
 
 class CustomerWelcomeMail extends Mailable implements ShouldQueue
 {
@@ -31,7 +32,7 @@ class CustomerWelcomeMail extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Welcome to Sinar Meadow ' . $this->customer->name . '!',
+            subject: 'Welcome to Sinar Meadow ' . $this->customer->name,
         );
     }
 
@@ -44,6 +45,10 @@ class CustomerWelcomeMail extends Mailable implements ShouldQueue
 
     public function attachments(): array
     {
-        return [];
+        return [
+            Attachment::fromPath(public_path('assets/images/logo/sinarmeadow.png'))
+                ->as('logo.png')
+                ->withMime('image/png'),
+        ];
     }
 }

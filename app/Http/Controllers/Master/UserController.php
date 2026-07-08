@@ -40,7 +40,8 @@ class UserController extends Controller
 
     public function getData()
     {
-        $users = User::with(['department', 'roles']);
+        // Tips: Tambahkan 'position' ke dalam eager loading agar tidak terkena masalah N+1 query
+        $users = User::with(['department', 'roles', 'position']);
 
         return DataTables::of($users)
             ->addIndexColumn()
@@ -50,13 +51,13 @@ class UserController extends Controller
                     : asset('assets/images/logo/sinarmeadow.png');
 
                 return '
-                    <div class="d-flex align-items-center">
-                        <div class="h-30 w-30 d-flex-center b-r-50 overflow-hidden text-bg-dark">
-                            <img src="' . $avatar . '" alt="avatar" class="img-fluid">
-                        </div>
-                        <p class="mb-0 ps-2">' . e($user->name) . '</p>
+                <div class="d-flex align-items-center">
+                    <div class="h-30 w-30 d-flex-center b-r-50 overflow-hidden text-bg-dark">
+                        <img src="' . $avatar . '" alt="avatar" class="img-fluid">
                     </div>
-                ';
+                    <p class="mb-0 ps-2">' . e($user->name) . '</p>
+                </div>
+            ';
             })
             ->addColumn('roles', function ($user) {
                 $badges = '';
@@ -66,6 +67,7 @@ class UserController extends Controller
                 return $badges;
             })
             ->addColumn('department', function ($user) {
+                // Menggunakan e() agar karakter seperti & tetap aman tapi di-render benar oleh browser
                 return $user->department ? e($user->department->name) : '-';
             })
             ->addColumn('position', function ($user) {
@@ -74,34 +76,35 @@ class UserController extends Controller
             ->addColumn('action', function ($user) {
                 $roles = $user->roles->pluck('name')->toArray();
 
-                        return '
-                    <div class="d-flex gap-2">
-                        <button type="button" class="btn btn-warning btn-edit-user"
-                            data-id="' . $user->id . '"
-                            data-nik="' . $user->nik . '"
-                            data-username="' . $user->username . '"
-                            data-name="' . e($user->name) . '"
-                            data-email="' . e($user->email) . '"
-                            data-department_id="' . $user->department_id . '"
-                            data-position_id="' . $user->position_id . '"
-                            data-atasan_nik="' . e($user->atasan_nik) . '"
-                            data-roles=\'' . json_encode($roles) . '\'
-                            data-avatar="' . $user->avatar . '"
-                            data-status="' . $user->status . '"
-                        >
-                            <i class="fa-solid fa-pencil text-white"></i>
-                        </button>
+                return '
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-warning btn-edit-user"
+                        data-id="' . $user->id . '"
+                        data-nik="' . $user->nik . '"
+                        data-username="' . $user->username . '"
+                        data-name="' . e($user->name) . '"
+                        data-email="' . e($user->email) . '"
+                        data-department_id="' . $user->department_id . '"
+                        data-position_id="' . $user->position_id . '"
+                        data-atasan_nik="' . e($user->atasan_nik) . '"
+                        data-roles=\'' . json_encode($roles) . '\'
+                        data-avatar="' . $user->avatar . '"
+                        data-status="' . $user->status . '"
+                    >
+                        <i class="fa-solid fa-pencil text-white"></i>
+                    </button>
 
-                        <form action="' . route('users.destroy', $user->id) . '" method="POST" class="delete-form delete-user-btn" style="display:inline;">
-                            ' . csrf_field() . method_field('DELETE') . '
-                            <button type="submit" class="btn btn-danger">
-                                <i class="fas fa-trash-alt text-white"></i>
-                            </button>
-                        </form>
-                    </div>
-                ';
+                    <form action="' . route('users.destroy', $user->id) . '" method="POST" class="delete-form delete-user-btn" style="display:inline;">
+                        ' . csrf_field() . method_field('DELETE') . '
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash-alt text-white"></i>
+                        </button>
+                    </form>
+                </div>
+            ';
             })
-            ->rawColumns(['name', 'roles', 'action'])
+            // PERBAIKAN: Tambahkan 'department' dan 'position' ke dalam rawColumns
+            ->rawColumns(['name', 'roles', 'department', 'position', 'action'])
             ->make(true);
     }
 
@@ -114,7 +117,7 @@ class UserController extends Controller
             'nik' => 'required|min:4|max:6|unique:users,nik',
             'name' => 'required|string|max:255',
             'username' => 'required|string|max:255|unique:users,username',
-            'email' => 'required|email|max:255|unique:users,email',
+            'email' => 'required|email|max:255',
             'password' => 'required|string|min:8|max:20',
             'department_id' => 'required|exists:departments,id',
             'position_id' => 'nullable|exists:positions,id',
@@ -123,7 +126,7 @@ class UserController extends Controller
             'roles.*' => 'exists:roles,name', // pakai id, bukan name
         ]);
 
-         $avatarPath = null;
+        $avatarPath = null;
 
         if ($request->hasFile('avatar')) {
             // ambil ekstensi file (jpg/png/dll)
@@ -153,13 +156,13 @@ class UserController extends Controller
             'avatar' => $avatarPath,
         ]);
 
-            $user->syncRoles($request->roles);
+        $user->syncRoles($request->roles);
 
-            activity()
-                ->causedBy(Auth::user())
-                ->performedOn($user)
-                ->event('users')
-                ->log('Created a new user');
+        activity()
+            ->causedBy(Auth::user())
+            ->performedOn($user)
+            ->event('users')
+            ->log('Created a new user');
 
         // Return JSON for AJAX
         return response()->json(['success' => true, 'message' => 'User created successfully!']);
@@ -168,7 +171,7 @@ class UserController extends Controller
     public function update(Request $request, User $user)
     {
         $request->validate([
-            'email' => 'required|email|max:255|unique:users,email,' . $user->id,
+            'email' => 'required|email|max:255',
             'nik' => 'required|min:4|max:6|unique:users,nik,' . $user->id,
             'username' => 'required|string|max:255|unique:users,username,' . $user->id,
             'name' => 'required|string|max:255',
@@ -200,7 +203,7 @@ class UserController extends Controller
             $data['password'] = Hash::make($request->password);
         }
 
-           // Menangani unggahan avatar dengan nama file NIK
+        // Menangani unggahan avatar dengan nama file NIK
         if ($request->hasFile('avatar')) {
             $allAvatarFiles = Storage::disk('public')->files('avatar');
 
@@ -234,14 +237,14 @@ class UserController extends Controller
         $user->syncRoles($request->roles);
 
         activity()
-           ->causedBy(Auth::user())
-           ->performedOn($user)
-           ->event('users')
-           ->withProperties([
-               'old' => array_merge($oldData, ['roles' => $oldRoles]),
-               'new' => array_merge($user->getChanges(), ['roles' => $request->roles])
+            ->causedBy(Auth::user())
+            ->performedOn($user)
+            ->event('users')
+            ->withProperties([
+                'old' => array_merge($oldData, ['roles' => $oldRoles]),
+                'new' => array_merge($user->getChanges(), ['roles' => $request->roles])
             ])
-           ->log('Updated user data');
+            ->log('Updated user data');
 
         return response()->json([
             'success' => true,
@@ -265,10 +268,10 @@ class UserController extends Controller
         $user->delete();
 
         activity()
-           ->causedBy(Auth::user())
-           ->event('users')
-           ->withProperties(['deleted_data' => $oldData])
-           ->log('Deleted a user');
+            ->causedBy(Auth::user())
+            ->event('users')
+            ->withProperties(['deleted_data' => $oldData])
+            ->log('Deleted a user');
 
         // Return JSON for AJAX
         return response()->json(['success' => true, 'message' => 'User deleted successfully!']);

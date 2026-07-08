@@ -15,20 +15,29 @@ class Customer extends Model
 {
     use HasFactory;
 
+    protected static function booted(): void
+    {
+        static::saving(function (self $customer) {
+            if (is_string($customer->bank_garansi) && strtoupper($customer->bank_garansi) === 'TIDAK') {
+                $customer->credit_limit = 0;
+            }
+        });
+    }
+
     protected $fillable = ['user_id',
-        'code', 'no_pkd', 'name','sort_name', 'customer_class', 'account_group',
+        'code', 'no_pkd', 'pic', 'name','sort_name', 'customer_class', 'account_group',
         'address1', 'address2', 'address3', 'city', 'postal_code', 'country',
         'shipping_to_name', 'shipping_to_address',
-        'purchasing_manager_name', 'purchasing_manager_email',
-        'finance_manager_name', 'finance_manager_email',
+        'purchasing_manager_name', 'purchasing_manager_email', 'purchasing_manager_telepon',
+        'finance_manager_name', 'finance_manager_email', 'finance_manager_telepon',
         'penagihan_nama_kontak', 'penagihan_telepon', 'penagihan_address','surat_menyurat_address', 'email', 'tax_contact_name', 'tax_contact_email', 'tax_contact_phone',
         'npwp', 'tanggal_npwp', 'nppkp', 'tanggal_nppkp','no_pengukuhan_kaber', 'output_tax',
         'term_of_payment', 'lead_time', 'credit_limit', 'ccar', 'bank_garansi',
-        'area', 'join_date', 'status', 'status_approval', 'route_to', 'pembagian', 'customer_total', 
-        'virtual_account', 
-        'payment_days', 
-        'payment_date', 
-        'faktur_days', 
+        'area', 'join_date', 'status', 'status_approval', 'route_to', 'pembagian', 'customer_total',
+        'virtual_account',
+        'payment_days',
+        'payment_date',
+        'faktur_days',
         'faktur_date',
         'created_by'
     ];
@@ -95,5 +104,5 @@ class Customer extends Model
     public function items() {
         return $this->hasMany(CustomerItem::class, 'customer_id');
     }
-    
+
 }

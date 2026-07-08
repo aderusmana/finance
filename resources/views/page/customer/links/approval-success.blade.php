@@ -55,8 +55,8 @@
 
         <div class="card-body">
             <p class="text-muted">
-                Terima kasih, respon Anda telah berhasil dicatat.
-                Halaman ini akan tertutup otomatis dalam <b id="countdown">3</b> detik.
+                Thank you, your response has been recorded successfully.
+                This page will close automatically in <b id="countdown">3</b> seconds.
             </p>
 
             <div class="info-box">

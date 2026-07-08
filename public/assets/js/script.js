@@ -26,6 +26,21 @@
 
 
 // >>-- 01 Horizontal Nav Js --<<
+/* Theme name prepend to localstorage key (safe polyfill)
+   Defines `getLocalStorageItem` only if not already present to avoid
+   ReferenceError when scripts are loaded in different orders. */
+const _laThemeName = "La-Theme";
+if (typeof getLocalStorageItem === 'undefined') {
+  function getLocalStorageItem(key, defaultValue = null){
+    try{
+      var v = localStorage.getItem(`${_laThemeName}-${key}`);
+      return v === null ? defaultValue : v;
+    }catch(e){
+      return defaultValue;
+    }
+  }
+}
+
 let navBar = $(".main-nav");
 let size = "150px";
 let leftsideLimit = -100;
