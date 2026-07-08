@@ -77,7 +77,7 @@
             <div class="stat-card bg-grad-primary text-white h-100 p-4 shadow-sm">
                 <div class="stat-icon-wrapper"><i class="ph-fill ph-shopping-cart" style="font-size: 8rem;"></i></div>
                 <div class="position-relative z-1">
-                    <p class="mb-1 text-white-50 fw-semibold text-uppercase" style="font-size: 0.75rem; letter-spacing: 1px;">Total Logistic Orders</p>
+                    <p class="mb-1 text-white fw-semibold text-uppercase" style="font-size: 0.75rem; letter-spacing: 1px;">Total Logistic Orders</p>
                     <h2 class="fw-black mb-0 display-5" id="stat_total_orders">0</h2>
                 </div>
             </div>
@@ -88,7 +88,7 @@
             <div class="stat-card bg-grad-warning text-white h-100 p-4 shadow-sm">
                 <div class="stat-icon-wrapper"><i class="ph-fill ph-download-simple" style="font-size: 8rem;"></i></div>
                 <div class="position-relative z-1">
-                    <p class="mb-1 text-white-50 fw-semibold text-uppercase" style="font-size: 0.75rem; letter-spacing: 1px;">DN Belum Diunduh</p>
+                    <p class="mb-1 text-white fw-semibold text-uppercase" style="font-size: 0.75rem; letter-spacing: 1px;">DN Belum Diunduh</p>
                     <h2 class="fw-black mb-0 display-5" id="stat_pending_downloads">0</h2>
                 </div>
             </div>
@@ -99,7 +99,7 @@
             <div class="stat-card bg-grad-success text-white h-100 p-4 shadow-sm">
                 <div class="stat-icon-wrapper"><i class="ph-fill ph-check-circle" style="font-size: 8rem;"></i></div>
                 <div class="position-relative z-1">
-                    <p class="mb-1 text-white-50 fw-semibold text-uppercase" style="font-size: 0.75rem; letter-spacing: 1px;">Harga Logistik Aktif</p>
+                    <p class="mb-1 text-white fw-semibold text-uppercase" style="font-size: 0.75rem; letter-spacing: 1px;">Harga Logistik Aktif</p>
                     <h2 class="fw-black mb-0 display-5" id="stat_active_fees">0</h2>
                 </div>
             </div>
@@ -110,7 +110,7 @@
             <div class="stat-card bg-grad-purple text-white h-100 p-4 shadow-sm">
                 <div class="stat-icon-wrapper"><i class="ph-fill ph-hourglass-medium" style="font-size: 8rem;"></i></div>
                 <div class="position-relative z-1">
-                    <p class="mb-1 text-white-50 fw-semibold text-uppercase" style="font-size: 0.75rem; letter-spacing: 1px;">Antrean Approval Harga</p>
+                    <p class="mb-1 text-white fw-semibold text-uppercase" style="font-size: 0.75rem; letter-spacing: 1px;">Antrean Approval Harga</p>
                     <h2 class="fw-black mb-0 display-5" id="stat_pending_fees">0</h2>
                 </div>
             </div>
