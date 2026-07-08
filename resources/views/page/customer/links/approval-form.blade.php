@@ -828,11 +828,11 @@
     </div>
 
     <!-- AJAX Success Modal -->
-    <div class="modal fade" id="ajaxSuccessModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0">
-                <div class="modal-body p-3" id="ajaxSuccessModalBody" style="background:transparent;">
-                    <!-- injected HTML -->
+    <div class="modal fade" id="ajaxSuccessModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 560px;">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
+                <div id="ajaxSuccessModalBody">
+                    <!-- injected HTML from approval-success-modal.blade.php -->
                 </div>
             </div>
         </div>
@@ -1294,37 +1294,31 @@
                                 if (data.html) {
                                     const modalBody = document.getElementById('ajaxSuccessModalBody');
                                     modalBody.innerHTML = data.html;
+
                                     const ajaxModalEl = document.getElementById('ajaxSuccessModal');
                                     const ajaxModal = new bootstrap.Modal(ajaxModalEl);
                                     ajaxModal.show();
 
-                                    // start countdown inside modal
+                                    // Countdown: update #countdown el and close/clear page after 5s
                                     const countdownEl = modalBody.querySelector('#countdown');
-                                    let seconds = 3;
+                                    let seconds = parseInt(countdownEl?.innerText) || 5;
                                     if (countdownEl) {
                                         countdownEl.innerText = seconds;
-                                        const iv = setInterval(() => {
-                                            seconds--;
-                                            if (seconds <= 0) {
-                                                clearInterval(iv);
-                                                try { ajaxModal.hide(); } catch(e){}
-                                                // Try to close the window. If browser blocks it, show fallback message.
-                                                try {
-                                                    window.open('', '_self');
-                                                    window.close();
-                                                } catch (e) {}
-
-                                                // Fallback after short delay: replace body with inactive message
-                                                setTimeout(() => {
-                                                    try {
-                                                        document.body.innerHTML = "<div style='display:flex; height:100vh; justify-content:center; align-items:center; color:#64748b;'>Halaman sudah tidak aktif. Silakan tutup tab ini.</div>";
-                                                    } catch(e) {}
-                                                }, 500);
-                                            } else {
-                                                countdownEl.innerText = seconds;
-                                            }
-                                        }, 1000);
                                     }
+                                    const iv = setInterval(() => {
+                                        seconds--;
+                                        if (countdownEl) countdownEl.innerText = seconds;
+                                        if (seconds <= 0) {
+                                            clearInterval(iv);
+                                            try { ajaxModal.hide(); } catch(e){}
+                                            try { window.open('', '_self'); window.close(); } catch(e) {}
+                                            setTimeout(() => {
+                                                try {
+                                                    document.body.innerHTML = "<div style='display:flex;height:100vh;justify-content:center;align-items:center;font-family:sans-serif;color:#64748b;flex-direction:column;gap:12px;'><svg xmlns='http://www.w3.org/2000/svg' width='64' height='64' fill='#22c55e' viewBox='0 0 256 256'><path d='M173.66,98.34a8,8,0,0,1,0,11.32l-56,56a8,8,0,0,1-11.32,0l-24-24a8,8,0,0,1,11.32-11.32L112,148.69l50.34-50.35A8,8,0,0,1,173.66,98.34ZM232,128A104,104,0,1,1,128,24,104.11,104.11,0,0,1,232,128Zm-16,0a88,88,0,1,0-88,88A88.1,88.1,0,0,0,216,128Z'/></svg><div style='font-size:1.1rem;font-weight:600;'>Halaman sudah tidak aktif.</div><div style='font-size:0.9rem;'>Silakan tutup tab ini.</div></div>";
+                                                } catch(e) {}
+                                            }, 500);
+                                        }
+                                    }, 1000);
                                 } else {
                                     Swal.fire('Success', data.message || 'Action processed.', 'success').then(() => location.reload());
                                 }

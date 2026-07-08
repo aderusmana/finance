@@ -811,16 +811,19 @@ class CustomerController extends Controller
                 }
             }
         } else {
-            if ($action === 'review' || $action === 'reject') {
-
-                if (!$isIT) {
-                    if (empty($cleanNotes)) {
-                        throw \Illuminate\Validation\ValidationException::withMessages(['notes' => 'Notes are required for review or reject actions.']);
-                    }
-
-                    if (!preg_match('/[a-zA-Z]{2,}/', $cleanNotes)) {
-                        throw \Illuminate\Validation\ValidationException::withMessages(['notes' => 'Notes must contain clear sentences.']);
-                    }
+            // Reject: notes WAJIB diisi
+            if ($action === 'reject' && !$isIT) {
+                if (empty($cleanNotes)) {
+                    throw \Illuminate\Validation\ValidationException::withMessages(['notes' => 'Reason for rejection is required.']);
+                }
+                if (!preg_match('/[a-zA-Z]{2,}/', $cleanNotes)) {
+                    throw \Illuminate\Validation\ValidationException::withMessages(['notes' => 'Rejection reason must contain clear sentences.']);
+                }
+            }
+            // Review (Approved with Notes): notes OPSIONAL, tapi jika diisi harus valid
+            if ($action === 'review' && !$isIT && !empty($cleanNotes)) {
+                if (!preg_match('/[a-zA-Z]{2,}/', $cleanNotes)) {
+                    throw \Illuminate\Validation\ValidationException::withMessages(['notes' => 'Notes must contain clear sentences.']);
                 }
             }
         }
