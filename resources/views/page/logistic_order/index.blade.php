@@ -292,7 +292,7 @@
                                     <div class="row mb-3">
                                         <div class="col-md-6">
                                             <label class="form-label fw-bold">Attention</label>
-                                            <input type="text" id="attention" name="attention" class="form-control" placeholder="e.g: Bapak Budi">
+                                            <input type="text" id="attention" name="attention" class="form-control" placeholder="">
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label fw-bold">Date of PO</label>
