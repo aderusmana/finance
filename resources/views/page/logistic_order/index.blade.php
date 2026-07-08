@@ -599,6 +599,7 @@
             function handlePriceInput(input) {
                 let val = input.value.replace(/[^0-9]/g, '');
                 input.value = val ? formatRupiah(val) : '';
+                calculateRow(input);
             }
 
             function calculateGrandTotal() {
@@ -1330,7 +1331,7 @@
             function addRow(code = '', name = '', price = 0, qty = 1, packSize = '') {
                 $('#emptyRow').remove();
                 let index = Date.now() + Math.floor(Math.random() * 1000);
-                let initialTotal = (qty > 0) ? formatRupiah(qty * activeLogisticFee) : 'Rp 0';
+                let initialTotal = (qty > 0 && price > 0) ? formatRupiah(qty * price) : 'Rp 0';
                 let displayPrice = (price > 0) ? formatRupiah(price) : '';
                 let row = `
                 <tr>
@@ -1356,8 +1357,12 @@
             }
 
             function calculateRow(input) {
-                let qty = parseFloat($(input).val()) || 0;
-                $(input).closest('tr').find('.amount-display').val(formatRupiah(qty * activeLogisticFee));
+                let row = $(input).closest('tr');
+                let qty = parseFloat(row.find('.qty-input').val()) || 0;
+                let priceStr = row.find('.price-input').val().replace(/[^0-9]/g, '');
+                let price = parseFloat(priceStr) || 0;
+                
+                row.find('.amount-display').val(formatRupiah(qty * price));
 
                 calculateGrandTotal();
             }
