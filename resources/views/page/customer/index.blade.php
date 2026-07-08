@@ -345,12 +345,12 @@
                                             <label class="form-label">Customer Name <span
                                                     class="text-danger">*</span></label>
                                             <input type="text" class="form-control" name="name" id="name"
-                                                placeholder="e.g. PT. Maju Mundur Cantik" required>
+                                                placeholder="e.g. PT. SINAR MEADOW" required>
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label">Sort Name</label>
                                             <input type="text" class="form-control" name="sort_name"
-                                                id="sort_name" placeholder="e.g. MMC">
+                                                id="sort_name" placeholder="e.g. SINAR MEADOW">
                                         </div>
                                         <div class="col-md-12">
                                             <label class="form-label">Address <span
@@ -2106,9 +2106,10 @@
                                 }
                             });
 
-                            // PSM 6: Paksa Tesseract membaca rapi dari atas ke bawah (Jangan pakai 11!)
+                            // PSM 11: Sparse text. Find as much text as possible in no particular order.
+                            // Sangat ampuh untuk kartu di mana ada QR code/foto yang merusak struktur kolom teks (seperti alamat di samping QR)
                             await worker.setParameters({
-                                tessedit_pageseg_mode: '6'
+                                tessedit_pageseg_mode: '11'
                             });
 
                             const result = await worker.recognize(originalDataUrl);
@@ -2137,13 +2138,16 @@
                                     }
 
                                     // 3. SAPU BERSIH: Kartu NPWP HANYA pakai huruf KAPITAL.
-                                    // Jika kata ini punya huruf kecil, ini 100% noise QR Code! Buang!
-                                    if (/[a-z]/.test(w)) continue;
+                                    // Seringkali Tesseract membaca huruf kapital sebagai huruf kecil (misal: "Sinar" atau "Bungo").
+                                    // Kita konversi semuanya ke huruf kapital agar tidak ada kata valid yang terbuang.
+                                    if (/[a-z]/.test(w)) {
+                                        w = w.toUpperCase(); // Konversi ke kapital tanpa membuang kata
+                                    }
 
-                                    // 4. SAPU BERSIH: Buang kata sampah 1-2 huruf (seperti 'EE', 'LJ', 'X')
-                                    // Pengecualian hanya untuk singkatan resmi atau jika mengandung angka (RT, RW, JL, E5A)
+                                    // 4. SAPU BERSIH: Buang kata sampah 1-2 huruf tanpa membuang kata valid
                                     let cleanW = w.replace(/[^A-Z0-9]/g, '');
-                                    if (cleanW.length <= 2 && !/^(PT|CV|UD|PD|JL|RT|RW|NO|DI)$/.test(
+                                    // Pengecualian untuk singkatan awalan nama/jalan yang umum (CV, PT, JL, H, M, dll)
+                                    if (cleanW.length <= 2 && !/^(PT|CV|UD|PD|JL|JLN|RT|RW|NO|DI|GG|M|H|TB|KAV)$/.test(
                                             cleanW) && !/\d/.test(cleanW)) continue;
 
                                     goodWords.push(w);
@@ -2159,6 +2163,8 @@
 
                             // --- 2. AMBIL TANGGAL DAN NPWP ---
                             let tgl = '';
+                            let npwp15 = '';
+                            let npwp16 = '';
                             let npwpTesseract = '';
 
                             for (let l of cleanLines) {
@@ -2167,17 +2173,31 @@
                                     /(\d{2})\s*[\/\-\.]\s*(\d{2})\s*[\/\-\.]\s*(\d{4})/);
                                 if (dm) tgl = `${dm[3]}-${dm[2]}-${dm[1]}`;
 
-                                // Cari NPWP
-                                let cleanDigit = l.replace(/\D/g, '');
-                                let npwpLama = l.match(
-                                    /(?:^|\D)(\d{2})[\.\s]*(\d{3})[\.\s]*(\d{3})[\.\s]*(\d{1})[\-\.\s]*(\d{3})[\.\s]*(\d{3})(?:\D|$)/
-                                    );
-                                let npwpBaru = cleanDigit.match(/\b\d{16}\b/);
+                                // Perbaiki salah baca OCR umum pada angka sebelum mengekstrak NPWP
+                                let textForNpwp = l.replace(/[Oo]/g, '0').replace(/[Il]/g, '1');
 
-                                if (npwpLama) npwpTesseract =
-                                    `${npwpLama[1]}.${npwpLama[2]}.${npwpLama[3]}.${npwpLama[4]}-${npwpLama[5]}.${npwpLama[6]}`;
-                                else if (npwpBaru) npwpTesseract =
-                                    `${npwpBaru[0].slice(0,4)}.${npwpBaru[0].slice(4,8)}.${npwpBaru[0].slice(8,12)}.${npwpBaru[0].slice(12,16)}`;
+                                // Cari NPWP Lama (15 digit)
+                                let npwpLama = textForNpwp.match(
+                                    /(?:^|\D)(\d{2})[\.\s]*(\d{3})[\.\s]*(\d{3})[\.\s]*(\d{1})[\-\.\s]*(\d{3})[\.\s]*(\d{3})(?:\D|$)/
+                                );
+                                
+                                // Cari NPWP Baru (16 digit) dengan menghapus spasi/titik/strip terlebih dahulu
+                                let cleanFor16 = textForNpwp.replace(/[\s\.\-]/g, '');
+                                let npwpBaru = cleanFor16.match(/(?:^|\D)(\d{16})(?:\D|$)/);
+
+                                if (npwpLama) {
+                                    npwp15 = `${npwpLama[1]}.${npwpLama[2]}.${npwpLama[3]}.${npwpLama[4]}-${npwpLama[5]}.${npwpLama[6]}`;
+                                }
+                                if (npwpBaru) {
+                                    npwp16 = `${npwpBaru[1].slice(0,4)}.${npwpBaru[1].slice(4,8)}.${npwpBaru[1].slice(8,12)}.${npwpBaru[1].slice(12,16)}`;
+                                }
+                            }
+                            
+                            // Prioritaskan NPWP 16 digit jika ditemukan, jika tidak gunakan 15 digit
+                            if (npwp16) {
+                                npwpTesseract = npwp16;
+                            } else if (npwp15) {
+                                npwpTesseract = npwp15;
                             }
 
                             if (tgl) $('#tanggal_npwp').val(tgl);
@@ -2195,12 +2215,36 @@
                             // Buang semua baris yang berisi Header Instansi, Tanggal, dan Nomor NPWP
                             for (let l of cleanLines) {
                                 if (stopWords.test(l)) continue;
+                                
+                                // Jangan buang seluruh baris jika ada pola tanggal! (Antisipasi Tesseract menggabung Alamat dan Tanggal).
+                                // Ekstrak hapus bagian teks tanggalnya saja agar sisa alamatnya selamat.
+                                let isDateLine = /(\d{2})\s*[\/\-\.]\s*(\d{2})\s*[\/\-\.]\s*(\d{4})/.test(l.replace(/[Oo]/g, '0'));
+                                if (isDateLine) {
+                                    l = l.replace(/TANGGAL\s*TERDAFTAR\s*/i, '')
+                                         .replace(/\b\d{2}\s*[\/\-\.]\s*\d{2}\s*[\/\-\.]\s*\d{4}\b/g, '')
+                                         .trim();
+                                    if (l.length < 3) continue; // Jika sisa baris kosong, baru buang
+                                }
 
-                                let lineDigits = l.replace(/\D/g, '');
-                                if (lineDigits.length >= 14 || (activeNpwpDigit && lineDigits.includes(
-                                        activeNpwpDigit.substring(0, 10)))) continue;
+                                // Jangan hapus seluruh baris jika baris tersebut mengandung NPWP (untuk antisipasi OCR menggabung baris).
+                                // Cukup hapus teks NPWP-nya saja agar sisa namanya (jika ada) bisa diselamatkan.
+                                l = l.replace(/\b\d{4}\s*\d{4}\s*\d{4}\s*\d{4}\b/g, '') // Hapus format NPWP baru 16 digit (berspasi)
+                                     .replace(/\b\d{2}[\.\s]*\d{3}[\.\s]*\d{3}[\.\s]*\d{1}[\-\.\s]*\d{3}[\.\s]*\d{3}\b/g, '') // Hapus NPWP lama
+                                     .replace(/\b\d{15,16}\b/g, '') // Hapus deretan angka nempel
+                                     .trim();
+
+                                if (l.length < 3) continue; // Jika setelah NPWP dihapus baris jadi kosong, buang
 
                                 dataSisa.push(l);
+                            }
+
+                            // Bersihkan noise logo atas yang sering salah baca menjadi kata aneh
+                            while (dataSisa.length > 0) {
+                                if (/^(NENI|NPW|NPNP|RE|NA|NON|KEMENTRIAN|DJR)$/i.test(dataSisa[0])) {
+                                    dataSisa.shift();
+                                } else {
+                                    break;
+                                }
                             }
 
                             console.log("[DEBUG] Sisa Teks (Murni Nama & Alamat):", dataSisa);
