@@ -105,4 +105,54 @@ class Customer extends Model
         return $this->hasMany(CustomerItem::class, 'customer_id');
     }
 
+    public function scopeAllowedForUser($query, $user)
+    {
+        if ($user->hasRole(['super-admin', 'admin'])) {
+            return $query;
+        }
+
+        $salesAccountGroupIds = \App\Models\Customer\Sales::where('user_id', $user->id)
+            ->pluck('account_group_id')
+            ->toArray();
+
+        if (empty($salesAccountGroupIds)) {
+            // Jika bukan admin dan tidak punya pemetaan di tabel sales, fallback ke data buatan sendiri
+            return $query->where('customers.created_by', $user->id);
+        }
+
+        $accountGroups = \App\Models\Customer\AccountGroup::whereIn('id', $salesAccountGroupIds)->get();
+        
+        $allowedAccountGroupIds = [];
+        $isWest = false;
+        $isEast = false;
+        
+        foreach ($accountGroups as $ag) {
+            $allowedAccountGroupIds[] = $ag->id;
+            $name = strtoupper($ag->name_account_group);
+            if (str_starts_with($name, 'REGION 1') || str_starts_with($name, 'REGION 3')) {
+                $isWest = true;
+            }
+            if (str_starts_with($name, 'REGION 2') || str_starts_with($name, 'REGION 4')) {
+                $isEast = true;
+            }
+        }
+        
+        if ($isWest) {
+            $westIds = \App\Models\Customer\AccountGroup::where('name_account_group', 'LIKE', 'REGION 1%')
+                ->orWhere('name_account_group', 'LIKE', 'REGION 3%')
+                ->pluck('id')->toArray();
+            $allowedAccountGroupIds = array_merge($allowedAccountGroupIds, $westIds);
+        }
+        
+        if ($isEast) {
+            $eastIds = \App\Models\Customer\AccountGroup::where('name_account_group', 'LIKE', 'REGION 2%')
+                ->orWhere('name_account_group', 'LIKE', 'REGION 4%')
+                ->pluck('id')->toArray();
+            $allowedAccountGroupIds = array_merge($allowedAccountGroupIds, $eastIds);
+        }
+        
+        $allowedAccountGroupIds = array_unique($allowedAccountGroupIds);
+
+        return $query->whereIn('customers.account_group', $allowedAccountGroupIds);
+    }
 }

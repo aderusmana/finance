@@ -125,7 +125,8 @@ class CustomerController extends Controller
                     'customer_files.ktp_file as file_ktp',
                     'customer_files.akte_file as file_akte',
                     'customer_files.company_profile_file as file_company_profile'
-                );
+                )
+                ->allowedForUser($user);
 
             if ($request->has('status') && $request->status !== 'all') {
                 if ($request->status === 'Active') {
@@ -379,11 +380,11 @@ class CustomerController extends Controller
         $accountgroup = AccountGroup::all();
         $customerClass = CustomerClass::all();
 
-        $pendingCount = Customer::whereIn('status_approval', ['Pending', 'Processing'])->count();
-        $processingCount = Customer::where('status_approval', 'Processing')->count();
-        $approvedCount = Customer::whereIn('status_approval', ['Approved', 'Completed'])->count();
-        $activeCount = Customer::where('bank_garansi', 'YA')->count();
-        $inactiveCount = Customer::where(function ($q) {
+        $pendingCount = Customer::allowedForUser($user)->whereIn('status_approval', ['Pending', 'Processing'])->count();
+        $processingCount = Customer::allowedForUser($user)->where('status_approval', 'Processing')->count();
+        $approvedCount = Customer::allowedForUser($user)->whereIn('status_approval', ['Approved', 'Completed'])->count();
+        $activeCount = Customer::allowedForUser($user)->where('bank_garansi', 'YA')->count();
+        $inactiveCount = Customer::allowedForUser($user)->where(function ($q) {
             $q->where('bank_garansi', '!=', 'YA')
                 ->orWhereNull('bank_garansi');
         })->count();
@@ -1395,13 +1396,28 @@ class CustomerController extends Controller
 
     public function getLogData()
     {
+        $user = Auth::user();
+        
         $query = Activity::with('causer')
             ->where(function ($q) {
                 $q->where('log_name', 'like', '%customer%')
                     ->orWhere('log_name', 'like', 'sample%')
                     ->orWhere('log_name', 'path%');
-            })
-            ->orderBy('created_at', 'desc');
+            });
+
+        if (!$user->hasRole(['super-admin', 'admin'])) {
+            $allowedCustomerIds = Customer::allowedForUser($user)->pluck('id')->toArray();
+            $query->where(function ($q) use ($allowedCustomerIds) {
+                $q->where(function ($sub) use ($allowedCustomerIds) {
+                    $sub->where('subject_type', Customer::class)
+                        ->whereIn('subject_id', $allowedCustomerIds);
+                })
+                ->orWhere('subject_type', '!=', Customer::class)
+                ->orWhereNull('subject_type');
+            });
+        }
+
+        $query->orderBy('created_at', 'desc');
 
         return DataTables::of($query)
             ->addIndexColumn()
@@ -1833,6 +1849,7 @@ class CustomerController extends Controller
         $customers = Customer::with(['user', 'items', 'customerClass', 'accountGroup'])
             ->whereIn('id', $request->selected_ids)
             ->whereIn('status_approval', ['Approved', 'Completed'])
+            ->allowedForUser(Auth::user())
             ->get();
 
         if ($customers->isEmpty()) {
@@ -1882,9 +1899,7 @@ class CustomerController extends Controller
             }
         }
 
-        if (!Auth::user()->hasRole('super-admin')) {
-            $query->where('customers.created_by', Auth::id());
-        }
+        $query->allowedForUser(Auth::user());
 
         return DataTables::of($query)
             ->addIndexColumn()
