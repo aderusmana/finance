@@ -53,16 +53,68 @@ class ProfileController extends Controller
                 Storage::disk('public')->delete($filesToDelete);
             }
 
-            // ambil ekstensi file (jpg/png/dll)
-            $extension = $request->file('avatar')->getClientOriginalExtension();
+            $file = $request->file('avatar');
+            $extension = strtolower($file->getClientOriginalExtension());
+            $filename = $request->nik . '.' . $extension;
+            $directory = storage_path('app/public/avatar');
+            $path = $directory . '/' . $filename;
 
-            // simpan ke disk "public" (storage/app/public/avatar)
-            // Menggunakan $request->nik karena $user->nik mungkin belum tersimpan jika NIK juga diubah
-            $avatarPath = $request->file('avatar')->storeAs(
-                'avatar',                               // folder di dalam storage/app/public
-                $request->nik . '.' . $extension,       // nama file = NIK.ext
-                'public'                                // pakai disk public, bukan local
-            );
+            if (!file_exists($directory)) {
+                mkdir($directory, 0755, true);
+            }
+
+            // Gunakan PHP GD untuk resize ke 150x150
+            $sourceImage = null;
+            if (in_array($extension, ['jpg', 'jpeg'])) {
+                $sourceImage = @imagecreatefromjpeg($file->getRealPath());
+            } elseif ($extension === 'png') {
+                $sourceImage = @imagecreatefrompng($file->getRealPath());
+            } elseif ($extension === 'webp') {
+                $sourceImage = @imagecreatefromwebp($file->getRealPath());
+            }
+
+            if ($sourceImage) {
+                $width = imagesx($sourceImage);
+                $height = imagesy($sourceImage);
+                $size = min($width, $height); // Crop jadi kotak sempurna
+                $newSize = 150; // Max size 150x150
+
+                $croppedImage = imagecrop($sourceImage, [
+                    'x' => ($width - $size) / 2,
+                    'y' => ($height - $size) / 2,
+                    'width' => $size,
+                    'height' => $size
+                ]);
+
+                $finalImage = imagecreatetruecolor($newSize, $newSize);
+
+                // Pertahankan transparansi untuk PNG & WEBP
+                if (in_array($extension, ['png', 'webp'])) {
+                    imagealphablending($finalImage, false);
+                    imagesavealpha($finalImage, true);
+                    $transparent = imagecolorallocatealpha($finalImage, 255, 255, 255, 127);
+                    imagefilledrectangle($finalImage, 0, 0, $newSize, $newSize, $transparent);
+                }
+
+                imagecopyresampled($finalImage, $croppedImage, 0, 0, 0, 0, $newSize, $newSize, $size, $size);
+
+                if (in_array($extension, ['jpg', 'jpeg'])) {
+                    imagejpeg($finalImage, $path, 90);
+                } elseif ($extension === 'png') {
+                    imagepng($finalImage, $path);
+                } elseif ($extension === 'webp') {
+                    imagewebp($finalImage, $path, 90);
+                }
+
+                imagedestroy($sourceImage);
+                imagedestroy($croppedImage);
+                imagedestroy($finalImage);
+
+                $avatarPath = 'avatar/' . $filename;
+            } else {
+                // Fallback jika ekstensi tidak didukung GD
+                $avatarPath = $file->storeAs('avatar', $filename, 'public');
+            }
 
             // simpan path relatif untuk dipanggil dengan asset()
             $user->avatar = 'storage/' . $avatarPath;
