@@ -1258,8 +1258,9 @@
                                 }
                             }
                             else {
-                                if (!notesValue) {
-                                    Swal.fire('Warning', 'Notes are required for this approval.', 'warning');
+                                // Review: notes optional — hanya validasi format jika diisi
+                                if (notesValue && !/[a-zA-Z]{2,}/.test(notesValue)) {
+                                    Swal.fire('Warning', 'If filling notes, please use clear sentences.', 'warning');
                                     return;
                                 }
                             }
