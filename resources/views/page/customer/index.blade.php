@@ -2065,7 +2065,7 @@
                             });
 
                             if (code && code.data) {
-                                console.log("[QR SCAN] Data ditemukan:", code.data);
+                                // console.log("[QR SCAN] Data ditemukan:", code.data);
                                 const match = code.data.match(/\b\d{15,16}\b/);
 
                                 if (match) {
@@ -2159,7 +2159,7 @@
                                 if (cleanedLine.length > 3) cleanLines.push(cleanedLine);
                             }
 
-                            console.log("[DEBUG] Baris Setelah Disaring:", cleanLines);
+                            // console.log("[DEBUG] Baris Setelah Disaring:", cleanLines);
 
                             // --- 2. AMBIL TANGGAL DAN NPWP ---
                             let tgl = '';
@@ -2247,7 +2247,7 @@
                                 }
                             }
 
-                            console.log("[DEBUG] Sisa Teks (Murni Nama & Alamat):", dataSisa);
+                            // console.log("[DEBUG] Sisa Teks (Murni Nama & Alamat):", dataSisa);
 
                             if (dataSisa.length > 0) {
                                 // A. Ekstrak NAMA (Sudah pasti berada di baris pertama sisa data)
@@ -2306,15 +2306,15 @@
                             $('#ocr-status').remove();
                             originalBtn.prop('disabled', false);
 
-                            console.log("=== HASIL AKHIR OCR ===");
-                            console.log({
-                                NPWP: $('#npwp').val(),
-                                Nama: $('#name').val(),
-                                Alamat_1: $('#address1').val(),
-                                Alamat_2: $('#address2').val(),
-                                Alamat_3: $('#address3').val(),
-                                Tanggal: $('#tanggal_npwp').val()
-                            });
+                            // console.log("=== HASIL AKHIR OCR ===");
+                            // console.log({
+                            //     NPWP: $('#npwp').val(),
+                            //     Nama: $('#name').val(),
+                            //     Alamat_1: $('#address1').val(),
+                            //     Alamat_2: $('#address2').val(),
+                            //     Alamat_3: $('#address3').val(),
+                            //     Tanggal: $('#tanggal_npwp').val()
+                            // });
 
                         } catch (e) {
                             console.error('[NPWP OCR] Error:', e);
@@ -3219,7 +3219,7 @@
                         let filePath = $(this).data('path');
                         const title = $(this).data('title');
 
-                        console.log('Mencoba buka file:', filePath);
+                        // console.log('Mencoba buka file:', filePath);
 
                         if (!filePath || filePath.trim() === '' || filePath.endsWith('/storage/')) {
                             Swal.fire({
