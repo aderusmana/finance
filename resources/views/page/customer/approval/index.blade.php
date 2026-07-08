@@ -1322,7 +1322,10 @@
                         },
                         error: function(xhr) {
                             $('#loading-overlay').fadeOut('fast');
-                            const errMsg = xhr.responseJSON?.message || 'An error occurred while processing the request.';
+                            let errMsg = xhr.responseJSON?.message || 'An error occurred while processing the request.';
+                            if (xhr.responseJSON?.errors) {
+                                errMsg = Object.values(xhr.responseJSON.errors).flat().join('\n');
+                            }
                             Swal.fire('Error!', errMsg, 'error');
                         }
                     });

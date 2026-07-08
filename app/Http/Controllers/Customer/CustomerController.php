@@ -807,7 +807,7 @@ class CustomerController extends Controller
 
             if ($isTopChanged) {
                 if (empty($cleanNotes)) {
-                    return back()->withInput()->withErrors(['notes' => 'Notes are required when changing Term of Payment.']);
+                    throw \Illuminate\Validation\ValidationException::withMessages(['notes' => 'Notes are required when changing Term of Payment.']);
                 }
             }
         } else {
@@ -815,11 +815,11 @@ class CustomerController extends Controller
 
                 if (!$isIT) {
                     if (empty($cleanNotes)) {
-                        return back()->withInput()->withErrors(['notes' => 'Notes are required for review or reject actions.']);
+                        throw \Illuminate\Validation\ValidationException::withMessages(['notes' => 'Notes are required for review or reject actions.']);
                     }
 
                     if (!preg_match('/[a-zA-Z]{2,}/', $cleanNotes)) {
-                        return back()->withInput()->withErrors(['notes' => 'Notes must contain clear sentences.']);
+                        throw \Illuminate\Validation\ValidationException::withMessages(['notes' => 'Notes must contain clear sentences.']);
                     }
                 }
             }

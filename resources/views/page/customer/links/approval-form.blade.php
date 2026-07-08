@@ -1258,12 +1258,29 @@
 
                         fetch(actionUrl, {
                             method: 'POST',
-                            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                            headers: { 
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'Accept': 'application/json'
+                            },
                             body: formData,
                             credentials: 'same-origin'
                         })
                         .then(async (res) => {
                             const text = await res.text();
+                            
+                            if (!res.ok) {
+                                let errorMsg = `HTTP Error ${res.status}`;
+                                try {
+                                    const errData = JSON.parse(text);
+                                    if (errData.errors) {
+                                        errorMsg = Object.values(errData.errors).flat().join('\n');
+                                    } else if (errData.message) {
+                                        errorMsg = errData.message;
+                                    }
+                                } catch(e) {}
+                                throw new Error(errorMsg);
+                            }
+
                             // Try parse JSON first; if response is JSON use it, otherwise treat as HTML
                             try {
                                 return JSON.parse(text);
