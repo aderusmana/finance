@@ -32,7 +32,7 @@
                         <i class="ph-bold ph-briefcase text-white fs-5"></i>
                         <div>
                             <small class="d-block text-white" style="opacity: 0.8;">Position</small>
-                            <span class="text-white fw-bold">{{ $user->position->name ?? '-' }}</span>
+                            <span class="text-white fw-bold">{{ $user->position->position_name ?? '-' }}</span>
                         </div>
                     </div>
                 </div>
