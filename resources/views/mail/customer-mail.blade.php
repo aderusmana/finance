@@ -67,7 +67,7 @@
                         <td class="mobile-padding" style="padding: 40px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;">
 
                             <div style="font-size: 18px; margin-bottom: 35px; border-left: 6px solid #3b82f6; padding: 20px; background-color: #eff6ff; border-radius: 0 4px 4px 0; color: #1f2937; line-height: 1.6;">
-                                <strong>Hi {{ $approver_name ?? 'User' }},</strong><br>
+                                <strong>Dear {{ $approver_name ?? 'User' }},</strong><br>
                                 @if(isset($mail_type) && $mail_type == 'approval')
                                     Mohon tinjau data customer baru berikut.
                                 @elseif(isset($mail_type) && $mail_type == 'completed')
