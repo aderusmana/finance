@@ -14,40 +14,35 @@ use Illuminate\Support\Facades\Log;
 class ResendPendingApproval extends Command
 {
     protected $signature = 'approval:resend-pending';
-    protected $description = 'Resend approval emails only to the current active turn (lowest pending level) more than 1 day';
+    protected $description = 'Resend approval emails only to the current active turn (Weekdays only)';
 
     public function handle()
     {
-        // Ambil waktu batas (kemarin). Ganti jadi Carbon::now() kalau mau ditest instan
-        $yesterday = Carbon::now()->subDay(); 
+        if (Carbon::now()->isWeekend()) {
+            $this->info('Today is the weekend (Saturday/Sunday). The resend process is skipped.');
+            Log::info('Approval Resend Skipped: Today is the weekend (Saturday/Sunday).');
+            return;
+        }
 
-        // 1. Ambil semua ID Customer yang sedang memiliki log berstatus 'Pending'
+        $yesterday = Carbon::now()->subDay(); 
         $pendingCustomerIds = ApprovalLog::where('category', 'Customer')
             ->where('status', 'Pending')
             ->distinct()
             ->pluck('related_id');
 
         foreach ($pendingCustomerIds as $customerId) {
-            
-            // 2. Cari pemegang antrean saat ini (Level TERENDAH yang masih Pending)
             $activeLog = ApprovalLog::where('category', 'Customer')
                 ->where('related_id', $customerId)
                 ->where('status', 'Pending')
-                ->orderBy('level', 'asc') // Urutkan dari level paling kecil
+                ->orderBy('level', 'asc')
                 ->first();
 
-            // 3. Pastikan antrean yang aktif ini umurnya sudah lebih dari 1 hari
             if ($activeLog && $activeLog->updated_at <= $yesterday) {
-                
                 $customer = Customer::find($customerId);
                 $approver = User::where('nik', $activeLog->approver_nik)->first();
 
                 if ($customer && $approver && $approver->email) {
-                    
-                    // Generate token baru agar email/link yang kemarin menjadi invalid
                     $newToken = Str::uuid()->toString();
-                    
-                    // Update token & updated_at (Reset timer agar tidak dikirim berulang kali hari ini)
                     $activeLog->update([
                         'token' => $newToken, 
                         'updated_at' => now()
@@ -59,7 +54,7 @@ class ResendPendingApproval extends Command
                         'name' => $approver->name,
                         'level' => $activeLog->level,
                         'is_first' => ($activeLog->level == 1),
-                        'is_it' => $approver->hasRole('it') // Pengecekan aman jika dia adalah IT
+                        'is_it' => $approver->hasRole('it')
                     ]];
 
                     CustomerJob::dispatch($customer->id, $recipients, $newToken, 'approval');
@@ -68,6 +63,6 @@ class ResendPendingApproval extends Command
             }
         }
         
-        $this->info('Pending approvals processed successfully.');
+        $this->info('Pending approvals (Active queue only) processed successfully for Weekday.');
     }
 }
