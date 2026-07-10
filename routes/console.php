@@ -9,7 +9,5 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('bg:check-expired')->dailyAt('08:00');
-
 Schedule::command('approval:send-reminder')->dailyAt('08:00');
-
-Schedule::command('approval:resend-pending')->weekdays()->dailyAt('08:00');
+Schedule::command('approval:resend-pending')->weekdays()->hourly();
