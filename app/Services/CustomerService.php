@@ -26,50 +26,58 @@ class CustomerService
 
             // CEK STATUS BANK GARANSI (BG)
             $isBgActive = $data['bank_garansi'] === 'YA';
-            if ($isBgActive) {
-                // JIKA BG = YA: Limit Otomatis 0
+            $isCbd = strtoupper($data['term_of_payment'] ?? '') === 'CBD';
+
+            if ($isBgActive || $isCbd) {
+                // JIKA BG = YA ATAU TOP = CBD: Limit Otomatis 0
                 $data['credit_limit'] = 0; 
+                // Bersihkan inputan approved_credit_limit jika ada
+                if (isset($data['approved_credit_limit'])) {
+                    $data['approved_credit_limit'] = str_replace(['.', ','], '', $data['approved_credit_limit']);
+                }
             } else {
-                // JIKA BG = TIDAK: Ambil nominal dari inputan user & bersihkan formatnya
+                // JIKA BUKAN BG YES & BUKAN CBD: Ambil nominal dari inputan user & bersihkan formatnya
                 $rawLimit = $data['credit_limit'] ?? 0;
                 $cleanLimit = str_replace(['.', ','], '', $rawLimit);
                 $data['credit_limit'] = (float) $cleanLimit;
+                $data['approved_credit_limit'] = null; // Kosongkan
             }
 
-            if ($isBgActive) {
-                // JIKA BG = YA: Generate Nomor PKD (Format: 001/PKD-INI/V/2026)
-                $year = date('Y');
-                $monthRoman = $this->getRomanMonth(date('n')); 
-                $initials = $this->generateInitials($data['name']); 
+            $data['no_pkd'] = '-';
 
-                $maxSequence = 0;
-                $existingNumbers = Customer::where('no_pkd', 'LIKE', "%/{$year}")
-                                    ->pluck('no_pkd')->toArray();
+            // if ($isBgActive) {
+            //     $year = date('Y');
+            //     $monthRoman = $this->getRomanMonth(date('n')); 
+            //     $initials = $this->generateInitials($data['name']); 
 
-                foreach ($existingNumbers as $no) {
-                    $parts = explode('/', $no); 
-                    if (isset($parts[0]) && is_numeric($parts[0])) {
-                        $seq = intval($parts[0]);
-                        if ($seq > $maxSequence) $maxSequence = $seq; 
-                    }
-                }
+            //     $maxSequence = 0;
+            //     $existingNumbers = Customer::where('no_pkd', 'LIKE', "%/{$year}")
+            //                         ->pluck('no_pkd')->toArray();
 
-                $nextSequence = $maxSequence + 1; 
-                $pkdNumber = '';
+            //     foreach ($existingNumbers as $no) {
+            //         $parts = explode('/', $no); 
+            //         if (isset($parts[0]) && is_numeric($parts[0])) {
+            //             $seq = intval($parts[0]);
+            //             if ($seq > $maxSequence) $maxSequence = $seq; 
+            //         }
+            //     }
+
+            //     $nextSequence = $maxSequence + 1; 
+            //     $pkdNumber = '';
                 
-                do {
-                    $sequenceStr = str_pad($nextSequence, 3, '0', STR_PAD_LEFT); 
-                    $pkdNumber = sprintf("%s/PKD-%s/%s/%s", $sequenceStr, $initials, $monthRoman, $year);
-                    $exists = Customer::where('no_pkd', $pkdNumber)->exists();
-                    if ($exists) $nextSequence++; 
-                } while ($exists);
+            //     do {
+            //         $sequenceStr = str_pad($nextSequence, 3, '0', STR_PAD_LEFT); 
+            //         $pkdNumber = sprintf("%s/PKD-%s/%s/%s", $sequenceStr, $initials, $monthRoman, $year);
+            //         $exists = Customer::where('no_pkd', $pkdNumber)->exists();
+            //         if ($exists) $nextSequence++; 
+            //     } while ($exists);
 
-                $data['no_pkd'] = $pkdNumber;
+            //     $data['no_pkd'] = $pkdNumber;
                 
-            } else {
-                // JIKA BG = TIDAK: Tidak perlu Nomor PKD
-                $data['no_pkd'] = null;
-            }
+            // } else {
+            //     // JIKA BG = TIDAK: Tidak perlu Nomor PKD
+            //     $data['no_pkd'] = null;
+            // }
 
             if (isset($data['top_calc'])) {
                 $data['top_calc'] = $data['top_calc'];

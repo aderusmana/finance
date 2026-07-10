@@ -11,6 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
+        Schema::dropIfExists('logistic_fee_logs');
         Schema::create('logistic_fee_logs', function (Blueprint $table) {
             $table->id();
             $table->foreignId('distributor_customer_id')->constrained('distributor_customers')->onDelete('cascade');

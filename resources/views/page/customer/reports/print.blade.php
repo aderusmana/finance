@@ -398,6 +398,9 @@
                     <td class="lbl-cell">Credit Limit & CCAR:</td>
                     <td class="val-cell">
                         <div class="highlight-val">IDR {{ number_format($customer->credit_limit ?? 0, 0, ',', '.') }}</div>
+                        @if(($customer->bank_garansi === 'YA' || strtoupper($customer->term_of_payment) === 'CBD') && $customer->approved_credit_limit)
+                            <div style="color: #166534; font-size: 8pt; font-weight: bold;">(Apprv: IDR {{ number_format((float)$customer->approved_credit_limit, 0, ',', '.') }})</div>
+                        @endif
                         <div style="font-weight: normal; margin-top: 2px;"><strong>CCAR:</strong> {{ strtoupper($customer->ccar ?? '-') }}</div>
                     </td>
                 </tr>

@@ -336,16 +336,27 @@
                         {{-- 3. CREDIT LIMIT (AUTO CALC) --}}
                         <div class="col-md-4">
                             <div class="p-3 border rounded bg-light h-100">
-                                <label class="info-label mb-2">Credit Limit (Calculated)</label>
-                                <input type="hidden" name="update_credit_limit_value" id="final_credit_limit_input" value="{{ $customer->credit_limit }}" form="approvalForm">
-                                <div class="fs-5 text-success fw-bold" id="display_credit_limit">
-                                    IDR {{ number_format($customer->credit_limit, 0, ',', '.') }}
-                                </div>
-                                <span id="calc-badge" class="badge bg-warning text-dark mt-1 d-none" style="font-size: 0.6rem;">
-                                    <i class="fas fa-calculator me-1"></i> Auto-Updated
-                                </span>
+                                <label class="info-label mb-2">Credit Limit</label>
+                                <div class="fs-5 text-success fw-bold">IDR {{ number_format($customer->credit_limit, 0, ',', '.') }}</div>
                             </div>
                         </div>
+
+                        {{-- NEW: APPROVED CREDIT LIMIT --}}
+                        @if($customer->bank_garansi === 'YA' || strtoupper($customer->term_of_payment) === 'CBD')
+                        <div class="col-md-4">
+                            <div class="p-3 border rounded border-success bg-light-success h-100">
+                                <label class="info-label mb-2 text-success">Approved Credit Limit</label>
+                                @if($canAdjust)
+                                    <input type="text" class="form-control fw-bold text-success editable-field" 
+                                           name="update_approved_credit_limit" 
+                                           value="{{ number_format((float)$customer->approved_credit_limit, 0, ',', '.') }}" 
+                                           form="approvalForm" disabled placeholder="Input Limit Opsional">
+                                @else
+                                    <div class="fs-5 text-success fw-bold">IDR {{ number_format((float)$customer->approved_credit_limit, 0, ',', '.') }}</div>
+                                @endif
+                            </div>
+                        </div>
+                        @endif
                     </div>
 
                     {{-- 4.5. FINANCE PAYMENT & FAKTUR DETAILS (New Section) --}}

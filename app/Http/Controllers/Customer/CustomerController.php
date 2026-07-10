@@ -67,47 +67,52 @@ class CustomerController extends Controller
 
     public function generatePkdPreview(Request $request)
     {
-        $name = $request->name;
+        // $name = $request->name;
 
-        if (empty($name)) {
-            return response()->json(['success' => false, 'number' => '']);
-        }
+        // if (empty($name)) {
+        //     return response()->json(['success' => false, 'number' => '']);
+        // }
 
-        $year = date('Y');
-        $monthRoman = $this->getRomanMonth(date('n'));
-        $initials = $this->generateInitials($name);
+        // $year = date('Y');
+        // $monthRoman = $this->getRomanMonth(date('n'));
+        // $initials = $this->generateInitials($name);
 
-        $maxSequence = 0;
-        $existingNumbers = Customer::where('no_pkd', 'LIKE', "%/{$year}")
-            ->pluck('no_pkd')
-            ->toArray();
+        // $maxSequence = 0;
+        // $existingNumbers = Customer::where('no_pkd', 'LIKE', "%/{$year}")
+        //     ->pluck('no_pkd')
+        //     ->toArray();
 
-        foreach ($existingNumbers as $no) {
-            $parts = explode('/', $no);
-            if (isset($parts[0]) && is_numeric($parts[0])) {
-                $seq = intval($parts[0]);
-                if ($seq > $maxSequence) {
-                    $maxSequence = $seq;
-                }
-            }
-        }
+        // foreach ($existingNumbers as $no) {
+        //     $parts = explode('/', $no);
+        //     if (isset($parts[0]) && is_numeric($parts[0])) {
+        //         $seq = intval($parts[0]);
+        //         if ($seq > $maxSequence) {
+        //             $maxSequence = $seq;
+        //         }
+        //     }
+        // }
 
-        $nextSequence = $maxSequence + 1;
-        $pkdNumber = '';
+        // $nextSequence = $maxSequence + 1;
+        // $pkdNumber = '';
 
-        do {
-            $sequenceStr = str_pad($nextSequence, 3, '0', STR_PAD_LEFT);
-            $pkdNumber = sprintf("%s/PKD-%s/%s/%s", $sequenceStr, $initials, $monthRoman, $year);
+        // do {
+        //     $sequenceStr = str_pad($nextSequence, 3, '0', STR_PAD_LEFT);
+        //     $pkdNumber = sprintf("%s/PKD-%s/%s/%s", $sequenceStr, $initials, $monthRoman, $year);
 
-            $exists = Customer::where('no_pkd', $pkdNumber)->exists();
-            if ($exists) {
-                $nextSequence++;
-            }
-        } while ($exists);
+        //     $exists = Customer::where('no_pkd', $pkdNumber)->exists();
+        //     if ($exists) {
+        //         $nextSequence++;
+        //     }
+        // } while ($exists);
+
+        // return response()->json([
+        //     'success' => true,
+        //     'number' => $pkdNumber
+        // ]);
 
         return response()->json([
             'success' => true,
-            'number' => $pkdNumber
+            'number' => '-'
         ]);
     }
 
@@ -230,6 +235,7 @@ class CustomerController extends Controller
                     $dataAttrs .= ' data-term_of_payment="' . e($row->term_of_payment) . '"';
                     $dataAttrs .= ' data-lead_time="' . e($row->lead_time) . '"';
                     $dataAttrs .= ' data-credit_limit="' . e($row->credit_limit) . '"';
+                    $dataAttrs .= ' data-approved_credit_limit="' . e($row->approved_credit_limit) . '"';
                     $dataAttrs .= ' data-ccar="' . e($row->ccar) . '"';
                     $dataAttrs .= ' data-bank_garansi="' . e($row->bank_garansi) . '"';
                     $dataAttrs .= ' data-area="' . e($row->area) . '"';
@@ -320,11 +326,23 @@ class CustomerController extends Controller
                             </div>';
                 })
                 ->editColumn('credit_limit', function ($row) {
-                    $amount = number_format($row->credit_limit, 0, ',', '.');
+                    $isBgActive = $row->bank_garansi === 'YA';
+                    $isCbd = strtoupper($row->term_of_payment ?? '') === 'CBD';
+                    $amountToShow = (float) $row->credit_limit;
+                    $badgeHtml = '';
+
+                    if (($isBgActive || $isCbd) && !empty($row->approved_credit_limit)) {
+                        $amountToShow = (float) $row->approved_credit_limit;
+                        $badgeHtml = '<div class="mt-1"><span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25" style="font-size: 9px;"><i class="ph-bold ph-check-circle me-1"></i>Approved Limit</span></div>';
+                    }
+
+                    $formattedAmount = number_format($amountToShow, 0, ',', '.');
+
                     return '<div class="d-flex flex-column text-start">
                                 <span class="fw-bold text-success" style="font-size: 14px;">
-                                    <span class="text-muted fw-normal me-1" style="font-size: 10px;">IDR</span>' . $amount . '
+                                    <span class="text-muted fw-normal me-1" style="font-size: 10px;">IDR</span>' . $formattedAmount . '
                                 </span>
+                                ' . $badgeHtml . '
                             </div>';
                 })
                 ->editColumn('financial_info', function ($row) {
@@ -980,6 +998,17 @@ class CustomerController extends Controller
                 'token' => null,
             ]);
 
+            $requester = $customer->user;
+            if ($requester) {
+                Notification::send($requester, new SystemNotification(
+                    "Approval Update: {$customer->name}",
+                    "Customer Status <b>{$customer->name}</b> has been <b>{$dbStatus}</b> by <b>{$actor->name}</b>.",
+                    route('customers.index'),
+                    $dbStatus === 'Approved' ? 'ph-check-circle' : 'ph-x-circle',
+                    $dbStatus === 'Approved' ? 'success' : 'danger'
+                ));
+            }
+
             if ($dbStatus === 'Approved') {
                 $nextLevel = $currentLog->level + 1;
                 $nextLog = ApprovalLog::where('category', 'Customer')
@@ -1050,7 +1079,6 @@ class CustomerController extends Controller
                         }
                     }
 
-                    $requester = $customer->user;
                     if ($requester && $requester->email) {
                         $recipients = [[
                             'email' => $requester->email,

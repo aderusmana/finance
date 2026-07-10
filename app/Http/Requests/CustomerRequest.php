@@ -92,37 +92,37 @@ class CustomerRequest extends FormRequest
             'address1' => 'required|string|max:255',
             'address2' => 'nullable|string|max:255',
             'address3' => 'nullable|string|max:255',
-            'pic' => 'required|string|max:255',
-            'city' => 'required|string|max:100',
-            'postal_code' => 'required|string|max:20',
-            'country' => 'required|string|max:100',
-            'email' => 'required|email|max:255',
-            'area' => 'required|string|max:100',
+            'pic' => 'nullable|string|max:255',
+            'city' => 'nullable|string|max:100',
+            'postal_code' => 'nullable|string|max:20',
+            'country' => 'nullable|string|max:100',
+            'email' => 'nullable|email|max:255',
+            'area' => 'nullable|string|max:100',
 
             // --- 5. Shipping & Management ---
-            'shipping_to_name' => 'required|string|max:255',
-            'shipping_to_address' => 'required|string',
-            'purchasing_manager_name' => 'required|string|max:255',
-            'purchasing_manager_email' => 'required|email|max:255',
-            'purchasing_manager_telepon' => 'required|string|max:50',
-            'finance_manager_name' => 'required|string|max:255',
-            'finance_manager_email' => 'required|email|max:255',
-            'finance_manager_telepon' => 'required|string|max:50',
+            'shipping_to_name' => 'nullable|string|max:255',
+            'shipping_to_address' => 'nullable|string',
+            'purchasing_manager_name' => 'nullable|string|max:255',
+            'purchasing_manager_email' => 'nullable|email|max:255',
+            'purchasing_manager_telepon' => 'nullable|string|max:50',
+            'finance_manager_name' => 'nullable|string|max:255',
+            'finance_manager_email' => 'nullable|email|max:255',
+            'finance_manager_telepon' => 'nullable|string|max:50',
 
             // --- 6. Billing & Tax ---
-            'penagihan_nama_kontak' => 'required|string|max:255',
-            'penagihan_telepon' => 'required|string|max:50',
-            'penagihan_address' => 'required|string',
-            'surat_menyurat_address' => 'required|string',
+            'penagihan_nama_kontak' => 'nullable|string|max:255',
+            'penagihan_telepon' => 'nullable|string|max:50',
+            'penagihan_address' => 'nullable|string',
+            'surat_menyurat_address' => 'nullable|string',
 
-            'tax_contact_name' => 'required|string|max:255',
-            'tax_contact_email' => 'required|email|max:255',
-            'tax_contact_phone' => 'required|string|max:50',
+            'tax_contact_name' => 'nullable|string|max:255',
+            'tax_contact_email' => 'nullable|email|max:255',
+            'tax_contact_phone' => 'nullable|string|max:50',
 
-            'npwp' => 'required|string|max:50',
+            'npwp' => 'nullable|string|max:50',
             'tanggal_npwp' => 'required|date',
             'nppkp' => 'nullable|string|max:50',
-            'tanggal_nppkp' => 'nullable|date',
+            'tanggal_nppkp' => 'required|date',
             'no_pengukuhan_kaber' => 'nullable|string|max:255',
 
             // --- 7. Financial Terms ---
@@ -133,9 +133,9 @@ class CustomerRequest extends FormRequest
                 'numeric',
                 'min:0',
             ],
-            'ccar' => 'required|string',
+            'ccar' => 'nullable|string',
             'bank_garansi' => 'required|in:YA,TIDAK',
-            'lead_time' => 'nullable|numeric|min:0',
+            'lead_time' => 'required|numeric|min:0',
         ];
     }
 
@@ -143,23 +143,11 @@ class CustomerRequest extends FormRequest
     {
         $top = $this->input('term_of_payment');
         $bg = $this->input('bank_garansi');
-        $rawCreditLimit = $this->input('credit_limit');
+        
+        $creditLimit = preg_replace('/[^0-9]/', '', (string)$this->input('credit_limit'));
+        if ($creditLimit === '') $creditLimit = 0;
 
-        $creditLimit = $rawCreditLimit;
-        if (is_string($creditLimit)) {
-            $creditLimit = preg_replace('/[^0-9]/', '', $creditLimit);
-            if ($creditLimit === '') {
-                $creditLimit = null;
-            }
-        }
-
-        // CBD (Cash Before Delivery) tidak memiliki kredit, jadi Credit Limit harus 0
-        if (is_string($top) && strtoupper($top) === 'CBD') {
-            $creditLimit = 0;
-        }
-
-        // Jika Bank Garansi TIDAK, Credit Limit harus 0
-        if (is_string($bg) && strtoupper($bg) === 'YES') {
+        if (strtoupper((string)$top) === 'CBD' || strtoupper((string)$bg) === 'YA') {
             $creditLimit = 0;
         }
 
@@ -183,7 +171,6 @@ class CustomerRequest extends FormRequest
             'customer_class.required' => 'Customer Class wajib dipilih.',
 
             // --- 3. Documents (Files) ---
-            // NPWP
             'file_npwp.required' => 'Dokumen NPWP wajib diupload.',
             'file_npwp.file'     => 'Dokumen NPWP harus berupa file yang valid.',
 
@@ -193,48 +180,15 @@ class CustomerRequest extends FormRequest
             'file_ktp.required'  => 'Dokumen KTP wajib diupload.',
             'file_ktp.file'      => 'Dokumen KTP harus berupa file yang valid.',
 
-            'file_akte.mimes'    => 'Format Akte harus PDF.',
-            'file_akte.max'      => 'Ukuran file Akte maksimal 5MB.',
-
             // --- 4. General Info ---
-            'name.required'        => 'Nama Customer wajib diisi.',
-            'address1.required'    => 'Alamat baris 1 wajib diisi.',
-            'city.required'        => 'Kota wajib diisi.',
-            'pic.required'         => 'PIC wajib diisi.',
-            'postal_code.required' => 'Kode Pos wajib diisi.',
-            'country.required'     => 'Negara wajib diisi.',
-            'email.required'       => 'Email general wajib diisi.',
-            'email.email'          => 'Format email general tidak valid.',
-            'area.required'        => 'Area wajib diisi.',
+            'name.required'     => 'Nama Customer wajib diisi.',
+            'address1.required' => 'Alamat baris 1 wajib diisi.',
 
-            // --- 5. Shipping & Mgmt ---
-            'shipping_to_name.required'    => 'Nama penerima pengiriman wajib diisi.',
-            'shipping_to_address.required' => 'Alamat pengiriman wajib diisi.',
-
-            'purchasing_manager_name.required'  => 'Nama Purchasing Manager wajib diisi.',
-            'purchasing_manager_email.required' => 'Email Purchasing Manager wajib diisi.',
-            'purchasing_manager_email.email'    => 'Format email Purchasing Manager tidak valid.',
-            'purchasing_manager_telepon.required' => 'Telepon Purchasing Manager wajib diisi.',
-
-            'finance_manager_name.required'  => 'Nama Finance Manager wajib diisi.',
-            'finance_manager_email.required' => 'Email Finance Manager wajib diisi.',
-            'finance_manager_email.email'    => 'Format email Finance Manager tidak valid.',
-            'finance_manager_telepon.required' => 'Telepon Finance Manager wajib diisi.',
-
-            // --- 6. Billing & Tax ---
-            'penagihan_nama_kontak.required'  => 'Nama kontak penagihan wajib diisi.',
-            'penagihan_telepon.required'      => 'Nomor telepon penagihan wajib diisi.',
-            'penagihan_address.required'      => 'Alamat penagihan wajib diisi.',
-            'surat_menyurat_address.required' => 'Alamat surat menyurat wajib diisi.',
-
-            'tax_contact_name.required'  => 'Nama kontak pajak wajib diisi.',
-            'tax_contact_email.required' => 'Email kontak pajak wajib diisi.',
-            'tax_contact_phone.required' => 'Telepon kontak pajak wajib diisi.',
-
-            'npwp.required'          => 'Nomor NPWP wajib diisi.',
+            // --- 5. Tax (Sesuai dengan rules: tanggal required, string npwp nullable) ---
             'tanggal_npwp.required'  => 'Tanggal NPWP wajib diisi.',
+            'tanggal_nppkp.required' => 'Tanggal NPPKP wajib diisi.',
 
-            // --- 7. Financial Terms ---
+            // --- 6. Financial Terms ---
             'term_of_payment.required' => 'Term of Payment (TOP) wajib dipilih.',
             'output_tax.required'      => 'Output Tax wajib dipilih.',
             'output_tax.in'            => 'Pilihan Output Tax tidak valid.',
@@ -242,8 +196,10 @@ class CustomerRequest extends FormRequest
             'credit_limit.required' => 'Credit Limit wajib dihitung/diisi.',
             'credit_limit.min'      => 'Credit Limit tidak boleh bernilai negatif.',
 
-            'ccar.required'         => 'CCAR wajib dipilih.',
             'bank_garansi.required' => 'Status Bank Garansi wajib dipilih.',
+            
+            'lead_time.required'    => 'Lead Time wajib diisi.',
+            'lead_time.min'         => 'Lead Time tidak boleh bernilai negatif.',
         ];
     }
 }

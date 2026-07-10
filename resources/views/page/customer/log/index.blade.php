@@ -14,7 +14,7 @@
                             <span style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; padding: 2px 8px; font-size: 0.7rem; font-weight: 700; letter-spacing: 1px; color: #a5b4fc;"><i class="ph-fill ph-shield-check me-1"></i> SECURITY & AUDIT</span>
                         </div>
                         <h3 class="fw-bolder mb-1" style="letter-spacing: -0.5px;">System Activity Logs</h3>
-                        <p class="mb-0" style="color: #c7d2fe; font-size: 0.95rem;">Pantau seluruh jejak digital, perubahan data, dan aktivitas sistem secara *real-time*.</p>
+                        <p class="mb-0" style="color: #c7d2fe; font-size: 0.95rem;">Record user activities, data changes, and system events for security and audit purposes.</p>
                     </div>
                     <!-- <div class="flex-shrink-0">
                         <nav aria-label="breadcrumb">
@@ -33,7 +33,7 @@
             <div class="col-12">
                 <div class="card" style="background: #ffffff; border: none; border-radius: 1.25rem; box-shadow: 0 4px 24px rgba(0, 0, 0, 0.03); overflow: hidden; z-index: 2; position: relative;">
                     <div class="card-header bg-white pt-4 pb-0 px-4 d-flex justify-content-between align-items-center" style="border-bottom: 0;">
-                        <h5 class="fw-bolder mb-0" style="color: #1e293b;"><i class="ph-fill ph-fingerprint me-2" style="color: #2563eb;"></i>Rekam Jejak Aktivitas</h5>
+                        <h5 class="fw-bolder mb-0" style="color: #1e293b;"><i class="ph-fill ph-fingerprint me-2" style="color: #2563eb;"></i>Activity Log</h5>
                         <button class="btn btn-sm btn-light border fw-bold rounded-pill px-3 shadow-sm" style="color: #475569;" onclick="table.ajax.reload()"><i class="ph-bold ph-arrows-clockwise me-1"></i> Refresh Log</button>
                     </div>
                     <div class="card-body p-0 mt-3">
@@ -42,13 +42,13 @@
                                 <thead>
                                     <tr>
                                         <th class="text-center" style="background-color: #f8fafc; color: #475569; font-weight: 700; text-transform: uppercase; font-size: 0.75rem; padding: 1.25rem 1rem; border-bottom: 2px solid #e2e8f0; width: 3%;">No</th>
-                                        <th style="background-color: #f8fafc; color: #475569; font-weight: 700; text-transform: uppercase; font-size: 0.75rem; padding: 1.25rem 1rem; border-bottom: 2px solid #e2e8f0; width: 12%;">Waktu Log</th>
-                                        <th class="text-center" style="background-color: #f8fafc; color: #475569; font-weight: 700; text-transform: uppercase; font-size: 0.75rem; padding: 1.25rem 1rem; border-bottom: 2px solid #e2e8f0; width: 10%;">Tipe Modul</th>
-                                        <th class="text-center" style="background-color: #f8fafc; color: #475569; font-weight: 700; text-transform: uppercase; font-size: 0.75rem; padding: 1.25rem 1rem; border-bottom: 2px solid #e2e8f0; width: 10%;">Aksi (Event)</th>
-                                        <th style="background-color: #f8fafc; color: #475569; font-weight: 700; text-transform: uppercase; font-size: 0.75rem; padding: 1.25rem 1rem; border-bottom: 2px solid #e2e8f0; width: 12%;">Aktor (Causer)</th>
+                                        <th style="background-color: #f8fafc; color: #475569; font-weight: 700; text-transform: uppercase; font-size: 0.75rem; padding: 1.25rem 1rem; border-bottom: 2px solid #e2e8f0; width: 12%;">Timestamp</th>
+                                        <th class="text-center" style="background-color: #f8fafc; color: #475569; font-weight: 700; text-transform: uppercase; font-size: 0.75rem; padding: 1.25rem 1rem; border-bottom: 2px solid #e2e8f0; width: 10%;">Module Type</th>
+                                        <th class="text-center" style="background-color: #f8fafc; color: #475569; font-weight: 700; text-transform: uppercase; font-size: 0.75rem; padding: 1.25rem 1rem; border-bottom: 2px solid #e2e8f0; width: 10%;">Action (Event)</th>
+                                        <th style="background-color: #f8fafc; color: #475569; font-weight: 700; text-transform: uppercase; font-size: 0.75rem; padding: 1.25rem 1rem; border-bottom: 2px solid #e2e8f0; width: 12%;">Actor (Causer)</th>
                                         <th style="background-color: #f8fafc; color: #475569; font-weight: 700; text-transform: uppercase; font-size: 0.75rem; padding: 1.25rem 1rem; border-bottom: 2px solid #e2e8f0; width: 18%;">Target Data</th>
                                         <th class="text-center" style="background-color: #f8fafc; color: #475569; font-weight: 700; text-transform: uppercase; font-size: 0.75rem; padding: 1.25rem 1rem; border-bottom: 2px solid #e2e8f0; width: 5%;">Tag ID</th>
-                                        <th style="background-color: #f8fafc; color: #2563eb; font-weight: 700; text-transform: uppercase; font-size: 0.75rem; padding: 1.25rem 1rem; border-bottom: 2px solid #e2e8f0; width: 25%;"><i class="ph-bold ph-braces me-1"></i> Detail Perubahan (Properties)</th>
+                                        <th style="background-color: #f8fafc; color: #2563eb; font-weight: 700; text-transform: uppercase; font-size: 0.75rem; padding: 1.25rem 1rem; border-bottom: 2px solid #e2e8f0; width: 25%;"><i class="ph-bold ph-braces me-1"></i> Properties</th>
                                     </tr>
                                 </thead>
                             </table>
@@ -109,9 +109,9 @@
                     order: [[ 1, 'desc' ]], // Urutkan berdasarkan created_at (kolom index 1)
                     language: {
                         search: "",
-                        searchPlaceholder: "🔍 Cari data log/history...",
-                        lengthMenu: "Tampilkan _MENU_ baris",
-                        info: "Menampilkan _START_ s/d _END_ dari _TOTAL_ rekam jejak"
+                        searchPlaceholder: "🔍 Search data log/history...",
+                        lengthMenu: "Show _MENU_ rows",
+                        info: "Showing _START_ to _END_ of _TOTAL_ records"
                     },
                     drawCallback: function(settings) {
                         // Inject CSS secara inline ke dalam TR dan TD setelah data selesai di-render

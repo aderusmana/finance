@@ -613,6 +613,12 @@
                                                 <option value="TIDAK">No</option>
                                             </select>
                                         </div>
+
+                                        <div class="col-md-4" id="div_approved_credit_limit" style="display: none;">
+                                            <label class="form-label text-success"><i class="ph-bold ph-check-circle me-1"></i>Approved Credit Limit</label>
+                                            <input type="text" class="form-control border-success calc-price" name="approved_credit_limit" id="approved_credit_limit" placeholder="Masukkan Nominal">
+                                            <small class="text-muted f-s-11">Opsional: Nominal aktual jika BG Yes.</small>
+                                        </div>
                                     </div>
                                 </div>
                                 <hr>
@@ -883,10 +889,14 @@
                                 <div class="card-body p-4">
                                     <div class="d-flex justify-content-between align-items-start mb-3">
                                         <div>
-                                            <label
-                                                class="text-white text-opacity-75 text-uppercase f-s-12 fw-bold">Credit
-                                                Limit</label>
+                                            <label class="text-white text-opacity-75 text-uppercase f-s-12 fw-bold">Credit Limit</label>
                                             <h3 class="mb-0 fw-bold mt-1" id="view_credit_limit">IDR 0</h3>
+                                            
+                                            <div id="view_approved_credit_limit_wrapper" class="mt-1" style="display: none;">
+                                                <span class="badge bg-white text-success fw-bold" style="font-size: 11px;">
+                                                    <i class="ph-bold ph-check-circle me-1"></i>Apprv: <span id="view_approved_credit_limit">0</span>
+                                                </span>
+                                            </div>
                                         </div>
                                         <i class="ph-duotone ph-wallet f-s-40 text-white text-opacity-50"></i>
                                     </div>
@@ -1366,6 +1376,10 @@
                                                 <option value="TIDAK">No</option>
                                             </select>
                                         </div>
+                                        <div class="col-md-4" id="div_recall_approved_credit_limit" style="display: none;">
+                                            <label class="form-label small fw-bold text-success">Approved Credit Limit</label>
+                                            <input type="text" class="form-control border-success calc-price" name="approved_credit_limit" id="recall_approved_credit_limit" placeholder="Input Limit Opsional">
+                                        </div>
                                         <div class="col-md-4">
                                             <label class="form-label small fw-bold text-dark">Output Tax</label>
                                             <select class="form-select select2-recall" name="output_tax"
@@ -1770,6 +1784,7 @@
                     $('#recall_area').val(data.area);
                     $('#recall_postal_code').val(data.postal_code);
                     $('#recall_credit_limit').val(data.credit_limit);
+                    $('#recall_approved_credit_limit').val(data.approved_credit_limit);
 
                     // Management & Shipping (Previously Hidden/Missing)
                     $('#recall_shipping_to_name').val(data.shipping_to_name);
@@ -1795,6 +1810,7 @@
                     $('#recall_tax_contact_name').val(data.tax_contact_name);
                     $('#recall_tax_contact_email').val(data.tax_contact_email);
                     $('#recall_tax_contact_phone').val(data.tax_contact_phone);
+                    toggleRecallApprovedCreditLimit();
 
                     // --- 3. POPULATE ITEMS ---
                     if (data.items && data.items.length > 0) {
@@ -1852,19 +1868,19 @@
                     const currentApprovalFilter = $('#approvalStatusFilter').val();
 
                     Swal.fire({
-                        title: 'Konfirmasi Recall',
-                        text: "Data akan diajukan ulang (Resubmit) dan status kembali Pending. Pastikan revisi sudah benar.",
+                        title: 'Recall Confirmation',
+                        text: "The data will be resubmitted and the status will return to Pending. Make sure the revisions are correct.",
                         icon: 'question',
                         showCancelButton: true,
                         confirmButtonColor: '#ffc107',
                         cancelButtonColor: '#d33',
-                        confirmButtonText: 'Ya, Submit!',
-                        cancelButtonText: 'Batal'
+                        confirmButtonText: 'Yes, Submit!',
+                        cancelButtonText: 'Cancel'
                     }).then((result) => {
                         if (result.isConfirmed) {
                             Swal.fire({
                                 title: 'Processing...',
-                                html: 'Sedang menyimpan perubahan...',
+                                html: 'Saving changes...',
                                 allowOutsideClick: false,
                                 didOpen: () => {
                                     Swal.showLoading();
@@ -1883,7 +1899,7 @@
                                     if (response.success) {
                                         Swal.fire({
                                             icon: 'success',
-                                            title: 'Recall Berhasil!',
+                                            title: 'Recall Successful!',
                                             text: response.message,
                                             timer: 2000,
                                             showConfirmButton: false
@@ -1945,18 +1961,18 @@
                     const currentApprovalFilter = $('#approvalStatusFilter').val();
 
                     Swal.fire({
-                        title: 'Konfirmasi Penyimpanan',
-                        text: "Pastikan seluruh data yang diinput sudah benar.",
+                        title: 'Save Confirmation',
+                        text: "Please ensure all entered data is correct.",
                         icon: 'question',
                         showCancelButton: true,
                         confirmButtonColor: '#3085d6',
                         cancelButtonColor: '#d33',
-                        confirmButtonText: 'Ya, Simpan!'
+                        confirmButtonText: 'Yes, Save!'
                     }).then((result) => {
                         if (result.isConfirmed) {
                             Swal.fire({
-                                title: 'Menyimpan Data...',
-                                html: 'Mohon tunggu sebentar.',
+                                title: 'Saving Data...',
+                                html: 'Please wait a moment.',
                                 allowOutsideClick: false,
                                 didOpen: () => {
                                     Swal.showLoading();
@@ -1975,7 +1991,7 @@
                                     if (response.success) {
                                         Swal.fire({
                                             icon: 'success',
-                                            title: 'Berhasil!',
+                                            title: 'Success!',
                                             text: response.message,
                                             timer: 2000,
                                             showConfirmButton: false
@@ -2027,7 +2043,7 @@
                     originalBtn.prop('disabled', true);
 
                     const notice = $(
-                        '<div class="mt-2 text-info" id="ocr-status"><i class="ph-bold ph-spinner ph-spin me-1"></i> Membaca QR Code & Memproses Kartu...</div>'
+                        '<div class="mt-2 text-info" id="ocr-status"><i class="ph-bold ph-spinner ph-spin me-1"></i> Reading QR Code & Processing Card...</div>'
                     );
                     $(this).closest('.card-body').find('#ocr-status').remove(); // Hapus notif lama jika ada
                     $(this).closest('.card-body').append(notice);
@@ -2083,12 +2099,12 @@
                                     $('#npwp').val(formattedNpwp);
                                     qrNpwpFound = true;
                                     $('#ocr-status').html(
-                                        '<i class="ph-bold ph-check text-success me-1"></i> QR Code terbaca! Mengekstrak Nama & Alamat...'
+                                        '<i class="ph-bold ph-check text-success me-1"></i> QR Code scanned! Extracting Name & Address...'
                                     );
                                 }
                             }
                         } catch (err) {
-                            console.warn("[QR SCAN] Gagal mengeksekusi jsQR:", err);
+                            console.warn("[QR SCAN] Failed to execute jsQR:", err);
                         }
 
                         // ============================================================
@@ -2100,7 +2116,7 @@
                                     if (m.status === 'recognizing text' && $('#ocr-status')
                                         .length) {
                                         $('#ocr-status').html(
-                                            `<i class="ph-bold ph-spinner ph-spin me-1"></i> Menyaring Data Kartu... ${Math.round(m.progress * 100)}%`
+                                            `<i class="ph-bold ph-spinner ph-spin me-1"></i> Filtering Card Data... ${Math.round(m.progress * 100)}%`
                                             );
                                     }
                                 }
@@ -2319,7 +2335,7 @@
                         } catch (e) {
                             console.error('[NPWP OCR] Error:', e);
                             $('#ocr-status').html(
-                                '<span class="text-danger mt-1">Gagal memproses gambar. Silakan input manual.</span>'
+                                '<span class="text-danger mt-1">Failed to process image. Please enter manually.</span>'
                                 );
                             originalBtn.prop('disabled', false);
                         }
@@ -2665,8 +2681,35 @@
                     }
                 }
 
+                // --- HELPER UNTUK FORM CREATE ---
+                function toggleApprovedCreditLimit() {
+                    let bgVal = $('#bank_garansi').val();
+                    let topVal = $('#term_of_payment').val();
+                    
+                    if (bgVal === 'YA' || String(topVal).toUpperCase() === 'CBD') {
+                        $('#div_approved_credit_limit').slideDown();
+                    } else {
+                        $('#div_approved_credit_limit').slideUp();
+                        $('#approved_credit_limit').val('');
+                    }
+                }
+
+                // --- HELPER UNTUK FORM RECALL ---
+                function toggleRecallApprovedCreditLimit() {
+                    let bgVal = $('#recall_bank_garansi').val();
+                    let topVal = $('#recall_term_of_payment').val();
+                    
+                    if (bgVal === 'YA' || String(topVal).toUpperCase() === 'CBD') {
+                        $('#div_recall_approved_credit_limit').slideDown();
+                    } else {
+                        $('#div_recall_approved_credit_limit').slideUp();
+                        $('#recall_approved_credit_limit').val('');
+                    }
+                }
+
                 $('#term_of_payment').on('change', function() {
                     checkCreditLimitAccess();
+                    toggleApprovedCreditLimit();
                     const v = $(this).val();
 
                     if ($('#calc_top').length && $('#calc_top').val() !== v) {
@@ -2683,29 +2726,24 @@
 
                 $('#recall_term_of_payment, #recall_bank_garansi').on('change', function() {
                     checkRecallCreditLimitAccess();
+                    toggleRecallApprovedCreditLimit();
                 });
 
                 $('#bank_garansi').on('change', function() {
                     const val = $(this).val();
                     const pkdInput = $('#no_pkd');
-                    const customerName = $('#name').val();
+                    
+                    toggleApprovedCreditLimit();
 
-                    pkdInput.parent().find('.pkd-status-note').remove();
-
-                    if (val === 'TIDAK') {
-                        pkdInput.val('').prop('readonly', true).removeClass('fw-bold');
-                        pkdInput.after(
-                            '<small class="pkd-status-note text-danger fw-bold mt-1 d-block"><i class="ph-bold ph-info me-1"></i> This Customer does not use Bank Guarantee.</small>'
-                        );
+                    if (val === 'YA') {
+                        $('#div_approved_credit_limit').slideDown();
                     } else {
-                        pkdInput.prop('readonly', true).addClass('fw-bold');
-                        if (customerName && customerName.length > 3) {
-                            generatePkdNumber(customerName);
-                        } else {
-                            pkdInput.val('').attr('placeholder', 'Enter Customer Name to Generate PKD...');
-                        }
+                        $('#div_approved_credit_limit').slideUp();
+                        $('#approved_credit_limit').val('');
                     }
 
+                    // No PKD selalu statis '-'
+                    pkdInput.val('-').prop('readonly', true).addClass('text-muted');
                     checkCreditLimitAccess();
                 });
 
@@ -2973,6 +3011,18 @@
                     // 3. FINANCIAL
                     const cl = parseFloat(btn.data('credit_limit')) || 0;
                     $('#view_credit_limit').text('IDR ' + cl.toLocaleString('id-ID'));
+                    
+                    // --- TAMBAHAN LOGIC APPROVED CREDIT LIMIT ---
+                    const apprvCl = parseFloat(btn.data('approved_credit_limit'));
+                    const bgStatusDetail = btn.data('bank_garansi');
+                    const topStatusDetail = btn.data('term_of_payment');
+
+                    if ((bgStatusDetail === 'YA' || String(topStatusDetail).toUpperCase() === 'CBD') && !isNaN(apprvCl)) {
+                        $('#view_approved_credit_limit').text('IDR ' + apprvCl.toLocaleString('id-ID'));
+                        $('#view_approved_credit_limit_wrapper').fadeIn();
+                    } else {
+                        $('#view_approved_credit_limit_wrapper').hide();
+                    }
                     $('#view_top').text(btn.data('term_of_payment'));
 
                     $('#view_npwp').text(btn.data('npwp'));

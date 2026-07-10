@@ -21,6 +21,12 @@ class Customer extends Model
             if (is_string($customer->bank_garansi) && strtoupper($customer->bank_garansi) === 'TIDAK') {
                 $customer->credit_limit = 0;
             }
+
+            if (is_string($customer->bank_garansi) && strtoupper($customer->bank_garansi) === 'YA') {
+                if (!$customer->approved_credit_limit) {
+                    $customer->approved_credit_limit = $customer->credit_limit;
+                }
+            }
         });
     }
 
@@ -39,7 +45,8 @@ class Customer extends Model
         'payment_date',
         'faktur_days',
         'faktur_date',
-        'created_by'
+        'created_by',
+        'approved_credit_limit'
     ];
 
     protected $casts = [
@@ -51,6 +58,7 @@ class Customer extends Model
         'payment_date' => 'array',
         'faktur_days' => 'array',
         'faktur_date' => 'array',
+        'approved_credit_limit' => 'decimal:2',
     ];
 
     protected $table = 'customers';

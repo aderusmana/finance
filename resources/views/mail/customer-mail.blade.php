@@ -150,6 +150,9 @@
                                     </td>
                                     <td class="data-text" style="padding: 12px 0; border-bottom: 1px solid #f3f4f6; color: #15803d; font-weight: bold;">
                                         IDR {{ number_format($customer->credit_limit, 0, ',', '.') }}
+                                        @if(($customer->bank_garansi === 'YA' || strtoupper($customer->term_of_payment) === 'CBD') && $customer->approved_credit_limit)
+                                            <br><span style="font-size: 14px; color: #166534;">Apprv: IDR {{ number_format((float)$customer->approved_credit_limit, 0, ',', '.') }}</span>
+                                        @endif
                                     </td>
                                 </tr>
                                 <tr>
