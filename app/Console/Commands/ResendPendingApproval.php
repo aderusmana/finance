@@ -19,7 +19,7 @@ class ResendPendingApproval extends Command
     public function handle()
     {
         // Ambil waktu batas (kemarin). Ganti jadi Carbon::now() kalau mau ditest instan
-        $yesterday = Carbon::now(); 
+        $yesterday = Carbon::now()->subDay(); 
 
         // 1. Ambil semua ID Customer yang sedang memiliki log berstatus 'Pending'
         $pendingCustomerIds = ApprovalLog::where('category', 'Customer')
