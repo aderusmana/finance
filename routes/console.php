@@ -8,6 +8,8 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-Schedule::command('bg:check-expired')->dailyAt('08:00')->timezone('Asia/Jakarta');
+Schedule::command('bg:check-expired')->dailyAt('08:00');
 
 Schedule::command('approval:send-reminder')->dailyAt('08:00');
+
+Schedule::command('approval:resend-pending')->weekdays()->dailyAt('08:00');
