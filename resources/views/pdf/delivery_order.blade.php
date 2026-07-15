@@ -425,7 +425,7 @@
 
         {{-- KASO Information Fields --}}
         <table class="kaso-info-table">
-            <tr>
+            <!-- <tr>
                 <td width="12%">To</td>
                 <td width="2%">:</td>
                 <td width="36%" class="kaso-uline">Sales Admin</td>
@@ -438,7 +438,7 @@
                 <td class="kaso-uline">{{ $order->attention ?? '-' }}</td>
                 <td align="right" style="padding-right: 5px;">Sales Order Date :</td>
                 <td class="kaso-uline">{{ $order->created_at->format('d F Y') }}</td>
-            </tr>
+            </tr> -->
             <tr>
                 <td>From</td>
                 <td>:</td>

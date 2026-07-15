@@ -1135,14 +1135,24 @@ class CustomerController extends Controller
             $logQuery->where('approver_nik', $user->nik);
         }
 
-        $pendingCount = (clone $logQuery)->where('status', 'Pending')->count();
+        $pendingCount = (clone $logQuery)->where('status', 'Pending')
+            ->whereHas('customer', function ($q) {
+                $q->where('status_approval', 'Pending');
+            })->count();
+
+        $processingCount = (clone $logQuery)->where('status', 'Pending')
+            ->whereHas('customer', function ($q) {
+                $q->where('status_approval', 'Processing');
+            })->count();
+
         $approvedCount = (clone $logQuery)->where('status', 'Approved')->count();
 
         $activeCount = Customer::where('status', 'Active')->count();
         $inactiveCount = Customer::where('status', 'Inactive')->count();
 
-        $approvalStatuses = ApprovalLog::where('category', 'Customer')->distinct()->pluck('status');
+        $approvalStatuses = Customer::whereNotNull('status_approval')->distinct()->pluck('status_approval');
         $accountStatuses = Customer::whereNotNull('status')->distinct()->pluck('status');
+        $levels = ApprovalLog::where('category', 'Customer')->whereNotNull('level')->distinct()->pluck('level')->sort();
 
         $sales = Sales::with(['user.position', 'branch', 'region'])->get();
         $top = TOP::all();
@@ -1155,11 +1165,13 @@ class CustomerController extends Controller
             'accountgroup',
             'customerClass',
             'pendingCount',
+            'processingCount',
             'approvedCount',
             'activeCount',
             'inactiveCount',
             'approvalStatuses',
-            'accountStatuses'
+            'accountStatuses',
+            'levels'
         ));
     }
 
@@ -1187,15 +1199,8 @@ class CustomerController extends Controller
             ->join('customers', 'approval_logs.related_id', '=', 'customers.id')
             ->where('approval_logs.category', 'Customer');
 
-        if ($request->has('status') && $request->status !== 'all') {
-            if ($request->status === 'Active') {
-                $query->where('customers.bank_garansi', 'YA');
-            } elseif ($request->status === 'Inactive') {
-                $query->where(function ($q) {
-                    $q->where('customers.bank_garansi', '!=', 'YA')
-                        ->orWhereNull('customers.bank_garansi');
-                });
-            }
+        if ($request->has('level') && $request->level !== 'all') {
+            $query->where('approval_logs.level', $request->level);
         }
 
         if ($request->has('approval_status') && $request->approval_status !== 'all') {

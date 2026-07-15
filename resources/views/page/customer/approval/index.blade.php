@@ -42,10 +42,11 @@
                             <i class="ph-bold ph-funnel text-primary"></i>
                             <span class="text-muted fw-bold" style="font-size: 0.85rem;">FILTER</span>
                         </div>
-                        <select id="statusFilter" class="form-select select2" style="width: 160px;">
-                            <option value="all">All Accounts</option>
-                            <option value="Active">Active (BG)</option>
-                            <option value="Inactive">Inactive (BG)</option>
+                        <select id="levelFilter" class="form-select select2" style="width: 160px;">
+                            <option value="all">All Levels</option>
+                            @foreach($levels as $level)
+                                <option value="{{ $level }}">Level {{ $level }}</option>
+                            @endforeach
                         </select>
                         <select id="approvalStatusFilter" class="form-select select2" style="width: 180px;">
                             <option value="all">All Statuses</option>
@@ -68,7 +69,16 @@
                                 <span style="font-size: 1.1rem; color: #92400e; font-weight: 800;">{{ $pendingCount }}</span>
                             </div>
                         </div>
-                         <div class="d-flex align-items-center gap-2 px-3 py-2" style="background: linear-gradient(180deg, #f0fdf4 0%, #dcfce7 100%); border: 1px solid #86efac; border-radius: 1rem; box-shadow: 0 2px 5px rgba(22, 163, 74, 0.1);">
+                        <div class="d-flex align-items-center gap-2 px-3 py-2" style="background: linear-gradient(180deg, #eff6ff 0%, #dbeafe 100%); border: 1px solid #bfdbfe; border-radius: 1rem; box-shadow: 0 2px 5px rgba(37, 99, 235, 0.1);">
+                            <div style="width: 32px; height: 32px; background: #3b82f6; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white;">
+                                <i class="ph-bold ph-spinner fs-6"></i>
+                            </div>
+                            <div class="d-flex flex-column line-height-sm">
+                                <span style="font-size: 0.7rem; color: #1d4ed8; font-weight: 700; text-transform: uppercase;">Processing</span>
+                                <span style="font-size: 1.1rem; color: #1e3a8a; font-weight: 800;">{{ $processingCount }}</span>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center gap-2 px-3 py-2" style="background: linear-gradient(180deg, #f0fdf4 0%, #dcfce7 100%); border: 1px solid #86efac; border-radius: 1rem; box-shadow: 0 2px 5px rgba(22, 163, 74, 0.1);">
                             <div style="width: 32px; height: 32px; background: #10b981; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white;">
                                 <i class="ph-bold ph-seal-check fs-6"></i>
                             </div>
@@ -517,7 +527,7 @@
                     ajax: {
                         url: "{{ route('customers.approval.data') }}",
                         data: function(d) {
-                            d.status = $('#statusFilter').val();
+                            d.level = $('#levelFilter').val();
                             d.approval_status = $('#approvalStatusFilter').val();
                         }
                     },
@@ -559,9 +569,9 @@
                     'box-shadow': 'inset 0 1px 2px rgba(0,0,0,0.02)'
                 });
 
-                $('#statusFilter, #approvalStatusFilter').on('change', function() { table.ajax.reload(); });
+                $('#levelFilter, #approvalStatusFilter').on('change', function() { table.ajax.reload(); });
                 $('#resetFilters').on('click', function() {
-                    $('#statusFilter').val('all').trigger('change');
+                    $('#levelFilter').val('all').trigger('change');
                     $('#approvalStatusFilter').val('all').trigger('change');
                 });
 
