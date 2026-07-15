@@ -462,9 +462,6 @@ class CustomerController extends Controller
             $user = Auth::user();
             $customerData = $request->except(['file_npwp', 'file_nib', 'file_ktp', 'items', '_token']);
 
-            if (is_string($request->bank_garansi) && strtoupper($request->bank_garansi) === 'TIDAK') {
-                $customerData['credit_limit'] = 0;
-            }
 
             $grandTotal = 0;
             if ($request->has('items') && is_array($request->items)) {
@@ -850,55 +847,42 @@ class CustomerController extends Controller
         try {
             if (($action === 'review' || $action === 'approve') && $isFinanceAdjuster) {
                 $updateData = [];
-                $changesLog = [];
 
-
-                if (request()->has('update_top') && request('update_top') != $customer->term_of_payment) {
-                    $updateData['term_of_payment'] = request('update_top');
-                    $changesLog[] = "TOP changed to " . request('update_top');
+                if (request()->has('update_top')) $updateData['term_of_payment'] = request('update_top');
+                
+                if (request()->has('update_lead_time')) {
+                    $updateData['lead_time'] = request('update_lead_time') === '' ? 0 : request('update_lead_time');
                 }
+                
+                if (request()->has('update_credit_limit_value')) $updateData['credit_limit'] = request('update_credit_limit_value');
+                if (request()->filled('update_npwp')) $updateData['npwp'] = request('update_npwp');
+                if (request()->has('update_va')) $updateData['virtual_account'] = request('update_va');
+                if (request()->has('update_payment_days')) $updateData['payment_days'] = request('update_payment_days');
+                if (request()->has('update_payment_date')) $updateData['payment_date'] = request('update_payment_date');
+                if (request()->has('update_faktur_days')) $updateData['faktur_days'] = request('update_faktur_days');
+                if (request()->has('update_faktur_date')) $updateData['faktur_date'] = request('update_faktur_date');
 
-                if (request()->has('update_lead_time') && request('update_lead_time') != $customer->lead_time) {
-                    $updateData['lead_time'] = request('update_lead_time');
-                    $changesLog[] = "Lead Time changed to " . request('update_lead_time');
-                }
+                $customer->fill($updateData);
 
-                if (request()->has('update_credit_limit_value') && request('update_credit_limit_value') != $customer->credit_limit) {
-                    $updateData['credit_limit'] = request('update_credit_limit_value');
-                }
+                if ($customer->isDirty()) {
+                    $changesLog = [];
+                    if ($customer->isDirty('term_of_payment')) $changesLog[] = "TOP changed to " . $customer->term_of_payment;
+                    if ($customer->isDirty('lead_time')) $changesLog[] = "Lead Time changed to " . $customer->lead_time;
+                    if ($customer->isDirty('credit_limit')) $changesLog[] = "Credit Limit changed";
+                    if ($customer->isDirty('npwp')) $changesLog[] = "NPWP corrected by Finance";
+                    if ($customer->isDirty('virtual_account')) $changesLog[] = "VA Updated";
+                    
+                    if ($customer->isDirty('payment_days') || $customer->isDirty('payment_date')) {
+                        $changesLog[] = "Payment Schedule Updated";
+                    }
+                    if ($customer->isDirty('faktur_days') || $customer->isDirty('faktur_date')) {
+                        $changesLog[] = "Faktur Schedule Updated";
+                    }
 
-                if (request()->filled('update_npwp') && request('update_npwp') != $customer->npwp) {
-                    $updateData['npwp'] = request('update_npwp');
-                    $changesLog[] = "NPWP corrected by Finance";
-                }
-
-                if (request()->has('update_va')) {
-                    $updateData['virtual_account'] = request('update_va');
-                }
-
-                if (request()->has('update_payment_days')) {
-                    $updateData['payment_days'] = request('update_payment_days');
-                }
-
-                if (request()->has('update_payment_date')) {
-                    $updateData['payment_date'] = request('update_payment_date');
-                }
-
-                if (request()->has('update_faktur_days')) {
-                    $updateData['faktur_days'] = request('update_faktur_days');
-                }
-
-                if (request()->has('update_faktur_date')) {
-                    $updateData['faktur_date'] = request('update_faktur_date');
-                }
-
-                if (!empty($updateData)) {
-                    $customer->update($updateData);
-                    if (isset($updateData['virtual_account'])) $changesLog[] = "VA Updated";
-                    if (isset($updateData['payment_days'])) $changesLog[] = "Payment Days Updated";
+                    $customer->save();
 
                     if (!empty($changesLog)) {
-                        $prefix = !empty($notes) ? "\n" : "";
+                        $prefix = !empty(trim($notes)) ? "\n" : "";
                         $notes .= $prefix . "[Finance Adjustments]: " . implode('; ', $changesLog);
                     }
                 }
@@ -923,15 +907,20 @@ class CustomerController extends Controller
             $dbStatus = '';
             $dbNotes = '';
 
+            $finalNotes = trim($notes);
+            if (empty($finalNotes)) {
+                $finalNotes = "No additional notes were provided for this approval.";
+            }
+
             if ($action === 'approve') {
                 $dbStatus = 'Approved';
-                $dbNotes = empty($notes) ? 'Approve tanpa notes' : $notes;
+                $dbNotes = $finalNotes;
             } elseif ($action === 'review') {
                 $dbStatus = 'Approved';
-                $dbNotes = $notes;
+                $dbNotes = $finalNotes;
             } elseif ($action === 'reject') {
                 $dbStatus = 'Rejected';
-                $dbNotes = $notes;
+                $dbNotes = $finalNotes;
             }
 
             $logMessage = '';
@@ -955,7 +944,7 @@ class CustomerController extends Controller
                 ->withProperties([
                     'level' => $currentLog->level,
                     'status' => $dbStatus,
-                    'notes' => $notes,
+                    'notes' => $dbNotes,
                     'approver_name' => $actor->name ?? 'System'
                 ])
                 ->log($logMessage);
@@ -971,12 +960,12 @@ class CustomerController extends Controller
 
             if ($action === 'approve' || $action === 'review') {
                 $adminTitle = "Approval Customer";
-                $adminMessage = "Customer <b>{$customer->name}</b> approved oleh <b>{$actor->name}</b>." . ($action === 'review' ? " Notes: {$notes}" : "");
+                $adminMessage = "Customer <b>{$customer->name}</b> approved oleh <b>{$actor->name}</b>." . ($action === 'review' ? " Notes: {$dbNotes}" : "");
                 $adminIcon = "ph-check-circle";
                 $adminColor = "success";
             } elseif ($action === 'reject') {
                 $adminTitle = "Rejection Customer";
-                $adminMessage = "Customer <b>{$customer->name}</b> rejected oleh <b>{$actor->name}</b>. Reason: {$notes}";
+                $adminMessage = "Customer <b>{$customer->name}</b> rejected oleh <b>{$actor->name}</b>. Reason: {$dbNotes}";
                 $adminIcon = "ph-x-circle";
                 $adminColor = "danger";
             }

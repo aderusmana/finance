@@ -1961,18 +1961,13 @@
                                             showConfirmButton: false
                                         }).then(() => {
                                             $('#customerModal').modal('hide');
-                                            $('#statusFilter').val('all').trigger(
-                                                'change.select2');
-                                            $('#approvalStatusFilter').val('all')
-                                                .trigger('change.select2');
+                                            $('#statusFilter').val('all').trigger('change.select2');
+                                            $('#approvalStatusFilter').val('all').trigger('change.select2');
 
                                             if (typeof table !== 'undefined') {
-                                                table.search('').ajax.reload(null,
-                                                    true);
+                                                table.search('').ajax.reload(null, true);
                                             } else {
-                                                $('#sampleTable').DataTable()
-                                                    .search('').ajax.reload(null,
-                                                        true);
+                                                $('#sampleTable').DataTable().search('').ajax.reload(null, true);
                                             }
                                         });
                                     } else {
@@ -2782,6 +2777,7 @@
 
                 $('#btn-create-customer').on('click', function() {
                     $('#customerForm')[0].reset();
+                    $('#customerForm').find('.hidden-item-input, #top_calc_hidden').remove();
                     $('.select2-styled').val(null).trigger('change');
 
                     $('#customerForm').find('input, textarea, select').prop('disabled', false);

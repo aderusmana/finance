@@ -7,6 +7,8 @@ use App\Models\Customer\CustomerFile;
 use App\Models\BG\BankGaransi;
 use App\Models\BG\BgRecommendation;
 use App\Models\Customer\CreditLimit;
+use App\Models\Customer\AccountGroup;
+use App\Models\Customer\Sales;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -18,9 +20,6 @@ class Customer extends Model
     protected static function booted(): void
     {
         static::saving(function (self $customer) {
-            if (is_string($customer->bank_garansi) && strtoupper($customer->bank_garansi) === 'TIDAK') {
-                $customer->credit_limit = 0;
-            }
 
             if (is_string($customer->bank_garansi) && strtoupper($customer->bank_garansi) === 'YA') {
                 if (!$customer->approved_credit_limit) {
@@ -119,7 +118,7 @@ class Customer extends Model
             return $query;
         }
 
-        $salesAccountGroupIds = \App\Models\Customer\Sales::where('user_id', $user->id)
+        $salesAccountGroupIds = Sales::where('user_id', $user->id)
             ->pluck('account_group_id')
             ->toArray();
 
@@ -128,7 +127,7 @@ class Customer extends Model
             return $query->where('customers.created_by', $user->id);
         }
 
-        $accountGroups = \App\Models\Customer\AccountGroup::whereIn('id', $salesAccountGroupIds)->get();
+        $accountGroups = AccountGroup::whereIn('id', $salesAccountGroupIds)->get();
         
         $allowedAccountGroupIds = [];
         $isWest = false;
@@ -146,14 +145,14 @@ class Customer extends Model
         }
         
         if ($isWest) {
-            $westIds = \App\Models\Customer\AccountGroup::where('name_account_group', 'LIKE', 'REGION 1%')
+            $westIds = AccountGroup::where('name_account_group', 'LIKE', 'REGION 1%')
                 ->orWhere('name_account_group', 'LIKE', 'REGION 3%')
                 ->pluck('id')->toArray();
             $allowedAccountGroupIds = array_merge($allowedAccountGroupIds, $westIds);
         }
         
         if ($isEast) {
-            $eastIds = \App\Models\Customer\AccountGroup::where('name_account_group', 'LIKE', 'REGION 2%')
+            $eastIds = AccountGroup::where('name_account_group', 'LIKE', 'REGION 2%')
                 ->orWhere('name_account_group', 'LIKE', 'REGION 4%')
                 ->pluck('id')->toArray();
             $allowedAccountGroupIds = array_merge($allowedAccountGroupIds, $eastIds);

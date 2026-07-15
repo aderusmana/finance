@@ -92,6 +92,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/recent-activities', [DashboardController::class, 'getRecentActivities'])->name('recent-activities');
         Route::get('/my-actions', [DashboardController::class, 'getMyActions'])->name('my-actions');
         Route::get('/logistic-stats', [DashboardController::class, 'getLogisticStats'])->name('logistic-stats');
+        Route::get('/customer-classes', [DashboardController::class, 'getCustomerClassesData'])->name('customer-classes');
+        Route::get('/class-stats-chart', [DashboardController::class, 'getClassStatsChart'])->name('class-stats-chart');
     });
 
     Route::post('/customers/{customer}/recall', [CustomerController::class, 'recall'])->name('customers.recall');
