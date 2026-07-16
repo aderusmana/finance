@@ -196,6 +196,18 @@
                                         <div class="info-label">General Email</div>
                                         <div class="info-value"><a href="mailto:{{ $customer->email }}">{{ $customer->email }}</a></div>
                                     </div>
+                                    <div class="col-md-12">
+                                        <div class="info-label">Sales</div>
+                                        <div class="info-value text-dark fw-bold">{{ $customer->user->name ?? '-' }}</div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="info-label">Account Group</div>
+                                        <div class="info-value text-dark fw-bold">{{ $customer->accountGroup->name_account_group ?? '-' }}</div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="info-label">Customer Class</div>
+                                        <div class="info-value text-dark fw-bold">{{ $customer->customerClass->name_class ?? '-' }}</div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -335,9 +347,12 @@
 
                         {{-- 3. CREDIT LIMIT (AUTO CALC) --}}
                         <div class="col-md-4">
-                            <div class="p-3 border rounded bg-light h-100">
-                                <label class="info-label mb-2">Credit Limit</label>
-                                <div class="fs-5 text-success fw-bold">IDR {{ number_format($customer->credit_limit, 0, ',', '.') }}</div>
+                            <div class="p-3 border rounded bg-light h-100 position-relative">
+                                <label class="info-label mb-2">Credit Limit <span id="calc-badge" class="badge bg-warning ms-2 d-none">Calculated</span></label>
+                                <div class="fs-5 text-success fw-bold" id="display_credit_limit">IDR {{ number_format($customer->credit_limit, 0, ',', '.') }}</div>
+                                @if($canAdjust)
+                                    <input type="hidden" name="update_credit_limit_value" id="final_credit_limit_input" form="approvalForm" value="{{ $customer->credit_limit }}">
+                                @endif
                             </div>
                         </div>
 

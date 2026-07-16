@@ -183,7 +183,7 @@
                         id="dataTypeSelect" style="width: auto; cursor: pointer;">
                         <option value="all" selected>All Data</option>
                         <option value="bg">Bank Garansi</option>
-                        <option value="customer">Customer</option>
+                        <option value="customer_exec">Customer</option>
                         <option value="logistic_order">Logistic Order</option>
                     </select>
                 </div>

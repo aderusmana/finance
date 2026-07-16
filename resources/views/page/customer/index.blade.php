@@ -520,9 +520,9 @@
                                                 placeholder="NPPKP Number">
                                         </div>
                                         <div class="col-md-3">
-                                            <label class="form-label">NPPKP Date <span class="text-danger">*</span></label>
+                                            <label class="form-label">NPPKP Date</label>
                                             <input type="date" class="form-control" name="tanggal_nppkp"
-                                                id="tanggal_nppkp" required>
+                                                id="tanggal_nppkp">
                                         </div>
                                         <div class="col-md-3">
                                             <label class="form-label">No Pengukuhan Kaber</label>
@@ -828,6 +828,25 @@
                                                 (Penanggung Jawab)</label>
                                             <div class="fw-bold text-dark f-s-14" id="view_pic">-</div>
                                         </div>
+                                        <div class="col-md-12">
+                                            <div class="p-3 bg-primary bg-opacity-10 border border-primary border-opacity-25 rounded d-flex align-items-center">
+                                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center shadow-sm me-3" style="width: 40px; height: 40px;">
+                                                    <i class="ph-fill ph-user-circle f-s-24"></i>
+                                                </div>
+                                                <div>
+                                                    <label class="fw-bold text-primary text-uppercase f-s-11 mb-1" style="letter-spacing: 0.5px;">Sales Representative</label>
+                                                    <div class="fw-bolder text-dark f-s-15" id="view_sales">-</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="fw-bold text-secondary text-uppercase f-s-12 mb-1">Account Group</label>
+                                            <div class="fw-bold text-dark f-s-14" id="view_account_group">-</div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="fw-bold text-secondary text-uppercase f-s-12 mb-1">Customer Class</label>
+                                            <div class="fw-bold text-dark f-s-14" id="view_customer_class">-</div>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="col-md-6 ps-md-4">
@@ -879,11 +898,15 @@
                                         </div>
                                         <i class="ph-duotone ph-wallet f-s-40 text-white text-opacity-50"></i>
                                     </div>
-                                    <div
-                                        class="mt-4 pt-3 border-top border-white border-opacity-25 d-flex justify-content-between align-items-center">
-                                        <span class="f-s-13 opacity-75">Term of Payment</span>
-                                        <span class="fw-bold f-s-16 bg-warning bg-opacity-20 px-2 py-1 rounded"><span
-                                                id="view_top">-</span> Days</span>
+                                    <div class="mt-4 pt-3 border-top border-white border-opacity-25 row g-2">
+                                        <div class="col-6 d-flex flex-column">
+                                            <span class="f-s-12 opacity-75 mb-1">Term of Payment</span>
+                                            <span class="fw-bold f-s-15 bg-warning bg-opacity-20 px-2 py-1 rounded text-center"><span id="view_top">-</span> Days</span>
+                                        </div>
+                                        <div class="col-6 d-flex flex-column border-start border-white border-opacity-25 ps-2">
+                                            <span class="f-s-12 opacity-75 mb-1">Lead Time</span>
+                                            <span class="fw-bold f-s-15 bg-success bg-opacity-20 px-2 py-1 rounded text-center"><span id="view_lead_time">-</span> Days</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -2958,6 +2981,9 @@
                     $('#view_email').text(btn.data('email'));
                     $('#view_no_pkd').text(btn.data('no_pkd') || '-');
                     $('#view_pic').text(btn.data('pic') || '-');
+                    $('#view_sales').text(btn.data('sales_name') || '-');
+                    $('#view_account_group').text(btn.data('account_group_name') || '-');
+                    $('#view_customer_class').text(btn.data('customer_class_name') || '-');
 
                     const addr1 = btn.data('address1') || '';
                     const addr2 = btn.data('address2') ? ', ' + btn.data('address2') : '';
@@ -2984,6 +3010,7 @@
                         $('#view_approved_credit_limit_wrapper').hide();
                     }
                     $('#view_top').text(btn.data('term_of_payment'));
+                    $('#view_lead_time').text(btn.data('lead_time'));
 
                     $('#view_npwp').text(btn.data('npwp'));
                     $('#view_tanggal_npwp').text(btn.data('tanggal_npwp') || '-');

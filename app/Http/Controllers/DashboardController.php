@@ -166,6 +166,38 @@ class DashboardController extends Controller
             ]);
         }
 
+        if ($type === 'customer_exec') {
+            $data = Customer::query()->whereBetween('created_at', [$startDate, $endDate])
+                ->select('status_approval', 'status', DB::raw('MONTH(created_at) as month'))->get();
+
+            $created = array_fill(0, 12, 0);
+            $approved = array_fill(0, 12, 0);
+            $pending  = array_fill(0, 12, 0);
+            $rejected = array_fill(0, 12, 0);
+
+            foreach ($data as $row) {
+                $idx = $row->month - 1;
+                $created[$idx]++;
+
+                $st = strtolower($row->status_approval ?? '');
+                
+                if (in_array($st, ['approved'])) {
+                    $approved[$idx]++;
+                } elseif (in_array($st, ['rejected'])) {
+                    $rejected[$idx]++;
+                } else {
+                    $pending[$idx]++;
+                }
+            }
+
+            return response()->json([
+                'created' => $created,
+                'approved' => $approved,
+                'pending' => $pending,
+                'rejected' => $rejected
+            ]);
+        }
+
         // --- PERBAIKAN DI SINI: Switch Query Berdasarkan Tipe ---
         if ($type === 'customer') {
             $year = $request->input('year');
@@ -368,7 +400,8 @@ class DashboardController extends Controller
         $activeCount = (clone $query)->whereIn('status', ['approved', 'active'])->count();
         $expiringCount = BankGaransi::whereBetween('exp_date', [now(), now()->addDays(60)])
                                     ->whereNotIn('status', ['expired', 'returned', 'rejected'])
-                                    ->count();
+                                    ->distinct('customer_id')
+                                    ->count('customer_id');
 
         $largestBg = (clone $query)->whereIn('status', ['approved', 'active'])
                                    ->orderBy('bg_nominal', 'desc')
@@ -416,6 +449,7 @@ class DashboardController extends Controller
             'highest_limit_name' => $highestLimit ? $highestLimit->name : '-',
             'highest_limit_amount' => $highestLimit ? $highestLimit->credit_limit : 0,
             'longest_joined_name' => $longestJoined ? $longestJoined->name : '-',
+            'credit_exceeded' => 0,
         ]);
     }
 

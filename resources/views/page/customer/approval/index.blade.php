@@ -212,6 +212,17 @@
                                             <div class="fw-bold" style="color: #334155; font-size: 0.95rem;" id="view_pic">-</div>
                                         </div>
                                         <div class="col-12">
+                                            <div class="p-3 mt-1 mb-1 rounded d-flex align-items-center" style="background-color: rgba(37, 99, 235, 0.05); border: 1px solid rgba(37, 99, 235, 0.2);">
+                                                <div class="rounded-circle d-flex align-items-center justify-content-center me-3 shadow-sm" style="width: 36px; height: 36px; background-color: #2563eb; color: white;">
+                                                    <i class="ph-fill ph-user-circle" style="font-size: 1.25rem;"></i>
+                                                </div>
+                                                <div>
+                                                    <label style="color: #2563eb; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; margin-bottom: 2px; letter-spacing: 0.5px;">Sales Representative</label>
+                                                    <div class="fw-bolder" style="color: #0f172a; font-size: 1rem;" id="view_sales">-</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-12">
                                             <label style="color: #64748b; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; margin-bottom: 4px;">Email address</label>
                                             <div class="fw-bold" style="color: #2563eb; font-size: 0.95rem;" id="view_email">-</div>
                                         </div>
@@ -655,6 +666,8 @@
                     $('#view_city').text(data.city || '-');
                     $('#view_area').text(data.area || '-');
                     $('#view_postal_code').text(data.postal_code || '-');
+                    $('#view_sales').text(salesName);
+                    $('#view_term_of_payment').text(data.term_of_payment || '-');
 
                     // --- FINANCE SECTION ---
                     const limit = parseFloat(data.credit_limit) || 0;

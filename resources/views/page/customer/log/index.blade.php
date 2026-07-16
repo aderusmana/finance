@@ -16,14 +16,6 @@
                         <h3 class="fw-bolder mb-1" style="letter-spacing: -0.5px;">System Activity Logs</h3>
                         <p class="mb-0" style="color: #c7d2fe; font-size: 0.95rem;">Record user activities, data changes, and system events for security and audit purposes.</p>
                     </div>
-                    <!-- <div class="flex-shrink-0">
-                        <nav aria-label="breadcrumb">
-                            <ol class="breadcrumb mb-0" style="background: rgba(0,0,0,0.2); padding: 0.6rem 1.2rem; border-radius: 50rem; display: inline-flex; flex-wrap: nowrap; border: 1px solid rgba(255,255,255,0.1);">
-                                <li class="breadcrumb-item"><a href="/" class="text-white text-decoration-none"><i class="ph-fill ph-monitor-play me-1"></i> Monitoring</a></li>
-                                <li class="breadcrumb-item active text-white fw-bold" aria-current="page">Activity Logs</li>
-                            </ol>
-                        </nav>
-                    </div> -->
                 </div>
             </div>
         </div>
@@ -48,7 +40,9 @@
                                         <th style="background-color: #f8fafc; color: #475569; font-weight: 700; text-transform: uppercase; font-size: 0.75rem; padding: 1.25rem 1rem; border-bottom: 2px solid #e2e8f0; width: 12%;">Actor (Causer)</th>
                                         <th style="background-color: #f8fafc; color: #475569; font-weight: 700; text-transform: uppercase; font-size: 0.75rem; padding: 1.25rem 1rem; border-bottom: 2px solid #e2e8f0; width: 18%;">Target Data</th>
                                         <th class="text-center" style="background-color: #f8fafc; color: #475569; font-weight: 700; text-transform: uppercase; font-size: 0.75rem; padding: 1.25rem 1rem; border-bottom: 2px solid #e2e8f0; width: 5%;">Tag ID</th>
-                                        <th style="background-color: #f8fafc; color: #2563eb; font-weight: 700; text-transform: uppercase; font-size: 0.75rem; padding: 1.25rem 1rem; border-bottom: 2px solid #e2e8f0; width: 25%;"><i class="ph-bold ph-braces me-1"></i> Properties</th>
+                                        <th style="background-color: #f8fafc; color: #475569; font-weight: 700; text-transform: uppercase; font-size: 0.75rem; padding: 1.25rem 1rem; border-bottom: 2px solid #e2e8f0; width: 22%;"><i class="ph-bold ph-braces me-1"></i> Properties</th>
+                                        <!-- KOLOM ACTION DITAMBAHKAN DI SINI -->
+                                        <th class="text-center" style="background-color: #f8fafc; color: #2563eb; font-weight: 700; text-transform: uppercase; font-size: 0.75rem; padding: 1.25rem 1rem; border-bottom: 2px solid #e2e8f0; width: 8%;">Action</th>
                                     </tr>
                                 </thead>
                             </table>
@@ -58,27 +52,34 @@
             </div>
         </div>
 
-        {{-- 3. MODAL PREVIEW JSON BERGAYA TERMINAL DARK MODE --}}
-        <div class="modal fade" id="jsonPreviewModal" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
+        {{-- MODAL PREVIEW BERGAYA LIGHT & ELEGAN (COMPACT) --}}
+        <div class="modal fade" id="logDetailModal" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
             <div class="modal-dialog modal-dialog-centered modal-lg">
-                <div class="modal-content" style="background: #0f172a; border: 1px solid rgba(255,255,255,0.1); border-radius: 1.25rem; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);">
-                    <div class="modal-header d-flex justify-content-between align-items-center" style="background: #1e293b; border-bottom: 1px solid #334155; padding: 1rem 1.5rem;">
-                        <div class="d-flex align-items-center gap-2">
-                            <div class="d-flex gap-1 me-3">
-                                <div style="width: 12px; height: 12px; border-radius: 50%; background: #ef4444;"></div>
-                                <div style="width: 12px; height: 12px; border-radius: 50%; background: #f59e0b;"></div>
-                                <div style="width: 12px; height: 12px; border-radius: 50%; background: #10b981;"></div>
+                <div class="modal-content border-0 overflow-hidden shadow-lg">
+                    <!-- HEADER MODAL -->
+                    <div class="modal-header bg-primary text-white py-3">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="bg-white bg-opacity-25 rounded p-2 d-flex justify-content-center align-items-center" style="width: 45px; height: 45px;">
+                                <i class="ph-bold ph-list-magnifying-glass f-s-24"></i>
                             </div>
-                            <h6 class="modal-title fw-bolder mb-0 text-white" style="letter-spacing: 0.5px; font-family: monospace;">~/log_details.json</h6>
+                            <div>
+                                <h4 class="modal-title mb-0 fw-bold">Detail Approval & Log Data</h4>
+                                <div class="opacity-75 f-s-13 mt-1">Seluruh data komprehensif pada riwayat log ini</div>
+                            </div>
                         </div>
-                        <button type="button" class="btn-close btn-close-white shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
 
-                    <div class="modal-body p-0" style="position: relative;">
-                        <button id="btnCopyJson" class="btn btn-sm d-flex align-items-center gap-1" style="position: absolute; top: 15px; right: 15px; background: rgba(255,255,255,0.1); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; font-size: 0.75rem; font-weight: 600; transition: all 0.2s;">
-                            <i class="ph-bold ph-copy"></i> Copy Data
-                        </button>
-                        <pre id="jsonContent" style="margin: 0; padding: 1.5rem; color: #a5b4fc; font-family: 'Courier New', Courier, monospace; font-size: 0.85rem; line-height: 1.6; max-height: 60vh; overflow-y: auto;"></pre>
+                    <!-- BODY MODAL (Dibuat lebih padat) -->
+                    <div class="modal-body bg-light p-3" style="max-height: 75vh; overflow-y: auto;">
+                        <div id="logDetailContent">
+                            <!-- Tabel Log akan di-inject ke sini -->
+                        </div>
+                    </div>
+
+                    <!-- FOOTER MODAL -->
+                    <div class="modal-footer bg-white border-top py-2">
+                        <button type="button" class="btn btn-secondary px-4 rounded shadow-sm fw-bold" data-bs-dismiss="modal">Tutup Detail</button>
                     </div>
                 </div>
             </div>
@@ -95,7 +96,7 @@
                 table = $('#sampleTable').DataTable({
                     processing: true, 
                     serverSide: true,
-                    ajax: "{{ route('customers.log.data') }}", // Sesuaikan dengan route kamu
+                    ajax: "{{ route('customers.log.data') }}", 
                     columns: [
                         { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false, className: 'text-center' },
                         { data: 'created_at', name: 'created_at' },
@@ -104,9 +105,11 @@
                         { data: 'causer_info', name: 'causer_info', orderable: false },
                         { data: 'subject_info', name: 'subject_info', orderable: false },
                         { data: 'subject_id', name: 'subject_id', className: 'text-center', orderable: false },
-                        { data: 'properties', name: 'properties', orderable: false, searchable: false }
+                        { data: 'properties', name: 'properties', orderable: false, searchable: false },
+                        // PANGGIL DATA ACTION DI SINI
+                        { data: 'action', name: 'action', orderable: false, searchable: false, className: 'text-center align-middle' }
                     ],
-                    order: [[ 1, 'desc' ]], // Urutkan berdasarkan created_at (kolom index 1)
+                    order: [[ 1, 'desc' ]], 
                     language: {
                         search: "",
                         searchPlaceholder: "🔍 Search data log/history...",
@@ -114,7 +117,6 @@
                         info: "Showing _START_ to _END_ of _TOTAL_ records"
                     },
                     drawCallback: function(settings) {
-                        // Inject CSS secara inline ke dalam TR dan TD setelah data selesai di-render
                         $('#sampleTable tbody tr').css({
                             'transition': 'background-color 0.2s ease'
                         }).hover(
@@ -141,57 +143,79 @@
                     'box-shadow': 'inset 0 1px 2px rgba(0,0,0,0.02)'
                 });
 
-                // --- FUNGSI KLIK: VIEW JSON TERMINAL ---
-                $(document).on('click', '.btn-view-json', function() {
+                // --- FUNGSI KLIK: VIEW FULL DATA (TABEL COMPACT & PLAIN TEXT PROPERTIES) ---
+                $(document).on('click', '.btn-view-full', function() {
                     let rawData = $(this).data('json');
+                    let contentDiv = $('#logDetailContent');
+                    contentDiv.empty();
                     
                     try {
                         let parsedData = typeof rawData === 'string' ? JSON.parse(rawData) : rawData;
-                        // Format JSON agar menjorok rapi (indent 4 spasi)
-                        let formattedJson = JSON.stringify(parsedData, null, 4);
                         
-                        // Highlight syntax JSON sederhana agar berwarna-warni
-                        formattedJson = formattedJson.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
-                            let color = '#38bdf8'; // Default number/boolean color (cyan)
-                            if (/^"/.test(match)) {
-                                if (/:$/.test(match)) {
-                                    color = '#f472b6'; // Key (pink/rose)
-                                } else {
-                                    color = '#a3e635'; // String value (lime green)
-                                }
-                            } else if (/true|false/.test(match)) {
-                                color = '#fbbf24'; // Boolean (amber)
-                            } else if (/null/.test(match)) {
-                                color = '#94a3b8'; // Null (slate)
-                            }
-                            return '<span style="color: ' + color + ';">' + match + '</span>';
-                        });
+                        if (typeof parsedData !== 'object' || parsedData === null) {
+                            contentDiv.html('<div class="alert alert-warning p-2 m-0 border-0 shadow-sm">Data log ini kosong.</div>');
+                        } else {
+                            // Render Data Json Menjadi Tabel Padat (Compact Table)
+                            let html = '<div class="table-responsive m-0 shadow-sm border rounded bg-white"><table class="table table-sm table-bordered m-0" style="font-size: 13px; table-layout: fixed; width: 100%;"><tbody>';
+                            
+                            for (let key in parsedData) {
+                                let val = parsedData[key];
+                                let label = key.replace(/_/g, ' ').toUpperCase();
+                                let displayVal = '';
+                                
+                                // Khusus untuk array/object Properties (Diubah menjadi Teks Biasa tanpa scroll samping)
+                                if (key === 'Properties') {
+                                    if (typeof val === 'object' && val !== null && Object.keys(val).length > 0) {
+                                        
+                                        // Buat container dengan word-wrap agar teks panjang turun ke bawah
+                                        displayVal = '<div class="p-2 bg-light border rounded" style="font-size: 13px; max-height: 40vh; overflow-y: auto; word-wrap: break-word; white-space: normal;">';
+                                        
+                                        // Looping isi properties agar tampil sebagai teks biasa (Key: Value)
+                                        for (let propKey in val) {
+                                            let propVal = val[propKey];
+                                            
+                                            // Jika di dalam properties masih ada array/object (misal array attributes), jadikan string biasa
+                                            if (typeof propVal === 'object' && propVal !== null) {
+                                                propVal = JSON.stringify(propVal);
+                                            }
+                                            
+                                            let cleanPropKey = propKey.replace(/_/g, ' ').toUpperCase();
+                                            displayVal += `<div class="mb-1 pb-1 border-bottom border-light">
+                                                              <span class="fw-bold text-dark">${cleanPropKey}:</span> 
+                                                              <span class="text-secondary" style="word-break: break-word;">${propVal}</span>
+                                                           </div>`;
+                                        }
+                                        displayVal += '</div>';
 
-                        $('#jsonContent').html(formattedJson);
+                                    } else {
+                                        displayVal = '<span class="text-muted fst-italic">Tidak ada detail properties</span>';
+                                    }
+                                } else {
+                                    // Teks Biasa untuk kolom selain Properties
+                                    displayVal = '<span class="fw-bold text-dark" style="word-wrap: break-word; white-space: normal;">' + (val ?? '-') + '</span>';
+                                }
+                                
+                                html += `
+                                    <tr>
+                                        <td class="bg-light text-secondary fw-bold align-middle" style="width: 30%; padding: 10px 14px; border-right: 1px solid #e2e8f0; word-wrap: break-word; white-space: normal;">
+                                            <i class="ph-bold ph-caret-right me-1 text-primary"></i> ${label}
+                                        </td>
+                                        <td class="align-middle" style="padding: 10px 14px; word-wrap: break-word; white-space: normal;">${displayVal}</td>
+                                    </tr>
+                                `;
+                            }
+                            
+                            html += '</tbody></table></div>';
+                            contentDiv.html(html);
+                        }
                     } catch (e) {
-                        $('#jsonContent').html('<span style="color: #ef4444;">Error parsing JSON data:</span>\n' + rawData);
+                        contentDiv.html('<div class="alert alert-danger p-2 m-0 border-0 shadow-sm">Error saat melakukan parsing data log.</div>');
                     }
 
-                    // Tampilkan Modal
-                    let jsonModal = new bootstrap.Modal(document.getElementById('jsonPreviewModal'));
-                    jsonModal.show();
+                    // Buka Modal
+                    let logModal = new bootstrap.Modal(document.getElementById('logDetailModal'));
+                    logModal.show();
                 });
-
-                // --- FUNGSI COPY JSON ---
-                $('#btnCopyJson').on('click', function() {
-                    // Ambil teks murni (tanpa tag HTML pewarnaan)
-                    let textToCopy = $('#jsonContent').text();
-                    navigator.clipboard.writeText(textToCopy).then(() => {
-                        let originalHtml = $(this).html();
-                        $(this).html('<i class="ph-bold ph-check text-emerald-400"></i> Copied!')
-                               .css({'background': 'rgba(16,185,129,0.2)', 'border-color': 'rgba(16,185,129,0.5)'});
-                        
-                        setTimeout(() => {
-                            $(this).html(originalHtml).css({'background': 'rgba(255,255,255,0.1)', 'border-color': 'rgba(255,255,255,0.2)'});
-                        }, 2000);
-                    });
-                });
-
             });
         </script>
     @endpush

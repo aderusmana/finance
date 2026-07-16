@@ -122,7 +122,8 @@ class CustomerController extends Controller
         $latestRevision = Revision::orderBy('created_at', 'desc')->first();
 
         if ($request->ajax()) {
-            $query = Customer::leftJoin('customer_files', 'customers.id', '=', 'customer_files.customer_id')
+            $query = Customer::with(['accountGroup', 'customerClass', 'user'])
+                ->leftJoin('customer_files', 'customers.id', '=', 'customer_files.customer_id')
                 ->select(
                     'customers.*',
                     'customer_files.npwp_file as file_npwp',
@@ -203,7 +204,10 @@ class CustomerController extends Controller
                     $dataAttrs .= ' data-name="' . e($row->name) . '"';
                     $dataAttrs .= ' data-sort_name="' . e($row->sort_name) . '"';
                     $dataAttrs .= ' data-customer_class="' . e($row->customer_class) . '"';
+                    $dataAttrs .= ' data-customer_class_name="' . e($row->customerClass->name_class ?? '-') . '"';
                     $dataAttrs .= ' data-account_group="' . e($row->account_group) . '"';
+                    $dataAttrs .= ' data-account_group_name="' . e($row->accountGroup->name_account_group ?? '-') . '"';
+                    $dataAttrs .= ' data-sales_name="' . e($row->user->name ?? '-') . '"';
                     $dataAttrs .= ' data-address1="' . e($row->address1) . '"';
                     $dataAttrs .= ' data-address2="' . e($row->address2) . '"';
                     $dataAttrs .= ' data-address3="' . e($row->address3) . '"';
@@ -763,8 +767,13 @@ class CustomerController extends Controller
             return view('page.customer.links.approval-invalid');
         }
 
-        $customer = Customer::with(['user', 'accountGroup', 'customerClass', 'files'])
+        $customer = Customer::with(['user', 'accountGroup', 'customerClass', 'files', 'items'])
             ->findOrFail($log->related_id);
+
+        $totalAmount = 0;
+        foreach ($customer->items as $item) {
+            $totalAmount += ($item->quantity * $item->price);
+        }
 
         $preSelectedAction = $request->query('pre_action', 'approve');
 
@@ -776,7 +785,8 @@ class CustomerController extends Controller
             'customer' => $customer,
             'token' => $token,
             'log' => $log,
-            'preSelectedAction' => $preSelectedAction
+            'preSelectedAction' => $preSelectedAction,
+            'totalAmount' => $totalAmount
         ]);
     }
 
@@ -849,11 +859,11 @@ class CustomerController extends Controller
                 $updateData = [];
 
                 if (request()->has('update_top')) $updateData['term_of_payment'] = request('update_top');
-                
+
                 if (request()->has('update_lead_time')) {
                     $updateData['lead_time'] = request('update_lead_time') === '' ? 0 : request('update_lead_time');
                 }
-                
+
                 if (request()->has('update_credit_limit_value')) $updateData['credit_limit'] = request('update_credit_limit_value');
                 if (request()->filled('update_npwp')) $updateData['npwp'] = request('update_npwp');
                 if (request()->has('update_va')) $updateData['virtual_account'] = request('update_va');
@@ -871,7 +881,7 @@ class CustomerController extends Controller
                     if ($customer->isDirty('credit_limit')) $changesLog[] = "Credit Limit changed";
                     if ($customer->isDirty('npwp')) $changesLog[] = "NPWP corrected by Finance";
                     if ($customer->isDirty('virtual_account')) $changesLog[] = "VA Updated";
-                    
+
                     if ($customer->isDirty('payment_days') || $customer->isDirty('payment_date')) {
                         $changesLog[] = "Payment Schedule Updated";
                     }
@@ -1183,8 +1193,8 @@ class CustomerController extends Controller
         $revNumber = $latestRevision ? $latestRevision->revision_number : '-';
         $revCount  = $latestRevision ? $latestRevision->revision_count : '0';
         $revDate   = $latestRevision && $latestRevision->revision_date
-                        ? Carbon::parse($latestRevision->revision_date)->format('d M Y')
-                        : '-';
+            ? Carbon::parse($latestRevision->revision_date)->format('d M Y')
+            : '-';
 
         $query = ApprovalLog::with('approver')
             ->select(
@@ -1422,7 +1432,7 @@ class CustomerController extends Controller
     public function getLogData()
     {
         $user = Auth::user();
-        
+
         $query = Activity::with('causer')
             ->where(function ($q) {
                 $q->where('log_name', 'like', '%customer%')
@@ -1437,8 +1447,8 @@ class CustomerController extends Controller
                     $sub->where('subject_type', Customer::class)
                         ->whereIn('subject_id', $allowedCustomerIds);
                 })
-                ->orWhere('subject_type', '!=', Customer::class)
-                ->orWhereNull('subject_type');
+                    ->orWhere('subject_type', '!=', Customer::class)
+                    ->orWhereNull('subject_type');
             });
         }
 
@@ -1446,7 +1456,6 @@ class CustomerController extends Controller
 
         return DataTables::of($query)
             ->addIndexColumn()
-
             ->editColumn('log_name', function ($log) {
                 $logName = $log->log_name;
 
@@ -1473,7 +1482,6 @@ class CustomerController extends Controller
                     </div>
                 ';
             })
-
             ->addColumn('properties', function ($log) {
                 $props = $log->properties ?? [];
 
@@ -1488,14 +1496,10 @@ class CustomerController extends Controller
                     $label = ucfirst(str_replace(['_', '-'], ' ', $key));
 
                     if ($key === 'attributes') {
-                        $json = json_encode($value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-                        $escaped = e($json);
                         $output .= '
                             <div style="margin-bottom: 8px;">
                                 <div style="color: #64748b; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">' . e($label) . '</div>
-                                <button class="btn btn-view-json d-inline-flex align-items-center" style="background: #e2e8f0; color: #475569; border: none; padding: 4px 10px; font-size: 0.7rem; border-radius: 6px; font-weight: 700; transition: all 0.2s;" data-json="' . $escaped . '">
-                                    <i class="ph-bold ph-braces me-1 text-primary"></i> View JSON Data
-                                </button>
+                                <div style="color: #1e293b; font-weight: 600; font-size: 0.8rem; line-height: 1.4; font-style: italic;">(View Action details)</div>
                             </div>';
                         continue;
                     }
@@ -1516,10 +1520,11 @@ class CustomerController extends Controller
                             return is_array($i) ? json_encode($i, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : (string) $i;
                         }, (array) $value));
 
+                        $shortText = Str::limit($preview, 80);
                         $output .= '
                             <div style="margin-bottom: 8px;">
                                 <div style="color: #64748b; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">' . e($label) . '</div>
-                                <div style="color: #1e293b; font-weight: 600; font-size: 0.8rem; line-height: 1.4; word-break: break-word;">' . e(Str::limit($preview, 80)) . '</div>
+                                <div style="color: #1e293b; font-weight: 600; font-size: 0.8rem; line-height: 1.4; word-break: break-word;">' . e($shortText) . '</div>
                             </div>';
                         continue;
                     }
@@ -1542,27 +1547,28 @@ class CustomerController extends Controller
                                 return is_array($i) ? json_encode($i) : (string) $i;
                             }, $decoded)) : json_encode($decoded, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
+                            $shortText = Str::limit($preview, 80);
                             $output .= '
                                 <div style="margin-bottom: 8px;">
                                     <div style="color: #64748b; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">' . e($label) . '</div>
-                                    <div style="color: #1e293b; font-weight: 600; font-size: 0.8rem; line-height: 1.4; word-break: break-word;">' . e(Str::limit($preview, 80)) . '</div>
+                                    <div style="color: #1e293b; font-weight: 600; font-size: 0.8rem; line-height: 1.4; word-break: break-word;">' . e($shortText) . '</div>
                                 </div>';
                             continue;
                         }
                     }
 
                     $display = is_null($value) ? '-' : (string) $value;
+                    $shortText = Str::limit($display, 80);
                     $output .= '
                         <div style="margin-bottom: 8px;">
                             <div style="color: #64748b; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">' . e($label) . '</div>
-                            <div style="color: #1e293b; font-weight: 600; font-size: 0.8rem; line-height: 1.4; word-break: break-word;">' . e(Str::limit($display, 80)) . '</div>
+                            <div style="color: #1e293b; font-weight: 600; font-size: 0.8rem; line-height: 1.4; word-break: break-word;">' . e($shortText) . '</div>
                         </div>';
                 }
 
                 $output .= '</div>';
                 return $output;
             })
-
             ->addColumn('subject_info', function ($log) {
                 if ($log->subject_type === Customer::class) {
                     $code = $log->subject ? $log->subject->code : ($log->properties['code'] ?? '-');
@@ -1594,7 +1600,6 @@ class CustomerController extends Controller
 
                 return '<span class="fw-bold text-muted" style="font-size: 0.8rem; font-style: italic;">N/A</span>';
             })
-
             ->addColumn('subject_id', function ($log) {
                 $id = $log->subject_id;
                 if (!$id) return '<span style="color: #cbd5e1; font-weight: 700;">-</span>';
@@ -1606,7 +1611,6 @@ class CustomerController extends Controller
                     </div>
                 ';
             })
-
             ->addColumn('causer_info', function ($log) {
                 $causerName = optional($log->causer)->name ?? 'System';
                 $isSystem = $causerName === 'System';
@@ -1622,7 +1626,6 @@ class CustomerController extends Controller
                         <span class="fw-bolder" style="color: #1e293b; font-size: 0.85rem;">' . e($causerName) . '</span>
                     </div>';
             })
-
             ->editColumn('event', function ($log) {
                 $event = strtolower($log->event ?? 'N/A');
 
@@ -1691,13 +1694,44 @@ class CustomerController extends Controller
                     </div>
                 ';
             })
-
             ->editColumn('created_at', function ($log) {
                 $date = Carbon::parse($log->created_at)->format('d M Y, H:i');
                 return '<div class="d-flex align-items-center gap-2"><i class="ph-fill ph-clock-counter-clockwise" style="color: #94a3b8; font-size: 1.1rem;"></i><span style="color: #475569; font-weight: 600; font-size: 0.85rem;">' . $date . '</span></div>';
             })
+            // MEMBUAT KOLOM ACTION BARU DI SINI
+            ->addColumn('action', function ($log) {
+                $props = $log->properties ?? [];
+                
+                // 1. Ekstrak Causer (Aktor)
+                $causerName = optional($log->causer)->name ?? 'System';
 
-            ->rawColumns(['log_name', 'event', 'subject_info', 'causer_info', 'subject_id', 'properties', 'created_at'])
+                // 2. Ekstrak Target Data Info (Plain Text)
+                $targetData = '-';
+                if ($log->subject_type === Customer::class) {
+                    $code = $log->subject ? $log->subject->code : ($props['code'] ?? '-');
+                    $name = $log->subject ? $log->subject->name : ($props['name'] ?? '-');
+                    $targetData = $code . ' - ' . $name;
+                } elseif ($log->subject_type === ApprovalPath::class) {
+                    $category = $log->subject ? $log->subject->category : ($props['category'] ?? 'General');
+                    $sub = $log->subject ? $log->subject->sub_category : ($props['sub_category'] ?? null);
+                    $targetData = $category . ($sub ? ' - ' . $sub : '');
+                }
+
+                $fullData = [
+                    'Tanggal_Update' => Carbon::parse($log->created_at)->format('d M Y, H:i:s'),
+                    'Modul_Type'     => ucwords(str_replace('-', ' ', $log->log_name)),
+                    'Action_Event'   => strtoupper($log->event),
+                    'Causer'         => $causerName,
+                    'Target_Data'    => $targetData,
+                    'Tag_ID'         => $log->subject_id ?? '-',
+                    'Properties'     => $props
+                ];
+
+                $json = json_encode($fullData, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+                
+                return '<button type="button" class="btn btn-primary btn-xs rounded fw-bold btn-view-full shadow-sm" style="font-size: 12px; padding: 5px 12px;" data-json="' . e($json) . '"><i class="ph-bold ph-eye me-1"></i> View Full</button>';
+            })
+            ->rawColumns(['log_name', 'event', 'subject_info', 'causer_info', 'subject_id', 'properties', 'created_at', 'action'])
             ->make(true);
     }
 
@@ -1712,15 +1746,55 @@ class CustomerController extends Controller
         ];
 
         $columns = [
-            'user_id', 'code', 'no_pkd', 'pic', 'name', 'sort_name', 'customer_class', 'account_group',
-            'address1', 'address2', 'address3', 'city', 'postal_code', 'country',
-            'shipping_to_name', 'shipping_to_address', 'purchasing_manager_name', 'purchasing_manager_email',
-            'finance_manager_name', 'finance_manager_email', 'penagihan_nama_kontak', 'penagihan_telepon',
-            'penagihan_address', 'surat_menyurat_address', 'email', 'tax_contact_name', 'tax_contact_email',
-            'tax_contact_phone', 'npwp', 'tanggal_npwp', 'nppkp', 'tanggal_nppkp', 'no_pengukuhan_kaber',
-            'output_tax', 'term_of_payment', 'lead_time', 'credit_limit', 'ccar', 'bank_garansi', 'area',
-            'status', 'pembagian', 'customer_total', 'virtual_account', 'payment_days', 'payment_date',
-            'faktur_days', 'faktur_date', 'join_date'
+            'user_id',
+            'code',
+            'no_pkd',
+            'pic',
+            'name',
+            'sort_name',
+            'customer_class',
+            'account_group',
+            'address1',
+            'address2',
+            'address3',
+            'city',
+            'postal_code',
+            'country',
+            'shipping_to_name',
+            'shipping_to_address',
+            'purchasing_manager_name',
+            'purchasing_manager_email',
+            'finance_manager_name',
+            'finance_manager_email',
+            'penagihan_nama_kontak',
+            'penagihan_telepon',
+            'penagihan_address',
+            'surat_menyurat_address',
+            'email',
+            'tax_contact_name',
+            'tax_contact_email',
+            'tax_contact_phone',
+            'npwp',
+            'tanggal_npwp',
+            'nppkp',
+            'tanggal_nppkp',
+            'no_pengukuhan_kaber',
+            'output_tax',
+            'term_of_payment',
+            'lead_time',
+            'credit_limit',
+            'ccar',
+            'bank_garansi',
+            'area',
+            'status',
+            'pembagian',
+            'customer_total',
+            'virtual_account',
+            'payment_days',
+            'payment_date',
+            'faktur_days',
+            'faktur_date',
+            'join_date'
         ];
 
         $callback = function () use ($columns) {
@@ -1728,15 +1802,55 @@ class CustomerController extends Controller
             fputcsv($file, $columns, ';');
 
             fputcsv($file, [
-                '1', 'CUST-001', 'NULL', 'Bapak Budi', 'PT Maju Jaya', 'MJY', '1', '1',
-                'Jl. Sudirman No 1', 'NULL', 'NULL', 'Jakarta', '12345', 'Indonesia',
-                'Bapak Andi', 'Jl. Gudang Baru No 2', 'Bapak Coki', 'coki@majujaya.com',
-                'Ibu Dini', 'dini@majujaya.com', 'Ibu Eka', '08123456789',
-                'Jl. Sudirman No 1', 'Jl. Sudirman No 1', 'info@majujaya.com', 'Ibu Fani', 'tax@majujaya.com',
-                '08123456780', '12.345.678.9-123.000', '2020-01-01', 'NULL', 'NULL', 'NULL',
-                'PPN', '30', '0', '10000000', 'smd_idr', 'TIDAK', 'Jabodetabek',
-                'Active', 'NULL', '0', '1234567890', 'Senin,Selasa', '15,30',
-                'Rabu,Kamis', '10,20', '2026-03-11'
+                '1',
+                'CUST-001',
+                'NULL',
+                'Bapak Budi',
+                'PT Maju Jaya',
+                'MJY',
+                '1',
+                '1',
+                'Jl. Sudirman No 1',
+                'NULL',
+                'NULL',
+                'Jakarta',
+                '12345',
+                'Indonesia',
+                'Bapak Andi',
+                'Jl. Gudang Baru No 2',
+                'Bapak Coki',
+                'coki@majujaya.com',
+                'Ibu Dini',
+                'dini@majujaya.com',
+                'Ibu Eka',
+                '08123456789',
+                'Jl. Sudirman No 1',
+                'Jl. Sudirman No 1',
+                'info@majujaya.com',
+                'Ibu Fani',
+                'tax@majujaya.com',
+                '08123456780',
+                '12.345.678.9-123.000',
+                '2020-01-01',
+                'NULL',
+                'NULL',
+                'NULL',
+                'PPN',
+                '30',
+                '0',
+                '10000000',
+                'smd_idr',
+                'TIDAK',
+                'Jabodetabek',
+                'Active',
+                'NULL',
+                '0',
+                '1234567890',
+                'Senin,Selasa',
+                '15,30',
+                'Rabu,Kamis',
+                '10,20',
+                '2026-03-11'
             ], ';');
             fclose($file);
         };
@@ -1771,7 +1885,7 @@ class CustomerController extends Controller
                     }
 
                     $data = array_combine($header, $row);
-                    $clean = function($key, $default = null) use ($data) {
+                    $clean = function ($key, $default = null) use ($data) {
                         $val = isset($data[$key]) ? trim($data[$key]) : null;
                         if ($val === '' || strtoupper($val) === 'NULL') {
                             return $default;
@@ -1957,10 +2071,10 @@ class CustomerController extends Controller
                         <span class="fw-bold" style="color: #15803d; font-size: 0.8rem;">' . e($status) . '</span>
                     </div>';
             })
-            ->filterColumn('requester_name', function($query, $keyword) {
+            ->filterColumn('requester_name', function ($query, $keyword) {
                 $query->where('users.name', 'like', "%{$keyword}%");
             })
-            ->orderColumn('requester_name', function($query, $order) {
+            ->orderColumn('requester_name', function ($query, $order) {
                 $query->orderBy('users.name', $order);
             })
             ->rawColumns(['no_pkd', 'code', 'name', 'status_approval'])

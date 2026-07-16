@@ -122,7 +122,7 @@ class CustomerRequest extends FormRequest
             'npwp' => 'required|string|max:50',
             'tanggal_npwp' => 'required|date',
             'nppkp' => 'nullable|string|max:50',
-            'tanggal_nppkp' => 'required|date',
+            'tanggal_nppkp' => 'nullable|date',
             'no_pengukuhan_kaber' => 'nullable|string|max:255',
 
             // --- 7. Financial Terms ---
