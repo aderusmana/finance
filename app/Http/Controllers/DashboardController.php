@@ -256,35 +256,41 @@ class DashboardController extends Controller
                 ];
             }
 
-            if ($view === 'class' || $view === 'all') {
-                $classQuery = clone $query;
-                $classData = $classQuery->leftJoin('customer_classes', 'customers.customer_class', '=', 'customer_classes.id')
-                    ->select(
+            if ($view === 'status' || $view === 'all') {
+                $statusQuery = clone $query;
+                $statusData = $statusQuery->select(
                         $selectTime,
-                        DB::raw('COALESCE(customer_classes.name_class, "Uncategorized") as class_name'),
+                        DB::raw('COALESCE(customers.status_approval, "Pending") as status_name'),
                         DB::raw('count(customers.id) as total')
                     )
-                    ->groupBy('time_val', 'class_name')
+                    ->groupBy('time_val', 'status_name')
                     ->get();
 
-                $classGrouped = [];
-                // Initialize all found classes with 0s
-                $foundClasses = $classData->pluck('class_name')->unique();
-                foreach ($foundClasses as $cName) {
-                    $classGrouped[$cName] = array_fill(0, $dataLength, 0);
+                $statusGrouped = [];
+                // Initialize all found statuses with 0s
+                $foundStatuses = $statusData->pluck('status_name')->unique();
+                foreach ($foundStatuses as $sName) {
+                    $statusGrouped[$sName] = array_fill(0, $dataLength, 0);
                 }
 
-                foreach ($classData as $row) {
-                    $classGrouped[$row->class_name][$row->time_val - 1] = $row->total;
+                foreach ($statusData as $row) {
+                    $statusGrouped[$row->status_name][$row->time_val - 1] = $row->total;
                 }
 
-                $colors = ['#1aac6e', '#f7b84b', '#ef476f', '#38bdf8', '#8b5cf6', '#f43f5e', '#a8a29e', '#485ede'];
+                $statusColors = [
+                    'Pending' => '#f59e0b',    // Amber
+                    'Processing' => '#3b82f6', // Blue
+                    'Approved' => '#10b981',   // Emerald
+                    'Rejected' => '#ef4444',   // Red
+                    'Completed' => '#8b5cf6',  // Purple
+                ];
+                $defaultColors = ['#1aac6e', '#f7b84b', '#ef476f', '#38bdf8', '#8b5cf6', '#f43f5e', '#a8a29e', '#485ede'];
                 $cIdx = 0;
 
-                foreach ($classGrouped as $className => $dataArr) {
-                    $c = $colors[$cIdx % count($colors)];
+                foreach ($statusGrouped as $statusName => $dataArr) {
+                    $c = $statusColors[$statusName] ?? $defaultColors[$cIdx % count($defaultColors)];
                     $datasets[] = [
-                        'label' => $className,
+                        'label' => $statusName,
                         'data' => $dataArr,
                         'borderColor' => $c,
                         'backgroundColor' => 'transparent',

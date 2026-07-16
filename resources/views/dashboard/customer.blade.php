@@ -94,13 +94,13 @@
             <div class="card chart-card h-100">
                 <div class="chart-header header-blue d-flex justify-content-between align-items-center flex-wrap gap-2">
                     <div>
-                        <i class="iconoir-graph-up text-primary me-2 f-s-22"></i> Growth & Class Trends
+                        <i class="iconoir-graph-up text-primary me-2 f-s-22"></i> Registration Status Trends
                     </div>
                     <div class="d-flex gap-2">
                         <select id="growthFilterView" class="form-select form-select-sm border-0 shadow-sm text-secondary" style="border-radius: 8px; width: 140px; font-size: 0.75rem;">
                             <option value="all">All (Combined)</option>
                             <option value="registration">Total Registration</option>
-                            <option value="class">Per Class</option>
+                            <option value="status">Per Status</option>
                         </select>
                         <select id="growthFilterMonth" class="form-select form-select-sm border-0 shadow-sm text-secondary" style="border-radius: 8px; width: 110px; font-size: 0.75rem;">
                             <option value="all">All Months</option>
