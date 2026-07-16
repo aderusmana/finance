@@ -22,7 +22,7 @@ class ResendPendingApproval extends Command
             return;
         }
 
-        $batasWaktu = Carbon::now()->subWeekday(); 
+        $batasWaktu = Carbon::today();
         $pendingCustomerIds = ApprovalLog::where('category', 'Customer')
             ->where('status', 'Pending')
             ->distinct()

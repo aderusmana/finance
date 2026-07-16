@@ -45,7 +45,14 @@ class DashboardController extends Controller
         //     abort(403, 'Anda tidak memiliki akses ke Dashboard Customer');
         // }
 
-        return view('dashboard.customer');
+        $availableYears = \App\Models\Customer\Customer::selectRaw('YEAR(created_at) as year')
+            ->whereNotNull('created_at')
+            ->groupBy('year')
+            ->orderBy('year', 'desc')
+            ->pluck('year')
+            ->toArray();
+
+        return view('dashboard.customer', compact('availableYears'));
     }
 
     public function bgIndex()
