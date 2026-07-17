@@ -456,15 +456,28 @@ class LogisticOrderController extends Controller
         ]);
 
         $pdfFileName = $note->delivery_order_no . '.pdf';
+        $cacheKey    = 'delivery_order_pdf_' . $order->id;
 
-        $pdf = Pdf::loadView('pdf.delivery_order', compact('order'))
-            ->setPaper('a5', 'landscape')
-            ->output();
+        $pdfBase64 = Cache::remember($cacheKey, now()->addHours(24), function () use ($order) {
+            $pdf = Pdf::loadView('pdf.delivery_order', compact('order'))
+                ->setPaper('a5', 'landscape')
+                ->output();
 
-        return response($pdf, 200, [
+            return base64_encode($pdf);
+        });
+
+        $pdfContent = base64_decode($pdfBase64);
+
+        return response()->streamDownload(function () use ($pdfContent) {
+            echo $pdfContent;
+        }, $pdfFileName, [
             'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'inline; filename="' . $pdfFileName . '"',
         ]);
+
+        // return response($pdfContent, 200, [
+        //     'Content-Type' => 'application/pdf',
+        //     'Content-Disposition' => 'inline; filename="' . $pdfFileName . '"',
+        // ]);
     }
 
     public function cancel(Request $request, $id)
