@@ -204,28 +204,42 @@
                         <table class="table table-custom table-hover mb-0 border-0">
                             <thead>
                                 <tr>
-                                    <th width="8%" class="text-center border-0">No</th>
+                                    <th width="5%" class="text-center border-0">No</th>
                                     <th width="15%" class="border-0">Item Code</th>
-                                    <th width="42%" class="border-0">Item Name</th>
-                                    <th width="15%" class="text-center border-0">Pack Size</th>
-                                    <th width="20%" class="text-center border-0">Quantity</th>
+                                    <th width="25%" class="border-0">Item Name</th>
+                                    <th width="15%" class="border-0">Pack Size</th>
+                                    <th width="15%" class="border-0">Price List</th>
+                                    <th width="10%" class="text-center border-0">Qty</th>
+                                    <th width="15%" class="border-0">Amount</th>
                                 </tr>
                             </thead>
                             <tbody>
+                                @php $grandTotal = 0; @endphp
                                 @forelse($order->items as $index => $item)
+                                @php $grandTotal += $item->order_amount; @endphp
                                 <tr>
                                     <td class="text-center text-muted">{{ $index + 1 }}</td>
-                                    <td><span class="badge bg-light text-secondary border px-2 py-1">{{ $item->order_item_code }}</span></td>
+                                    <td><span class="badge bg-light text-secondary border px-2 py-1">{{ $item->order_item_code ?? '-' }}</span></td>
                                     <td class="fw-bold">{{ $item->order_item_name }}</td>
-                                    <td class="text-center">{{ $item->pack_size ?? '-' }}</td>
+                                    <td>{{ $item->pack_size ?? '-' }}</td>
+                                    <td>Rp {{ number_format($item->price_list ?? 0, 0, ',', '.') }}</td>
                                     <td class="text-center fs-5 fw-bold text-primary">{{ $item->order_quantity }}</td>
+                                    <td class="fw-bold text-success">Rp {{ number_format($item->order_amount ?? 0, 0, ',', '.') }}</td>
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="4" class="text-center text-muted py-5">Item data not found.</td>
+                                    <td colspan="7" class="text-center text-muted py-5">Item data not found.</td>
                                 </tr>
                                 @endforelse
                             </tbody>
+                            @if($order->items->count() > 0)
+                            <tfoot>
+                                <tr style="background-color: #f8fafc;">
+                                    <td colspan="6" class="text-end fw-bold align-middle">Total Amount Claim :</td>
+                                    <td class="fw-bold text-success">Rp {{ number_format($grandTotal, 0, ',', '.') }}</td>
+                                </tr>
+                            </tfoot>
+                            @endif
                         </table>
                     </div>
 

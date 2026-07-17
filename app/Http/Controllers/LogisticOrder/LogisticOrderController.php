@@ -383,7 +383,7 @@ class LogisticOrderController extends Controller
             }
 
             DB::commit();
-            return response()->json(['success' => true, 'message' => "Order ($loNo) & Note ($doNo) successfully created! Email sent to Distributor."], 201);
+            return response()->json(['success' => true, 'message' => "Logistic Order ($loNo) & Delivery Note ($doNo) successfully created! Email sent to Distributor."], 201);
         } catch (\Exception $e) {
             DB::rollback();
             return response()->json(['success' => false, 'message' => 'Failed to save: ' . $e->getMessage()], 500);
@@ -456,28 +456,15 @@ class LogisticOrderController extends Controller
         ]);
 
         $pdfFileName = $note->delivery_order_no . '.pdf';
-        $cacheKey    = 'delivery_order_pdf_' . $order->id;
 
-        $pdfBase64 = Cache::remember($cacheKey, now()->addHours(24), function () use ($order) {
-            $pdf = Pdf::loadView('pdf.delivery_order', compact('order'))
-                ->setPaper('a5', 'landscape')
-                ->output();
+        $pdf = Pdf::loadView('pdf.delivery_order', compact('order'))
+            ->setPaper('a5', 'landscape')
+            ->output();
 
-            return base64_encode($pdf);
-        });
-
-        $pdfContent = base64_decode($pdfBase64);
-
-        return response()->streamDownload(function () use ($pdfContent) {
-            echo $pdfContent;
-        }, $pdfFileName, [
+        return response($pdf, 200, [
             'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="' . $pdfFileName . '"',
         ]);
-
-        // return response($pdfContent, 200, [
-        //     'Content-Type' => 'application/pdf',
-        //     'Content-Disposition' => 'inline; filename="' . $pdfFileName . '"',
-        // ]);
     }
 
     public function cancel(Request $request, $id)

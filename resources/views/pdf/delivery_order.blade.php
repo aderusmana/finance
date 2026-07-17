@@ -135,23 +135,53 @@
             overflow-wrap: break-word;
         }
 
-        .item-table td:nth-child(1),
-        .item-table th:nth-child(1) {
+        .dn-table td:nth-child(1),
+        .dn-table th:nth-child(1) {
             width: 6%;
         }
 
-        .item-table td:nth-child(2),
-        .item-table th:nth-child(2) {
+        .dn-table td:nth-child(2),
+        .dn-table th:nth-child(2) {
             width: 18%;
         }
 
-        .item-table td:nth-child(3),
-        .item-table th:nth-child(3) {
+        .dn-table td:nth-child(3),
+        .dn-table th:nth-child(3) {
             width: 61%;
         }
 
-        .item-table td:nth-child(4),
-        .item-table th:nth-child(4) {
+        .dn-table td:nth-child(4),
+        .dn-table th:nth-child(4) {
+            width: 15%;
+        }
+
+        .kaso-table td:nth-child(1),
+        .kaso-table th:nth-child(1) {
+            width: 5%;
+        }
+
+        .kaso-table td:nth-child(2),
+        .kaso-table th:nth-child(2) {
+            width: 15%;
+        }
+
+        .kaso-table td:nth-child(3),
+        .kaso-table th:nth-child(3) {
+            width: 35%;
+        }
+
+        .kaso-table td:nth-child(4),
+        .kaso-table th:nth-child(4) {
+            width: 15%;
+        }
+
+        .kaso-table td:nth-child(5),
+        .kaso-table th:nth-child(5) {
+            width: 15%;
+        }
+
+        .kaso-table td:nth-child(6),
+        .kaso-table th:nth-child(6) {
             width: 15%;
         }
 
@@ -194,81 +224,19 @@
             page-break-before: always;
         }
 
-        .kaso-wrapper {
-            font-family: 'Helvetica', Arial, sans-serif;
-            color: #000;
-            padding: 0;
-        }
-
-        .kaso-header-text {
-            text-align: center;
-            color: #000080; /* Navy Blue dari image */
-        }
-
-        .kaso-company {
-            font-size: 16px;
-            font-weight: bold;
-            text-decoration: underline;
-            margin-bottom: 4px;
-            letter-spacing: 0.5px;
-        }
-
-        .kaso-address {
-            font-size: 11px;
-            font-weight: bold;
-        }
-
-        .kaso-line-thick {
-            border-top: 2px solid #000;
-            margin-top: 8px;
-        }
-
-        .kaso-line-thin {
-            border-top: 1px solid #000;
-            margin-top: 2px;
-            margin-bottom: 15px;
-        }
-
-        .kaso-title {
-            color: #ff0000; /* Merah sesuai image */
-            font-size: 20px;
-            font-style: italic;
-            font-weight: bold;
-            text-decoration: underline;
-            margin: 0;
-            letter-spacing: 0.5px;
-        }
-
-        .kaso-info-table {
-            width: 100%;
-            font-size: 11px;
-            margin-bottom: 20px;
+        .kaso-doc-control {
             border-collapse: collapse;
-        }
-
-        .kaso-info-table td {
-            padding: 4px 2px;
-            vertical-align: bottom;
-        }
-
-        .kaso-uline {
-            border-bottom: 1px solid #000;
-        }
-
-        .kaso-item-table {
+            font-size: 9px;
             width: 100%;
-            border-collapse: collapse;
-            font-size: 11px;
+            max-width: 130px;
+            float: right;
+            margin-top: 5px;
         }
 
-        .kaso-item-table th, .kaso-item-table td {
-            border: 1px solid #000;
-            padding: 6px 4px;
-        }
-
-        .kaso-item-table th {
-            font-weight: bold;
-            text-align: center;
+        .kaso-doc-control td {
+            border: 1px solid #cbd5e1;
+            padding: 3px 5px;
+            color: #4a5568;
         }
     </style>
 </head>
@@ -322,7 +290,7 @@
                                 <tr>
                                     <td>Delivery Date</td>
                                     <td>:</td>
-                                    <td>{{ \Carbon\Carbon::parse($order->delivery_date)->format('d F Y') }}</td>
+                                    <td>{{ \Carbon\Carbon::parse($order->delivery_date)->locale('id')->translatedFormat('d F Y') }}</td>
                                 </tr>
                                 <tr>
                                     <td>Distributor</td>
@@ -341,7 +309,7 @@
                                     style="font-size: 13px; color: #1a202c;">{{ $order->customerShipTo->ship_to_name }}</strong><br>
                                 {{ $order->customerShipTo->ship_to_address_1 }}<br>
                                 @if ($order->customerShipTo->ship_to_address_2)
-                                    {{ $order->customerShipTo->ship_to_address_2 }}<br>
+                                {{ $order->customerShipTo->ship_to_address_2 }}<br>
                                 @endif
                                 <span class="text-bold"
                                     style="font-size: 12px;">{{ $order->customerShipTo->ship_to_city }}</span>
@@ -351,7 +319,7 @@
                 </tr>
             </table>
 
-            <table class="item-table">
+            <table class="item-table dn-table">
                 <thead>
                     <tr>
                         <th>No</th>
@@ -362,12 +330,12 @@
                 </thead>
                 <tbody>
                     @foreach ($order->items as $index => $item)
-                        <tr>
-                            <td class="text-center">{{ $index + 1 }}</td>
-                            <td class="text-center">{{ $item->order_item_code }}</td>
-                            <td>{{ $item->order_item_name }}</td>
-                            <td class="text-center text-bold">{{ $item->order_quantity }}</td>
-                        </tr>
+                    <tr>
+                        <td class="text-center">{{ $index + 1 }}</td>
+                        <td class="text-center">{{ $item->order_item_code }}</td>
+                        <td>{{ $item->order_item_name }}</td>
+                        <td class="text-center text-bold">{{ $item->order_quantity }}</td>
+                    </tr>
                     @endforeach
                 </tbody>
             </table>
@@ -397,100 +365,106 @@
     {{-- PAGE 2: KEY ACCOUNT SALES ORDER (KASO)                    --}}
     {{-- ======================================================= --}}
     <div class="page-break"></div>
-    <div class="kaso-wrapper">
-        
+    <div class="kaso-wrapper" style="padding: 20px 0;">
+
         {{-- KASO Header --}}
-        <div class="kaso-header-text">
-            <div class="kaso-company">PT.SINAR MEADOW INTERNATIONAL INDONESIA</div>
-            <div class="kaso-address">Jl.Pulo Ayang I/6, JIEP, Jakarta 13260. Telp : 4602981-5</div>
-        </div>
-        <div class="kaso-line-thick"></div>
-        <div class="kaso-line-thin"></div>
+        <table width="100%" style="margin-bottom: 10px;">
+            <tr>
+                <td width="15%" align="right" valign="middle" style="padding-right: 5px;">
+                    <img src="{{ public_path('assets/images/logo/sinarmeadow.png') }}" alt="Logo" style="width: 75px; border-radius: 5px;">
+                </td>
+                <td width="70%" align="center" valign="middle">
+                    <div style="font-family: 'Times New Roman', Times, serif; font-size: 18px; font-weight: 800; color: #a68831; letter-spacing: 0.5px;">PT. SINAR MEADOW INTERNATIONAL INDONESIA</div>
+                    <div style="font-size: 10px; color: #718096; margin-top: 4px;">Jl. Pulo Ayang I No.6, Kawasan Industri Pulogadung Jatinegara, Jakarta Timur, 13260 - Indonesia</div>
+                </td>
+                <td width="15%"></td>
+            </tr>
+        </table>
+
+        <div style="border-top: 2px solid #a68831; margin-bottom: 2px;"></div>
+        <div style="border-top: 1px solid #a68831; margin-bottom: 20px;"></div>
 
         {{-- Title & Document Control --}}
         <table width="100%" style="margin-bottom: 20px;">
             <tr>
-                <td width="70%" align="center">
-                    <h2 class="kaso-title">KEY ACCOUNT SALES ORDER</h2>
+                <td width="70%" align="left">
+                    <h2 style="font-family: 'Times New Roman', Times, serif; font-size: 22px; font-weight: 800; color: #2d3748; margin: 0; letter-spacing: 1px;">KEY ACCOUNT SALES ORDER</h2>
                 </td>
-                <td width="30%" align="right" valign="top">
-                    <table style="border-collapse: collapse; font-size: 10px; width: 100%; max-width: 140px;">
-                        <tr><td style="border: 1px solid #000; padding: 3px;">No.F/C.1.3.02</td></tr>
-                        <tr><td style="border: 1px solid #000; padding: 3px;">Revision : 1</td></tr>
-                        <tr><td style="border: 1px solid #000; padding: 3px;">Date : 28 April 03</td></tr>
+                <td align="right" valign="top" style="width: 140px;">
+                    <table style="border-collapse: collapse; font-size: 9px; width: 100%; color: #000;">
+                        <tr>
+                            <td style="border: 1px solid #000; padding: 3px 5px; font-weight: bold; width: 35%;">No.</td>
+                            <td style="border: 1px solid #000; padding: 3px 5px;">F/C.1.3.02</td>
+                        </tr>
+                        <tr>
+                            <td style="border: 1px solid #000; padding: 3px 5px; font-weight: bold;">Revision</td>
+                            <td style="border: 1px solid #000; padding: 3px 5px;">1</td>
+                        </tr>
+                        <tr>
+                            <td style="border: 1px solid #000; padding: 3px 5px; font-weight: bold;">Date</td>
+                            <td style="border: 1px solid #000; padding: 3px 5px;">12 Januari 2024</td>
+                        </tr>
                     </table>
                 </td>
             </tr>
         </table>
 
         {{-- KASO Information Fields --}}
-        <table class="kaso-info-table">
-            <!-- <tr>
-                <td width="12%">To</td>
-                <td width="2%">:</td>
-                <td width="36%" class="kaso-uline">Sales Admin</td>
-                <td width="20%" align="right" style="padding-right: 5px;">Sales Order No. :</td>
-                <td width="30%" class="kaso-uline">LO-{{ str_pad($order->id, 4, '0', STR_PAD_LEFT) }}</td>
+        <table style="width: 100%; font-size: 11px; margin-bottom: 20px; border-collapse: collapse; color: #2d3748;">
+            <tr>
+                <td width="15%" style="padding: 2px;">From</td>
+                <td width="2%" style="padding: 2px;">:</td>
+                <td width="33%" style="padding: 2px;">Key Account Sales</td>
+                <td width="25%" align="right" style="padding: 2px 15px 2px 5px;">Cust. Order (PO) No. :</td>
+                <td width="25%" style="padding: 2px;">{{ $order->no_po ?? '-' }}</td>
             </tr>
             <tr>
-                <td>Attention</td>
-                <td>:</td>
-                <td class="kaso-uline">{{ $order->attention ?? '-' }}</td>
-                <td align="right" style="padding-right: 5px;">Sales Order Date :</td>
-                <td class="kaso-uline">{{ $order->created_at->format('d F Y') }}</td>
-            </tr> -->
-            <tr>
-                <td>From</td>
-                <td>:</td>
-                <td class="kaso-uline">Key Account Sales</td>
-                <td align="right" style="padding-right: 5px;">Cust. Order (PO) No. :</td>
-                <td class="kaso-uline">{{ $order->no_po ?? '-' }}</td>
+                <td style="padding: 2px;">Name of PIC</td>
+                <td style="padding: 2px;">:</td>
+                <td style="padding: 2px;">{{ $order->customerShipTo->user->name ?? '-' }}</td>
+                <td align="right" style="padding: 2px 15px 2px 5px;">Date of PO :</td>
+                <td style="padding: 2px;">{{ $order->date_of_po ? \Carbon\Carbon::parse($order->date_of_po)->locale('id')->translatedFormat('d F Y') : '-' }}</td>
             </tr>
             <tr>
-                <td>Name of PIC</td>
-                <td>:</td>
-                <td class="kaso-uline">{{ $order->customerShipTo->user->name ?? '-' }}</td>
-                <td align="right" style="padding-right: 5px;">Date of PO :</td>
-                <td class="kaso-uline">{{ $order->date_of_po ? \Carbon\Carbon::parse($order->date_of_po)->format('d F Y') : '-' }}</td>
+                <td style="padding: 2px;">Ship to</td>
+                <td style="padding: 2px;">:</td>
+                <td colspan="3" style="padding: 2px;">{{ $order->customerShipTo->ship_to_name }}</td>
             </tr>
             <tr>
-                <td>Ship to</td>
-                <td>:</td>
-                <td colspan="3" class="kaso-uline" style="font-weight: bold;">{{ $order->customerShipTo->ship_to_name }}</td>
-            </tr>
-            <tr>
-                <td valign="top">Address</td>
-                <td valign="top">:</td>
-                <td colspan="3" class="kaso-uline">
-                    {{ $order->customerShipTo->ship_to_address_1 }} 
-                    {{ $order->customerShipTo->ship_to_address_2 ? ', ' . $order->customerShipTo->ship_to_address_2 : '' }},
-                    {{ $order->customerShipTo->ship_to_city }}
+                <td valign="top" style="padding: 2px;">Address</td>
+                <td valign="top" style="padding: 2px;">:</td>
+                <td colspan="3" style="padding: 2px; line-height: 1.4;">
+                    <div style="word-wrap: break-word; white-space: normal; max-width: 50%;">
+                        {{ $order->customerShipTo->ship_to_address_1 }}
+                        {{ $order->customerShipTo->ship_to_address_2 ? ', ' . $order->customerShipTo->ship_to_address_2 : '' }},
+                        <span>{{ $order->customerShipTo->ship_to_city }}</span>
+                    </div>
                 </td>
             </tr>
         </table>
 
         {{-- KASO Items Table --}}
-        <table class="kaso-item-table">
+        <table class="item-table kaso-table">
             <thead>
                 <tr>
-                    <th width="6%">No.</th>
-                    <th width="16%">Product Code</th>
-                    <th width="38%">Description (Product Name)</th>
-                    <th width="15%">Pack Size</th>
-                    <th width="10%">Quantity</th>
-                    <th width="15%">Delivery Date</th>
+                    <th>No.</th>
+                    <th>Product Code</th>
+                    <th>Description (Product Name)</th>
+                    <th>Pack Size</th>
+                    <th>Quantity</th>
+                    <th>Delivery Date</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach ($order->items as $index => $item)
-                    <tr>
-                        <td align="center">{{ $index + 1 }}</td>
-                        <td align="center">{{ $item->order_item_code }}</td>
-                        <td>{{ $item->order_item_name }}</td>
-                        <td align="center">{{ $item->pack_size ?? '-' }}</td>
-                        <td align="center">{{ $item->order_quantity }}</td>
-                        <td align="center">{{ \Carbon\Carbon::parse($order->delivery_date)->format('d F Y') }}</td>
-                    </tr>
+                <tr>
+                    <td class="text-center">{{ $index + 1 }}</td>
+                    <td class="text-center">{{ $item->order_item_code }}</td>
+                    <td>{{ $item->order_item_name }}</td>
+                    <td class="text-center">{{ $item->pack_size ?? '-' }}</td>
+                    <td class="text-center">{{ $item->order_quantity }}</td>
+                    <td class="text-center">{{ \Carbon\Carbon::parse($order->delivery_date)->locale('id')->translatedFormat('d F Y') }}</td>
+                </tr>
                 @endforeach
             </tbody>
         </table>
