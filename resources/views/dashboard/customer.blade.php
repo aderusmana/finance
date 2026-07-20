@@ -119,13 +119,13 @@
                         </select>
                         <select id="growthFilterYear" class="form-select form-select-sm border-0 shadow-sm text-secondary" style="border-radius: 8px; width: 95px; font-size: 0.75rem;">
                             <option value="all">All Years</option>
-                            @php
-                                $startYear = 2020;
-                                $currentYear = date('Y');
-                            @endphp
-                            @for ($y = $currentYear; $y >= $startYear; $y--)
-                                <option value="{{ $y }}" {{ $y == $currentYear ? 'selected' : '' }}>{{ $y }}</option>
-                            @endfor
+                            @if(isset($availableYears) && count($availableYears) > 0)
+                                @foreach($availableYears as $y)
+                                    <option value="{{ $y }}" {{ $y == date('Y') ? 'selected' : '' }}>{{ $y }}</option>
+                                @endforeach
+                            @else
+                                <option value="{{ date('Y') }}" selected>{{ date('Y') }}</option>
+                            @endif
                         </select>
                     </div>
                 </div>
@@ -163,13 +163,13 @@
                         </select>
                         <select id="classFilterYear" class="form-select form-select-sm border-0 shadow-sm text-secondary" style="border-radius: 8px; width: 95px; font-size: 0.75rem;">
                             <option value="all">All Years</option>
-                            @php
-                                $startYear = 2020;
-                                $currentYear = date('Y');
-                            @endphp
-                            @for ($y = $currentYear; $y >= $startYear; $y--)
-                                <option value="{{ $y }}" {{ $y == $currentYear ? 'selected' : '' }}>{{ $y }}</option>
-                            @endfor
+                            @if(isset($availableYears) && count($availableYears) > 0)
+                                @foreach($availableYears as $y)
+                                    <option value="{{ $y }}" {{ $y == date('Y') ? 'selected' : '' }}>{{ $y }}</option>
+                                @endforeach
+                            @else
+                                <option value="{{ date('Y') }}" selected>{{ date('Y') }}</option>
+                            @endif
                         </select>
                     </div>
                 </div>

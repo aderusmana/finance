@@ -524,15 +524,24 @@
                                     <table class="table table-hover align-middle mb-0">
                                         <thead class="table-light">
                                             <tr>
-                                                <th width="10%" class="text-center text-muted py-3">NO</th>
-                                                <th width="50%" class="text-muted py-3">ITEM NAME</th>
-                                                <th width="20%" class="text-center text-muted py-3">PACK SIZE</th>
-                                                <th width="20%" class="text-center text-muted py-3">QTY</th>
+                                                <th width="5%" class="text-center text-muted py-3">NO</th>
+                                                <th width="15%" class="text-muted py-3">ITEM CODE</th>
+                                                <th width="25%" class="text-muted py-3">ITEM NAME</th>
+                                                <th width="15%" class="text-muted py-3">PACK SIZE</th>
+                                                <th width="15%" class="text-muted py-3">PRICE LIST</th>
+                                                <th width="10%" class="text-center text-muted py-3">QTY</th>
+                                                <th width="15%" class="text-muted py-3">AMOUNT</th>
                                             </tr>
                                         </thead>
                                         <tbody id="detail_items_table">
                                             {{-- Data di-inject via JS --}}
                                         </tbody>
+                                        <tfoot id="detail_items_footer" style="display: none;">
+                                            <tr class="table-light">
+                                                <td colspan="6" class="text-end fw-bold align-middle">Total Amount Claim :</td>
+                                                <td class="fw-bold text-success" id="detail_grand_total">Rp 0</td>
+                                            </tr>
+                                        </tfoot>
                                     </table>
                                 </div>
                             </div>
@@ -1128,24 +1137,36 @@
 
                         let tbody = $('#detail_items_table');
                         tbody.empty();
+                        let grandTotal = 0;
                         if (data.items && data.items.length > 0) {
                             $.each(data.items, function(index, item) {
+                                let itemPrice = parseFloat(item.price_list) || 0;
+                                let itemAmount = parseFloat(item.order_amount) || 0;
+                                grandTotal += itemAmount;
+                                
                                 tbody.append(`
                                 <tr>
                                     <td class="text-center text-muted py-2">${index + 1}</td>
                                     <td class="py-2">
-                                        <div class="fw-bold text-dark">${item.order_item_name}</div>
-                                        <small class="text-muted">${item.order_item_code || '-'}</small>
+                                        <span class="badge bg-light text-secondary border px-2 py-1">${item.order_item_code || '-'}</span>
                                     </td>
-                                    <td class="text-center fw-bold text-primary py-2">${item.pack_size}</td>
+                                    <td class="py-2">
+                                        <div class="fw-bold text-dark">${item.order_item_name}</div>
+                                    </td>
+                                    <td class="py-2">${item.pack_size || '-'}</td>
+                                    <td class="py-2">Rp ${new Intl.NumberFormat('id-ID').format(itemPrice)}</td>
                                     <td class="text-center fw-bold text-primary py-2">${item.order_quantity}</td>
+                                    <td class="py-2 fw-bold text-success">Rp ${new Intl.NumberFormat('id-ID').format(itemAmount)}</td>
                                 </tr>
                             `);
                             });
+                            $('#detail_grand_total').text('Rp ' + new Intl.NumberFormat('id-ID').format(grandTotal));
+                            $('#detail_items_footer').show();
                         } else {
                             tbody.append(
-                                '<tr><td colspan="4" class="text-center text-muted py-4">No item details available.</td></tr>'
+                                '<tr><td colspan="7" class="text-center text-muted py-4">No item details available.</td></tr>'
                             );
+                            $('#detail_items_footer').hide();
                         }
 
                         let logTbody = $('#detail_download_logs_table');

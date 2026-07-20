@@ -383,7 +383,7 @@ class LogisticOrderController extends Controller
             }
 
             DB::commit();
-            return response()->json(['success' => true, 'message' => "Order ($loNo) & Note ($doNo) successfully created! Email sent to Distributor."], 201);
+            return response()->json(['success' => true, 'message' => "Logistic Order ($loNo) & Delivery Note ($doNo) successfully created! Email sent to Distributor."], 201);
         } catch (\Exception $e) {
             DB::rollback();
             return response()->json(['success' => false, 'message' => 'Failed to save: ' . $e->getMessage()], 500);
