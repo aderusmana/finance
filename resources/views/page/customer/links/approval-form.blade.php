@@ -356,11 +356,11 @@
                             </div>
                         </div>
 
-                        {{-- NEW: APPROVED CREDIT LIMIT --}}
+                        {{-- NEW: Approved BG --}}
                         @if($customer->bank_garansi === 'YA' || strtoupper($customer->term_of_payment) === 'CBD')
                         <div class="col-md-4">
                             <div class="p-3 border rounded border-success bg-light-success h-100">
-                                <label class="info-label mb-2 text-success">Approved Credit Limit</label>
+                                <label class="info-label mb-2 text-success">Approved BG</label>
                                 @if($canAdjust)
                                     <input type="text" class="form-control fw-bold text-success editable-field" 
                                            name="update_approved_credit_limit" 

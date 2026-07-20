@@ -618,8 +618,7 @@
 
                                         <div class="col-md-4" id="div_approved_credit_limit" style="display: none;">
                                             <label class="form-label text-success"><i
-                                                    class="ph-bold ph-check-circle me-1"></i>Approved Credit
-                                                Limit</label>
+                                                    class="ph-bold ph-check-circle me-1"></i>Approved BG</label>
                                             <input type="text" class="form-control border-success calc-price"
                                                 name="approved_credit_limit" id="approved_credit_limit"
                                                 placeholder="Masukkan Nominal">
