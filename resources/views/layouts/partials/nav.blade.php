@@ -151,7 +151,7 @@
             @endcan
 
             @can('view logistic-orders menu')
-                <li class="menu-title text-white"><span>Logistic Orders</span></li>
+                {{-- <li class="menu-title text-white"><span>Logistic Orders</span></li> --}}
                 <li>
                     <a aria-expanded="false" data-bs-toggle="collapse" href="#logistic-orders-menu">
                         <i class="iconoir-community"></i> Logistic Orders
