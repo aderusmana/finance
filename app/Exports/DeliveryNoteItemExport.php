@@ -37,6 +37,10 @@ class DeliveryNoteItemExport implements FromQuery, WithHeadings, WithMapping, Wi
             ->leftJoin('customers', 'customers.id', '=', 'logistic_orders.customer_id')
             ->leftJoin('distributors', 'distributors.id', '=', 'logistic_orders.distributor_id')
             ->leftJoin('customer_ship_toes', 'customer_ship_toes.id', '=', 'logistic_orders.customer_ship_to_id')
+            ->leftJoin('distributor_customers', function ($join) {
+                $join->on('distributor_customers.distributor_id', '=', 'logistic_orders.distributor_id')
+                     ->on('distributor_customers.customer_id', '=', 'logistic_orders.customer_id');
+            })
             ->where('delivery_order_notes.status', 'Downloaded')
             ->select([
                 'delivery_order_notes.delivery_order_no as dn_no',
@@ -54,6 +58,7 @@ class DeliveryNoteItemExport implements FromQuery, WithHeadings, WithMapping, Wi
                 'logistic_order_items.price_list as price_list',
                 'logistic_orders.delivery_date as delivery_date',
                 'logistic_orders.distributor_id as distributor_id',
+                'distributor_customers.proposed_fee as proposed_fee',
             ])
             ->orderBy('logistic_orders.delivery_date', 'desc')
             ->orderBy('delivery_order_notes.delivery_order_no', 'desc');
@@ -106,7 +111,7 @@ class DeliveryNoteItemExport implements FromQuery, WithHeadings, WithMapping, Wi
             'DISTRIBUTOR NAME',
             'CUSTOMER NAME',
             'ITEM NAME',
-            'PRICE ITEM',
+            'LOGISTIC FEE',
             'QTY',
             'TOTAL CLAIM',
             'SALES VALUE',
@@ -117,8 +122,8 @@ class DeliveryNoteItemExport implements FromQuery, WithHeadings, WithMapping, Wi
     public function map($row): array
     {
         $qty = (float) ($row->qty ?? 0);
-        $total = (float) ($row->total ?? 0);
-        $priceItem = $qty > 0 ? ($total / $qty) : 0;
+        $priceItem = (float) ($row->proposed_fee ?? 0);
+        $total = $priceItem * $qty;
         $priceList = (float) ($row->price_list ?? 0);
         $salesValue = $priceList * $qty;
         $ratio = $salesValue > 0 ? ($total / $salesValue) : 0;

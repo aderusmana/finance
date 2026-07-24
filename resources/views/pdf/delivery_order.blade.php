@@ -450,7 +450,7 @@
                     <th>No.</th>
                     <th>Product Code</th>
                     <th>Description (Product Name)</th>
-                    <th>Pack Size</th>
+                    <!-- <th>Pack Size</th> -->
                     <th>Quantity</th>
                     <th>Delivery Date</th>
                 </tr>
@@ -461,7 +461,7 @@
                     <td class="text-center">{{ $index + 1 }}</td>
                     <td class="text-center">{{ $item->order_item_code }}</td>
                     <td>{{ $item->order_item_name }}</td>
-                    <td class="text-center">{{ $item->pack_size ?? '-' }}</td>
+                    <!-- <td class="text-center">{{ $item->pack_size ?? '-' }}</td> -->
                     <td class="text-center">{{ $item->order_quantity }}</td>
                     <td class="text-center">{{ \Carbon\Carbon::parse($order->delivery_date)->locale('id')->translatedFormat('d F Y') }}</td>
                 </tr>

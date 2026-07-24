@@ -366,7 +366,7 @@
                                                 <tr>
                                                     <th width="12%">Item Code <span class="text-danger">*</span></th>
                                                     <th width="23%">Item Name <span class="text-danger">*</span></th>
-                                                    <th width="15%">Pack Size</th>
+                                                    <!-- <th width="15%">Pack Size</th> -->
                                                     <th width="15%">Price List <span class="text-danger">*</span></th>
                                                     <th width="10%">Qty <span class="text-danger">*</span></th>
                                                     <th width="15%">Amount</th>
@@ -527,7 +527,7 @@
                                                 <th width="5%" class="text-center text-muted py-3">NO</th>
                                                 <th width="15%" class="text-muted py-3">ITEM CODE</th>
                                                 <th width="25%" class="text-muted py-3">ITEM NAME</th>
-                                                <th width="15%" class="text-muted py-3">PACK SIZE</th>
+                                                <!-- <th width="15%" class="text-muted py-3">PACK SIZE</th> -->
                                                 <th width="15%" class="text-muted py-3">PRICE LIST</th>
                                                 <th width="10%" class="text-center text-muted py-3">QTY</th>
                                                 <th width="15%" class="text-muted py-3">AMOUNT</th>
@@ -948,7 +948,7 @@
                             
                             $('#itemTable tbody').empty();
                             $.each(editDataBuffer.items, function(key, item) {
-                                addRow(item.order_item_code, item.order_item_name, item.price_list, item.order_quantity, item.pack_size);
+                                addRow(item.order_item_code, item.order_item_name, item.price_list, item.order_quantity);
                             });
                             editDataBuffer = null;
                         } 
@@ -1153,7 +1153,6 @@
                                     <td class="py-2">
                                         <div class="fw-bold text-dark">${item.order_item_name}</div>
                                     </td>
-                                    <td class="py-2">${item.pack_size || '-'}</td>
                                     <td class="py-2">Rp ${new Intl.NumberFormat('id-ID').format(itemPrice)}</td>
                                     <td class="text-center fw-bold text-primary py-2">${item.order_quantity}</td>
                                     <td class="py-2 fw-bold text-success">Rp ${new Intl.NumberFormat('id-ID').format(itemAmount)}</td>
@@ -1358,7 +1357,6 @@
                 <tr>
                     <td><input type="text" name="items[${index}][item_code]" class="form-control form-control-sm" value="${code}" placeholder="Item Code" required></td>
                     <td><input type="text" name="items[${index}][item_name]" class="form-control form-control-sm" value="${name}" placeholder="Item Name" required></td>
-                    <td><input type="text" name="items[${index}][pack_size]" class="form-control form-control-sm" value="${packSize}" placeholder="e.g. 10 x 10's"></td>
                     <td><input type="text" name="items[${index}][price_list]" class="form-control form-control-sm price-input" value="${displayPrice}" placeholder="Rp 0" oninput="handlePriceInput(this)" required></td>
                     <td><input type="number" name="items[${index}][qty]" class="form-control form-control-sm qty-input" value="${qty}" placeholder="1" min="1" oninput="calculateRow(this)" required></td>
                     <td><input type="text" name="items[${index}][amount]" class="form-control form-control-sm bg-light amount-display fw-bold text-primary" readonly value="${initialTotal}"></td>
