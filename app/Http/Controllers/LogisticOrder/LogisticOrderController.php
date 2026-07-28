@@ -212,6 +212,8 @@ class LogisticOrderController extends Controller
         $dateTo = $request->query('date_to');
         $distributors = $request->query('distributors');
         $apNumber = $request->query('ap_number', '-');
+        $statusTab = $request->query('tab', 'downloaded');
+        $searchCustomer = $request->query('search_customer');
 
         if ((!empty($dateFrom) && empty($dateTo)) || (empty($dateFrom) && !empty($dateTo))) {
             return response()->json([
@@ -235,10 +237,10 @@ class LogisticOrderController extends Controller
                 ], 422);
             }
 
-            $export = new DeliveryNoteItemExport($from, $to, $distributors, $apNumber);
+            $export = new DeliveryNoteItemExport($from, $to, $distributors, $apNumber, $statusTab, $searchCustomer);
             $suffix = $from . '_to_' . $to;
         } else {
-            $export = new DeliveryNoteItemExport(null, null, $distributors, $apNumber);
+            $export = new DeliveryNoteItemExport(null, null, $distributors, $apNumber, $statusTab, $searchCustomer);
             $suffix = now()->format('Ymd_His');
         }
 

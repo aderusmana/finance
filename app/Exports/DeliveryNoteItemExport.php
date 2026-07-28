@@ -3,9 +3,10 @@
 namespace App\Exports;
 
 use App\Models\Customer\LogisticOrderItem;
+use App\Models\Customer\DistributorCustomer;
 use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Concerns\FromQuery;
-use Maatwebsite\Excel\Concerns\WithColumnWidths; // Menggantikan ShouldAutoSize
+use Maatwebsite\Excel\Concerns\WithColumnWidths;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithEvents;
@@ -20,67 +21,98 @@ class DeliveryNoteItemExport implements FromQuery, WithHeadings, WithMapping, Wi
     private float $sumSalesValue = 0;
     private int $rowIndex = 1;
     private ?string $apNumber;
+    private ?string $statusTab;
+    private ?string $searchCustomer;
 
-    public function __construct(?string $dateFrom = null, ?string $dateTo = null, ?string $distributors = null, ?string $apNumber = null)
-    {
+    private array $feeCache = [];
+
+    public function __construct(
+        ?string $dateFrom = null,
+        ?string $dateTo = null,
+        ?string $distributors = null,
+        ?string $apNumber = null,
+        ?string $statusTab = 'downloaded',
+        ?string $searchCustomer = null
+    ) {
         $this->dateFrom = $dateFrom;
         $this->dateTo = $dateTo;
         $this->distributors = $distributors;
         $this->apNumber = $apNumber;
+        $this->statusTab = $statusTab;
+        $this->searchCustomer = $searchCustomer;
     }
 
     public function query()
     {
-        $query = LogisticOrderItem::query()
-            ->join('logistic_orders', 'logistic_orders.id', '=', 'logistic_order_items.logistic_order_id')
-            ->join('delivery_order_notes', 'delivery_order_notes.logistic_order_id', '=', 'logistic_orders.id')
-            ->leftJoin('customers', 'customers.id', '=', 'logistic_orders.customer_id')
-            ->leftJoin('distributors', 'distributors.id', '=', 'logistic_orders.distributor_id')
-            ->leftJoin('customer_ship_toes', 'customer_ship_toes.id', '=', 'logistic_orders.customer_ship_to_id')
-            ->leftJoin('distributor_customers', function ($join) {
-                $join->on('distributor_customers.distributor_id', '=', 'logistic_orders.distributor_id')
-                     ->on('distributor_customers.customer_id', '=', 'logistic_orders.customer_id');
-            })
-            ->where('delivery_order_notes.status', 'Downloaded')
-            ->select([
-                'delivery_order_notes.delivery_order_no as dn_no',
-                'logistic_orders.no_po as no_po',
-                'customers.code as customer_code',
-                'customers.name as customer_name',
-                'distributors.code as distributor_code',
-                'distributors.name as distributor_name',
-                'customer_ship_toes.ship_to_code as ship_to_code',
-                'customer_ship_toes.ship_to_name as ship_to',
-                'logistic_order_items.order_item_code as item_code',
-                'logistic_order_items.order_item_name as item_name',
-                'logistic_order_items.order_quantity as qty',
-                'logistic_order_items.order_amount as total',
-                'logistic_order_items.price_list as price_list',
-                'logistic_orders.delivery_date as delivery_date',
-                'logistic_orders.distributor_id as distributor_id',
-                'distributor_customers.proposed_fee as proposed_fee',
-            ])
-            ->orderBy('logistic_orders.delivery_date', 'desc')
-            ->orderBy('delivery_order_notes.delivery_order_no', 'desc');
+        $query = LogisticOrderItem::with([
+            'logisticOrder.distributor',
+            'logisticOrder.customer',
+            'logisticOrder.shipTo',
+            'logisticOrder.note'
+        ]);
+
+        $statusTab = $this->statusTab ?? 'downloaded';
+        $query->whereHas('logisticOrder.note', function ($q) use ($statusTab) {
+            if ($statusTab === 'downloaded') {
+                $q->where('status', 'Downloaded');
+            } else {
+                $q->where('status', 'Pending Download');
+            }
+        });
 
         $user = Auth::user();
         if (!$user->hasRole(['super-admin', 'sales-ka-approver'])) {
-            $query->where('logistic_orders.created_by', $user->id);
+            $query->whereHas('logisticOrder', function ($q) use ($user) {
+                $q->where('created_by', $user->id);
+            });
         }
 
-        if ($this->dateFrom && $this->dateTo) {
-            $query->whereBetween('logistic_orders.delivery_date', [$this->dateFrom, $this->dateTo]);
+        if (!empty($this->dateFrom) && !empty($this->dateTo)) {
+            $query->whereHas('logisticOrder', function ($q) {
+                $q->whereBetween('delivery_date', [$this->dateFrom, $this->dateTo]);
+            });
         }
 
         if (!empty($this->distributors)) {
             $distArray = is_array($this->distributors) ? $this->distributors : explode(',', $this->distributors);
             $distArray = array_filter($distArray);
             if (count($distArray) > 0) {
-                $query->whereIn('logistic_orders.distributor_id', $distArray);
+                $query->whereHas('logisticOrder', function ($q) use ($distArray) {
+                    $q->whereIn('distributor_id', $distArray);
+                });
             }
         }
 
+        if (!empty($this->searchCustomer)) {
+            $query->whereHas('logisticOrder.customer', function ($q) {
+                $q->where('name', 'LIKE', '%' . $this->searchCustomer . '%');
+            });
+        }
+
+        $query->join('logistic_orders', 'logistic_orders.id', '=', 'logistic_order_items.logistic_order_id')
+            ->select('logistic_order_items.*')
+            ->orderBy('logistic_orders.delivery_date', 'desc')
+            ->orderBy('logistic_order_items.id', 'asc');
+
         return $query;
+    }
+
+    private function getProposedFee(?int $distributorId, ?int $customerId): float
+    {
+        if (!$distributorId || !$customerId) {
+            return 0;
+        }
+
+        $key = "{$distributorId}_{$customerId}";
+        if (!array_key_exists($key, $this->feeCache)) {
+            $record = DistributorCustomer::where('distributor_id', $distributorId)
+                ->where('customer_id', $customerId)
+                ->first();
+
+            $this->feeCache[$key] = (float) ($record->proposed_fee ?? 0);
+        }
+
+        return $this->feeCache[$key];
     }
 
     public function columnWidths(): array
@@ -93,11 +125,11 @@ class DeliveryNoteItemExport implements FromQuery, WithHeadings, WithMapping, Wi
             'E' => 30,  // DISTRIBUTOR NAME
             'F' => 30,  // CUSTOMER NAME
             'G' => 30,  // ITEM NAME
-            'H' => 12,  // PRICE ITEM
+            'H' => 15,  // LOGISTIC FEE
             'I' => 8,   // QTY
-            'J' => 16,  // TOTAL CLAIM
-            'K' => 16,  // SALES VALUE
-            'L' => 10,  // RATIO
+            'J' => 18,  // TOTAL CLAIM
+            'K' => 18,  // SALES VALUE
+            'L' => 12,  // RATIO
         ];
     }
 
@@ -121,8 +153,9 @@ class DeliveryNoteItemExport implements FromQuery, WithHeadings, WithMapping, Wi
 
     public function map($row): array
     {
-        $qty = (float) ($row->qty ?? 0);
-        $priceItem = (float) ($row->proposed_fee ?? 0);
+        $lo = $row->logisticOrder;
+        $qty = (float) ($row->order_quantity ?? 0);
+        $priceItem = $this->getProposedFee($lo->distributor_id ?? null, $lo->customer_id ?? null);
         $total = $priceItem * $qty;
         $priceList = (float) ($row->price_list ?? 0);
         $salesValue = $priceList * $qty;
@@ -133,12 +166,12 @@ class DeliveryNoteItemExport implements FromQuery, WithHeadings, WithMapping, Wi
 
         return [
             $this->rowIndex++,
-            $row->dn_no ?? '-',
-            $row->no_po ?? '-',
-            $row->delivery_date ? \Carbon\Carbon::parse($row->delivery_date)->format('d/m/Y') : '-',
-            $row->distributor_name ?? '-',
-            $row->customer_name ?? '-',
-            $row->item_name ?? '-',
+            $lo->note->delivery_order_no ?? '-',
+            $lo->no_po ?? '-',
+            $lo->delivery_date ? \Carbon\Carbon::parse($lo->delivery_date)->format('d/m/Y') : '-',
+            $lo->distributor->name ?? '-',
+            $lo->customer->name ?? '-',
+            $row->order_item_name ?? '-',
             $priceItem,
             $qty,
             $total,
@@ -175,7 +208,7 @@ class DeliveryNoteItemExport implements FromQuery, WithHeadings, WithMapping, Wi
                 ]);
 
                 $sheet->mergeCells('A5:L5');
-                $sheet->setCellValue('A5', 'AP : ' . strtoupper($this->apNumber));
+                $sheet->setCellValue('A5', 'AP : ' . strtoupper($this->apNumber ?? '-'));
                 $sheet->getStyle('A5')->applyFromArray([
                     'font' => ['bold' => true, 'size' => 11],
                     'alignment' => ['horizontal' => 'center']
@@ -232,3 +265,4 @@ class DeliveryNoteItemExport implements FromQuery, WithHeadings, WithMapping, Wi
         ];
     }
 }
+
