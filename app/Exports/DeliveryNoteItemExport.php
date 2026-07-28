@@ -47,7 +47,7 @@ class DeliveryNoteItemExport implements FromQuery, WithHeadings, WithMapping, Wi
         $query = LogisticOrderItem::with([
             'logisticOrder.distributor',
             'logisticOrder.customer',
-            'logisticOrder.shipTo',
+            'logisticOrder.customerShipTo',
             'logisticOrder.note'
         ]);
 
