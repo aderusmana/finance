@@ -202,6 +202,23 @@
         </form>
     </div>
 
+    {{-- MODAL PRINT OPTIONS --}}
+    <div class="modal fade" id="printModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 16px;">
+                <div class="modal-header bg-light border-bottom-0" style="border-radius: 16px 16px 0 0;">
+                    <h5 class="modal-title fw-bold text-dark" id="printModalTitle">
+                        <!-- Judul dinamis via JS -->
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4 bg-light" id="printModalBody">
+                    <!-- Opsi Card dinamis akan di-inject via JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+
     @push('scripts')
     <script>
         $(document).ready(function() {
@@ -254,8 +271,13 @@
                 $('#checkAllTrans, #checkAllLetters').prop('checked', false);
 
                 updateBulkUI();
-                transTable.columns.adjust().draw();
-                lettersTable.columns.adjust().draw();
+                
+                if (typeof transTable !== 'undefined') {
+                    transTable.columns.adjust().draw();
+                }
+                if (typeof lettersTable !== 'undefined') {
+                    lettersTable.columns.adjust().draw();
+                }
             });
 
             $('#btnCancelSelection').on('click', function() {
@@ -417,6 +439,91 @@
                         Toast.fire({ icon: 'success', title: 'Download sedang diproses...' });
                     }
                 });
+            });
+
+            // --- LOGIC KLIK TOMBOL PRINT & MUNCULKAN MODAL ---
+            $(document).on('click', '.btn-print-modal', function() {
+                let id = $(this).data('id');
+                let category = $(this).data('category');
+                
+                let modalTitle = '';
+                let htmlOptions = '';
+
+                // BASE URL untuk Controller
+                let baseUrl = "{{ url('bg/reports') }}";
+
+                if (category === 'transactions') {
+                    modalTitle = '<i class="ph-bold ph-printer me-2 text-light"></i> Cetak Dokumen Transaksi';
+                    
+                    // URL Route untuk Lampiran D & Formulir
+                    let urlLampiranD = `${baseUrl}/download/${id}/lampiran_d`;
+                    let urlFormulir = `${baseUrl}/download/${id}/submission_form`;
+
+                    htmlOptions = `
+                        <div class="row g-3">
+                            <div class="col-6">
+                                <a href="${urlLampiranD}" target="_blank" class="card h-100 text-decoration-none border shadow-sm hover-elevate bg-white" onclick="$('#printModal').modal('hide')">
+                                    <div class="card-body text-center p-4">
+                                        <div class="bg-warning bg-opacity-10 text-warning d-inline-flex align-items-center justify-content-center rounded-circle mb-3" style="width: 60px; height: 60px;">
+                                            <i class="ph-duotone ph-file-text fs-1"></i>
+                                        </div>
+                                        <h6 class="fw-bold text-dark mb-1">Lampiran D</h6>
+                                        <span class="text-muted small">Cetak draft perhitungan limit</span>
+                                    </div>
+                                </a>
+                            </div>
+                            <div class="col-6">
+                                <a href="${urlFormulir}" target="_blank" class="card h-100 text-decoration-none border shadow-sm hover-elevate bg-white" onclick="$('#printModal').modal('hide')">
+                                    <div class="card-body text-center p-4">
+                                        <div class="bg-danger bg-opacity-10 text-danger d-inline-flex align-items-center justify-content-center rounded-circle mb-3" style="width: 60px; height: 60px;">
+                                            <i class="ph-duotone ph-file-pdf fs-1"></i>
+                                        </div>
+                                        <h6 class="fw-bold text-dark mb-1">Formulir Pengajuan</h6>
+                                        <span class="text-muted small">Cetak bukti pengajuan BG</span>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                    `;
+                } else if (category === 'expiring') {
+                    modalTitle = '<i class="ph-bold ph-envelope-open me-2 text-light"></i> Cetak Surat Pengantar';
+                    
+                    // URL Route untuk Surat Distributor & Surat Bank
+                    let urlDistributor = `${baseUrl}/letters/${id}/distributor`;
+                    let urlBank = `${baseUrl}/letters/${id}/bank`;
+
+                    htmlOptions = `
+                        <div class="row g-3">
+                            <div class="col-6">
+                                <a href="${urlDistributor}" target="_blank" class="card h-100 text-decoration-none border shadow-sm hover-elevate bg-white" onclick="$('#printModal').modal('hide')">
+                                    <div class="card-body text-center p-4">
+                                        <div class="bg-primary bg-opacity-10 text-primary d-inline-flex align-items-center justify-content-center rounded-circle mb-3" style="width: 60px; height: 60px;">
+                                            <i class="ph-duotone ph-buildings fs-1"></i>
+                                        </div>
+                                        <h6 class="fw-bold text-dark mb-1">Surat Distributor</h6>
+                                        <span class="text-muted small">Notifikasi resmi ke customer</span>
+                                    </div>
+                                </a>
+                            </div>
+                            <div class="col-6">
+                                <a href="${urlBank}" target="_blank" class="card h-100 text-decoration-none border shadow-sm hover-elevate bg-white" onclick="$('#printModal').modal('hide')">
+                                    <div class="card-body text-center p-4">
+                                        <div class="bg-success bg-opacity-10 text-success d-inline-flex align-items-center justify-content-center rounded-circle mb-3" style="width: 60px; height: 60px;">
+                                            <i class="ph-duotone ph-bank fs-1"></i>
+                                        </div>
+                                        <h6 class="fw-bold text-dark mb-1">Surat Bank</h6>
+                                        <span class="text-muted small">Pengantar pencairan untuk bank</span>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                // Render ke modal lalu tampilkan
+                $('#printModalTitle').html(modalTitle);
+                $('#printModalBody').html(htmlOptions);
+                $('#printModal').modal('show');
             });
         });
     </script>

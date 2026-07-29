@@ -2115,3 +2115,13 @@ STYLES MOVED FROM index.blade.php
 #canceledTable tbody tr:nth-child(even):hover {
     background: linear-gradient(90deg, rgba(#2563eb) 0%, rgba(#2563eb) 100%) !important;
 }
+
+.hover-elevate { 
+    transition: all 0.25s ease; 
+    cursor: pointer;
+}
+.hover-elevate:hover { 
+    transform: translateY(-5px); 
+    box-shadow: 0 12px 24px rgba(0,0,0,0.1) !important; 
+    border-color: #3b82f6 !important; 
+}

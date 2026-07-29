@@ -304,6 +304,23 @@
                 margin-bottom: 1rem;
             }
         }
+
+        div.dt-paging nav,
+        nav[aria-label="pagination"] {
+            background-color: transparent !important;
+            width: auto !important;
+            height: auto !important;
+            min-height: 0 !important;
+            position: static !important;
+            box-shadow: none !important;
+            border: none !important;
+            display: flex !important;
+            justify-content: flex-end !important;
+        }
+
+        div.dt-paging nav ul.pagination {
+            margin-bottom: 0 !important;
+        }
     </style>
 
     @stack('css')
@@ -364,9 +381,7 @@
     <!-- latest jquery-->
     <script src="{{ asset('assets') }}/js/jquery-3.6.3.min.js"></script>
 
-
     <script src="https://cdn.datatables.net/2.3.4/js/dataTables.min.js"></script>
-    <script src="{{ asset('assets') }}/vendor/datatable/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/responsive/3.0.8/js/dataTables.responsive.js"></script>
     <script src="https://cdn.datatables.net/responsive/3.0.8/js/responsive.bootstrap5.js"></script>
 

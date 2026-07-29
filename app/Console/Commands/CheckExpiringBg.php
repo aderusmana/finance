@@ -15,23 +15,52 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use App\Helpers\DocumentHelper;
 use Illuminate\Support\Facades\URL;
-// [BARU] Import untuk Notifikasi Sistem
 use App\Notifications\SystemNotification;
 use Illuminate\Support\Facades\Notification;
 
 class CheckExpiringBg extends Command
 {
     protected $signature = 'bg:check-expired';
-    protected $description = 'Cek BG expired H-60, create draft, catat log activity, dan kirim notifikasi.';
+    protected $description = 'Check BG and send recommendation notifications at the beginning of the month according to the date batch.';
 
     public function handle()
     {
-        $targetDate = Carbon::now()->addDays(60)->format('Y-m-d');
-        $this->info("Checking BG expiring on: " . $targetDate . " (H-60)");
+        $today = Carbon::now();
+
+        // 1. Pastikan command hanya mengeksekusi data pada tanggal 1 setiap bulannya
+        if ($today->day !== 1) {
+            $this->info("No execution. BG recommendation notifications are only sent on the 1st of every month.");
+            return;
+        }
+
+        $this->info("Checking BG recommendation notifications for period: " . $today->format('F Y'));
+
+        // 2. Logic Perhitungan Batch (Reverse Lookup):
+        // - Jika target kirim adalah Hari Ini (Bulan Y), maka BG yang ditarik adalah:
+        //   a. BG dari 2 bulan yang lalu (Bulan Y - 2), khusus tanggal 1 s/d 15
+        //   b. BG dari 3 bulan yang lalu (Bulan Y - 3), khusus tanggal 16 s/d 31
+        
+        $targetMonth1 = $today->copy()->subMonths(2); // Untuk batch tanggal 1-15
+        $targetMonth2 = $today->copy()->subMonths(3); // Untuk batch tanggal > 15
 
         $expiringBgs = BankGaransi::with('customer')
-            ->whereDate('exp_date', $targetDate)
             ->where('status', 'approved')
+            ->where(function($query) use ($targetMonth1, $targetMonth2) {
+                // Batch A: Tanggal 1-15 (Target - 2 bulan)
+                // Contoh: Kirim 1 September -> Ditarik BG tanggal 1-15 Juli
+                $query->where(function($q) use ($targetMonth1) {
+                    $q->whereMonth('exp_date', $targetMonth1->month)
+                      ->whereYear('exp_date', $targetMonth1->year)
+                      ->whereDay('exp_date', '<=', 15);
+                })
+                // Batch B: Tanggal >15 (Target - 3 bulan)
+                // Contoh: Kirim 1 Oktober -> Ditarik BG tanggal 16-31 Juli
+                ->orWhere(function($q) use ($targetMonth2) {
+                    $q->whereMonth('exp_date', $targetMonth2->month)
+                      ->whereYear('exp_date', $targetMonth2->year)
+                      ->whereDay('exp_date', '>', 15);
+                });
+            })
             ->get();
 
         if ($expiringBgs->count() > 0) {
@@ -40,13 +69,10 @@ class CheckExpiringBg extends Command
                 $taxConfig = Tax::first();
                 $taxId     = $taxConfig ? $taxConfig->id : null;
                 $inflationFixed = 130;
-
                 $delayCounter = 5;
-
 
                 $internalEmails = User::role(['super-admin', 'manager-finance'])->pluck('email')->toArray();
                 $internalEmails = array_unique(array_filter($internalEmails));
-
                 $internalUsers = User::role(['super-admin', 'manager-finance', 'head-finance'])->get();
 
                 if (!empty($internalEmails)) {
@@ -92,20 +118,20 @@ class CheckExpiringBg extends Command
                                 'bg_number' => $bg->bg_number,
                                 'customer'  => $cust->name,
                                 'exp_date'  => $bg->exp_date,
-                                'action'    => 'H-60 Notification Sent'
+                                'action'    => 'Monthly Batch Notification Sent'
                             ])
-                            ->log("System Warning: Bank Garansi {$bg->bg_number} Expired H-60 pada tanggal " . $targetDate);
+                            ->log("System Warning: A bank guarantee notification {$bg->bg_number} was sent at the beginning of the month " . $today->format('F Y'));
                     } catch (\Exception $logEx) {
-                        $this->error("Gagal mencatat log: " . $logEx->getMessage());
+                        $this->error("Failed to record log: " . $logEx->getMessage());
                     }
 
                     if ($internalUsers->count() > 0) {
                         Notification::send($internalUsers, new SystemNotification(
-                            'BG Expiring Soon (H-60)', // Judul
-                            "BG No: <b>{$bg->bg_number}</b> milik <b>{$cust->name}</b> akan expired pada <b>" . date('d M Y', strtotime($targetDate)) . "</b>.",
-                            route('bg-list.index'), // URL Redirect saat diklik (Ke List BG)
-                            'ph-clock-warning', // Icon
-                            'danger' // Warna Merah
+                            'BG Recommendation (Start of Month)', 
+                            "Recommendation BG No: <b>{$bg->bg_number}</b> from <b>{$cust->name}</b> was processed at the beginning of this month.",
+                            route('bg-list.index'), 
+                            'ph-clock-warning', 
+                            'danger' 
                         ));
                     }
 
@@ -117,9 +143,9 @@ class CheckExpiringBg extends Command
                             'bg'            => $bg,
                             'nomor_pkd'     => $nomorPkd,
                             'expired_date'  => $bg->exp_date,
-                            'bank_name'     => $bg->bank_name ?? 'Bank',
-                            'branch_name'   => $bg->branch_name ?? 'SMII Office',
-                            'bank_address'  => $bg->bank_address ?? $bg->branch_name ?? 'KCU Sudirman',
+                            'bank_name'     => $bg->bank_name ?? '-',
+                            'branch_name'   => $bg->branch_name ?? '-',
+                            'bank_address'  => $bg->bank_address ?? $bg->branch_name ?? '-',
                             'nominal'       => $bg->bg_nominal
                         ];
 
@@ -150,7 +176,7 @@ class CheckExpiringBg extends Command
                 }
 
                 DB::commit();
-                $this->info("Proses selesai. {$expiringBgs->count()} BG diproses.");
+                $this->info("Process completed. {$expiringBgs->count()} BGs processed.");
 
             } catch (\Exception $e) {
                 DB::rollBack();
@@ -158,7 +184,7 @@ class CheckExpiringBg extends Command
                 activity()->useLog('system_error')->log('Scheduler Error: ' . $e->getMessage());
             }
         } else {
-            $this->info("Tidak ada BG yang expired tepat H-60 hari ini.");
+            $this->info("There are no BGs that fall into the early month calculation batch this month.");
         }
     }
 }

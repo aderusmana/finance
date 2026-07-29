@@ -25,7 +25,6 @@ class BgReportController extends Controller
 
                 return DataTables::of($query)
                     ->addIndexColumn()
-                    // CHECKBOX COLUMN
                     ->addColumn('checkbox', function($row) {
                         return '<div class="form-check text-center">
                                     <input class="form-check-input dt-checkbox" type="checkbox" value="'.$row->id.'">
@@ -52,16 +51,9 @@ class BgReportController extends Controller
                         return '<span class="badge bg-'.$color.' status-badge-lg"><i class="ph-bold '.$icon.' me-1"></i>'.$label.'</span>';
                     })
                     ->addColumn('action', function($row) {
-                        return '
-                        <div class="dropdown">
-                            <button class="btn btn-light-danger dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="ph-bold ph-printer"></i> Print
-                            </button>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                <li><a class="dropdown-item" href="'.route('bg-reports.download', ['id' => $row->id, 'doc_type' => 'lampiran_d']).'" target="_blank"><i class="ph-duotone ph-file-text text-warning me-2 fs-5"></i> Lampiran D</a></li>
-                                <li><a class="dropdown-item" href="'.route('bg-reports.download', ['id' => $row->id, 'doc_type' => 'submission_form']).'" target="_blank"><i class="ph-duotone ph-file-pdf text-danger me-2 fs-5"></i> Formulir Pengajuan</a></li>
-                            </ul>
-                        </div>';
+                        return '<button type="button" class="btn btn-primary fw-bold btn-print-modal shadow-sm" data-id="'.$row->id.'" data-category="transactions">
+                                    <i class="ph-bold ph-printer me-1"></i> Print
+                                </button>';
                     })
                     ->rawColumns(['checkbox', 'form_code', 'status', 'action'])
                     ->make(true);
@@ -81,14 +73,9 @@ class BgReportController extends Controller
                     ->addColumn('exp_date', fn($row) => date('d M Y', strtotime($row->exp_date)))
                     ->addColumn('nominal', fn($row) => 'Rp ' . number_format($row->bg_nominal, 0, ',', '.'))
                     ->addColumn('action', function($row) {
-                        return '
-                        <div class="dropdown">
-                            <button class="btn btn-light-danger dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="ph-bold ph-envelope-open"></i> Letters</button>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                <li><a class="dropdown-item" href="'.route('bg-reports.download-letters', ['id' => $row->id, 'letter_type' => 'distributor']).'" target="_blank"><i class="ph-duotone ph-buildings text-primary me-2 fs-5"></i> Surat Distributor</a></li>
-                                <li><a class="dropdown-item" href="'.route('bg-reports.download-letters', ['id' => $row->id, 'letter_type' => 'bank']).'" target="_blank"><i class="ph-duotone ph-bank text-success me-2 fs-5"></i> Surat Bank</a></li>
-                            </ul>
-                        </div>';
+                        return '<button type="button" class="btn btn-danger fw-bold btn-print-modal shadow-sm" data-id="'.$row->id.'" data-category="expiring">
+                                    <i class="ph-bold ph-envelope-open me-1"></i> Letters
+                                </button>';
                     })
                     ->rawColumns(['checkbox', 'bg_number', 'action'])
                     ->make(true);

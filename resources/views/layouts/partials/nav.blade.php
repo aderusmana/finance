@@ -135,7 +135,6 @@
             @endcan
 
             @can('view logistic fees menu')
-                <li class="menu-title text-white"><span>Pengajuan dan Perubahan Harga</span></li>
                 <li>
                     <a aria-expanded="false" data-bs-toggle="collapse" href="#logistic-fees-menu">
                         <i class="iconoir-community"></i> Logistic Fee
