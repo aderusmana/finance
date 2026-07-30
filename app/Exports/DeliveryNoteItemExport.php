@@ -17,6 +17,7 @@ class DeliveryNoteItemExport implements FromQuery, WithHeadings, WithMapping, Wi
     private ?string $dateFrom;
     private ?string $dateTo;
     private ?string $distributors;
+    private ?string $ids;
     private float $sumTotalClaim = 0;
     private float $sumSalesValue = 0;
     private int $rowIndex = 1;
@@ -30,6 +31,7 @@ class DeliveryNoteItemExport implements FromQuery, WithHeadings, WithMapping, Wi
         ?string $dateFrom = null,
         ?string $dateTo = null,
         ?string $distributors = null,
+        ?string $ids = null,
         ?string $apNumber = null,
         ?string $statusTab = 'downloaded',
         ?string $searchCustomer = null
@@ -37,6 +39,7 @@ class DeliveryNoteItemExport implements FromQuery, WithHeadings, WithMapping, Wi
         $this->dateFrom = $dateFrom;
         $this->dateTo = $dateTo;
         $this->distributors = $distributors;
+        $this->ids = $ids;
         $this->apNumber = $apNumber;
         $this->statusTab = $statusTab;
         $this->searchCustomer = $searchCustomer;
@@ -67,19 +70,24 @@ class DeliveryNoteItemExport implements FromQuery, WithHeadings, WithMapping, Wi
             });
         }
 
-        if (!empty($this->dateFrom) && !empty($this->dateTo)) {
-            $query->whereHas('logisticOrder', function ($q) {
-                $q->whereBetween('delivery_date', [$this->dateFrom, $this->dateTo]);
-            });
-        }
-
-        if (!empty($this->distributors)) {
-            $distArray = is_array($this->distributors) ? $this->distributors : explode(',', $this->distributors);
-            $distArray = array_filter($distArray);
-            if (count($distArray) > 0) {
-                $query->whereHas('logisticOrder', function ($q) use ($distArray) {
-                    $q->whereIn('distributor_id', $distArray);
+        if (!empty($this->ids)) {
+            $idsArray = explode(',', $this->ids);
+            $query->whereIn('logistic_order_id', $idsArray);
+        } else {
+            if (!empty($this->dateFrom) && !empty($this->dateTo)) {
+                $query->whereHas('logisticOrder', function ($q) {
+                    $q->whereBetween('delivery_date', [$this->dateFrom, $this->dateTo]);
                 });
+            }
+
+            if (!empty($this->distributors)) {
+                $distArray = is_array($this->distributors) ? $this->distributors : explode(',', $this->distributors);
+                $distArray = array_filter($distArray);
+                if (count($distArray) > 0) {
+                    $query->whereHas('logisticOrder', function ($q) use ($distArray) {
+                        $q->whereIn('distributor_id', $distArray);
+                    });
+                }
             }
         }
 
@@ -90,9 +98,15 @@ class DeliveryNoteItemExport implements FromQuery, WithHeadings, WithMapping, Wi
         }
 
         $query->join('logistic_orders', 'logistic_orders.id', '=', 'logistic_order_items.logistic_order_id')
-            ->select('logistic_order_items.*')
-            ->orderBy('logistic_orders.delivery_date', 'desc')
-            ->orderBy('logistic_order_items.id', 'asc');
+            ->select('logistic_order_items.*');
+            
+        if ($this->statusTab === 'downloaded' || $this->statusTab === 'canceled') {
+            $query->orderBy('logistic_orders.updated_at', 'desc');
+        } else {
+            $query->orderBy('logistic_orders.created_at', 'desc');
+        }
+        
+        $query->orderBy('logistic_order_items.id', 'asc');
 
         return $query;
     }

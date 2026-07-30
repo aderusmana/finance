@@ -135,6 +135,7 @@
             @endcan
 
             @can('view logistic fees menu')
+                <li class="menu-title text-white"><span>Pengajuan dan Perubahan Harga</span></li>
                 <li>
                     <a aria-expanded="false" data-bs-toggle="collapse" href="#logistic-fees-menu">
                         <i class="iconoir-community"></i> Logistic Fee
@@ -150,7 +151,7 @@
             @endcan
 
             @can('view logistic-orders menu')
-                {{-- <li class="menu-title text-white"><span>Logistic Orders</span></li> --}}
+                <li class="menu-title text-white"><span>Pengajuan Pengiriman Barang</span></li>
                 <li>
                     <a aria-expanded="false" data-bs-toggle="collapse" href="#logistic-orders-menu">
                         <i class="iconoir-community"></i> Logistic Orders

@@ -197,6 +197,11 @@
                     <table class="table table-hover w-100 align-middle" id="historyTable">
                         <thead>
                             <tr>
+                                <th width="5%" class="text-center">
+                                    <div class="form-check d-flex justify-content-center">
+                                        <input class="form-check-input" type="checkbox" id="checkAllHistory">
+                                    </div>
+                                </th>
                                 <th>No</th>
                                 <th width="15%">DN Info</th>
                                 <th width="20%">Customer</th>
@@ -714,41 +719,17 @@
                             d.distributors = $('#filter_distributor').val();
                         }
                     },
-                    columns: [{
-                            data: 'DT_RowIndex',
-                            name: 'DT_RowIndex',
-                            orderable: false,
-                            searchable: false
-                        },
+                    columns: [
                         {
-                            data: 'do_no',
-                            name: 'note.delivery_order_no',
-                            className: 'fw-bold text-success'
+                            data: 'checkbox', name: 'checkbox', orderable: false, searchable: false, className: 'text-center align-middle'
                         },
-                        {
-                            data: 'customer_name',
-                            name: 'customer.name',
-                            className: 'fw-semibold'
-                        },
-                        {
-                            data: 'distributor_name',
-                            name: 'distributor.name'
-                        },
-                        {
-                            data: 'ship_to',
-                            name: 'customerShipTo.ship_to_name'
-                        },
-                        {
-                            data: 'status_badge',
-                            name: 'note.status'
-                        },
-                        {
-                            data: 'action',
-                            name: 'action',
-                            orderable: false,
-                            searchable: false,
-                            className: 'text-center'
-                        }
+                        { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
+                        { data: 'do_no', name: 'note.delivery_order_no', className: 'fw-bold text-success' },
+                        { data: 'customer_name', name: 'customer.name', className: 'fw-semibold' },
+                        { data: 'distributor_name', name: 'distributor.name' },
+                        { data: 'ship_to', name: 'customerShipTo.ship_to_name' },
+                        { data: 'status_badge', name: 'note.status' },
+                        { data: 'action', name: 'action', orderable: false, searchable: false, className: 'text-center' }
                     ]
                 });
 
@@ -779,6 +760,18 @@
                 // $('#historyTable').on('draw.dt', function() {
                 //     $('[data-bs-toggle="tooltip"]').tooltip();
                 // });
+
+                $('#checkAllHistory').on('click', function() {
+                    $('#historyTable .dt-checkbox').prop('checked', this.checked);
+                });
+
+                $('#historyTable').on('draw.dt', function() {
+                    $('#checkAllHistory').prop('checked', false); // Reset saat ganti halaman
+                });
+
+                $('#historyTable').on('draw.dt', function() {
+                    $('[data-bs-toggle="tooltip"]').tooltip();
+                });
 
                 function initTooltips() {
                     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
@@ -831,18 +824,16 @@
                     const dists = $('#filter_distributor').val();
                     const currentTab = activeTab;
 
-                    let url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 'tab=' + currentTab;
-
-                    if (from && to) {
-                        if (from > to) {
-                            Swal.fire('Warning', 'From date cannot be later than To date.', 'warning');
-                            return;
-                        }
-                        url += '&date_from=' + encodeURIComponent(from) + '&date_to=' + encodeURIComponent(to);
+                    let selectedIds = [];
+                    if (currentTab === 'downloaded') {
+                        $('#historyTable .dt-checkbox:checked').each(function() {
+                            selectedIds.push($(this).val());
+                        });
                     }
 
-                    if (dists && dists.length > 0) {
-                        url += '&distributors=' + encodeURIComponent(dists.join(','));
+                    if (selectedIds.length === 0 && from && to && from > to) {
+                        Swal.fire('Warning', 'From date cannot be later than To date.', 'warning');
+                        return;
                     }
 
                     Swal.fire({
@@ -858,41 +849,32 @@
                             confirmButton: 'btn btn-primary rounded-pill px-4 fw-bold',
                             cancelButton: 'btn btn-light rounded-pill px-4 fw-bold border'
                         },
-                        buttonsStyling: false,
                         inputValidator: (value) => {
-                            if (!value) {
-                                return 'AP Number is required to proceed with the export.';
-                            }
+                            if (!value) return 'AP Number is required to proceed with the export.';
                         }
                     }).then((result) => {
                         if (result.isConfirmed) {
                             const apNumber = result.value;
-                            Swal.fire({
-                                title: 'Processing Export',
-                                html: '<span style="color: #64748b; font-size: 0.95rem;">Please wait while we process your export request.</span>',
-                                allowOutsideClick: false, 
-                                allowEscapeKey: false,
-                                showConfirmButton: false,
-                                didOpen: () => {
-                                    Swal.showLoading();
-                                }
-                            });
-
+                            
                             let url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 'tab=' + currentTab + '&ap_number=' + encodeURIComponent(apNumber);
 
-                            if (from && to) {
-                                url += '&date_from=' + encodeURIComponent(from) + '&date_to=' + encodeURIComponent(to);
+                            if (selectedIds.length > 0) {
+                                url += '&ids=' + encodeURIComponent(selectedIds.join(','));
+                            } else {
+                                if (from && to) url += '&date_from=' + encodeURIComponent(from) + '&date_to=' + encodeURIComponent(to);
+                                if (dists && dists.length > 0) url += '&distributors=' + encodeURIComponent(dists.join(','));
                             }
-                            
-                            if (dists && dists.length > 0) {
-                                url += '&distributors=' + encodeURIComponent(dists.join(','));
-                            }
+
+                            Swal.fire({
+                                title: 'Processing Export',
+                                html: 'Please wait while we process your export request.',
+                                allowOutsideClick: false, 
+                                showConfirmButton: false,
+                                didOpen: () => { Swal.showLoading(); }
+                            });
 
                             window.location.href = url;
-
-                            setTimeout(() => {
-                                Swal.close();
-                            }, 3000); 
+                            setTimeout(() => { Swal.close(); }, 3000); 
                         }
                     });
                 }
