@@ -105,6 +105,7 @@
                                         Group / Class
                                     </td>
                                     <td class="data-text" style="padding: 12px 0; border-bottom: 1px solid #f3f4f6; color: #000000;">
+                                        {{ $customer->customer_type ?? '-' }} /
                                         {{ $customer->accountGroup->name_account_group ?? $customer->account_group }} /
                                         {{ $customer->customerClass->name_class ?? $customer->customer_class }}
                                     </td>
@@ -175,7 +176,7 @@
                                 </tr>
                                 <tr>
                                     <td style="padding: 12px 0; border-bottom: 1px solid #f3f4f6; color: #555555; font-weight: 600;">
-                                        Bank Garansi / CCAR
+                                        Bank Garansi / Currency
                                     </td>
                                     <td class="data-text" style="padding: 12px 0; border-bottom: 1px solid #f3f4f6; color: #000000;">
                                         {{ $customer->bank_garansi }} / {{ $customer->ccar }}

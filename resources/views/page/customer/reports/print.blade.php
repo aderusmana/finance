@@ -294,6 +294,8 @@
                 <tr>
                     <td class="lbl-cell">Account Group:</td>
                     <td class="val-cell">{{ $customer->accountGroup ? strtoupper($customer->accountGroup->name_account_group) : strtoupper($customer->account_group ?? '-') }}</td>
+                    <td class="lbl-cell">Customer Type:</td>
+                    <td class="val-cell">{{ strtoupper($customer->customer_type ?? '-') }}</td>
                     <td class="lbl-cell">Join Date:</td>
                     <td class="val-cell">{{ $customer->join_date ? \Carbon\Carbon::parse($customer->join_date)->locale('id')->translatedFormat('d F Y') : '-' }}</td>
                 </tr>
@@ -379,7 +381,7 @@
                 <tr>
                     <td class="lbl-cell">Other Tax Info:</td>
                     <td class="val-cell" style="font-weight: normal;">
-                        <strong>Pengukuhan Kaber:</strong> {{ $customer->no_pengukuhan_kaber ?? '-' }}<br>
+                        <!-- <strong>Pengukuhan Kaber:</strong> {{ $customer->no_pengukuhan_kaber ?? '-' }}<br> -->
                         <strong>Output Tax:</strong> <span style="font-weight: 600;">{{ strtoupper($customer->output_tax ?? 'PPN') }}</span>
                     </td>
                     <td class="lbl-cell">Tax Contact Person:</td>
@@ -395,13 +397,13 @@
                         <strong>Term of Payment:</strong> {{ $customer->term_of_payment ?? '-' }} Days<br>
                         <strong>Lead Time:</strong> {{ $customer->lead_time ?? '-' }} Days
                     </td>
-                    <td class="lbl-cell">Credit Limit & CCAR:</td>
+                    <td class="lbl-cell">Credit Limit & Currency:</td>
                     <td class="val-cell">
                         <div class="highlight-val">IDR {{ number_format($customer->credit_limit ?? 0, 0, ',', '.') }}</div>
                         @if(($customer->bank_garansi === 'YA' || strtoupper($customer->term_of_payment) === 'CBD') && $customer->approved_credit_limit)
                             <div style="color: #166534; font-size: 8pt; font-weight: bold;">(Apprv: IDR {{ number_format((float)$customer->approved_credit_limit, 0, ',', '.') }})</div>
                         @endif
-                        <div style="font-weight: normal; margin-top: 2px;"><strong>CCAR:</strong> {{ strtoupper($customer->ccar ?? '-') }}</div>
+                        <div style="font-weight: normal; margin-top: 2px;"><strong>Currency:</strong> {{ strtoupper($customer->ccar ?? '-') }}</div>
                     </td>
                 </tr>
                 <tr>

@@ -236,14 +236,12 @@
                                     <h6 class="mb-2 fw-bold text-white">Customer Detail</h6>
                                 </div>
 
-                                {{-- Account Group & Class --}}
+                                {{-- Account Group, Type & Class --}}
                                 <div class="card-body">
                                     <div class="row g-3 mb-3">
-                                        <div class="col-md-6">
-                                            <label for="account_group" class="form-label">Account Group <span
-                                                    class="text-danger">*</span></label>
-                                            <select class="form-select select2-styled" id="account_group"
-                                                name="account_group" style="width: 100%;" required>
+                                        <div class="col-md-4">
+                                            <label for="account_group" class="form-label">Account Group <span class="text-danger">*</span></label>
+                                            <select class="form-select select2-styled" id="account_group" name="account_group" style="width: 100%;" required>
                                                 <option></option>
                                                 @foreach ($accountgroup as $ag)
                                                     <option value="{{ $ag->id }}"
@@ -254,11 +252,19 @@
                                                 @endforeach
                                             </select>
                                         </div>
-                                        <div class="col-md-6">
-                                            <label for="customer_class" class="form-label">Customer Class <span
-                                                    class="text-danger">*</span></label>
-                                            <select class="form-select select2-styled" id="customer_class"
-                                                name="customer_class" style="width: 100%;" required>
+                                        
+                                        <div class="col-md-4">
+                                            <label class="form-label">Customer Type <span class="text-danger">*</span></label>
+                                            <select class="form-select select2-styled type-dropdown" name="customer_type" id="customer_type" style="width: 100%;" required>
+                                                <option></option>
+                                                <option value="Individual/Perorangan">Individual/Perorangan</option>
+                                                <option value="Company/Badan Usaha">Company/Badan Usaha</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="col-md-4">
+                                            <label for="customer_class" class="form-label">Customer Class <span class="text-danger">*</span></label>
+                                            <select class="form-select select2-styled" id="customer_class" name="customer_class" style="width: 100%;" required>
                                                 <option></option>
                                                 @foreach ($customerClass as $cc)
                                                     <option value="{{ $cc->id }}">
@@ -315,12 +321,10 @@
 
                                         {{-- 4. AKTE (OPTIONAL - PDF ONLY) --}}
                                         <div class="col-md">
-                                            <label class="form-label">Upload Akte Pendirian</label>
-                                            <input type="file" class="form-control" name="file_akte"
-                                                accept=".pdf">
+                                            <label class="form-label">Upload Akte Pendirian <span class="text-danger akte-asterisk" style="display:none;">*</span></label>
+                                            <input type="file" class="form-control" name="file_akte" id="file_akte" accept=".pdf">
                                             <small class="text-muted f-s-11">Format: PDF only</small>
-                                            <div id="preview_akte" class="mt-4"
-                                                style="display: none; position:relative; z-index:2;"></div>
+                                            <div id="preview_akte" class="mt-4" style="display: none; position:relative; z-index:2;"></div>
                                         </div>
 
                                         {{-- 5. COMPANY PROFILE (OPTIONAL - PDF ONLY) --}}
@@ -547,10 +551,9 @@
                                             <input type="date" class="form-control" name="tanggal_nppkp"
                                                 id="tanggal_nppkp">
                                         </div>
-                                        <div class="col-md-3">
+                                        <div class="col-md-3 d-none">
                                             <label class="form-label">No Pengukuhan Kaber</label>
-                                            <input type="text" class="form-control" name="no_pengukuhan_kaber"
-                                                id="no_pengukuhan_kaber" placeholder="Optional">
+                                            <input type="text" class="form-control" name="no_pengukuhan_kaber" id="no_pengukuhan_kaber">
                                         </div>
                                     </div>
                                 </div>
@@ -596,7 +599,7 @@
                                         </div>
 
                                         <div class="col-md-4">
-                                            <label class="form-label">CCAR <span class="text-danger">*</span></label>
+                                            <label class="form-label">Currency <span class="text-danger">*</span></label>
                                             <select class="form-select select2-styled" name="ccar" id="ccar"
                                                 style="width:100%" required>
                                                 <option></option>
@@ -1388,10 +1391,11 @@
                                 <div class="tab-pane fade" id="tab-recall-finance" role="tabpanel">
                                     <h6 class="fw-bold text-primary border-bottom pb-2 mb-3">Financial Settings</h6>
                                     <div class="row g-3">
-                                        <div class="col-md-6">
-                                            <label class="form-label small fw-bold text-dark">Account Group</label>
+                                        <div class="col-md-4">
+                                            <label class="form-label small fw-bold text-dark">Account Group <span class="text-danger">*</span></label>
                                             <select class="form-select select2-recall" id="recall_account_group"
                                                 name="account_group" style="width: 100%;" required>
+                                                <option></option>
                                                 @foreach ($accountgroup as $ag)
                                                     <option value="{{ $ag->id }}"
                                                         data-bank_garansi="{{ $ag->bank_garansi }}">
@@ -1399,10 +1403,21 @@
                                                 @endforeach
                                             </select>
                                         </div>
-                                        <div class="col-md-6">
-                                            <label class="form-label small fw-bold text-dark">Customer Class</label>
+
+                                        <div class="col-md-4">
+                                            <label class="form-label small fw-bold text-dark">Customer Type <span class="text-danger">*</span></label>
+                                            <select class="form-select select2-recall type-dropdown" name="customer_type" id="recall_customer_type" style="width: 100%;" required>
+                                                <option></option>
+                                                <option value="Individual/Perorangan">Individual/Perorangan</option>
+                                                <option value="Company/Badan Usaha">Company/Badan Usaha</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="col-md-4">
+                                            <label class="form-label small fw-bold text-dark">Customer Class <span class="text-danger">*</span></label>
                                             <select class="form-select select2-recall" id="recall_customer_class"
                                                 name="customer_class" style="width: 100%;" required>
+                                                <option></option>
                                                 @foreach ($customerClass as $cc)
                                                     <option value="{{ $cc->id }}">{{ $cc->name_class }}
                                                     </option>
@@ -3673,6 +3688,32 @@
                         this.setCustomValidity('');
                     }
                 });
+
+                $('.type-dropdown').on('change', function() {
+                    let val = $(this).val();
+                    let modal = $(this).closest('.modal');
+                    let akteInput = modal.find('input[name="file_akte"]');
+                    let asterisk = modal.find('.akte-asterisk');
+
+                    if (val === 'Company/Badan Usaha') {
+                        asterisk.show();
+                        if(modal.attr('id') === 'customerModal') {
+                            akteInput.prop('required', true); // Hanya wajib pas Create
+                        }
+                    } else {
+                        asterisk.hide();
+                        akteInput.prop('required', false);
+                    }
+                });
+
+                // Mapping Customer Type ke Modal
+                $('#customer_type, #recall_customer_type').select2({ theme: 'bootstrap-5', placeholder: 'Select Type' });
+
+                // (Tambahkan dalam event klik .btn-show-customer)
+                $('#view_customer_type').text(btn.data('customer_type') || '-');
+
+                // (Tambahkan dalam event klik .btn-resubmit-customer)
+                $('#recall_customer_type').val(data.customer_type).trigger('change');
             });
         </script>
     @endpush

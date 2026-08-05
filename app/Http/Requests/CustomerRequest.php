@@ -53,6 +53,7 @@ class CustomerRequest extends FormRequest
 
             // --- 2. Classification ---
             'account_group' => 'required|exists:account_groups,id',
+            'customer_type' => 'required|in:Individual/Perorangan,Company/Badan Usaha',
             'customer_class' => 'required|exists:customer_classes,id',
 
             // --- 3. Documents (LOGIC BARU DISINI) ---
@@ -80,12 +81,13 @@ class CustomerRequest extends FormRequest
 
             // AKTE: Nullable + PDF Only + Max 5MB
             'file_akte' => [
+                'required_if:customer_type,Company/Badan Usaha',
                 'nullable',
                 'file',
-                'mimes:pdf', // Hanya PDF
-                'max:5120'   // Max 5MB
+                'mimes:pdf',
+                'max:5120'
             ],
-
+            
             // --- 4. General Info ---
             'name' => 'required|string|max:255',
             'sort_name' => 'nullable|string|max:50',
@@ -168,6 +170,7 @@ class CustomerRequest extends FormRequest
 
             // --- 2. Classification ---
             'account_group.required'  => 'Account Group wajib dipilih.',
+            'customer_type.required' => 'Jenis Customer wajib diisi.',
             'customer_class.required' => 'Customer Class wajib dipilih.',
 
             // --- 3. Documents (Files) ---
@@ -179,6 +182,10 @@ class CustomerRequest extends FormRequest
 
             'file_ktp.required'  => 'Dokumen KTP wajib diupload.',
             'file_ktp.file'      => 'Dokumen KTP harus berupa file yang valid.',
+
+            'file_akte.required_if' => 'Dokumen Akte Pendirian wajib diupload untuk jenis Company/Badan Usaha.',
+            'file_akte.mimes'     => 'Dokumen Akte Pendirian harus berformat PDF.',
+            'file_akte.max'       => 'Dokumen Akte Pendirian tidak boleh lebih dari 5MB.',
 
             // --- 4. General Info ---
             'name.required'     => 'Nama Customer wajib diisi.',

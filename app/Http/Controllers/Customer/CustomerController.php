@@ -203,6 +203,7 @@ class CustomerController extends Controller
                     $dataAttrs .= ' data-pic="' . e($row->pic) . '"';
                     $dataAttrs .= ' data-name="' . e($row->name) . '"';
                     $dataAttrs .= ' data-sort_name="' . e($row->sort_name) . '"';
+                    $dataAttrs .= ' data-customer_type="' . e($row->customer_type) . '"';
                     $dataAttrs .= ' data-customer_class="' . e($row->customer_class) . '"';
                     $dataAttrs .= ' data-customer_class_name="' . e($row->customerClass->name_class ?? '-') . '"';
                     $dataAttrs .= ' data-account_group="' . e($row->account_group) . '"';

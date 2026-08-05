@@ -205,6 +205,10 @@
                                         <div class="info-value text-dark fw-bold">{{ $customer->accountGroup->name_account_group ?? '-' }}</div>
                                     </div>
                                     <div class="col-md-6">
+                                        <div class="info-label">Customer Type</div>
+                                        <div class="info-value text-dark fw-bold">{{ $customer->customer_type ?? '-' }}</div>
+                                    </div>
+                                    <div class="col-md-6">
                                         <div class="info-label">Customer Class</div>
                                         <div class="info-value text-dark fw-bold">{{ $customer->customerClass->name_class ?? '-' }}</div>
                                     </div>
@@ -352,6 +356,15 @@
                                 <div class="fs-5 text-success fw-bold" id="display_credit_limit">IDR {{ number_format($customer->credit_limit, 0, ',', '.') }}</div>
                                 @if($canAdjust)
                                     <input type="hidden" name="update_credit_limit_value" id="final_credit_limit_input" form="approvalForm" value="{{ $customer->credit_limit }}">
+                                @endif
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-3 border rounded bg-light h-100 position-relative">
+                                <label class="info-label mb-2">Currency</label>
+                                <div class="fs-5 fw-bold" id="ccar_value">{{ $customer->ccar }}</div>
+                                @if($canAdjust)
+                                    <input type="hidden" name="ccar" id="ccar_input" value="{{ $customer->ccar }}" form="approvalForm">
                                 @endif
                             </div>
                         </div>
@@ -609,10 +622,10 @@
                                         <label class="info-label mb-1">Tanggal NPPKP</label>
                                         <div class="info-value">{{ $customer->tanggal_nppkp ? \Carbon\Carbon::parse($customer->tanggal_nppkp)->format('d M Y') : '-' }}</div>
                                     </div>
-                                    <div class="col-md-3">
+                                    <!-- <div class="col-md-3">
                                         <label class="info-label mb-1">No Pengukuhan Kaber</label>
                                         <div class="info-value">{{ $customer->no_pengukuhan_kaber ?? '-' }}</div>
-                                    </div>
+                                    </div> -->
                                     <div class="col-md-3">
                                         <label class="info-label mb-1">Output Tax</label>
                                         <div class="info-value">{{ $customer->output_tax }}</div>
