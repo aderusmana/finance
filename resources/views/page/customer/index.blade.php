@@ -878,14 +878,16 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="col-md-6">
-                                            <label class="fw-bold text-secondary text-uppercase f-s-12 mb-1">Account
-                                                Group</label>
+                                        <div class="col-md-4">
+                                            <label class="fw-bold text-secondary text-uppercase f-s-12 mb-1">Account Group</label>
                                             <div class="fw-bold text-dark f-s-14" id="view_account_group">-</div>
                                         </div>
-                                        <div class="col-md-6">
-                                            <label class="fw-bold text-secondary text-uppercase f-s-12 mb-1">Customer
-                                                Class</label>
+                                        <div class="col-md-4">
+                                            <label class="fw-bold text-secondary text-uppercase f-s-12 mb-1">Customer Type</label>
+                                            <div class="fw-bold text-dark f-s-14" id="view_customer_type">-</div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="fw-bold text-secondary text-uppercase f-s-12 mb-1">Customer Class</label>
                                             <div class="fw-bold text-dark f-s-14" id="view_customer_class">-</div>
                                         </div>
                                     </div>
@@ -982,6 +984,10 @@
                                     <div class="d-flex justify-content-between">
                                         <span class="fw-bold text-secondary f-s-13">Output Tax</span>
                                         <span class="fw-bold text-dark" id="view_output_tax">-</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mt-3 pt-3 border-top">
+                                        <span class="fw-bold text-secondary f-s-13">Currency</span>
+                                        <span class="fw-bold text-dark text-uppercase" id="view_ccar">-</span>
                                     </div>
                                 </div>
                             </div>
@@ -3092,6 +3098,7 @@
                     $('#view_pic').text(btn.data('pic') || '-');
                     $('#view_sales').text(btn.data('sales_name') || '-');
                     $('#view_account_group').text(btn.data('account_group_name') || '-');
+                    $('#view_customer_type').text(btn.data('customer_type') || '-');
                     $('#view_customer_class').text(btn.data('customer_class_name') || '-');
 
                     const addr1 = btn.data('address1') || '';
@@ -3126,6 +3133,7 @@
                     $('#view_tanggal_npwp').text(btn.data('tanggal_npwp') || '-');
                     $('#view_nppkp').text(btn.data('nppkp'));
                     $('#view_output_tax').text(btn.data('output_tax'));
+                    $('#view_ccar').text(btn.data('ccar') || '-');
 
                     $('#view_penagihan_nama').text(btn.data('penagihan_nama_kontak'));
                     $('#view_penagihan_telp').text(btn.data('penagihan_telepon'));
