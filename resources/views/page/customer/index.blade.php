@@ -1667,6 +1667,16 @@
                                             name="file_company_profile" accept=".pdf">
                                         <small class="text-muted f-s-11">Format: PDF saja</small>
                                     </div>
+
+                                    <div class="mb-3 border rounded p-2 bg-white mt-3">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <label class="fw-bold small mb-0 text-dark">Akte Pendirian <span class="text-danger akte-asterisk" style="display:none;">*</span></label>
+                                            <div id="recall_preview_akte"></div>
+                                        </div>
+                                        <input type="file" class="form-control form-control-sm"
+                                            name="file_akte" accept=".pdf">
+                                        <small class="text-muted f-s-11">Wajib jika tipe Company/Badan Usaha. Format: PDF saja</small>
+                                    </div>
                                 </div>
 
                             </div>

@@ -193,7 +193,8 @@
                         <h5 class="fw-bolder mb-3" style="color: #1e3a8a;"><i class="ph-fill ph-info me-2 text-primary"></i> General Information</h5>
                         <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 1rem; padding: 1.5rem; box-shadow: 0 4px 15px rgba(0,0,0,0.02); margin-bottom: 2rem;">
                             <div class="row g-4">
-                                <div class="col-md-6" style="border-right: 1px dashed #e2e8f0;">
+                                {{-- UBAH JADI COL-MD-7 --}}
+                                <div class="col-md-7" style="border-right: 1px dashed #e2e8f0;">
                                     <div class="row g-4">
                                         <div class="col-12">
                                             <label style="color: #64748b; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; margin-bottom: 4px;">Customer Name</label>
@@ -207,6 +208,21 @@
                                             <label style="color: #64748b; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; margin-bottom: 4px;">No. PKD</label>
                                             <div class="fw-bold" style="color: #334155; font-size: 0.95rem;" id="view_no_pkd">-</div>
                                         </div>
+                                        
+                                        {{-- TAMBAHAN: GROUP, TYPE, CLASS --}}
+                                        <div class="col-4">
+                                            <label style="color: #64748b; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; margin-bottom: 4px;">Group</label>
+                                            <div class="fw-bold" style="color: #334155; font-size: 0.9rem;" id="view_account_group">-</div>
+                                        </div>
+                                        <div class="col-4">
+                                            <label style="color: #64748b; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; margin-bottom: 4px;">Type</label>
+                                            <div class="fw-bold" style="color: #334155; font-size: 0.9rem;" id="view_customer_type">-</div>
+                                        </div>
+                                        <div class="col-4">
+                                            <label style="color: #64748b; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; margin-bottom: 4px;">Class</label>
+                                            <div class="fw-bold" style="color: #334155; font-size: 0.9rem;" id="view_customer_class">-</div>
+                                        </div>
+
                                         <div class="col-12">
                                             <label style="color: #64748b; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; margin-bottom: 4px;">Person in Charge (PIC)</label>
                                             <div class="fw-bold" style="color: #334155; font-size: 0.95rem;" id="view_pic">-</div>
@@ -228,7 +244,8 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-md-6 ps-md-4">
+                                {{-- UBAH JADI COL-MD-5 AGAR PAS --}}
+                                <div class="col-md-5 ps-md-4">
                                     <div class="row g-4">
                                         <div class="col-12">
                                             <label style="color: #64748b; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; margin-bottom: 4px;">Main Address</label>
@@ -302,6 +319,10 @@
                                     <div class="d-flex justify-content-between">
                                         <span style="color: #64748b; font-size: 0.85rem; font-weight: 600;">Output Tax</span>
                                         <span class="fw-bold" style="color: #334155; font-size: 0.85rem;" id="view_output_tax">-</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mt-3 pt-3" style="border-top: 1px dashed #e2e8f0;">
+                                        <span style="color: #64748b; font-size: 0.85rem; font-weight: 600;">Currency</span>
+                                        <span class="fw-bolder text-uppercase" style="color: #1e3a8a; font-size: 0.9rem;" id="view_ccar">-</span>
                                     </div>
                                 </div>
                             </div>
@@ -656,17 +677,26 @@
                     else if (data.user) salesName = data.user.name;
                     $('#view_user_name').text(salesName);
 
+                    // --- MAPPING GENERAL INFO BARU ---
+                    let accountGroupName = data.account_group?.name_account_group || data.account_group || '-';
+                    let customerClassName = data.customer_class?.name_class || data.customer_class || '-';
+                    
+                    $('#view_account_group').text(accountGroupName);
+                    $('#view_customer_type').text(data.customer_type || '-');
+                    $('#view_customer_class').text(customerClassName);
+                    $('#view_sales').text(salesName);
+
                     $('#view_name').text(data.name);
                     $('#view_sort_name').text(data.sort_name || '-');
                     $('#view_no_pkd').text(data.no_pkd || '-');
                     $('#view_pic').text(data.pic || '-');
                     $('#view_email').text(data.email || '-');
+                    
                     const fullAddr = [data.address1, data.address2, data.address3].filter(Boolean).join(', ');
                     $('#view_full_address').text(fullAddr || '-');
                     $('#view_city').text(data.city || '-');
                     $('#view_area').text(data.area || '-');
                     $('#view_postal_code').text(data.postal_code || '-');
-                    $('#view_sales').text(salesName);
                     $('#view_term_of_payment').text(data.term_of_payment || '-');
 
                     // --- FINANCE SECTION ---
@@ -678,12 +708,28 @@
                     $('#calc_badge').hide();
 
                     if (data.can_adjust_finance) {
+                        
+                        // Buat inputan Approved Credit Limit jika BG Yes / TOP CBD
+                        let apprvInputHtml = '';
+                        if (data.bank_garansi === 'YA' || String(data.term_of_payment).toUpperCase() === 'CBD') {
+                            const apprvVal = data.approved_credit_limit || '';
+                            apprvInputHtml = `
+                                <div class="mt-3" style="border-top: 1px solid rgba(255,255,255,0.2); padding-top: 12px;">
+                                    <label style="color: #a7f3d0; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Approved Credit Limit</label>
+                                    <input type="number" name="update_approved_credit_limit" class="form-control form-control-sm fw-bold mt-1 shadow-none" 
+                                           value="${apprvVal}" placeholder="Opsional: Input Limit" form="modalResponseForm" 
+                                           style="border: 1px solid rgba(16, 185, 129, 0.6); background: rgba(16, 185, 129, 0.15); color: #a7f3d0;">
+                                </div>
+                            `;
+                        }
+
                         $('#container_credit_limit').html(`
                             <h3 class="mb-0 fw-bolder mt-1 text-white" id="view_credit_limit">${formattedLimit}</h3>
                             <input type="hidden" name="update_credit_limit_value" id="hidden_credit_limit" value="${limit}" form="modalResponseForm">
                             <span id="calc_badge" style="display:none; background: rgba(255,255,255,0.2); border-radius: 4px; padding: 2px 6px; font-size: 0.7rem; margin-top: 8px; display: inline-block;">
                                 <i class="ph-fill ph-calculator me-1"></i> Auto-Calculated
                             </span>
+                            ${apprvInputHtml}
                         `);
 
                         let currentTop = data.term_of_payment || '30';
@@ -860,16 +906,37 @@
                         $('#input_top, #input_lead_time').on('change input', calculateFinanceLimit);
 
                     } else {
-                        $('#container_credit_limit').html(`<h3 class="mb-0 fw-bolder mt-1 text-white" id="view_credit_limit">${formattedLimit}</h3>`);
+                        // Tampilan untuk Non-Finance (Badge Approved Limit)
+                        let apprvBadgeHtml = '';
+                        const apprvCl = parseFloat(data.approved_credit_limit);
+                        
+                        if ((data.bank_garansi === 'YA' || String(data.term_of_payment).toUpperCase() === 'CBD') && !isNaN(apprvCl)) {
+                            const fmtApprv = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(apprvCl);
+                            apprvBadgeHtml = `
+                                <div id="view_approved_credit_limit_wrapper" class="mt-2">
+                                    <span style="background: rgba(16, 185, 129, 0.2); border: 1px solid rgba(16, 185, 129, 0.4); color: #a7f3d0; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 700;">
+                                        <i class="ph-bold ph-check-circle me-1"></i>Apprv: <span>${fmtApprv}</span>
+                                    </span>
+                                </div>
+                            `;
+                        }
+
+                        $('#container_credit_limit').html(`
+                            <h3 class="mb-0 fw-bolder mt-1 text-white" id="view_credit_limit">${formattedLimit}</h3>
+                            ${apprvBadgeHtml}
+                        `);
                         $('#container_top').html(`<span class="fw-bolder" style="background: rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 6px; font-size: 0.9rem;">${data.term_of_payment || '-'}</span>`);
                         $('#container_lead_time').html(`<span class="fw-bolder" style="font-size: 0.9rem;">${data.lead_time || 0} Days</span>`);
                         $('#container_npwp').html(`<span class="fw-bolder mt-1" style="color: #0f172a; font-size: 1rem;" id="view_npwp">${data.npwp || '-'}</span>`);
                         $('#finance_schedule_container').hide();
                     }
 
+                    // --- TAX & BILLING ---
                     $('#view_tanggal_npwp').text(data.tanggal_npwp || '-');
                     $('#view_nppkp').text(data.nppkp || '-');
                     $('#view_output_tax').text(data.output_tax || '-');
+                    $('#view_ccar').text(data.ccar || '-');
+
                     $('#view_penagihan_nama_kontak').text(data.penagihan_nama_kontak || '-');
                     $('#view_penagihan_telepon').text(data.penagihan_telepon || '-');
                     $('#view_penagihan_address').text(data.penagihan_address || '-');
