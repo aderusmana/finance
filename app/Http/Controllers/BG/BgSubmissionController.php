@@ -674,17 +674,15 @@ class BgSubmissionController extends Controller
         }
 
         try {
-            $customerEmail = $submission->recommendation->customer->email;
+            $customerEmail = $submission->recommendation->customer->email ?? null;
             $salesEmails   = User::role('head-SNM')->pluck('email')->toArray();
-            $financeEmails = User::role('head-finance')->pluck('email')->toArray();
+            $financeEmails = User::role(['manager-finance', 'head-finance'])->pluck('email')->toArray();
 
             $allRecipients = array_merge([$customerEmail], $salesEmails, $financeEmails);
-            $recipients    = array_unique(array_filter($allRecipients));
+            $recipients    = array_unique(array_filter($allRecipients, fn($e) => !empty($e) && filter_var($e, FILTER_VALIDATE_EMAIL)));
 
             foreach($recipients as $email) {
-                if (!empty($email)) {
-                    Mail::to($email)->queue(new CustomerBgReadyMail($submission));
-                }
+                Mail::to($email)->queue(new CustomerBgReadyMail($submission));
             }
         } catch (\Exception $e) {
             \Log::error("Gagal kirim email completion: " . $e->getMessage());

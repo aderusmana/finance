@@ -116,8 +116,9 @@ class CustomerBgPortalController extends Controller
                 $fileName = 'Formulir_Update_' . $submission->form_code . '.pdf';
                 Storage::disk('public')->put('generated_pdfs/' . $fileName, $pdf->output());
 
-                if ($rec->customer && $rec->customer->email) {
-                    Mail::to($rec->customer->email)
+                $custEmail = $rec->customer->email ?? null;
+                if ($custEmail && filter_var($custEmail, FILTER_VALIDATE_EMAIL)) {
+                    Mail::to($custEmail)
                         ->queue(new BgUpdateDocumentMail($submission, base64_encode($pdf->output()), 'existing'));
                 }
             } else {
@@ -188,12 +189,13 @@ class CustomerBgPortalController extends Controller
                     $fileName = 'Formulir_BG_' . $submission->form_code . '.pdf';
                     Storage::disk('public')->put('generated_pdfs/' . $fileName, $pdf->output());
 
-                    if ($rec->customer && $rec->customer->email) {
+                    $custEmail = $rec->customer->email ?? null;
+                    if ($custEmail && filter_var($custEmail, FILTER_VALIDATE_EMAIL)) {
                         if($action === 'extension') {
-                            Mail::to($rec->customer->email)
+                            Mail::to($custEmail)
                                 ->queue(new BgUpdateDocumentMail($submission, base64_encode($pdf->output()), 'extension'));
                         } else {
-                            Mail::to($rec->customer->email)
+                            Mail::to($custEmail)
                                 ->queue(new BgSubmissionDocumentMail($submission, base64_encode($pdf->output())));
                         }
                     }

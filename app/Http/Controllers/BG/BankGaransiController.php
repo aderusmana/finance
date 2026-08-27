@@ -177,8 +177,9 @@ class BankGaransiController extends Controller
                 ]);
 
                 if (($item['bg_type'] ?? '') === 'extension') {
-                    if ($bg->customer && $bg->customer->email) {
-                        Mail::to($bg->customer->email)->queue(new BgExtensionMail($bg));
+                    $custEmail = $bg->customer->email ?? null;
+                    if ($custEmail && filter_var($custEmail, FILTER_VALIDATE_EMAIL)) {
+                        Mail::to($custEmail)->queue(new BgExtensionMail($bg));
                     }
                 }
 
@@ -234,8 +235,9 @@ class BankGaransiController extends Controller
             ]);
 
             if (($mainData['bg_type'] ?? '') === 'existing') {
-                if ($bg->customer && $bg->customer->email) {
-                    Mail::to($bg->customer->email)->queue(new BgExistingMail($bg));
+                $custEmail = $bg->customer->email ?? null;
+                if ($custEmail && filter_var($custEmail, FILTER_VALIDATE_EMAIL)) {
+                    Mail::to($custEmail)->queue(new BgExistingMail($bg));
                 }
             }
 
@@ -334,7 +336,10 @@ class BankGaransiController extends Controller
                 ]);
             }
 
-            Mail::to($bg->customer->email)->queue(new BgExistingMail($bg, $rec));
+            $custEmail = $bg->customer->email ?? null;
+            if ($custEmail && filter_var($custEmail, FILTER_VALIDATE_EMAIL)) {
+                Mail::to($custEmail)->queue(new BgExistingMail($bg, $rec));
+            }
 
             activity()
                 ->causedBy(Auth::user())
@@ -392,7 +397,10 @@ class BankGaransiController extends Controller
                 ]);
             }
 
-            Mail::to($customer->email)->queue(new BgExtensionMail($rec));
+            $custEmail = $customer->email ?? null;
+            if ($custEmail && filter_var($custEmail, FILTER_VALIDATE_EMAIL)) {
+                Mail::to($custEmail)->queue(new BgExtensionMail($rec));
+            }
 
             $parentBgNumber = '-';
             if($request->has('bg_id')) {
