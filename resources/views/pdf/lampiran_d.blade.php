@@ -106,7 +106,7 @@
             <td class="col-no">1</td>
             <td class="col-label">NAMA DISTRIBUTOR</td>
             <td class="col-sep">:</td>
-            <td class="col-val">{{ strtoupper($customer->pic) }}</td>
+            <td class="col-val">{{ strtoupper($customer->sort_name) }}</td>
         </tr>
         <tr>
             <td class="col-no">2</td>
@@ -220,7 +220,7 @@
         <tr>
             <td class="sign-name">{{ isset($sales_name) ? strtoupper($sales_name) : '.........................' }}</td>
             <td class="sign-name">{{ isset($finance_name) ? strtoupper($finance_name) : '.........................' }}</td>
-            <td class="sign-name">{{ strtoupper($customer->name) }}</td>
+            <td class="sign-name">{{ strtoupper($customer->sort_name) }}</td>
         </tr>
     </table>
 
