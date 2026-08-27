@@ -250,8 +250,9 @@ class BgRecommendationController extends Controller
                 ])
                 ->log("Admin menetapkan Credit Limit Baru: Rp " . number_format($limitUpdated, 0, ',', '.') . " (BG: Rp " . number_format($setBg, 0, ',', '.') . ")");
 
-            if ($recForMail->customer && $recForMail->customer->email) {
-                Mail::to($recForMail->customer->email)
+            $custEmail = $recForMail->customer->email ?? null;
+            if ($custEmail && filter_var($custEmail, FILTER_VALIDATE_EMAIL)) {
+                Mail::to($custEmail)
                     ->queue(new CustomerFillFormNotification($recForMail)); // Kirim objek yg lengkap
             }
 

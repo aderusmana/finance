@@ -258,12 +258,10 @@ class ApprovalProcessController extends Controller
                 $financeEmails = User::role(['manager-finance', 'head-finance'])->pluck('email')->toArray();
 
                 $allRecipients = array_merge([$customerEmail], $salesEmails, $financeEmails);
-                $recipients = array_unique(array_filter($allRecipients));
+                $recipients = array_unique(array_filter($allRecipients, fn($e) => !empty($e) && filter_var($e, FILTER_VALIDATE_EMAIL)));
 
                 foreach($recipients as $email) {
-                    if(!empty($email)) {
-                        Mail::to($email)->queue(new CustomerBgReadyMail($sub));
-                    }
+                    Mail::to($email)->queue(new CustomerBgReadyMail($sub));
                 }
             }
         }

@@ -68,10 +68,16 @@ class LampiranDController extends Controller
                     return $row->updated_at->format('d M Y H:i');
                 })
                 ->addColumn('action', function ($row) {
-                    // Tombol Edit
-                    return '<button type="button" class="btn btn-sm btn-warning btn-edit-lampiran" data-id="' . $row->id . '">
-                                <i class="ph-bold ph-pencil-simple text-white"></i> Edit
+                    $downloadUrl = route('bg-reports.download', ['id' => $row->bg_submission_id, 'doc_type' => 'lampiran_d']);
+                    $btn = '<div class="d-flex justify-content-center gap-1">';
+                    $btn .= '<a href="' . $downloadUrl . '" target="_blank" class="btn btn-sm btn-outline-danger" title="Download PDF Lampiran D">
+                                <i class="ph-bold ph-file-pdf me-1"></i> PDF
+                            </a>';
+                    $btn .= '<button type="button" class="btn btn-sm btn-warning btn-edit-lampiran" data-id="' . $row->id . '" title="Edit & Create New Version">
+                                <i class="ph-bold ph-pencil-simple text-white me-1"></i> Edit
                             </button>';
+                    $btn .= '</div>';
+                    return $btn;
                 })
                 ->rawColumns(['version', 'action'])
                 ->make(true);
