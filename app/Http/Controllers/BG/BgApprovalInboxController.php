@@ -53,18 +53,18 @@ class BgApprovalInboxController extends Controller
                 })
                 ->addColumn('action', function ($row) {
                     return '
-                        <div class="d-flex gap-2">
-                            <button class="btn btn-sm btn-success btn-quick-approve" data-id="'.$row->id.'" title="Quick Approve">
+                        <div class="action-btn-group">
+                            <button class="btn btn-success action-btn-hover btn-quick-approve" data-id="'.$row->id.'" data-tooltip="Quick Approve">
                                 <i class="ph-bold ph-check"></i>
                             </button>
-                            <button class="btn btn-sm btn-warning btn-review text-white" data-id="'.$row->id.'" title="Review with Notes">
-                                <i class="ph-bold ph-pencil-simple"></i>
+                            <button class="btn btn-warning action-btn-hover btn-review" data-id="'.$row->id.'" data-tooltip="Review with Notes">
+                                <i class="ph-bold ph-pencil-simple text-white"></i>
                             </button>
-                            <button class="btn btn-sm btn-danger btn-reject" data-id="'.$row->id.'" title="Reject">
+                            <button class="btn btn-danger action-btn-hover btn-reject" data-id="'.$row->id.'" data-tooltip="Reject">
                                 <i class="ph-bold ph-x"></i>
                             </button>
-                            <button class="btn btn-sm btn-info btn-resend text-white" data-id="'.$row->id.'" title="Resend Email Notif">
-                                <i class="ph-bold ph-envelope-simple"></i>
+                            <button class="btn btn-info action-btn-hover btn-resend" data-id="'.$row->id.'" data-tooltip="Resend Email Notif">
+                                <i class="ph-bold ph-envelope-simple text-white"></i>
                             </button>
                         </div>
                     ';
@@ -218,7 +218,7 @@ class BgApprovalInboxController extends Controller
         if($approverUser) {
              Notification::send($approverUser, new SystemNotification(
                 'Reminder Approval',
-                "Halo, mohon segera review pengajuan <b>{$log->description}</b>.",
+                "Hello, please review the submission <b>{$log->description}</b> immediately.",
                 route('bg-approvals.index'),
                 'ph-bell-ringing',
                 'danger'

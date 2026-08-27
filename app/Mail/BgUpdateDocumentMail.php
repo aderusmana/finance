@@ -27,8 +27,8 @@ class BgUpdateDocumentMail extends Mailable
         $pdfDecoded = base64_decode($this->pdfContentBase64);
 
         $subject = ($this->type == 'existing')
-            ? 'Dokumen Update Bank Garansi & Link Upload (Action Required)'
-            : 'Dokumen Extension Bank Garansi & Link Upload (Action Required)';
+            ? 'Bank Guarantee Update Document & Upload Link (Action Required)'
+            : 'Bank Guarantee Extension Document & Upload Link (Action Required)';
 
         return $this->subject($subject)
                     ->view('mail.bg_update_upload')

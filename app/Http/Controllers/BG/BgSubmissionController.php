@@ -59,13 +59,13 @@ class BgSubmissionController extends Controller
                 ->addColumn('date_info', function($row) use ($type) {
                     if ($type === 'history') {
                         return '<div class="d-flex flex-column">
-                                    <span class="text-muted small">Selesai:</span>
+                                    <span class="text-muted small">Completed:</span>
                                     <span class="fw-bold text-success">'.$row->updated_at->format('d M Y').'</span>
                                     <span class="text-muted" style="font-size:10px">'.$row->updated_at->format('H:i').'</span>
                                 </div>';
                     } else {
                         return '<div class="d-flex flex-column">
-                                    <span class="text-muted small">Dibuat:</span>
+                                    <span class="text-muted small">Created:</span>
                                     <span class="fw-bold text-dark">'.($row->created_at ? $row->created_at->format('d M Y') : '-').'</span>
                                 </div>';
                     }
@@ -81,7 +81,7 @@ class BgSubmissionController extends Controller
                                     data-id="'.$row->id.'"
                                     data-status="completed"
                                     title="View Final Document">
-                                <i class="ph-bold ph-check-circle me-1"></i> Lihat Dokumen
+                                <i class="ph-bold ph-check-circle me-1"></i> View Document
                             </button>';
                         }
 
@@ -113,15 +113,21 @@ class BgSubmissionController extends Controller
                             </span>';
                 })
                 ->addColumn('action', function ($row) use ($type) {
-                    if ($type === 'history') {
-                        return '<span class="text-muted small"><i class="ph-bold ph-lock-key"></i> Locked</span>';
+                    $btn = '<div class="action-btn-group">';
+
+                    if ($type === 'active') {
+                        $btn .= '<button type="button" class="btn btn-secondary action-btn-hover btn-edit-submission" data-id="' . $row->id . '" title="Edit Admin">
+                                    <i class="ph-bold ph-pencil-simple"></i>
+                                 </button>
+                                 <button type="button" class="btn btn-danger action-btn-hover btn-delete" data-id="' . $row->id . '" title="Delete">
+                                    <i class="ph-bold ph-trash"></i>
+                                 </button>';
+                    } else if ($type === 'history') {
+                        $btn .= '<span class="text-muted small"><i class="ph-bold ph-lock-key"></i> Locked</span>';
                     }
-                    return '
-                        <div class="d-flex gap-2 justify-content-center">
-                            <button class="btn btn-sm btn-warning text-white btn-edit-submission" data-id="'.$row->id.'" title="Edit Admin"><i class="ph-bold ph-pencil-simple"></i></button>
-                            <button class="btn btn-sm btn-danger text-white btn-delete" data-id="'.$row->id.'" title="Delete"><i class="ph-bold ph-trash"></i></button>
-                        </div>
-                    ';
+
+                    $btn .= '</div>';
+                    return $btn;
                 })
                 ->rawColumns(['customer_name', 'form_code', 'date_info', 'file', 'status', 'action'])
                 ->make(true);
@@ -280,7 +286,7 @@ class BgSubmissionController extends Controller
         }
 
         if (!$targetBg) {
-             return response()->json(['success' => false, 'message' => 'Data Bank Garansi tidak ditemukan (Timestamp mismatch & No ID).']);
+             return response()->json(['success' => false, 'message' => 'Bank Guarantee data not found (Timestamp mismatch & No ID).']);
         }
 
         $totalBgDiserahkan = $targetBg->bg_nominal;
@@ -328,7 +334,7 @@ class BgSubmissionController extends Controller
         if ($request->action_type == 'edit_submit') {
 
             $approvalPathExists = ApprovalPath::where('category', 'BG')->where('sub_category', 'Lampiran D')->exists();
-            if (!$approvalPathExists) return response()->json(['success' => false, 'message' => 'Approval Path belum dibuat.']);
+            if (!$approvalPathExists) return response()->json(['success' => false, 'message' => 'Approval Path not created yet.']);
 
             DB::beginTransaction();
             try {
@@ -433,12 +439,12 @@ class BgSubmissionController extends Controller
                         ],
                         'approval_status' => 'waiting_finance'
                     ])
-                    ->log("Admin mengedit data Lampiran D (Koreksi) dan meneruskan ke Approval Finance");
+                    ->log("Admin edited Attachment D (Correction) and forwarded it to Finance Approval");
 
                 $approvers = User::role(['manager-finance', 'head-finance'])->get();
                 Notification::send($approvers, new SystemNotification(
                     'Approval Required',
-                    "Lampiran D <b>{$customer->name}</b> menunggu persetujuan Anda.",
+                    "Attachment D for <b>{$customer->name}</b> is awaiting your approval.",
                     route('bg-approvals.index'),
                     'ph-signature',
                     'warning'
@@ -447,14 +453,14 @@ class BgSubmissionController extends Controller
                 $admins = User::role(['super-admin'])->get();
                 Notification::send($admins, new SystemNotification(
                     'Submission Forwarded',
-                    "Lampiran D <b>{$customer->name}</b> diteruskan ke Finance.",
+                    "Attachment D for <b>{$customer->name}</b> was forwarded to Finance.",
                     route('bg-submissions.index'),
                     'ph-paper-plane-tilt',
                     'info'
                 ));
 
                 DB::commit();
-                return response()->json(['success' => true, 'message' => 'Data dikoreksi & diteruskan ke Finance (Log Tercatat).']);
+                return response()->json(['success' => true, 'message' => 'Data corrected & forwarded to Finance (Log Recorded).']);
 
             } catch (\Exception $e) {
                 DB::rollBack();
@@ -507,7 +513,7 @@ class BgSubmissionController extends Controller
                 }
 
                 if ($allBatchBgs->isEmpty() || !$targetBgToUpdate) {
-                    throw new \Exception("Data Bank Garansi tidak ditemukan.");
+                    throw new \Exception("Bank Guarantee data not found.");
                 }
 
                 $totalBgDiserahkan = $allBatchBgs->sum('bg_nominal');
@@ -585,7 +591,7 @@ class BgSubmissionController extends Controller
                         'lampiran_d_ver'  => $nextVersion,
                         'note'            => 'Bypass Approval Workflow'
                     ])
-                    ->log("Admin melakukan Direct Submit (Bypass Approval). Lampiran D diterbitkan & BG Approved.");
+                    ->log("Admin performed Direct Submit (Bypass Approval). Attachment D issued & BG Approved.");
 
                 $submission->update(['status' => 'completed', 'token' => Str::random(60)]);
 
@@ -601,7 +607,7 @@ class BgSubmissionController extends Controller
                 $this->sendCompletionEmails($submission);
 
                 DB::commit();
-                return response()->json(['success' => true, 'message' => 'Dokumen disetujui & History tercatat satu kali.']);
+                return response()->json(['success' => true, 'message' => 'Document approved & History recorded once.']);
 
             } catch (\Exception $e) {
                 DB::rollBack();
@@ -658,7 +664,7 @@ class BgSubmissionController extends Controller
 
             Notification::send($internalUsers, new SystemNotification(
                 'Dokumen Selesai',
-                "Lampiran D & BG untuk <b>{$custName}</b> telah Terbit & Dikirim ke Customer.",
+                "Attachment D & BG for <b>{$custName}</b> have been issued & sent to the Customer.",
                 route('bg-submissions.index', ['type' => 'history']),
                 'ph-files',
                 'success'

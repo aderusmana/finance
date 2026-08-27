@@ -24,11 +24,11 @@ class SuratDistributorMail extends Mailable
     public function build() {
         $pdf = Pdf::loadView('pdf.surat_distributor', $this->dataPdf)->output();
 
-        return $this->subject('Pemberitahuan Jatuh Tempo BG - ' . $this->customer->name)
+        return $this->subject('BG Expiration Notice - ' . $this->customer->name)
                     ->view('mail.bank-distributor-mail') // Pastikan view ini ada
                     ->with([
-                        'title' => 'Surat Pemberitahuan Distributor',
-                        'content' => 'Berikut kami lampirkan Surat Pemberitahuan perihal jatuh tempo Bank Garansi Distributor.',
+                        'title' => 'Distributor Notice Letter',
+                        'content' => 'Please find attached the Notice Letter regarding the expiration of the Distributor Bank Guarantee.',
                         'link' => $this->downloadLink
                     ])
                     ->attachData($pdf, 'Surat_Pemberitahuan_Distributor.pdf', [

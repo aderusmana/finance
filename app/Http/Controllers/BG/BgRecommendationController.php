@@ -51,19 +51,36 @@ class BgRecommendationController extends Controller
                 return DataTables::of($query)
                     ->addIndexColumn()
                     ->addColumn('bg_number', function($row) {
-                        $bg = BankGaransi::where('customer_id', $row->customer_id)
-                                ->latest()
-                                ->first();
-
-                        return $bg ? $bg->bg_number : '-';
+                        $bg = BankGaransi::where('customer_id', $row->customer_id)->latest()->first();
+                        $num = $bg ? $bg->bg_number : '-';
+                        return '<div class="d-flex align-items-center">
+                                    <div class="bg-primary bg-opacity-10 text-primary rounded-3 d-flex align-items-center justify-content-center me-3 shadow-sm" style="width: 36px; height: 36px;">
+                                        <i class="ph-bold ph-file-text fs-5"></i>
+                                    </div>
+                                    <span class="fw-bold text-dark fs-6">'.$num.'</span>
+                                </div>';
                     })
-                    ->addColumn('customer_name', fn($row) => $row->customer->name ?? '-')
-                    ->editColumn('current_bg', fn($row) => 'Rp ' . number_format($row->current_bg, 0, ',', '.'))
+                    ->addColumn('customer_name', function($row) {
+                        $name = $row->customer->name ?? '-';
+                        $initial = substr($name, 0, 1);
+                        return '<div class="d-flex align-items-center">
+                                    <div class="avatar-sm bg-warning bg-opacity-10 text-warning rounded-circle d-flex align-items-center justify-content-center me-3 fw-bold border border-warning border-opacity-25 shadow-sm" style="width: 36px; height: 36px; font-size: 15px;">'.$initial.'</div>
+                                    <div>
+                                        <h6 class="mb-0 fw-bold text-dark">'.$name.'</h6>
+                                    </div>
+                                </div>';
+                    })
+                    ->editColumn('current_bg', function($row) {
+                        return '<div class="d-flex align-items-center">
+                                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-2 shadow-sm" style="font-size: 0.9rem;">
+                                        <i class="ph-bold ph-wallet me-1"></i> Rp ' . number_format($row->current_bg, 0, ',', '.') . '
+                                    </span>
+                                </div>';
+                    })
                     ->addColumn('action', function ($row) {
-                        return '<button type="button" class="btn btn-sm btn-warning btn-process text-dark"
-                            data-id="'.$row->id.'" title="Process"><i class="ph-bold ph-note-pencil"></i></button>';
+                        return '<div class="action-btn-group"><button type="button" class="btn btn-secondary action-btn-hover btn-process" data-id="'.$row->id.'" data-tooltip="Process Recommendation"><i class="ph-bold ph-magic-wand"></i></button></div>';
                     })
-                    ->rawColumns(['action'])->make(true);
+                    ->rawColumns(['bg_number', 'customer_name', 'current_bg', 'action'])->make(true);
             }
 
             if ($request->has('type') && $request->type == 'history') {
@@ -73,26 +90,35 @@ class BgRecommendationController extends Controller
                 return DataTables::of($query)
                     ->addIndexColumn()
                     ->addColumn('bg_number', function($row) {
-                        $bg = BankGaransi::where('customer_id', $row->customer_id)
-                                ->latest()
-                                ->first();
-
-                        return $bg ? $bg->bg_number : '-';
+                        $bg = BankGaransi::where('customer_id', $row->customer_id)->latest()->first();
+                        $num = $bg ? $bg->bg_number : '-';
+                        return '<div class="d-flex align-items-center">
+                                    <div class="bg-secondary bg-opacity-10 text-secondary rounded-3 d-flex align-items-center justify-content-center me-2 shadow-sm" style="width: 32px; height: 32px;">
+                                        <i class="ph-bold ph-file-text"></i>
+                                    </div>
+                                    <span class="fw-bold text-dark">'.$num.'</span>
+                                </div>';
                     })
-                    ->addColumn('customer_name', fn($row) => $row->customer->name ?? '-')
-                    ->editColumn('average', fn($row) => 'Rp ' . number_format($row->average, 0, ',', '.'))
-                    ->editColumn('recommended_credit_limit', fn($row) => 'Rp ' . number_format($row->recommended_credit_limit, 0, ',', '.'))
-                    ->editColumn('set_bg', fn($row) => 'Rp ' . number_format($row->set_bg, 0, ',', '.'))
+                    ->addColumn('customer_name', function($row) {
+                        $name = $row->customer->name ?? '-';
+                        $initial = substr($name, 0, 1);
+                        return '<div class="d-flex align-items-center">
+                                    <div class="avatar-sm bg-info bg-opacity-10 text-info rounded-circle d-flex align-items-center justify-content-center me-2 fw-bold border border-info border-opacity-25 shadow-sm" style="width: 32px; height: 32px; font-size: 13px;">'.$initial.'</div>
+                                    <span class="fw-bold text-dark">'.$name.'</span>
+                                </div>';
+                    })
+                    ->editColumn('average', fn($row) => '<span class="text-muted fw-bold">Rp ' . number_format($row->average, 0, ',', '.') . '</span>')
+                    ->editColumn('recommended_credit_limit', fn($row) => '<span class="text-dark fw-bold">Rp ' . number_format($row->recommended_credit_limit, 0, ',', '.') . '</span>')
+                    ->editColumn('set_bg', fn($row) => '<span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2 py-1"><i class="ph-bold ph-check-circle me-1"></i> Rp ' . number_format($row->set_bg, 0, ',', '.') . '</span>')
                     ->editColumn('status', function($row){
                         $color = $row->status == 'completed' ? 'success' : 'primary';
-                        return '<span class="badge bg-'.$color.' status-badge-lg">'.ucfirst(str_replace('_', ' ', $row->status)).'</span>';
+                        $icon = $row->status == 'completed' ? 'ph-check-circle' : 'ph-spinner-gap';
+                        return '<span class="badge bg-'.$color.' bg-opacity-10 text-'.$color.' border border-'.$color.' border-opacity-25 px-3 py-1 rounded-pill"><i class="ph-bold '.$icon.' me-1"></i>'.ucfirst(str_replace('_', ' ', $row->status)).'</span>';
                     })
-
                     ->addColumn('action', function($row){
-                        return '<button class="btn btn-sm btn-warning btn-edit-rec text-white" data-id="'.$row->id.'"><i class="ph-bold ph-pencil-simple"></i></button>';
+                        return '<div class="action-btn-group"><button class="btn btn-secondary action-btn-hover btn-edit-rec" data-id="'.$row->id.'" data-tooltip="Edit Data"><i class="ph-bold ph-pencil"></i></button></div>';
                     })
-
-                    ->rawColumns(['status', 'action'])
+                    ->rawColumns(['bg_number', 'customer_name', 'average', 'recommended_credit_limit', 'set_bg', 'status', 'action'])
                     ->make(true);
             }
         }
@@ -157,7 +183,7 @@ class BgRecommendationController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Rincian periode berhasil disimpan.',
+                'message' => 'Period details have been successfully saved.',
                 'total_average' => $totalAmount // Kembalikan nilai total untuk JS
             ]);
 
@@ -248,7 +274,7 @@ class BgRecommendationController extends Controller
                     'set_bg_nominal' => $setBg,
                     'inflation_rate' => $inflation . '%'
                 ])
-                ->log("Admin menetapkan Credit Limit Baru: Rp " . number_format($limitUpdated, 0, ',', '.') . " (BG: Rp " . number_format($setBg, 0, ',', '.') . ")");
+                ->log("Admin set new Credit Limit: Rp " . number_format($limitUpdated, 0, ',', '.') . " (BG: Rp " . number_format($setBg, 0, ',', '.') . ")");
 
             if ($recForMail->customer && $recForMail->customer->email) {
                 Mail::to($recForMail->customer->email)
@@ -256,7 +282,7 @@ class BgRecommendationController extends Controller
             }
 
             DB::commit();
-            return response()->json(['success' => true, 'message' => 'Rekomendasi diproses!']);
+            return response()->json(['success' => true, 'message' => 'Recommendation has been processed!']);
 
         } catch (\Exception $e) {
             DB::rollBack();

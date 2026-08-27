@@ -81,30 +81,28 @@ class BankGaransiController extends Controller
                     $query->orderBy('customers.name', $order);
                 })
                 ->addColumn('menu', function ($row) {
-                    $btn = '<div class="d-flex justify-content-center gap-1">';
-                    $btn .= '<button class="btn btn-outline-success btn-sm btn-extension" data-id="'.$row->id.'" title="Ajukan Extension (Tambah BG)">';
-                    $btn .= '<i class="ph-bold ph-plus-square me-1"></i> Ext';
+                    $btn = '<div class="action-btn-group">';
+                    $btn .= '<button class="btn btn-success action-btn-hover btn-extension" data-id="'.$row->id.'" data-tooltip="Submit Extension (Add BG)">';
+                    $btn .= '<i class="ph-bold ph-plus-square"></i> Ext';
                     $btn .= '</button>';
 
-                    $btn .= '<button class="btn btn-outline-primary btn-sm btn-existing" data-id="'.$row->id.'" title="Update Existing (Ubah Nominal)">';
-                    $btn .= '<i class="ph-bold ph-arrows-clockwise me-1"></i> Exist';
+                    $btn .= '<button class="btn btn-primary action-btn-hover btn-existing" data-id="'.$row->id.'" data-tooltip="Update Existing (Change Nominal)">';
+                    $btn .= '<i class="ph-bold ph-arrows-clockwise"></i> Exist';
                     $btn .= '</button>';
                     $btn .= '</div>';
                     return $btn;
                 })
-
                 ->addColumn('action', function ($row) {
-                    $btn = '<div class="d-flex justify-content-center gap-2">';
-                    $btn .= '<button class="btn btn-sm btn-outline-info btn-show" data-id="'.$row->id.'" title="Lihat Detail">';
+                    $btn = '<div class="action-btn-group">';
+                    $btn .= '<button class="btn btn-info action-btn-hover btn-show" data-id="'.$row->id.'" data-tooltip="View Details">';
                     $btn .= '<i class="ph-bold ph-eye"></i>';
                     $btn .= '</button>';
-                    $btn .= '<button class="btn btn-sm btn-outline-warning btn-edit" data-id="'.$row->id.'" title="Edit Data">';
-                    $btn .= '<i class="ph-bold ph-pencil-simple"></i>';
+                    $btn .= '<button class="btn btn-secondary action-btn-hover btn-edit" data-id="'.$row->id.'" data-tooltip="Edit Data">';
+                    $btn .= '<i class="ph-bold ph-pencil"></i>';
                     $btn .= '</button>';
-                    $btn .= '<button class="btn btn-sm btn-outline-danger btn-delete" data-id="'.$row->id.'" title="Hapus Data">';
+                    $btn .= '<button class="btn btn-danger action-btn-hover btn-delete" data-id="'.$row->id.'" data-tooltip="Delete Data">';
                     $btn .= '<i class="ph-bold ph-trash"></i>';
                     $btn .= '</button>';
-
                     $btn .= '</div>';
                     return $btn;
                 })
@@ -348,9 +346,9 @@ class BankGaransiController extends Controller
                     'current_nominal' => $currentNominal,
                     'customer' => $bg->customer->name
                 ])
-                ->log("Admin memulai proses EXISTING untuk BG {$bg->bg_number}");
+                ->log("Admin started EXISTING process for BG {$bg->bg_number}");
 
-            return response()->json(['success' => true, 'message' => 'Tipe BG diubah menjadi EXISTING & Link update dikirim!']);
+            return response()->json(['success' => true, 'message' => 'BG type changed to EXISTING & update link sent!']);
 
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
@@ -411,9 +409,9 @@ class BankGaransiController extends Controller
                     'customer' => $customer->name,
                     'parent_bg' => $parentBgNumber
                 ])
-                ->log("Admin memulai proses EXTENSION untuk Customer {$customer->name}");
+                ->log("Admin started EXTENSION process for Customer {$customer->name}");
 
-            return response()->json(['success' => true, 'message' => 'Request Extension diproses. Link pembuatan BG Baru dikirim!']);
+            return response()->json(['success' => true, 'message' => 'Extension request processed. New BG creation link sent!']);
 
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upload Dokumen {{ ucfirst($type) }}</title>
+    <title>Upload Document {{ ucfirst($type) }}</title>
     {{-- Fonts & Icons --}}
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -38,7 +38,7 @@
                     <span style="background-color: rgba(255,255,255,0.25); border: 1px solid rgba(255,255,255,0.25); border-radius: 50rem; padding: 4px 16px; margin-bottom: 16px; display: inline-block; font-weight: 400; backdrop-filter: blur(4px);">
                         {{ ucfirst($type) }} Process
                     </span>
-                    <h3 class="fw-bold mb-1" style="font-weight: 700; margin-bottom: 4px;">Upload Dokumen</h3>
+                    <h3 class="fw-bold mb-1" style="font-weight: 700; margin-bottom: 4px;">Upload Document</h3>
                     <p class="small" style="margin: 0; opacity: 0.9;">{{ $submission->recommendation->customer->name ?? 'Customer Name' }}</p>
                 </div>
 
@@ -65,11 +65,11 @@
                     <div style="background-color: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; margin-bottom: 24px;">
                         <div class="row g-3">
                             <div class="col-6" style="border-right: 1px solid rgba(0,0,0,0.1);">
-                                <label style="display: block; margin-bottom: 4px; color: #64748b; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Kode Form</label>
+                                <label style="display: block; margin-bottom: 4px; color: #64748b; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Form Code</label>
                                 <span style="font-family: monospace; font-weight: 700; color: #0f172a;">{{ $submission->form_code }}</span>
                             </div>
                             <div class="col-6 text-end">
-                                <label style="display: block; margin-bottom: 4px; color: #64748b; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Nominal</label>
+                                <label style="display: block; margin-bottom: 4px; color: #64748b; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Amount</label>
                                 @if($bg)
                                     <span style="font-weight: 700; color: {{ $primaryColor }};">
                                         Rp {{ number_format($bg->bg_nominal, 0, ',', '.') }}
@@ -97,7 +97,7 @@
                             {{-- State Awal --}}
                             <div id="emptyState">
                                 <i class="bi bi-cloud-arrow-up-fill mb-3 d-block" style="font-size: 3rem; opacity: 0.75; transition: transform 0.3s ease;"></i>
-                                <h6 style="font-weight: 700; color: #1e293b; margin-bottom: 4px;">Klik atau Drop File PDF</h6>
+                                <h6 style="font-weight: 700; color: #1e293b; margin-bottom: 4px;">Click or Drop PDF File</h6>
                                 <p class="text-muted small" style="margin: 0;">Format PDF (Max. 5MB)</p>
                             </div>
 
@@ -105,7 +105,7 @@
                             <div id="successState" style="display: none;">
                                 <div style="color: {{ $primaryColor }}; font-weight: 700;">
                                     <i class="bi bi-check-circle-fill me-2" style="font-size: 1.5rem;"></i><br>
-                                    File Siap Dikirim
+                                    File Ready to Send
                                 </div>
                             </div>
                         </div>
@@ -118,7 +118,7 @@
                                     <h6 class="mb-0 fw-bold text-truncate" id="fileNameDisplay" style="font-size: 14px; color: #1e293b;">document.pdf</h6>
                                     <small class="text-muted" id="fileSizeDisplay" style="font-size: 12px;">0 MB</small>
                                 </div>
-                                <button type="button" id="removeFileBtn" style="border: none; background: #fff; color: #ef4444; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); cursor: pointer;" title="Hapus File">
+                                <button type="button" id="removeFileBtn" style="border: none; background: #fff; color: #ef4444; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); cursor: pointer;" title="Remove File">
                                     <i class="bi bi-x-lg"></i>
                                 </button>
                             </div>
@@ -129,7 +129,7 @@
                                 style="width: 100%; margin-top: 24px; padding: 14px; border-radius: 50px; font-weight: 600; letter-spacing: 0.5px; transition: all 0.2s; border: none; color: white; background: {{ $bgGradient }}; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);"
                                 onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 10px 15px -3px rgba(0, 0, 0, 0.1)';"
                                 onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 6px -1px rgba(0, 0, 0, 0.1)';">
-                            <i class="bi bi-send-fill me-2"></i> Kirim Dokumen
+                            <i class="bi bi-send-fill me-2"></i> Send Document
                         </button>
                     </form>
 
@@ -147,8 +147,8 @@
 {{-- LOADING OVERLAY --}}
 <div id="loadingOverlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(5px); z-index: 9999; display: none; flex-direction: column; justify-content: center; align-items: center;">
     <div class="spinner-border mb-3" role="status" style="width: 3rem; height: 3rem; color: {{ $primaryColor }};"></div>
-    <h5 style="font-weight: 700; color: #1e293b;" id="loadingText">Mengupload Dokumen...</h5>
-    <p class="text-muted small mb-0">Mohon jangan tutup halaman ini.</p>
+    <h5 style="font-weight: 700; color: #1e293b;" id="loadingText">Uploading Document...</h5>
+    <p class="text-muted small mb-0">Please do not close this page.</p>
 
     <div style="width: 300px; height: 6px; background: #e2e8f0; border-radius: 10px; overflow: hidden; margin-top: 20px;">
         <div id="progressBar" style="height: 100%; width: 0%; transition: width 0.2s ease; border-radius: 10px; background: {{ $bgGradient }};"></div>
@@ -217,8 +217,8 @@
                 if (file.type !== 'application/pdf') {
                     Swal.fire({
                         icon: 'error',
-                        title: 'Format Salah',
-                        text: 'Mohon upload file dengan format PDF.',
+                        title: 'Invalid Format',
+                        text: 'Please upload a file in PDF format.',
                         confirmButtonColor: themeColor
                     });
                     resetForm();
@@ -229,8 +229,8 @@
                 if (file.size > 5 * 1024 * 1024) {
                     Swal.fire({
                         icon: 'warning',
-                        title: 'File Terlalu Besar',
-                        text: 'Maksimal ukuran file adalah 5MB.',
+                        title: 'File Too Large',
+                        text: 'Maximum file size is 5MB.',
                         confirmButtonColor: themeColor
                     });
                     resetForm();
@@ -292,8 +292,8 @@
             if (!fileInput.files.length) {
                 Swal.fire({
                     icon: 'warning',
-                    title: 'Belum Ada File',
-                    text: 'Silakan pilih atau drop file PDF terlebih dahulu.',
+                    title: 'No File',
+                    text: 'Please select or drop a PDF file first.',
                     confirmButtonColor: themeColor
                 });
                 return;

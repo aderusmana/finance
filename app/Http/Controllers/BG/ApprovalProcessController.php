@@ -90,7 +90,7 @@ class ApprovalProcessController extends Controller
         }
 
         if (!$bg) {
-             return abort(404, 'Data Bank Garansi tidak ditemukan. Kemungkinan Timestamp mismatch atau ID salah.');
+             return abort(404, 'Bank Guarantee data not found. Possible Timestamp mismatch or incorrect ID.');
         }
 
         $bgs = collect([$bg]);
@@ -108,7 +108,7 @@ class ApprovalProcessController extends Controller
         $sub = BgSubmission::with('recommendation.customer')->find($log->related_id);
 
         if (!$sub) {
-            return abort(404, 'Data Submission tidak ditemukan');
+            return abort(404, 'Submission data not found');
         }
 
         $action = $request->action;
@@ -132,7 +132,7 @@ class ApprovalProcessController extends Controller
                 ->useLog('approval_process')
                 ->event($action)
                 ->withProperties(['notes' => $request->notes, 'approver' => $log->approver_name])
-                ->log("{$actionText} oleh Finance ({$log->approver_name})");
+                ->log("{$actionText} by Finance ({$log->approver_name})");
 
             if ($status == 'Rejected') {
                 $sub->update(['status' => 'rejected_by_finance']);
@@ -141,14 +141,14 @@ class ApprovalProcessController extends Controller
             }
 
             $admins = User::role(['super-admin'])->get();
-            $statusBold = "<b>" . ($status == 'Approved' ? 'Disetujui' : 'Ditolak') . "</b>";
+            $statusBold = "<b>" . ($status == 'Approved' ? 'Approved' : 'Rejected') . "</b>";
             $color = ($status == 'Approved') ? 'success' : 'danger';
             $icon  = ($status == 'Approved') ? 'ph-check-circle' : 'ph-x-circle';
 
             $custName = $sub->recommendation->customer->name ?? 'Unknown Customer';
             Notification::send($admins, new SystemNotification(
                 "Submission {$statusBold}",
-                "Pengajuan <b>{$custName}</b> telah {$statusBold} oleh Finance.",
+                "Submission for <b>{$custName}</b> has been {$statusBold} by Finance.",
                 route('bg-submissions.index'),
                 $icon,
                 $color
@@ -159,13 +159,13 @@ class ApprovalProcessController extends Controller
             return view('page.customer_portal.form-success', [
                 'type' => 'approval',
                 'title' => 'Processed Successfully',
-                'message' => 'Terima kasih, keputusan approval Anda telah disimpan.'
+                'message' => 'Thank you, your approval decision has been saved.'
             ]);
 
         } catch (\Exception $e) {
             DB::rollBack();
             \Log::error("Approval Error: " . $e->getMessage());
-            return abort(500, 'Terjadi kesalahan sistem saat memproses approval.');
+            return abort(500, 'A system error occurred while processing the approval.');
         }
     }
 

@@ -32,7 +32,7 @@
                                 Credit Limit Recommendations
                             </h5>
                             <span class="text-white-50 small" style="font-size: 0.85rem;">
-                                Monitor status Bank Garansi & riwayat limit.
+                                Monitor Bank Guarantee status & limit history.
                             </span>
                         </div>
                     </div>
@@ -65,28 +65,75 @@
             <div class="card border-0 shadow-sm" style="border-radius: 12px;">
                 <div class="card-body p-4">
                     <div class="alert alert-light-warning border-danger border-opacity-25 d-flex align-items-center">
-                        <i class="ph-fill ph-info text-danger me-2 fs-5"></i>
-                        <small class="text-danger fw-bold">Daftar customer yang BG-nya akan segera expired atau perlu tindakan.</small>
+                        <i class="ph-fill ph-warning-circle text-danger me-2 fs-5"></i>
+                        <small class="text-danger fw-bold">List of customers whose Bank Guarantees are expiring soon or require immediate action.</small>
                     </div>
-                    <ul class="nav nav-tabs nav-tabs-custom mb-4 border-bottom-0" id="recommendationTabs" role="tablist">
-                        <li class="nav-item me-2">
-                            <button class="nav-link active px-4 py-2 rounded-top-3"
+                    <style>
+                        .custom-pill-tabs {
+                            background-color: #f8fafc;
+                            padding: 6px;
+                            border-radius: 50rem;
+                            display: inline-flex;
+                            border: 1px solid #e2e8f0;
+                            gap: 5px;
+                        }
+                        .custom-pill-tabs .nav-link {
+                            color: #64748b;
+                            border-radius: 50rem;
+                            font-weight: 600;
+                            font-size: 1rem;
+                            padding: 12px 48px;
+                            min-width: 240px;
+                            justify-content: center;
+                            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                            border: none;
+                            display: flex;
+                            align-items: center;
+                            background: transparent;
+                        }
+                        .custom-pill-tabs .nav-link i {
+                            color: #94a3b8;
+                            transition: all 0.3s ease;
+                        }
+                        .custom-pill-tabs .nav-link:hover {
+                            color: #1e3a8a;
+                            background-color: #f1f5f9;
+                        }
+                        .custom-pill-tabs .nav-link:hover i {
+                            color: #1e3a8a;
+                        }
+                        .custom-pill-tabs .nav-link.active {
+                            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+                            color: white !important;
+                            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+                        }
+                        .custom-pill-tabs .nav-link.active i {
+                            color: white !important;
+                        }
+                    </style>
+                    <ul class="nav nav-pills custom-pill-tabs mb-4" id="recommendationTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active"
                                     id="expiring-tab"
-                                    data-bs-toggle="tab"
+                                    data-bs-toggle="pill"
                                     data-bs-target="#expiring-pane"
-                                    type="button">
-                                <i class="ph-bold ph-warning me-2"></i>Expiring (Action Needed)
+                                    type="button"
+                                    role="tab"
+                                    aria-controls="expiring-pane"
+                                    aria-selected="true">
+                                <i class="ph-fill ph-warning-circle me-2 fs-5"></i> Expiring (Action Needed)
                             </button>
                         </li>
-
-                        {{-- TAB 2: HISTORY --}}
-                        <li class="nav-item">
-                            <button class="nav-link px-4 py-2 rounded-top-3"
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link"
                                     id="history-tab"
-                                    data-bs-toggle="tab"
+                                    data-bs-toggle="pill"
                                     data-bs-target="#history-pane"
-                                    type="button">
-                                <i class="ph-bold ph-clock-counter-clockwise me-2"></i>History
+                                    type="button"
+                                    role="tab"
+                                    aria-controls="history-pane"
+                                    aria-selected="false">
+                                <i class="ph-bold ph-clock-counter-clockwise me-2 fs-5"></i> History
                             </button>
                         </li>
                     </ul>
@@ -199,7 +246,7 @@
                                     </h6>
 
                                     <div class="mb-2">
-                                        <label class="form-label fw-bold text-dark f-s-12">AVERAGE SALES (Per Bulan)</label>
+                                        <label class="form-label fw-bold text-dark f-s-12">AVERAGE SALES (Monthly)</label>
                                         <div class="d-flex gap-2">
                                             <div class="input-group input-group-lg shadow-sm flex-grow-1" style="cursor: pointer;">
                                                 <span class="input-group-text bg-light text-muted fw-bold border-end-0">Rp</span>
@@ -207,7 +254,7 @@
                                                 <input type="hidden" name="average" id="average">
                                             </div>
                                             <button type="button" class="btn btn-warning shadow-sm fw-bold px-3" id="btnOpenPeriodModal">
-                                                <i class="ph-bold ph-calendar-plus me-1"></i> Kelola Rincian
+                                                <i class="ph-bold ph-calendar-plus me-1"></i> Manage Details
                                             </button>
                                         </div>
                                     </div>
@@ -221,7 +268,7 @@
                                                 <td class="pe-3 py-2 text-end fw-bold text-dark f-s-14" id="calc_avg_ppn">-</td>
                                             </tr>
                                             <tr class="border-bottom border-white">
-                                                <td class="ps-3 py-2 text-muted">Faktor Pengali <small class="text-primary">(TOP & Inflation)</small></td>
+                                                <td class="ps-3 py-2 text-muted">Multiplier Factors <small class="text-primary">(TOP & Inflation)</small></td>
                                                 <td class="pe-3 py-2 text-end"><span class="badge bg-primary bg-opacity-10 text-primary f-s-12 px-3" id="calc_factor_val">-</span></td>
                                             </tr>
                                             <tr class="border-bottom border-white bg-white">
@@ -233,7 +280,7 @@
                                                 <td class="pe-3 py-2 text-end fw-bold text-secondary" id="calc_fk_limit">-</td>
                                             </tr>
                                             <tr class="bg-success bg-opacity-10">
-                                                <td class="ps-3 py-3 fw-bold text-success">ROUNDED (Jutaan)</td>
+                                                <td class="ps-3 py-3 fw-bold text-success">ROUNDED (Millions)</td>
                                                 <td class="pe-3 py-3 text-end fw-bold text-success f-s-18" id="calc_rounded">-</td>
                                             </tr>
                                         </table>
@@ -255,14 +302,14 @@
                                             {{-- REVISI 2: Perubahan ID ke average mentrigger Set BG auto --}}
                                             <input type="number" name="set_bg" id="set_bg" class="form-control border-success text-success fw-bold" placeholder="0">
                                         </div>
-                                        <small class="text-muted f-s-10">Otomatis memilih nilai tertinggi (Rounded vs Current BG)</small>
+                                        <small class="text-muted f-s-10">Automatically select the highest value (Rounded vs Current BG)</small>
                                     </div>
 
                                     <div class="p-4 border border-primary border-opacity-25 rounded-3 bg-primary bg-opacity-10 text-center mb-4">
                                         <small class="text-uppercase text-primary fw-bold f-s-11 mb-2 d-block letter-spacing-1">CREDIT LIMIT UPDATED</small>
                                         <div class="d-flex align-items-center justify-content-center gap-2 mb-2">
                                             <h2 class="fw-bold text-primary mb-0 f-s-28" id="calc_limit_updated">Rp 0</h2>
-                                            <button type="button" class="btn btn-sm btn-outline-primary bg-white shadow-sm rounded-circle p-1" id="btnRoundLimit" title="Bulatkan ke Jutaan Terdekat">
+                                            <button type="button" class="btn btn-sm btn-outline-primary bg-white shadow-sm rounded-circle p-1" id="btnRoundLimit" title="Round to the Nearest Million">
                                                 <i class="ph-bold ph-arrows-in-line-vertical f-s-16"></i>
                                             </button>
                                         </div>
@@ -298,7 +345,7 @@
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content border-0 shadow-lg">
                 <div class="modal-header bg-warning text-dark">
-                    <h5 class="modal-title fw-bold"><i class="ph-bold ph-calendar-blank me-2"></i>Rincian Penjualan Per Periode</h5>
+                    <h5 class="modal-title fw-bold"><i class="ph-bold ph-calendar-blank me-2"></i>Sales Details Per Period</h5>
                     <button type="button" class="btn-close" id="btnClosePeriodModal"></button>
                 </div>
                 <div class="modal-body bg-light">
@@ -308,8 +355,8 @@
                         <div class="card-body">
                             <div class="row align-items-end g-3">
                                 {{-- Periode Mulai --}}
-                                <div class="col-md-5">
-                                    <label class="form-label small fw-bold">Periode Mulai</label>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold">Start Period</label>
                                     <div class="input-group">
                                         {{-- Kosongkan option, nanti diisi JS --}}
                                         <select id="start_month" class="form-select bg-white"></select>
@@ -318,19 +365,13 @@
                                 </div>
 
                                 {{-- Periode Selesai --}}
-                                <div class="col-md-5">
-                                    <label class="form-label small fw-bold">Periode Selesai</label>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold">End Period</label>
                                     <div class="input-group">
                                         {{-- Kosongkan option, nanti diisi JS --}}
                                         <select id="end_month" class="form-select bg-white"></select>
                                         <select id="end_year" class="form-select bg-white fw-bold"></select>
                                     </div>
-                                </div>
-
-                                <div class="col-md-2">
-                                    <button type="button" class="btn btn-dark w-100 fw-bold" id="btnGeneratePeriods">
-                                        <i class="ph-bold ph-arrows-clockwise me-1"></i> Apply
-                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -340,26 +381,26 @@
                     <div class="card border-0 shadow-sm">
                         <div class="card-header bg-white py-3">
                             <div class="d-flex justify-content-between align-items-center">
-                                <h6 class="mb-0 fw-bold text-muted">Input Nominal Bulanan</h6>
-                                <span class="badge bg-info text-dark" id="period-counter">0 Bulan</span>
+                                <h6 class="mb-0 fw-bold text-muted">Monthly Nominal Input</h6>
+                                <span class="badge bg-info text-dark" id="period-counter">0 Months</span>
                             </div>
                         </div>
                         <div class="card-body p-0">
                             <div id="period-inputs-wrapper" class="p-3" style="max-height: 400px; overflow-y: auto;">
                                 <div class="text-center text-muted py-5">
                                     <i class="ph-duotone ph-calendar-slash f-s-32 mb-2"></i>
-                                    <p class="mb-0">Silakan pilih periode dan klik tombol "Gen"</p>
+                                    <p class="mb-0">Please select the period and click the "Generate" button</p>
                                 </div>
                             </div>
                         </div>
                         <div class="card-footer bg-white text-end py-3">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
-                                    <small class="text-muted d-block text-start">Total Penjualan:</small>
+                                    <small class="text-muted d-block text-start">Total Sales:</small>
                                     <h5 class="fw-bold text-success mb-0" id="live-total-period">Rp 0</h5>
                                 </div>
                                 <button type="button" class="btn btn-primary px-4 fw-bold" id="btnSavePeriod">
-                                    <i class="ph-bold ph-check me-2"></i> Simpan & Gunakan
+                                    <i class="ph-bold ph-check me-2"></i> Save & Use
                                 </button>
                             </div>
                         </div>
@@ -401,8 +442,8 @@
 
             function initDateDropdowns() {
                 const months = [
-                    "Januari", "Februari", "Maret", "April", "Mei", "Juni",
-                    "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+                    "January", "February", "March", "April", "May", "June",
+                    "July", "August", "September", "October", "November", "December"
                 ];
 
                 let monthOptions = '';
@@ -522,6 +563,7 @@
                     let y = now.getFullYear();
                     $('#start_month').val(m); $('#start_year').val(y);
                     $('#end_month').val(m); $('#end_year').val(y);
+                    generatePeriods();
                     return;
                 }
 
@@ -547,6 +589,8 @@
                     let valFmt = new Intl.NumberFormat('id-ID').format(p.amount);
                     total += parseFloat(p.amount);
 
+                    let datePrefix = p.period_date.substring(0, 7);
+                    let monthValue = datePrefix + '-01';
                     let html = `
                         <div class="row mb-2 align-items-center period-row border-bottom pb-2">
                             <label class="col-sm-4 col-form-label text-end small fw-bold">${monthName}</label>
@@ -554,14 +598,14 @@
                                 <div class="input-group input-group-sm">
                                     <span class="input-group-text">Rp</span>
                                     <input type="text" class="form-control period-amount text-end fw-bold" value="${valFmt}" onkeyup="formatRupiah(this)">
-                                    <input type="hidden" class="period-date-val" value="${p.period_date}">
+                                    <input type="hidden" class="period-date-val" value="${monthValue}">
                                     <input type="hidden" class="period-amount-real" value="${p.amount}">
                                 </div>
                             </div>
                         </div>`;
                     wrapper.append(html);
                 });
-                $('#period-counter').text(periods.length + " Bulan");
+                $('#period-counter').text(periods.length + " Months");
                 $('#live-total-period').text(fmt(total));
             }
 
@@ -570,15 +614,14 @@
 
             $('#average_display').on('click', function() {
                 Swal.fire({
-                    icon: 'warning', title: 'Input Terkunci',
-                    html: 'Silakan isi periode dengan klik tombol <br><b>"Kelola Rincian"</b>.',
-                    confirmButtonColor: '#ffc107', confirmButtonText: 'Oke'
+                    icon: 'warning', title: 'Input Locked',
+                    html: 'Please fill in the period by clicking the button <br><b>"Manage Details"</b>.',
+                    confirmButtonColor: '#ffc107', confirmButtonText: 'OK'
                 });
             });
 
-            // GENERATE BUTTON CLICK
-            $('#btnGeneratePeriods').click(function() {
-                // Gabungkan value dari dropdown
+            // AUTO GENERATE PERIODS ON DROPDOWN CHANGE
+            function generatePeriods() {
                 let startY = $('#start_year').val();
                 let startM = $('#start_month').val();
                 let endY = $('#end_year').val();
@@ -588,24 +631,45 @@
                 let endVal = endY + '-' + endM;
 
                 if (startVal > endVal) {
-                    Swal.fire('Error', 'Periode mulai tidak boleh lebih besar dari selesai', 'error');
+                    $('#period-inputs-wrapper').html('<div class="text-center text-danger py-4 fw-bold"><i class="ph-fill ph-warning-circle fs-1 mb-2 d-block"></i>Start period cannot be greater than end period</div>');
+                    $('#period-counter').text("0 Months");
+                    $('#live-total-period').text("Rp 0");
                     return;
                 }
 
                 let startDate = new Date(startVal + "-01");
                 let endDate = new Date(endVal + "-01");
                 let wrapper = $('#period-inputs-wrapper');
+                
+                // Simpan value inputan yang sudah ada agar tidak keriset
+                let savedValues = {};
+                $('.period-amount-real').each(function() {
+                    let date = $(this).siblings('.period-date-val').val();
+                    let val = $(this).val();
+                    let displayVal = $(this).siblings('.period-amount').val();
+                    savedValues[date] = { real: val, display: displayVal };
+                });
+
                 wrapper.empty();
 
                 let currentDate = startDate;
                 let countMonth = 0;
+                let newTotal = 0;
 
                 while (currentDate <= endDate) {
                     let monthName = currentDate.toLocaleString('id-ID', { month: 'long', year: 'numeric' });
-
                     let year = currentDate.getFullYear();
                     let month = (currentDate.getMonth() + 1).toString().padStart(2, '0');
                     let monthValue = `${year}-${month}-01`;
+
+                    let realVal = "0";
+                    let displayVal = "";
+                    
+                    if (savedValues[monthValue]) {
+                        realVal = savedValues[monthValue].real;
+                        displayVal = savedValues[monthValue].display;
+                        newTotal += parseFloat(realVal) || 0;
+                    }
 
                     let html = `
                         <div class="row mb-2 align-items-center period-row border-bottom pb-2">
@@ -613,9 +677,9 @@
                             <div class="col-sm-8">
                                 <div class="input-group input-group-sm">
                                     <span class="input-group-text">Rp</span>
-                                    <input type="text" class="form-control period-amount text-end fw-bold" placeholder="0" onkeyup="formatRupiah(this)">
+                                    <input type="text" class="form-control period-amount text-end fw-bold" placeholder="0" onkeyup="formatRupiah(this)" value="${displayVal}">
                                     <input type="hidden" class="period-date-val" value="${monthValue}">
-                                    <input type="hidden" class="period-amount-real" value="0">
+                                    <input type="hidden" class="period-amount-real" value="${realVal}">
                                 </div>
                             </div>
                         </div>`;
@@ -624,8 +688,12 @@
                     currentDate.setMonth(currentDate.getMonth() + 1);
                     countMonth++;
                 }
-                $('#period-counter').text(countMonth + " Bulan");
-            });
+                
+                $('#period-counter').text(countMonth + " Months");
+                $('#live-total-period').text(fmt(newTotal));
+            }
+
+            $('#start_month, #start_year, #end_month, #end_year').on('change', generatePeriods);
 
             $(document).on('keyup', '.period-amount', function() {
                 let val = $(this).val().replace(/[^,\d]/g, '').toString();
@@ -651,12 +719,12 @@
                 });
 
                 if(periodData.length === 0 && total === 0) {
-                    Swal.fire('Warning', 'Belum ada nominal yang diisi', 'warning');
+                    Swal.fire('Warning', 'No amount has been filled in', 'warning');
                     return;
                 }
 
                 let btn = $(this);
-                btn.prop('disabled', true).text('Menyimpan...');
+                btn.prop('disabled', true).text('Saving...');
 
                 $.ajax({
                     url: "{{ url('bg/bg-recommendations') }}/" + id + "/periods",
@@ -674,16 +742,16 @@
 
                         $('#periodModal').modal('hide');
                         Swal.fire({
-                            icon: 'success', title: 'Tersimpan',
-                            text: 'Rincian periode tersimpan & Average terupdate.',
+                            icon: 'success', title: 'Stored',
+                            text: 'Period details stored & Average updated.',
                             timer: 1500, showConfirmButton: false
                         });
                     },
                     error: function(err) {
-                        Swal.fire('Error', 'Gagal menyimpan periode', 'error');
+                        Swal.fire('Error', 'Failed to store period', 'error');
                     },
                     complete: function() {
-                        btn.prop('disabled', false).html('<i class="ph-bold ph-check me-2"></i> Simpan & Gunakan');
+                        btn.prop('disabled', false).html('<i class="ph-bold ph-check me-2"></i> Save & Use');
                     }
                 });
             });
@@ -816,26 +884,26 @@
                             </tr>
                         </table>
                     </div>
-                    <p class="text-center text-muted mt-3 mb-0 small">Pastikan data di atas sudah benar sebelum disimpan.</p>
+                    <p class="text-center text-muted mt-3 mb-0 small">Please ensure the data above is correct before saving.</p>
                 `;
 
                 // --- 3. TAMPILKAN SWEETALERT ---
                 Swal.fire({
-                    title: 'Konfirmasi Rekomendasi',
+                    title: 'Recommendation Confirmation',
                     html: htmlContent, // Gunakan HTML custom di atas
                     icon: 'info',
                     showCancelButton: true,
-                    confirmButtonText: '<i class="ph-bold ph-check me-1"></i> Ya, Simpan',
+                    confirmButtonText: '<i class="ph-bold ph-check me-1"></i> Yes, Save',
                     confirmButtonColor: '#3085d6',
-                    cancelButtonText: 'Periksa Lagi',
+                    cancelButtonText: 'Check Again',
                     cancelButtonColor: '#d33',
                     reverseButtons: true
                 }).then((result) => {
                     if (result.isConfirmed) {
                         // Tampilkan Loading state
                         Swal.fire({
-                            title: 'Menyimpan...',
-                            text: 'Mohon tunggu sebentar',
+                            title: 'Saving...',
+                            text: 'Please wait a moment',
                             allowOutsideClick: false,
                             didOpen: () => { Swal.showLoading(); }
                         });
@@ -851,7 +919,7 @@
 
                                 Swal.fire({
                                     icon: 'success',
-                                    title: 'Berhasil!',
+                                    title: 'Saved!',
                                     text: res.message,
                                     timer: 2000,
                                     showConfirmButton: false
@@ -878,8 +946,8 @@
                                 }
                             },
                             error: function(err) {
-                                let msg = err.responseJSON ? err.responseJSON.message : 'Terjadi kesalahan sistem';
-                                Swal.fire('Gagal!', msg, 'error');
+                                let msg = err.responseJSON ? err.responseJSON.message : 'System error occurred';
+                                Swal.fire('Failed!', msg, 'error');
                             }
                         });
                     }

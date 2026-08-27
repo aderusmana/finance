@@ -3,7 +3,7 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Dokumen Lampiran D</title>
+    <title>Attachment D Document</title>
 </head>
 <body style="margin: 0; padding: 0; background-color: #f4f7fa; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;">
 
@@ -16,7 +16,7 @@
                     <tr>
                         <td style="background-color: #1e3a8a; padding: 30px 40px; text-align: center;">
                             <h1 style="color: #ffffff; margin: 0; font-size: 22px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase;">
-                                Dokumen Lampiran D
+                                Attachment D Document
                             </h1>
                             <p style="color: #93c5fd; margin: 5px 0 0 0; font-size: 14px;">Bank Garansi Approval System</p>
                         </td>
@@ -25,31 +25,31 @@
                     {{-- Body --}}
                     <tr>
                         <td style="padding: 40px; color: #334155; font-size: 16px; line-height: 1.6;">
-                            <p style="margin-top: 0;">Yth. Bapak/Ibu,</p>
+                            <p style="margin-top: 0;">Dear Sir/Madam,</p>
 
-                            <p>Dengan ini kami informasikan bahwa proses perhitungan dan persetujuan Bank Garansi telah <strong>selesai</strong> (Completed). Dokumen <strong>Lampiran D</strong> telah diterbitkan sebagai acuan penerbitan BG.</p>
+                            <p>We would like to inform you that the calculation and approval process for the Bank Guarantee has been <strong>completed</strong>. The <strong>Attachment D</strong> document has been issued as a reference for BG issuance.</p>
 
                             <div style="background-color: #f8fafc; border-left: 4px solid #1e3a8a; padding: 15px 20px; margin: 25px 0; border-radius: 4px;">
                                 <p style="margin: 0; font-size: 14px; color: #475569;">
-                                    Dokumen ini berisi detail perhitungan final, limit kredit yang disetujui, dan rincian bank yang akan diterbitkan.
+                                    This document contains the final calculation details, approved credit limit, and details of the bank to be issued.
                                 </p>
                             </div>
 
-                            <p>Silakan unduh dokumen tersebut melalui lampiran (attachment) pada email ini, atau klik tombol di bawah untuk mengunduh melalui portal:</p>
+                            <p>Please download the document via the attachment in this email, or click the button below to download via the portal:</p>
 
                             {{-- Button Wrapper --}}
                             <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="margin: 30px 0;">
                                 <tr>
                                     <td align="center">
                                         <a href="{{ route('customer.portal.download-lampiran-d', $submission->token) }}" target="_blank" style="background-color: #2563eb; color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 700; display: inline-block; font-size: 16px; box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);">
-                                            Download Lampiran D
+                                            Download Attachment D
                                         </a>
                                     </td>
                                 </tr>
                             </table>
 
                             <p style="font-size: 13px; color: #64748b; text-align: center; margin-top: 20px;">
-                                <em>*Jika tombol di atas tidak berfungsi, Anda dapat menggunakan file PDF yang terlampir di bawah email ini.</em>
+                                <em>*If the button above does not work, you can use the PDF file attached below this email.</em>
                             </p>
                         </td>
                     </tr>

@@ -68,15 +68,11 @@ class BgHistoryController extends Controller
                     return $row->created_at->format('d M Y H:i');
                 })
                 ->addColumn('action', function ($row) {
-                    // Tombol Delete (Hanya untuk Super Admin jika perlu)
-                    return '
-                        <form action="' . route('bg-histories.destroy', $row->id) . '" method="POST" style="display:inline;" onsubmit="return confirm(\'Are you sure?\')">'
-                        . csrf_field() . method_field('DELETE') . '
-                            <button type="submit" class="btn btn-xs btn-danger" title="Delete Log">
-                                <i class="ph-bold ph-trash text-white"></i>
-                            </button>
-                        </form>
-                    ';
+                    return '<div class="action-btn-group">
+                                <button class="btn btn-info action-btn-hover btn-view-history" data-id="'.$row->id.'" data-tooltip="View Changes">
+                                    <i class="ph-bold ph-clock-counter-clockwise"></i>
+                                </button>
+                            </div>';
                 })
                 ->rawColumns(['nominal_change', 'date_change', 'remarks', 'action'])
                 ->make(true);

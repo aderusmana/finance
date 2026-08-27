@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $title ?? 'Berhasil' }} | Corporate Portal</title>
+    <title>{{ $title ?? 'Success' }} | Corporate Portal</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
@@ -58,23 +58,23 @@
             </div>
 
             <h2 style="color: #1e293b; font-weight: 800; font-size: 1.85rem; margin: 0 0 12px 0; letter-spacing: -0.025em;">
-                {{ $title ?? 'Permintaan Diterima!' }}
+                {{ $title ?? 'Request Accepted!' }}
             </h2>
 
             @if(isset($type) && $type == 'input')
                 <p style="color: #64748b; font-size: 1rem; line-height: 1.6; margin-bottom: 32px;">
-                    Sistem sedang memproses dokumen formulir Anda.<br>
-                    Pengunduhan akan dimulai secara otomatis.
+                    The system is processing your form document.<br>
+                    The download will start automatically.
                 </p>
 
                 <div style="text-align: left; padding: 20px; border-radius: 16px; margin-bottom: 24px; background-color: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af;">
                     <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 8px; display: flex; align-items: center; gap: 10px;">
-                        <i class="bi bi-printer-fill" style="color: #3b82f6;"></i> Instruksi Selanjutnya
+                        <i class="bi bi-printer-fill" style="color: #3b82f6;"></i> Next Instructions
                     </div>
                     <ul style="margin: 0; padding-left: 24px; font-size: 0.9rem; color: #475569;">
-                        <li style="margin-bottom: 6px;">Cetak & tanda tangani dokumen yang terunduh.</li>
-                        <li style="margin-bottom: 6px;">Scan kembali menjadi format <strong>PDF</strong>.</li>
-                        <li>Unggah melalui tombol di bawah ini.</li>
+                        <li style="margin-bottom: 6px;">Print & sign the downloaded document.</li>
+                        <li style="margin-bottom: 6px;">Scan it back into <strong>PDF</strong> format.</li>
+                        <li>Upload it via the button below.</li>
                     </ul>
                 </div>
 
@@ -84,13 +84,13 @@
                 <div style="display: flex; flex-direction: column; gap: 12px;">
                     @if(isset($uploadToken))
                     <a href="{{ route('customer.portal.upload-form', $uploadToken) }}" class="btn-hover-primary" style="display: inline-flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 14px 24px; border-radius: 14px; font-weight: 600; font-size: 0.95rem; text-decoration: none; transition: all 0.3s ease; cursor: pointer; border: none; background: #0f172a; color: white; box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.2); box-sizing: border-box;">
-                        Lanjut Upload Dokumen <i class="bi bi-cloud-upload-fill"></i>
+                        Proceed to Upload Document <i class="bi bi-cloud-upload-fill"></i>
                     </a>
                     @endif
 
                     @if(isset($downloadUrl))
                     <a href="{{ $downloadUrl }}" class="btn-hover-outline" style="display: inline-flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 14px 24px; border-radius: 14px; font-weight: 600; font-size: 0.95rem; text-decoration: none; transition: all 0.3s ease; cursor: pointer; background: transparent; color: #334155; border: 2px solid #e2e8f0; box-sizing: border-box;">
-                        <i class="bi bi-download"></i> Unduh Manual
+                        <i class="bi bi-download"></i> Download Manually
                     </a>
                     @endif
                 </div>
@@ -98,29 +98,29 @@
             @elseif(isset($type) && $type == 'input_multi')
                 <div style="text-align: left; padding: 20px; border-radius: 16px; margin-bottom: 24px; background-color: #f0fdf4; border: 1px solid #bbf7d0; color: #166534;">
                     <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 8px; display: flex; align-items: center; gap: 10px; color: #059669;">
-                        <i class="bi bi-envelope-check-fill"></i> Submission Berhasil
+                        <i class="bi bi-envelope-check-fill"></i> Submission Successful
                     </div>
                     <p style="margin: 0; font-size: 0.9rem; opacity: 0.9;">
-                        {{ $message ?? 'Data pengajuan Anda telah tersimpan aman di database kami.' }}
+                        {{ $message ?? 'Your application data has been securely saved in our database.' }}
                     </p>
                 </div>
 
                 <p style="color: #64748b; font-size: 1rem; line-height: 1.6; margin-bottom: 32px;">
-                    Instruksi pembayaran dan kelengkapan berkas untuk masing-masing bank telah dikirimkan ke <strong>email Anda</strong>. Mohon cek folder Inbox/Spam.
+                    Payment instructions and file requirements for each bank have been sent to <strong>your email</strong>. Please check your Inbox/Spam folder.
                 </p>
 
                 <button type="button" onclick="forceCloseWindow()" class="btn-hover-primary" style="display: inline-flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 14px 24px; border-radius: 14px; font-weight: 600; font-size: 0.95rem; text-decoration: none; transition: all 0.3s ease; cursor: pointer; border: none; background: #0f172a; color: white; box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.2);">
-                    Tutup Halaman
+                    Close Page
                 </button>
 
             @else
                 <p style="color: #64748b; font-size: 1rem; line-height: 1.6; margin-bottom: 32px;">
-                    Terima kasih telah melengkapi data. Perubahan Anda telah berhasil direkam ke dalam sistem.<br>
-                    Halaman ini akan tertutup otomatis.
+                    Thank you for completing the data. Your changes have been successfully recorded in the system.<br>
+                    This page will close automatically.
                 </p>
 
                 <button type="button" onclick="forceCloseWindow()" class="btn-hover-outline" style="display: inline-flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 14px 24px; border-radius: 14px; font-weight: 600; font-size: 0.95rem; text-decoration: none; transition: all 0.3s ease; cursor: pointer; background: transparent; color: #334155; border: 2px solid #e2e8f0;">
-                    Tutup Sekarang
+                    Close Now
                 </button>
             @endif
         </div>
@@ -132,15 +132,15 @@
 
             @if(!isset($type) || ($type != 'input' && $type != 'input_multi'))
                 <span id="countdown-wrapper">
-                    Menutup dalam <strong id="countdown" style="color: #0f172a; font-size: 1.1em;">3</strong>s
+                    Closing in <strong id="countdown" style="color: #0f172a; font-size: 1.1em;">3</strong>s
                 </span>
             @endif
         </div>
 
         <div id="fallbackUI" style="display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; height: 100%; padding: 60px 20px; color: #64748b;">
             <i class="bi bi-check-circle" style="color: #cbd5e1; font-size: 4rem; margin-bottom: 20px;"></i>
-            <h3 style="color: #334155; margin: 0 0 10px 0;">Sesi Selesai</h3>
-            <p style="margin: 0;">Anda dapat menutup tab browser ini secara manual.</p>
+            <h3 style="color: #334155; margin: 0 0 10px 0;">Session Ended</h3>
+            <p style="margin: 0;">You can close this browser tab manually.</p>
         </div>
     </div>
 

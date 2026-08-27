@@ -40,10 +40,9 @@ class LampiranDController extends Controller
                         return $row->generated_at->format('d M Y H:i');
                     })
                     ->addColumn('action', function ($row) {
-                        // Tombol Lihat Detail Snapshot
-                        return '<button class="btn btn-xs btn-outline-info btn-view-snapshot" data-id="'.$row->id.'">
-                                    <i class="ph-bold ph-eye"></i> Data
-                                </button>';
+                        return '<div class="action-btn-group"><button class="btn btn-info action-btn-hover btn-view-snapshot" data-id="'.$row->id.'" data-tooltip="View Data">
+                                    <i class="ph-bold ph-eye"></i>
+                                </button></div>';
                     })
                     ->rawColumns(['version', 'action'])
                     ->make(true);
@@ -68,10 +67,9 @@ class LampiranDController extends Controller
                     return $row->updated_at->format('d M Y H:i');
                 })
                 ->addColumn('action', function ($row) {
-                    // Tombol Edit
-                    return '<button type="button" class="btn btn-sm btn-warning btn-edit-lampiran" data-id="' . $row->id . '">
-                                <i class="ph-bold ph-pencil-simple text-white"></i> Edit
-                            </button>';
+                    return '<div class="action-btn-group"><button type="button" class="btn btn-secondary action-btn-hover btn-edit-lampiran" data-id="' . $row->id . '" data-tooltip="Edit Data">
+                                <i class="ph-bold ph-pencil"></i>
+                            </button></div>';
                 })
                 ->rawColumns(['version', 'action'])
                 ->make(true);

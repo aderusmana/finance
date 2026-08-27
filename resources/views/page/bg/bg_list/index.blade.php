@@ -495,17 +495,17 @@
 
                 Swal.fire({
                     title: 'Request Extension?',
-                    text: "Sistem akan mengirimkan email formulir kosong ke Customer untuk pengajuan BG Baru (Extension).",
+                    text: "The system will send an empty form email to the Customer for a New BG submission (Extension).",
                     icon: 'question',
                     showCancelButton: true,
                     confirmButtonColor: '#10b981',
                     cancelButtonColor: '#d33',
-                    confirmButtonText: 'Ya, Kirim Form!',
-                    cancelButtonText: 'Batal'
+                    confirmButtonText: 'Yes, Send Form!',
+                    cancelButtonText: 'Cancel'
                 }).then((result) => {
                     if (result.isConfirmed) {
                         Swal.fire({
-                            title: 'Mengirim Email...',
+                            title: 'Sending Email...',
                             didOpen: () => Swal.showLoading()
                         });
 
@@ -517,7 +517,7 @@
                                 bg_id: id
                             },
                             success: function(res) {
-                                Swal.fire('Terkirim!', res.message, 'success');
+                                Swal.fire('Sent!', res.message, 'success');
                                 table.ajax.reload();
                             },
                             error: function(xhr) {
@@ -534,18 +534,18 @@
 
                 Swal.fire({
                     title: 'Request Existing Update?',
-                    text: "Sistem akan mengirimkan email ke Customer untuk memperbarui Nominal BG ini.",
+                    text: "The system will send an email to the Customer to update the Nominal of this BG.",
                     icon: 'question',
                     showCancelButton: true,
                     confirmButtonColor: '#6366f1',
                     cancelButtonColor: '#d33',
-                    confirmButtonText: 'Ya, Kirim Email!',
-                    cancelButtonText: 'Batal'
+                    confirmButtonText: 'Yes, Send Email!',
+                    cancelButtonText: 'Cancel'
                 }).then((result) => {
                     if (result.isConfirmed) {
                         Swal.fire({
-                            title: 'Mengirim Email...',
-                            text: 'Mohon tunggu sebentar',
+                            title: 'Sending Email...',
+                            text: 'Please wait a moment',
                             allowOutsideClick: false,
                             didOpen: () => Swal.showLoading()
                         });
@@ -555,7 +555,7 @@
                             type: "POST",
                             data: { _token: "{{ csrf_token() }}" },
                             success: function(res) {
-                                Swal.fire('Terkirim!', res.message, 'success');
+                                Swal.fire('Sent!', res.message, 'success');
                                 table.ajax.reload();
                             },
                             error: function(xhr) {

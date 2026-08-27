@@ -65,10 +65,10 @@
                             </span>
                         </div>
                         <div>
-                            <h5 class="fw-bold mb-1" style="color: #052c65;">Panduan Proses Approval</h5>
+                            <h5 class="fw-bold mb-1" style="color: #052c65;">Approval Process Guide</h5>
                             <p class="mb-0 small" style="line-height: 2.5; color: #084298;">
-                                1. Klik tombol <span class="badge bg-primary text-light border border-warning shadow-sm"><i class="ph-bold ph-file-search me-1"></i> Review & Process</span> pada kolom <b>Signed Doc</b> untuk memeriksa dokumen, mengoreksi data, dan melanjutkan ke <b>Lampiran D</b>.<br>
-                                2. Tombol <span class="badge bg-warning text-light border"><i class="ph-bold ph-pencil-simple"></i></span> pada kolom <i>Action</i> hanya digunakan untuk <b>Upload Ulang / Edit Administrasi</b> (Tanpa Approval).
+                                1. Klik tombol <span class="badge bg-primary text-light border border-warning shadow-sm"><i class="ph-bold ph-file-search me-1"></i> Review & Process</span> in the <b>Signed Doc</b> column to inspect the document, correct the data, and proceed to <b>Attachment D</b>.<br>
+                                2. The <span class="badge bg-warning text-light border"><i class="ph-bold ph-pencil-simple"></i></span> button in the <i>Action</i> column is only used for <b>Re-upload / Administrative Edit</b> (Without Approval).
                             </p>
                         </div>
                     </div>
@@ -77,7 +77,7 @@
                     <div class="main-table-container">
                         <div class="table-header-enhanced bg-primary text-white">
                             <h4 class="table-title mb-1"><i class="ph-duotone ph-list-checks me-2"></i> Active To-Do List</h4>
-                            <small class="opacity-75 f-s-12">Daftar pengajuan yang memerlukan tindakan.</small>
+                            <small class="opacity-75 f-s-12">List of submissions requiring action.</small>
                         </div>
                         <div class="table-responsive">
                             <table class="w-100 display align-middle" id="sampleTable">
@@ -104,8 +104,8 @@
                     <div class="alert shadow-sm border-0 d-flex align-items-center mb-4 p-3 rounded-3" style="background-color: #f0fdf4; color: #166534; border-left: 5px solid #198754;">
                         <i class="ph-duotone ph-archive-box fs-3 me-3"></i>
                         <div>
-                            <h6 class="fw-bold mb-0">Arsip Dokumen Selesai</h6>
-                            <small>Data di bawah ini adalah pengajuan yang telah selesai (Completed/Approved). Bersifat Read-Only.</small>
+                            <h6 class="fw-bold mb-0">Completed Document Archives</h6>
+                            <small>The data below are completed/approved submissions. Read-Only.</small>
                         </div>
                     </div>
 
@@ -113,7 +113,7 @@
                     <div class="main-table-container">
                         <div class="table-header-enhanced bg-success text-white">
                             <h4 class="table-title mb-1"><i class="ph-bold ph-check-circle me-2"></i> Completed Archives</h4>
-                            <small class="opacity-75 f-s-12">Riwayat pengajuan Bank Garansi yang telah disetujui.</small>
+                            <small class="opacity-75 f-s-12">History of approved Bank Guarantee submissions.</small>
                         </div>
                         <div class="table-responsive">
                             <table class="w-100 display align-middle" id="historyTable">
@@ -150,7 +150,7 @@
                         <h5 class="modal-title fw-bold text-dark" id="modalLabel">
                             <i class="ph-bold ph-folder-plus me-2 text-primary"></i>Manage Submission
                         </h5>
-                        <small class="text-muted">Buat pengajuan baru atau edit data administrasi.</small>
+                        <small class="text-muted">Create a new submission or edit administrative data.</small>
                     </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
@@ -185,9 +185,9 @@
                                 <div class="input-group">
                                     <span class="input-group-text bg-light"><i class="ph-bold ph-qr-code"></i></span>
                                     <input type="text" class="form-control" name="form_code" id="form_code" required
-                                           placeholder="Contoh: NEW-20250112-ABCD-1">
+                                           placeholder="Example: NEW-20250112-ABCD-1">
                                 </div>
-                                <div class="form-text small text-muted"><i class="ph-bold ph-info me-1"></i> Gunakan format yang sesuai dengan standar perusahaan.</div>
+                                <div class="form-text small text-muted"><i class="ph-bold ph-info me-1"></i> Use a format that complies with company standards.</div>
                             </div>
 
                             {{-- File Upload --}}
@@ -200,14 +200,14 @@
 
                                     <div class="form-text mt-2 small text-muted">
                                         Format: PDF, JPG, PNG. Max 5MB.<br>
-                                        <span class="text-danger fst-italic" id="upload-note">* Wajib diupload untuk pengajuan baru.</span>
+                                        <span class="text-danger fst-italic" id="upload-note">* Must be uploaded for new submissions.</span>
                                     </div>
 
                                     {{-- Preview Link if Edit --}}
                                     <div id="current_file_preview" class="d-none mt-2 p-2 bg-white border rounded d-flex align-items-center gap-2">
                                         <i class="ph-fill ph-check-circle text-success fs-5"></i>
-                                        <span class="small text-success fw-bold">File sudah ada. Upload ulang untuk mengganti.</span>
-                                        <a href="#" id="link_view_file_modal" target="_blank" class="btn btn-sm btn-outline-success ms-auto">Lihat File</a>
+                                        <span class="small text-success fw-bold">File exists. Re-upload to replace.</span>
+                                        <a href="#" id="link_view_file_modal" target="_blank" class="btn btn-sm btn-outline-success ms-auto">View File</a>
                                     </div>
                                 </div>
                             </div>
@@ -216,9 +216,9 @@
                     </div>
 
                     <div class="modal-footer bg-light p-3 border-top-0">
-                        <button type="button" class="btn btn-light fw-bold rounded-pill px-4" data-bs-dismiss="modal">Batal</button>
+                        <button type="button" class="btn btn-light fw-bold rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
                         <button type="submit" class="btn btn-primary fw-bold rounded-pill px-4 shadow-sm">
-                            <i class="ph-bold ph-paper-plane-right me-2"></i> Simpan & Upload
+                            <i class="ph-bold ph-paper-plane-right me-2"></i> Save & Upload
                         </button>
                     </div>
                 </form>
@@ -260,7 +260,7 @@
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
                 <div class="modal-header bg-warning text-white">
-                    <h5 class="modal-title"><i class="ph-bold ph-pencil"></i> Koreksi Data</h5>
+                    <h5 class="modal-title"><i class="ph-bold ph-pencil"></i> Correct Data</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <form id="editBgForm">
@@ -271,8 +271,8 @@
                         <div id="bankDetailsContainer"></div> {{-- Diisi AJAX --}}
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
-                        <button type="submit" class="btn btn-primary fw-bold">Simpan Perubahan</button>
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary fw-bold">Save Changes</button>
                     </div>
                 </form>
             </div>
@@ -286,7 +286,7 @@
             $(document).ready(function() {
                 // Initialize Select2 in Modal
                 $('.select2').select2({ theme: 'bootstrap-5' });
-                $('.select2-modal').select2({ dropdownParent: $('#submissionModal'), theme: 'bootstrap-5', placeholder: 'Pilih Customer...' });
+                $('.select2-modal').select2({ dropdownParent: $('#submissionModal'), theme: 'bootstrap-5', placeholder: 'Select Customer...' });
 
                 let currentSubmissionId = null;
 
@@ -385,11 +385,11 @@
                 // --- DIRECT APPROVE ---
                 $('#btn-trigger-approve').click(function() {
                     Swal.fire({
-                        title: 'Konfirmasi Approve',
-                        text: "Pastikan dokumen sudah sesuai. Status akan berubah menjadi Completed.",
+                        title: 'Confirm Approval',
+                        text: "Ensure the document is correct. Status will change to Completed.",
                         icon: 'warning',
                         showCancelButton: true,
-                        confirmButtonText: 'Ya, Approve',
+                        confirmButtonText: 'Yes, Approve',
                         confirmButtonColor: '#198754'
                     }).then((result) => {
                         if (result.isConfirmed) {
@@ -429,13 +429,13 @@
 
                             let html = `
                                 <div class="row g-3">
-                                    <div class="col-12"><h6 class="fw-bold text-primary border-bottom pb-2">A. Informasi & Keuangan</h6></div>
-                                    <div class="col-md-12"><label class="small fw-bold">1. Nama</label><input type="text" class="form-control" name="nama_distributor" value="${d.nama_distributor}"></div>
-                                    <div class="col-md-6"><label class="small fw-bold">2. Kota</label><input type="text" class="form-control" name="kota" value="${d.kota}"></div>
-                                    <div class="col-md-6"><label class="small fw-bold">3. Wilayah</label><input type="text" class="form-control" name="wilayah_kerja" value="${d.wilayah_kerja}"></div>
+                                    <div class="col-12"><h6 class="fw-bold text-primary border-bottom pb-2">A. Information & Financials</h6></div>
+                                    <div class="col-md-12"><label class="small fw-bold">1. Name</label><input type="text" class="form-control" name="nama_distributor" value="${d.nama_distributor}"></div>
+                                    <div class="col-md-6"><label class="small fw-bold">2. City</label><input type="text" class="form-control" name="kota" value="${d.kota}"></div>
+                                    <div class="col-md-6"><label class="small fw-bold">3. Area</label><input type="text" class="form-control" name="wilayah_kerja" value="${d.wilayah_kerja}"></div>
 
                                     <div class="col-md-6">
-                                        <label class="small fw-bold">4. Rata-rata Sales (Rp)</label>
+                                        <label class="small fw-bold">4. Average Sales (Rp)</label>
                                         <input type="text" class="form-control rupiah-input" name="rata_rata_penjualan" value="${formatRupiah(d.rata_rata_penjualan)}">
                                     </div>
                                     <div class="col-md-3"><label class="small fw-bold">5. TOP</label>
@@ -445,19 +445,19 @@
                                         <input type="number" class="form-control" name="lead_time" value="${d.lead_time}">
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="small fw-bold">7. Faktor Fluktuasi (%)</label>
+                                        <label class="small fw-bold">7. Fluctuation Factor (%)</label>
                                         <input type="number" step="0.01" class="form-control" name="faktor_fluktuasi" value="${d.faktor_fluktuasi}">
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="small fw-bold">8. Limit Kredit (Rp)</label>
+                                        <label class="small fw-bold">8. Credit Limit (Rp)</label>
                                         <input type="text" class="form-control rupiah-input" name="limit_kredit" value="${formatRupiah(d.limit_kredit)}">
                                     </div>
                                     <div class="col-md-12">
-                                        <label class="small fw-bold">9. Nilai BG Ditetapkan (Rp)</label>
+                                        <label class="small fw-bold">9. Determined BG Amount (Rp)</label>
                                         <input type="text" class="form-control rupiah-input" name="nilai_bg_ditetapkan" value="${formatRupiah(d.nilai_bg_ditetapkan)}">
                                     </div>
                                 </div>
-                                <h6 class="fw-bold text-primary border-bottom pb-2 mt-4">B. Rincian Bank</h6>
+                                <h6 class="fw-bold text-primary border-bottom pb-2 mt-4">B. Bank Details</h6>
                             `;
 
                             if(d.details) {
@@ -469,7 +469,7 @@
                                                 <div class="d-flex justify-content-between mb-1"><strong class="text-primary small">Bank ${index+1}</strong></div>
                                                 <div class="row g-2">
                                                     <div class="col-md-4"><label class="small text-muted">Bank</label><input type="text" class="form-control form-control-sm" name="details[${item.id}][bank_name]" value="${item.bank_name}"></div>
-                                                    <div class="col-md-4"><label class="small text-muted">Cabang</label><input type="text" class="form-control form-control-sm" name="details[${item.id}][branch_name]" value="${item.branch_name}"></div>
+                                                    <div class="col-md-4"><label class="small text-muted">Branch</label><input type="text" class="form-control form-control-sm" name="details[${item.id}][branch_name]" value="${item.branch_name}"></div>
                                                     <div class="col-md-4">
                                                         <label class="small text-muted">Nominal</label>
                                                         <input type="text" class="form-control form-control-sm rupiah-input" name="details[${item.id}][nominal]" value="${formatRupiah(item.nominal)}">
@@ -542,7 +542,7 @@
                     $('#modalLabel').html('<i class="ph-bold ph-folder-plus me-2 text-primary"></i> Create New Submission');
                     $('#current_file_preview').addClass('d-none'); // Sembunyikan preview
                     $('#req-star').removeClass('d-none'); // Tampilkan bintang merah
-                    $('#upload-note').text('* Wajib diupload untuk pengajuan baru.');
+                    $('#upload-note').text('* Must be uploaded for new submissions.');
 
                     $('#submissionModal').modal('show');
                 });
@@ -573,7 +573,7 @@
 
                             // File jadi opsional kalau edit dan file sudah ada
                             $('#req-star').addClass('d-none');
-                            $('#upload-note').text('Biarkan kosong jika tidak ingin mengubah file.');
+                            $('#upload-note').text('Leave empty if you don\'t want to change the file.');
                         } else {
                             $('#current_file_preview').addClass('d-none');
                             $('#req-star').removeClass('d-none');
@@ -596,8 +596,8 @@
                     if (!id && fileInput.files.length === 0) {
                         Swal.fire({
                             icon: 'warning',
-                            title: 'Dokumen Wajib Diupload',
-                            text: 'Untuk pengajuan baru, Anda wajib mengupload dokumen yang telah ditandatangani.',
+                            title: 'Document Required',
+                            text: 'For new submissions, you must upload the signed document.',
                             confirmButtonColor: '#f59e0b'
                         });
                         return; // Stop process

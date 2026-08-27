@@ -25,11 +25,11 @@ class SuratBankMail extends Mailable
     public function build() {
         $pdf = Pdf::loadView('pdf.surat_bank', $this->dataPdf)->output();
 
-        return $this->subject('Surat Pengantar Bank - ' . $this->customer->name)
+        return $this->subject('Bank Cover Letter - ' . $this->customer->name)
                     ->view('mail.bank-distributor-mail')
                     ->with([
-                        'title' => 'Surat Pengantar Bank',
-                        'content' => 'Berikut kami lampirkan Surat Pengantar Bank untuk keperluan perpanjangan Bank Garansi.',
+                        'title' => 'Bank Cover Letter',
+                        'content' => 'Please find attached the Bank Cover Letter for Bank Guarantee extension purposes.',
                         'link' => $this->downloadLink
                     ])
                     ->attachData($pdf, 'Surat_Pengantar_Bank.pdf', [

@@ -51,11 +51,12 @@ class BgReportController extends Controller
                         return '<span class="badge bg-'.$color.' status-badge-lg"><i class="ph-bold '.$icon.' me-1"></i>'.$label.'</span>';
                     })
                     ->addColumn('action', function($row) {
-                        return '<button type="button" class="btn btn-primary fw-bold btn-print-modal shadow-sm" data-id="'.$row->id.'" data-category="transactions">
-                                    <i class="ph-bold ph-printer me-1"></i> Print
-                                </button>';
-                    })
-                    ->rawColumns(['checkbox', 'form_code', 'status', 'action'])
+                        return '<div class="action-btn-group">
+                                    <button class="btn btn-info action-btn-hover btn-print" data-id="'.$row->id.'" data-category="transactions" data-tooltip="Print Document">
+                                        <i class="ph-bold ph-printer"></i>
+                                    </button>
+                                </div>';
+                    })->rawColumns(['checkbox', 'form_code', 'status', 'action'])
                     ->make(true);
             }
 
@@ -73,11 +74,12 @@ class BgReportController extends Controller
                     ->addColumn('exp_date', fn($row) => date('d M Y', strtotime($row->exp_date)))
                     ->addColumn('nominal', fn($row) => 'Rp ' . number_format($row->bg_nominal, 0, ',', '.'))
                     ->addColumn('action', function($row) {
-                        return '<button type="button" class="btn btn-danger fw-bold btn-print-modal shadow-sm" data-id="'.$row->id.'" data-category="expiring">
-                                    <i class="ph-bold ph-envelope-open me-1"></i> Letters
-                                </button>';
-                    })
-                    ->rawColumns(['checkbox', 'bg_number', 'action'])
+                        return '<div class="action-btn-group">
+                                    <button class="btn btn-info action-btn-hover btn-print" data-id="'.$row->id.'" data-category="expiring" data-tooltip="Print Letters">
+                                        <i class="ph-bold ph-envelope-open"></i>
+                                    </button>
+                                </div>';
+                    })->rawColumns(['checkbox', 'bg_number', 'action'])
                     ->make(true);
             }
         }
@@ -187,7 +189,7 @@ class BgReportController extends Controller
         $docType = $request->doc_type;
         $category = $request->category;
         $outputMode = $request->output_mode;
-        if (empty($ids)) return back()->with('error', 'Tidak ada data dipilih.');
+        if (empty($ids)) return back()->with('error', 'No data selected.');
         $baseFileName = 'Bulk_' . ucfirst($docType) . '_' . date('Ymd_His');
         if ($outputMode == 'merged') {
             $dataset = [];
@@ -199,13 +201,13 @@ class BgReportController extends Controller
                 }
             }
 
-            if (empty($dataset)) return back()->with('error', 'Gagal memproses data.');
+            if (empty($dataset)) return back()->with('error', 'Failed to process data.');
             if ($docType == 'lampiran_d') {
                 $viewName = 'pdf.bulk_lampiran_d';
             } elseif ($docType == 'submission_form') {
                 $viewName = 'pdf.bulk_bg_confirmation';
             } else {
-                return back()->with('error', 'Fitur Merge dokumen ini belum tersedia.');
+                return back()->with('error', 'The Merge feature for this document is not yet available.');
             }
 
             // Untuk mode Merged, dataset sudah disiapkan di atas
@@ -247,7 +249,7 @@ class BgReportController extends Controller
     {
         $info = $this->prepareViewData($id, $doc_type, 'transactions');
 
-        if(!$info) return abort(404, 'Data tidak ditemukan.');
+        if(!$info) return abort(404, 'Data not found.');
 
         // --- PERBAIKAN PENTING DI SINI ---
         // Jika view yang dipanggil adalah bg_confirmation,
@@ -268,7 +270,7 @@ class BgReportController extends Controller
     {
         $info = $this->prepareViewData($id, $letter_type, 'expiring');
 
-        if(!$info) return abort(404, 'Data tidak ditemukan.');
+        if(!$info) return abort(404, 'Data not found.');
 
         $pdf = Pdf::loadView($info['view'], $info['data']);
         return $pdf->stream($info['filename']);

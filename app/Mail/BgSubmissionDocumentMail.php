@@ -26,7 +26,7 @@ class BgSubmissionDocumentMail extends Mailable
         // Decode kembali Base64 menjadi Binary PDF
         $pdfDecoded = base64_decode($this->pdfContentBase64);
 
-        return $this->subject('Dokumen Bank Garansi & Link Upload (Action Required)')
+        return $this->subject('Bank Guarantee Document & Upload Link (Action Required)')
                     ->view('mail.input-bank-upload')
                     ->with([
                         'submission' => $this->submission,

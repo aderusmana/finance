@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Notifikasi Expired H-60</title>
+    <title>Expiring BG Notification H-60</title>
 </head>
 <body style="margin: 0; padding: 0; background-color: #f4f7f6; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased;">
 
@@ -49,12 +49,12 @@
 
                     <tr>
                         <td style="padding: 40px 30px;">
-                            <p style="color: #2d3748; font-size: 18px; margin: 0 0 15px 0; font-weight: 600;">Halo, Firas.</p>
+                            <p style="color: #2d3748; font-size: 18px; margin: 0 0 15px 0; font-weight: 600;">Hello, Team.</p>
 
                             <p style="color: #4a5568; font-size: 14px; line-height: 1.6; margin-bottom: 25px;">
-                                Sistem mendeteksi adanya <strong>Bank Garansi</strong> yang akan jatuh tempo dalam kurun waktu 60 hari ({{ \Carbon\Carbon::now()->addDays(60)->format('d M Y') }}).
+                                The system has detected <strong>Bank Guarantees</strong> that will expire within 60 days ({{ \Carbon\Carbon::now()->addDays(60)->format('d M Y') }}).
                                 <br><br>
-                                Berikut adalah daftar customer beserta detail Bank Garansi yang perlu mendapatkan perhatian segera:
+                                Below is the list of customers along with the Bank Guarantee details that require immediate attention:
                             </p>
 
                             <table width="100%" border="0" cellspacing="0" cellpadding="0" style="width: 100%; border-collapse: separate; border-spacing: 0; margin-bottom: 30px; border: 1px solid #e2e8f0; border-radius: 6px; overflow: hidden;">
@@ -93,7 +93,7 @@
 
                             <div style="text-align: center; margin-top: 30px;">
                                 <a href="{{ url('/bg-recommendations') }}" style="background-color: #3182ce; color: #ffffff; padding: 12px 25px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 14px; display: inline-block; box-shadow: 0 4px 6px rgba(49, 130, 206, 0.25);">
-                                    Buka Dashboard
+                                    Open Dashboard
                                 </a>
                             </div>
 

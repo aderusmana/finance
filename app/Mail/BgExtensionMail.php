@@ -32,7 +32,7 @@ class BgExtensionMail extends Mailable
     {
         $customerName = $this->rec->customer ? $this->rec->customer->name : 'Customer';
 
-        return $this->subject('Action Required: Pengajuan Bank Garansi Tambahan (Extension) - ' . $customerName)
+        return $this->subject('Action Required: Additional Bank Guarantee Submission (Extension) - ' . $customerName)
                     ->view('mail.bg-extension');
     }
 }

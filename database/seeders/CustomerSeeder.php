@@ -16,7 +16,7 @@ class CustomerSeeder extends Seeder
         $faker = Faker::create('id_ID');
         $userId = User::first()->id ?? 1;
 
-        for ($i = 0; $i <3; $i++) {
+        for ($i = 0; $i < 5; $i++) {
 
             DB::beginTransaction();
             try {
@@ -75,6 +75,7 @@ class CustomerSeeder extends Seeder
                     'status' => 'active',
                     'status_approval' => 'approved',
                     'route_to' => '-',
+                    'pic' => $faker->name,
                     'pembagian' => 'Wilayah ' . $faker->randomDigitNotNull,
                     'customer_total' => $faker->numberBetween(1, 10),
                 ]);

@@ -18,36 +18,36 @@
         {{-- CONTENT --}}
         <div style="padding: 30px;">
             <p style="margin-top: 0;">Yth. <strong>{{ $approver->name }}</strong>,</p>
-            <p>Terdapat pengajuan Bank Garansi yang telah direvisi oleh Admin dan memerlukan persetujuan Anda.</p>
+            <p>There is a Bank Guarantee submission that has been revised by the Admin and requires your approval.</p>
 
             {{-- 1. DATA CUSTOMER --}}
             <div style="font-size: 14px; font-weight: bold; color: #1e3a8a; text-transform: uppercase; border-bottom: 2px solid #e2e8f0; padding-bottom: 5px; margin-top: 25px; margin-bottom: 15px;">
-                Data Customer
+                Customer Data
             </div>
             <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
                 <tr>
-                    <td style="padding: 8px 0; border-bottom: 1px solid #f1f5f9; color: #64748b; width: 40%;">Nama Customer</td>
+                    <td style="padding: 8px 0; border-bottom: 1px solid #f1f5f9; color: #64748b; width: 40%;">Customer Name</td>
                     <td style="padding: 8px 0; border-bottom: 1px solid #f1f5f9; font-weight: 600; color: #333; text-align: right;">{{ $submission->recommendation->customer->name }}</td>
                 </tr>
                 <tr>
-                    <td style="padding: 8px 0; border-bottom: 1px solid #f1f5f9; color: #64748b; width: 40%;">Kode Customer</td>
+                    <td style="padding: 8px 0; border-bottom: 1px solid #f1f5f9; color: #64748b; width: 40%;">Customer Code</td>
                     <td style="padding: 8px 0; border-bottom: 1px solid #f1f5f9; font-weight: 600; color: #333; text-align: right;">{{ $submission->recommendation->customer->code }}</td>
                 </tr>
             </table>
 
             {{-- 2. DATA RECOMMENDATION --}}
             <div style="font-size: 14px; font-weight: bold; color: #1e3a8a; text-transform: uppercase; border-bottom: 2px solid #e2e8f0; padding-bottom: 5px; margin-top: 25px; margin-bottom: 15px;">
-                Analisa Limit Kredit
+                Credit Limit Analysis
             </div>
             <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
                 <tr>
-                    <td style="padding: 8px 0; border-bottom: 1px solid #f1f5f9; color: #64748b; width: 40%;">Limit Disetujui (Updated)</td>
+                    <td style="padding: 8px 0; border-bottom: 1px solid #f1f5f9; color: #64748b; width: 40%;">Approved Limit (Updated)</td>
                     <td style="padding: 8px 0; border-bottom: 1px solid #f1f5f9; font-weight: 600; color: #333; text-align: right;">
                         Rp {{ number_format($submission->recommendation->credit_limit_updated, 0, ',', '.') }}
                     </td>
                 </tr>
                 <tr>
-                    <td style="padding: 8px 0; border-bottom: 1px solid #f1f5f9; color: #64748b; width: 40%;">Set BG</td>
+                    <td style="padding: 8px 0; border-bottom: 1px solid #f1f5f9; color: #64748b; width: 40%;">Set BG (IDR)</td>
                     <td style="padding: 8px 0; border-bottom: 1px solid #f1f5f9; font-weight: 600; color: #333; text-align: right;">
                         Rp {{ number_format($submission->recommendation->set_bg, 0, ',', '.') }}
                     </td>
@@ -73,7 +73,7 @@
             </div>
 
             <p style="text-align: center; font-size: 11px; color: #94a3b8; margin-top: 20px;">
-                Klik tombol di atas untuk memproses. Link ini valid selama status masih Pending.
+                Click the button above to process. This link is valid as long as the status is still Pending.
             </p>
         </div>
     </div>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upload Dokumen - {{ $submission->recommendation->customer->name ?? 'Customer' }}</title>
+    <title>Upload Document - {{ $submission->recommendation->customer->name ?? 'Customer' }}</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.0/font/bootstrap-icons.min.css">
@@ -19,8 +19,8 @@
 
                 {{-- HEADER --}}
                 <div style="background: linear-gradient(135deg, #0f172a 0%, #1e40af 100%); padding: 40px 30px; text-align: center; color: white; position: relative;">
-                    <h3 class="fw-bold mb-1" style="font-weight: 700;">Upload Dokumen</h3>
-                    <p class="mb-0 opacity-75 small" style="opacity: 0.75;">Verifikasi Bank Garansi</p>
+                    <h3 class="fw-bold mb-1" style="font-weight: 700;">Upload Document</h3>
+                    <p class="mb-0 opacity-75 small" style="opacity: 0.75;">Bank Guarantee Verification</p>
 
                     <div style="background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(5px); padding: 8px 16px; border-radius: 50px; font-size: 0.85rem; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; margin-top: 15px; border: 1px solid rgba(255,255,255,0.2);">
                         <i class="bi bi-building"></i>
@@ -40,14 +40,14 @@
 
                         <h6 class="fw-bold text-primary mb-3" style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1.5px; display: flex; align-items: center; gap: 8px;">
                             <span style="width: 24px; height: 2px; background: #3b82f6; display: inline-block;"></span>
-                            Detail Pengajuan
+                            Submission Details
                         </h6>
 
                         <div class="d-flex flex-column gap-3 position-relative">
                             {{-- Item 1: Kode --}}
                             <div class="d-flex justify-content-between align-items-center border-bottom border-primary border-opacity-10 pb-2">
                                 <span class="text-muted small d-flex align-items-center gap-2">
-                                    <i class="bi bi-qr-code text-primary opacity-75"></i> Kode
+                                    <i class="bi bi-qr-code text-primary opacity-75"></i> Code
                                 </span>
                                 <span class="fw-bold text-primary" style="font-family: monospace; font-size: 0.95rem; letter-spacing: 0.5px;">{{ $submission->form_code }}</span>
                             </div>
@@ -69,7 +69,7 @@
                                 {{-- Item 3: Nominal --}}
                                 <div class="d-flex justify-content-between align-items-center pt-1">
                                     <span class="text-muted small d-flex align-items-center gap-2">
-                                        <i class="bi bi-cash-stack text-success"></i> Nominal
+                                        <i class="bi bi-cash-stack text-success"></i> Amount
                                     </span>
                                     <span class="fw-bold text-success" style="font-size: 1.1rem;">
                                         Rp {{ number_format($bg->bg_nominal, 0, ',', '.') }}
@@ -77,7 +77,7 @@
                                 </div>
                             @else
                                 <div class="text-center small text-danger mt-2 bg-white rounded p-2 border border-danger border-opacity-25">
-                                    <i class="bi bi-exclamation-circle me-1"></i> Data Rincian Bank tidak ditemukan.
+                                    <i class="bi bi-exclamation-circle me-1"></i> Bank Details data not found.
                                 </div>
                             @endif
                         </div>
@@ -103,8 +103,8 @@
                                 <i class="bi bi-cloud-arrow-up-fill icon-cloud" style="font-size: 2rem; color: #3b82f6;"></i>
                             </div>
 
-                            <h6 class="fw-bold text-dark mb-1">Klik atau Drop File di Sini</h6>
-                            <p class="text-muted small mb-0">Format PDF (Maks. 5MB)</p>
+                            <h6 class="fw-bold text-dark mb-1">Click or Drop File Here</h6>
+                            <p class="text-muted small mb-0">PDF Format (Max. 5MB)</p>
 
                             {{-- FILE INFO --}}
                             <div id="fileInfo" class="mt-3" style="display: none;">
@@ -124,7 +124,7 @@
                         {{-- TOMBOL SUBMIT --}}
                         <div class="d-grid mt-4">
                             <button type="submit" class="btn btn-primary w-100" id="btnSubmit" style="background: linear-gradient(135deg, #0f172a 0%, #1e40af 100%); border: none; padding: 14px; font-weight: 700; border-radius: 12px; color: white; box-shadow: 0 4px 6px -1px rgba(30, 64, 175, 0.2); transition: all 0.2s;">
-                                <i class="bi bi-send-fill me-2"></i> Kirim Dokumen
+                                <i class="bi bi-send-fill me-2"></i> Send Document
                             </button>
                         </div>
                     </form>
@@ -145,8 +145,8 @@
         <div class="modal-content border-0 shadow-lg" style="border-radius: 16px;">
             <div class="modal-body text-center p-4">
                 <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;"></div>
-                <h6 class="fw-bold text-dark mb-1" id="loadingTitle">Memproses File...</h6>
-                <p class="text-muted small mb-3" id="loadingText">Mohon tunggu sebentar.</p>
+                <h6 class="fw-bold text-dark mb-1" id="loadingTitle">Processing File...</h6>
+                <p class="text-muted small mb-3" id="loadingText">Please wait a moment.</p>
                 <div class="progress" style="height: 8px; border-radius: 10px; background-color: #e2e8f0;">
                     <div id="modalProgressBar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%; background: linear-gradient(135deg, #0f172a 0%, #1e40af 100%); border-radius: 10px;"></div>
                 </div>
@@ -212,17 +212,17 @@
                 const file = fileInput.files[0];
 
                 if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
-                    Swal.fire({ icon: 'error', title: 'Format Salah', text: 'Mohon upload file PDF.', confirmButtonColor: '#1e40af' });
+                    Swal.fire({ icon: 'error', title: 'Invalid Format', text: 'Please upload a PDF file.', confirmButtonColor: '#1e40af' });
                     resetFile();
                     return;
                 }
                 if (file.size > MAX_SIZE_BYTES) {
-                    Swal.fire({ icon: 'error', title: 'File Terlalu Besar', text: `Maksimal ukuran file adalah ${MAX_SIZE_MB}MB.`, confirmButtonColor: '#1e40af' });
+                    Swal.fire({ icon: 'error', title: 'File Too Large', text: `Maximum file size is ${MAX_SIZE_MB}MB.`, confirmButtonColor: '#1e40af' });
                     resetFile();
                     return;
                 }
 
-                runLoadingAnimation('Memproses File...', 'Membaca dokumen...', () => {
+                runLoadingAnimation('Processing File...', 'Reading document...', () => {
                     fileNameDisplay.textContent = file.name;
                     fileSizeDisplay.textContent = formatBytes(file.size);
                     fileInfo.style.display = 'block';
@@ -237,10 +237,10 @@
         form.addEventListener('submit', function(e) {
             e.preventDefault();
             if(fileInput.files.length === 0) {
-                Swal.fire({ icon: 'warning', title: 'Belum Ada File', text: 'Silahkan upload file terlebih dahulu.', confirmButtonColor: '#1e40af' });
+                Swal.fire({ icon: 'warning', title: 'No File', text: 'Please upload a file first.', confirmButtonColor: '#1e40af' });
                 return;
             }
-            runLoadingAnimation('Mengupload...', 'Jangan tutup halaman ini...', () => {
+            runLoadingAnimation('Uploading...', 'Do not close this page...', () => {
                 form.submit();
             });
         });
@@ -258,7 +258,7 @@
                 if (width === 100) {
                     clearInterval(interval);
                     setTimeout(() => {
-                        if(title !== 'Mengupload...') loadingModal.hide();
+                        if(title !== 'Uploading...') loadingModal.hide();
                         if(callback) callback();
                     }, 500);
                 }

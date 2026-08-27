@@ -19,7 +19,7 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h4 class="table-title mb-1"><i class="ph-fill ph-clock-counter-clockwise fs-3"></i>Completed Transactions & Changes</h4>
-                            <small class="text-white opacity-75 f-s-12">Rekap jejak audit, revisi nominal, dan status penyelesaian Bank Garansi.</small>
+                            <small class="text-white opacity-75 f-s-12">Summary of audit trails, nominal revisions, and Bank Guarantee completion status.</small>
                         </div>
                         <div>
                             <a href="{{ route('bg-histories.export') }}" class="btn btn-success text-white fw-bold">

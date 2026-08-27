@@ -15,15 +15,15 @@
                     <tr>
                         <td style="background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); padding: 40px; text-align: center;">
                             <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 700; letter-spacing: 0.5px;">Existing Update</h1>
-                            <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0; font-size: 16px;">Pembaruan/Perubahan Nominal Bank Garansi</p>
+                            <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0; font-size: 16px;">Update/Change of Bank Guarantee Nominal</p>
                         </td>
                     </tr>
 
                     <tr>
                         <td style="padding: 40px;">
                             <p style="color: #334155; font-size: 16px; line-height: 24px; margin-bottom: 24px;">
-                                Halo Tim, <br><br>
-                                Terdapat pembaruan data untuk Customer <strong>Existing</strong> (Perubahan Nominal/Renewal). Data historis telah tersimpan.
+                                Hello Team, <br><br>
+                                There is an update for <strong>Existing</strong> Customers (Change of Nominal/Renewal). Historical data has been saved.
                             </p>
 
                             <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">

@@ -68,7 +68,7 @@ class CustomerBgPortalController extends Controller
             $msgType = '';
 
             if ($action === 'existing' && !empty($metadata['target_bg_id'])) {
-                $msgType = 'Update Data Existing';
+                $msgType = 'Update Existing Data';
                 $bg = BankGaransi::findOrFail($metadata['target_bg_id']);
                 $oldNominal = $bg->bg_nominal;
                 $newNominal = (float) $request->details[0]['nominal'];
@@ -100,7 +100,7 @@ class CustomerBgPortalController extends Controller
                         'difference'  => $newNominal - $oldNominal,
                         'form_code'   => $submission->form_code
                     ])
-                    ->log("Customer melakukan update EXISTING: Nominal berubah dari Rp " . number_format($oldNominal) . " menjadi Rp " . number_format($newNominal));
+                    ->log("Customer performed EXISTING update: Nominal changed from Rp " . number_format($oldNominal) . " to Rp " . number_format($newNominal));
 
                 $dataset = [[
                     'bg' => $bg,
@@ -121,7 +121,7 @@ class CustomerBgPortalController extends Controller
                         ->queue(new BgUpdateDocumentMail($submission, base64_encode($pdf->output()), 'existing'));
                 }
             } else {
-                $msgType = ($action === 'extension') ? 'Input Extension BG' : 'Input BG Baru';
+                $msgType = ($action === 'extension') ? 'Input Extension BG' : 'Input New BG';
                 $currentYear = date('Y');
                 $existingCount = BankGaransi::where('customer_id', $rec->customer_id)
                                     ->whereYear('created_at', $currentYear)
@@ -145,8 +145,8 @@ class CustomerBgPortalController extends Controller
                     $bg->update(['base_bg_id' => $bg->id]);
 
                     $logMessage = ($action === 'extension')
-                        ? "Customer mengajukan EXTENSION BG Baru senilai Rp " . number_format($nominal)
-                        : "Customer mengajukan BG BARU senilai Rp " . number_format($nominal);
+                        ? "Customer submitted New EXTENSION BG for Rp " . number_format($nominal)
+                        : "Customer submitted NEW BG for Rp " . number_format($nominal);
 
                     activity()
                         ->causedBy($rec->customer)
@@ -211,7 +211,7 @@ class CustomerBgPortalController extends Controller
 
                 Notification::send($admins, new SystemNotification(
                     'Customer Input Data',
-                    "Customer <b>{$rec->customer->name}</b> telah menyelesaikan {$msgType} & Form Generated.",
+                    "Customer <b>{$rec->customer->name}</b> has completed {$msgType} & Form Generated.",
                     route('bg-submissions.index'),
                     'ph-file-text',
                     'info'
@@ -226,12 +226,12 @@ class CustomerBgPortalController extends Controller
                 'type'        => 'input_multi',
                 'downloadUrl' => $downloadUrl,
                 'uploadToken' => $submission->token,
-                'message'     => 'Berhasil! Dokumen telah diproses. Silakan cek email Anda, tandatangani dokumen, lalu Upload kembali.',
+                'message'     => 'Success! Document has been processed. Please check your email, sign the document, and Upload it back.',
             ]);
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->with('error', 'Terjadi kesalahan sistem: ' . $e->getMessage());
+            return back()->with('error', 'System error occurred: ' . $e->getMessage());
         }
     }
 
@@ -304,7 +304,7 @@ class CustomerBgPortalController extends Controller
             return $pdf->download($fileName);
 
         } catch (\Exception $e) {
-            abort(404, 'File dokumen tidak ditemukan atau terjadi kesalahan sistem.');
+            abort(404, 'Document file not found or system error occurred.');
         }
     }
 
@@ -376,20 +376,20 @@ class CustomerBgPortalController extends Controller
 
         if (!$submission) {
             Log::error("Token tidak ditemukan: " . $token);
-            return back()->with('error', 'Token kadaluarsa atau tidak valid.');
+            return back()->with('error', 'Token is expired or invalid.');
         }
 
         if ($submission->status != 'awaiting_upload') {
             Log::warning("Status submission bukan awaiting_upload: " . $submission->status);
-            return back()->with('error', 'Dokumen sudah diupload sebelumnya.');
+            return back()->with('error', 'Document has already been uploaded.');
         }
 
         $request->validate([
             'signed_document' => 'required|mimes:pdf|max:5120',
         ], [
-            'signed_document.required' => 'File dokumen wajib diunggah.',
-            'signed_document.mimes' => 'Format file harus PDF.',
-            'signed_document.max' => 'Ukuran file maksimal 5MB.',
+            'signed_document.required' => 'Document file is required.',
+            'signed_document.mimes' => 'File format must be PDF.',
+            'signed_document.max' => 'Maximum file size is 5MB.',
         ]);
 
         try {
@@ -418,7 +418,7 @@ class CustomerBgPortalController extends Controller
 
         } catch (\Exception $e) {
             Log::error("Error Exception saat upload: " . $e->getMessage());
-            return back()->with('error', 'Gagal upload (Server Error): ' . $e->getMessage());
+            return back()->with('error', 'Upload failed (Server Error): ' . $e->getMessage());
         }
     }
 
@@ -450,7 +450,7 @@ class CustomerBgPortalController extends Controller
             return $pdf->download($fileName);
 
         } catch (\Exception $e) {
-            abort(404, 'Dokumen tidak ditemukan atau link kadaluarsa.');
+            abort(404, 'Document not found or link expired.');
         }
     }
 
@@ -514,7 +514,7 @@ class CustomerBgPortalController extends Controller
             return $pdf->download('Lampiran_D_' . $safeName . '.pdf');
 
         } catch (\Exception $e) {
-            abort(404, 'Dokumen tidak ditemukan atau terjadi kesalahan: ' . $e->getMessage());
+            abort(404, 'Document not found or error occurred: ' . $e->getMessage());
         }
     }
 }

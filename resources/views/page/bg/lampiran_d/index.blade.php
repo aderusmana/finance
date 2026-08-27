@@ -103,15 +103,15 @@
                             {{-- FORM FIELDS SAMA SEPERTI SEBELUMNYA --}}
                             <div class="col-12 border-bottom pb-2 fw-bold text-primary">Data Customer</div>
                             <div class="col-md-6">
-                                <label class="form-label small">Nama Customer</label>
+                                <label class="form-label small">Customer Name</label>
                                 <input type="text" class="form-control" name="customer_name" id="customer_name">
                             </div>
                             <div class="col-md-3">
-                                <label class="form-label small">Kota</label>
+                                <label class="form-label small">City</label>
                                 <input type="text" class="form-control" name="customer_city" id="customer_city">
                             </div>
                             <div class="col-md-3">
-                                <label class="form-label small">Wilayah</label>
+                                <label class="form-label small">Area</label>
                                 <input type="text" class="form-control" name="customer_area" id="customer_area">
                             </div>
 
@@ -138,17 +138,17 @@
                                 <input type="number" class="form-control" name="credit_limit" id="credit_limit">
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label small">Set BG (Ditetapkan)</label>
+                                <label class="form-label small">Set BG (Determined)</label>
                                 <input type="number" class="form-control" name="set_bg" id="set_bg">
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label small">BG Nominal (Diserahkan)</label>
+                                <label class="form-label small">BG Nominal (Submitted)</label>
                                 <input type="number" class="form-control" name="bg_nominal" id="bg_nominal">
                             </div>
 
                             <div class="col-12 mt-3">
-                                <label class="form-label fw-bold">Revision Remarks (Alasan Revisi)</label>
-                                <textarea class="form-control" name="remarks" rows="2" placeholder="Contoh: Koreksi nilai sales bulan lalu..." required></textarea>
+                                <label class="form-label fw-bold">Revision Remarks</label>
+                                <textarea class="form-control" name="remarks" rows="2" placeholder="Example: Corrected last month's sales value..." required></textarea>
                             </div>
                         </div>
                     </div>
@@ -311,15 +311,15 @@
                             <div class="card-body">
                                 <div class="row g-3">
                                     <div class="col-md-6">
-                                        <small class="text-muted d-block mb-1" style="font-size: 11px;">NAMA CUSTOMER</small>
+                                        <small class="text-muted d-block mb-1" style="font-size: 11px;">CUSTOMER NAME</small>
                                         <span class="fw-semibold text-dark">${cName}</span>
                                     </div>
                                     <div class="col-md-3">
-                                        <small class="text-muted d-block mb-1" style="font-size: 11px;">KOTA</small>
+                                        <small class="text-muted d-block mb-1" style="font-size: 11px;">CITY</small>
                                         <span class="fw-semibold text-dark">${cCity}</span>
                                     </div>
                                     <div class="col-md-3">
-                                        <small class="text-muted d-block mb-1" style="font-size: 11px;">WILAYAH</small>
+                                        <small class="text-muted d-block mb-1" style="font-size: 11px;">AREA</small>
                                         <span class="fw-semibold text-dark">${cArea}</span>
                                     </div>
                                 </div>
@@ -333,30 +333,30 @@
                             <div class="card-body">
                                 <div class="row g-3">
                                     <div class="col-md-4">
-                                        <small class="text-muted d-block mb-1" style="font-size: 11px;">Rata-rata Penjualan</small>
+                                        <small class="text-muted d-block mb-1" style="font-size: 11px;">Average Sales</small>
                                         <span class="fw-semibold text-dark">${fmt(avg)}</span>
                                     </div>
                                     <div class="col-md-4">
                                         <small class="text-muted d-block mb-1" style="font-size: 11px;">TOP / Lead Time</small>
-                                        <span class="fw-semibold text-dark">${top} Hari / ${lead} Hari</span>
+                                        <span class="fw-semibold text-dark">${top} Days / ${lead} Days</span>
                                     </div>
                                     <div class="col-md-4">
-                                        <small class="text-muted d-block mb-1" style="font-size: 11px;">Faktor Fluktuasi</small>
+                                        <small class="text-muted d-block mb-1" style="font-size: 11px;">Fluctuation Factor</small>
                                         <span class="fw-semibold text-dark">${infl}%</span>
                                     </div>
                                     <div class="col-md-12">
                                         <div class="p-3 bg-light rounded border mt-2">
                                             <div class="row text-center">
                                                 <div class="col-md-4 border-end">
-                                                    <small class="text-muted d-block mb-1" style="font-size: 11px;">Limit Kredit</small>
+                                                    <small class="text-muted d-block mb-1" style="font-size: 11px;">Credit Limit</small>
                                                     <span class="fw-bold text-danger fs-6">${fmt(limit)}</span>
                                                 </div>
                                                 <div class="col-md-4 border-end">
-                                                    <small class="text-muted d-block mb-1" style="font-size: 11px;">Nilai BG Ditetapkan</small>
+                                                    <small class="text-muted d-block mb-1" style="font-size: 11px;">Determined BG Amount</small>
                                                     <span class="fw-bold text-success fs-6">${fmt(setBg)}</span>
                                                 </div>
                                                 <div class="col-md-4">
-                                                    <small class="text-muted d-block mb-1" style="font-size: 11px;">Nilai BG Diserahkan</small>
+                                                    <small class="text-muted d-block mb-1" style="font-size: 11px;">Submitted BG Amount</small>
                                                     <span class="fw-bold text-primary fs-6">${fmt(bgNom)}</span>
                                                 </div>
                                             </div>

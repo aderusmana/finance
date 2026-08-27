@@ -24,9 +24,8 @@
                         <i class="ph-duotone ph-printer fs-2"></i>
                     </div>
                     <div>
-                        <h5 class="fw-bold text-dark mb-2">Pusat Cetak Dokumen</h5>
-                        <p class="mb-0 text-muted" style="font-size: 0.9rem; line-height: 1.6; max-width: 700px;">
-                            Gunakan halaman ini untuk mencetak dokumen fisik secara massal. Anda dapat memilih beberapa customer sekaligus dan mengunduhnya dalam bentuk <strong>ZIP</strong> (terpisah) atau <strong>PDF Gabungan</strong> (merged).
+                        <h5 class="fw-bold text-dark mb-2">Document Print Center</h5>
+                            Use this page to print physical documents in bulk. You can select multiple customers at once and download them in <strong>ZIP</strong> (separate) or <strong>Merged PDF</strong> format.
                         </p>
                     </div>
                 </div>
@@ -45,7 +44,7 @@
                                     <div class="icon-wrapper"><i class="ph-bold ph-files"></i></div>
                                     <div>
                                         <div class="fw-bold fs-6 mb-1 text-dark">Transaction Documents</div>
-                                        <div class="small text-muted">Cetak Lampiran D & Formulir Pengajuan.</div>
+                                        <div class="small text-muted">Print Attachment D & Submission Form.</div>
                                     </div>
                                 </div>
                             </button>
@@ -57,7 +56,7 @@
                                     <div class="icon-wrapper"><i class="ph-bold ph-envelope-open"></i></div>
                                     <div>
                                         <div class="fw-bold fs-6 mb-1 text-dark">Expiring Letters</div>
-                                        <div class="small text-muted">Cetak Surat Pengantar Bank & Distributor.</div>
+                                        <div class="small text-muted">Print Bank & Distributor Cover Letters.</div>
                                     </div>
                                 </div>
                             </button>
@@ -76,14 +75,14 @@
                                         {{-- KIRI: JUDUL --}}
                                         <div>
                                             <h6 class="fw-bold mb-0 text-dark d-flex align-items-center gap-2">
-                                                <i class="ph-fill ph-stack text-primary"></i> Daftar Dokumen Transaksi
+                                                <i class="ph-fill ph-stack text-primary"></i> Transaction Document List
                                             </h6>
-                                            <div class="small text-muted mt-1">Data real-time dari database</div>
+                                            <div class="small text-muted mt-1">Real-time data from database</div>
                                         </div>
 
                                         {{-- KANAN: CUSTOM SEARCH INPUT --}}
                                         <div class="position-relative" style="min-width: 250px;">
-                                            <input type="text" id="searchTrans" class="form-control ps-5 rounded-pill border-0 bg-light" placeholder="Cari Ref No / Customer...">
+                                            <input type="text" id="searchTrans" class="form-control ps-5 rounded-pill border-0 bg-light" placeholder="Search Ref No / Customer...">
                                             <i class="ph-bold ph-magnifying-glass position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
                                         </div>
                                     </div>
@@ -115,14 +114,14 @@
 
                                         <div>
                                             <h6 class="fw-bold mb-0 text-dark d-flex align-items-center gap-2">
-                                                <i class="ph-fill ph-clock-countdown text-warning"></i> Daftar BG Jatuh Tempo
+                                                <i class="ph-fill ph-clock-countdown text-warning"></i> Expiring BG List
                                             </h6>
-                                            <div class="small text-muted mt-1">Menampilkan BG Aktif yang mendekati Expired</div>
+                                            <div class="small text-muted mt-1">Showing Active BGs that are nearing Expiration</div>
                                         </div>
 
                                         {{-- CUSTOM SEARCH INPUT --}}
                                         <div class="position-relative" style="min-width: 250px;">
-                                            <input type="text" id="searchLetters" class="form-control ps-5 rounded-pill border-0 bg-light" placeholder="Cari No BG / Customer...">
+                                            <input type="text" id="searchLetters" class="form-control ps-5 rounded-pill border-0 bg-light" placeholder="Search BG Number / Customer...">
                                             <i class="ph-bold ph-magnifying-glass position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
                                         </div>
                                     </div>
@@ -196,7 +195,7 @@
             </button>
 
             {{-- 4. TOMBOL CANCEL (BARU) --}}
-            <button type="button" id="btnCancelSelection" class="btn btn-light text-primary fw-bold rounded-pill shadow-sm d-flex align-items-center px-3" title="Batalkan Pilihan">
+            <button type="button" id="btnCancelSelection" class="btn btn-light text-primary fw-bold rounded-pill shadow-sm d-flex align-items-center px-3" title="Cancel Selection">
                 <i class="ph-bold ph-x me-2"></i> Cancel
             </button>
         </form>
@@ -230,11 +229,11 @@
             const docOptions = {
                 'transactions': [
                     {val: 'lampiran_d', text: 'Lampiran D'},
-                    {val: 'submission_form', text: 'Formulir Pengajuan'}
+                    {val: 'submission_form', text: 'Submission Form'}
                 ],
                 'expiring': [
-                    {val: 'distributor', text: 'Surat Distributor'},
-                    {val: 'bank', text: 'Surat Bank'}
+                    {val: 'distributor', text: 'Distributor Letter'},
+                    {val: 'bank', text: 'Bank Letter'}
                 ]
             };
 
@@ -391,15 +390,15 @@
                 let contentDesc = '';
 
                 if (modeVal === 'merged') {
-                    modeLabel = '<span class="badge bg-primary">Merged PDF (1 File Gabungan)</span>';
-                    contentDesc = `Semua dokumen <b>${docText}</b> milik <b>${count} Customer</b> akan digabung menjadi satu file PDF panjang (multi-page).`;
+                    modeLabel = '<span class="badge bg-primary">Merged PDF (1 Merged File)</span>';
+                    contentDesc = `All <b>${docText}</b> documents of <b>${count} Customers</b> will be merged into a single multi-page PDF file.`;
                 } else {
-                    modeLabel = '<span class="badge bg-warning text-dark">ZIP Archive (Terpisah)</span>';
-                    contentDesc = `Anda akan mengunduh folder ZIP yang berisi <b>${count} file PDF</b> (satu file per customer) untuk dokumen <b>${docText}</b>.`;
+                    modeLabel = '<span class="badge bg-warning text-dark">ZIP Archive (Separate)</span>';
+                    contentDesc = `You will download a ZIP folder containing <b>${count} PDF files</b> (one file per customer) for <b>${docText}</b> documents.`;
                 }
 
                 Swal.fire({
-                    title: 'Konfirmasi Download',
+                    title: 'Confirm Download',
                     html: `
                         <div class="text-start border p-3 rounded bg-light mt-2">
                             <table class="table table-borderless table-sm mb-0">
@@ -408,7 +407,7 @@
                                     <td>${modeLabel}</td>
                                 </tr>
                                 <tr>
-                                    <td class="text-muted small">Jenis Dokumen</td>
+                                    <td class="text-muted small">Document Type</td>
                                     <td class="fw-bold text-dark">${docText}</td>
                                 </tr>
                                 <tr>
@@ -426,8 +425,8 @@
                     showCancelButton: true,
                     confirmButtonColor: '#2563eb',
                     cancelButtonColor: '#64748b',
-                    confirmButtonText: '<i class="ph-bold ph-download-simple me-1"></i> Ya, Proses Download',
-                    cancelButtonText: 'Batal',
+                    confirmButtonText: '<i class="ph-bold ph-download-simple me-1"></i> Yes, Process Download',
+                    cancelButtonText: 'Cancel',
                     reverseButtons: true,
                     focusConfirm: false
                 }).then((result) => {
@@ -436,7 +435,7 @@
                         const Toast = Swal.mixin({
                             toast: true, position: 'top-end', showConfirmButton: false, timer: 3000
                         });
-                        Toast.fire({ icon: 'success', title: 'Download sedang diproses...' });
+                        Toast.fire({ icon: 'success', title: 'Download in process...' });
                     }
                 });
             });
@@ -453,7 +452,7 @@
                 let baseUrl = "{{ url('bg/reports') }}";
 
                 if (category === 'transactions') {
-                    modalTitle = '<i class="ph-bold ph-printer me-2 text-light"></i> Cetak Dokumen Transaksi';
+                    modalTitle = '<i class="ph-bold ph-printer me-2 text-light"></i> Print Transaction Document';
                     
                     // URL Route untuk Lampiran D & Formulir
                     let urlLampiranD = `${baseUrl}/download/${id}/lampiran_d`;
@@ -468,7 +467,7 @@
                                             <i class="ph-duotone ph-file-text fs-1"></i>
                                         </div>
                                         <h6 class="fw-bold text-dark mb-1">Lampiran D</h6>
-                                        <span class="text-muted small">Cetak draft perhitungan limit</span>
+                                        <span class="text-muted small">Print limit calculation draft</span>
                                     </div>
                                 </a>
                             </div>
@@ -478,15 +477,15 @@
                                         <div class="bg-danger bg-opacity-10 text-danger d-inline-flex align-items-center justify-content-center rounded-circle mb-3" style="width: 60px; height: 60px;">
                                             <i class="ph-duotone ph-file-pdf fs-1"></i>
                                         </div>
-                                        <h6 class="fw-bold text-dark mb-1">Formulir Pengajuan</h6>
-                                        <span class="text-muted small">Cetak bukti pengajuan BG</span>
+                                        <h6 class="fw-bold text-dark mb-1">Submission Form</h6>
+                                        <span class="text-muted small">Print BG submission proof</span>
                                     </div>
                                 </a>
                             </div>
                         </div>
                     `;
                 } else if (category === 'expiring') {
-                    modalTitle = '<i class="ph-bold ph-envelope-open me-2 text-light"></i> Cetak Surat Pengantar';
+                    modalTitle = '<i class="ph-bold ph-envelope-open me-2 text-light"></i> Print Cover Letter';
                     
                     // URL Route untuk Surat Distributor & Surat Bank
                     let urlDistributor = `${baseUrl}/letters/${id}/distributor`;
@@ -500,8 +499,8 @@
                                         <div class="bg-primary bg-opacity-10 text-primary d-inline-flex align-items-center justify-content-center rounded-circle mb-3" style="width: 60px; height: 60px;">
                                             <i class="ph-duotone ph-buildings fs-1"></i>
                                         </div>
-                                        <h6 class="fw-bold text-dark mb-1">Surat Distributor</h6>
-                                        <span class="text-muted small">Notifikasi resmi ke customer</span>
+                                        <h6 class="fw-bold text-dark mb-1">Distributor Letter</h6>
+                                        <span class="text-muted small">Official notification to customer</span>
                                     </div>
                                 </a>
                             </div>
@@ -511,8 +510,8 @@
                                         <div class="bg-success bg-opacity-10 text-success d-inline-flex align-items-center justify-content-center rounded-circle mb-3" style="width: 60px; height: 60px;">
                                             <i class="ph-duotone ph-bank fs-1"></i>
                                         </div>
-                                        <h6 class="fw-bold text-dark mb-1">Surat Bank</h6>
-                                        <span class="text-muted small">Pengantar pencairan untuk bank</span>
+                                        <h6 class="fw-bold text-dark mb-1">Bank Letter</h6>
+                                        <span class="text-muted small">Disbursement letter for bank</span>
                                     </div>
                                 </a>
                             </div>

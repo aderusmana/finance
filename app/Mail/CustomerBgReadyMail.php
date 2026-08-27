@@ -52,7 +52,7 @@ class CustomerBgReadyMail extends Mailable
 
         $pdfLampiranD = Pdf::loadView('pdf.lampiran_d', $data)->output();
 
-        return $this->subject('Dokumen Perhitungan BG (Lampiran D) - ' . $customer->name)
+        return $this->subject('BG Calculation Document (Attachment D) - ' . $customer->name)
                     ->view('mail.mail-lampiran-d')
                     ->attachData($pdfLampiranD, 'Lampiran_D.pdf', ['mime' => 'application/pdf']);
     }

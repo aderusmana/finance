@@ -31,7 +31,7 @@ class CustomerFillFormNotification extends Mailable
      */
     public function build()
     {
-        return $this->subject('Konfirmasi & Pengisian Form Bank Garansi')
+        return $this->subject('Confirmation & Bank Guarantee Form')
                     ->view('mail.input-bank-upload')
                     ->with([
                         'recommendation' => $this->recommendation,

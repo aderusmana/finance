@@ -17,7 +17,7 @@
             <div class="alert alert-info d-flex align-items-center mb-4">
                 <i class="ph-bold ph-info me-2 fs-4"></i>
                 <div>
-                    Halaman ini menampilkan daftar pengajuan yang <strong>Menunggu Persetujuan (Waiting Approval)</strong> dari Finance.
+                    This page displays a list of submissions that are <strong>Waiting Approval</strong> from Finance.
                 </div>
             </div>
 
@@ -48,7 +48,7 @@
                     <div class="d-flex align-items-center justify-content-between w-100">
                         <div>
                             <h5 class="modal-title fw-bold" id="modalTitle" style="color: #1e293b; font-size: 1.2rem;">Review Submission</h5>
-                            <p class="mb-0 text-muted" style="font-size: 0.85rem;">Verifikasi data Lampiran D sebelum mengambil keputusan.</p>
+                            <p class="mb-0 text-muted" style="font-size: 0.85rem;">Verify Attachment D data before making a decision.</p>
                         </div>
                         <div class="d-flex align-items-center gap-2">
                             <span class="badge" id="display_form_code" style="background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; padding: 8px 12px; border-radius: 30px; font-weight: 600; font-size: 0.8rem;">LOADING...</span>
@@ -97,19 +97,19 @@
                                 <div style="{{ $cardStyle }}">
                                     <div style="font-size: 0.7rem; text-transform: uppercase; color: #94a3b8; font-weight: 700;">TOP / Lead Time</div>
                                     <div style="font-size: 0.95rem; font-weight: 700; color: #334155; margin-top: 4px;">
-                                        <span id="d_top">..</span> / <span id="d_lead">..</span> Hari
+                                        <span id="d_top">..</span> / <span id="d_lead">..</span> Days
                                     </div>
                                 </div>
                             </div>
                             <div class="col-md-3 col-6">
                                 <div style="{{ $cardStyle }}">
-                                    <div style="font-size: 0.7rem; text-transform: uppercase; color: #94a3b8; font-weight: 700;">Inflasi</div>
+                                    <div style="font-size: 0.7rem; text-transform: uppercase; color: #94a3b8; font-weight: 700;">Inflation</div>
                                     <div style="font-size: 0.95rem; font-weight: 700; color: #334155; margin-top: 4px;" id="d_inflasi">...</div>
                                 </div>
                             </div>
                             <div class="col-md-3 col-6">
                                 <div style="{{ $cardStyle }}">
-                                    <div style="font-size: 0.7rem; text-transform: uppercase; color: #94a3b8; font-weight: 700;">Periode</div>
+                                    <div style="font-size: 0.7rem; text-transform: uppercase; color: #94a3b8; font-weight: 700;">Period</div>
                                     <div style="font-size: 0.85rem; font-weight: 600; color: #334155; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="d_periode">...</div>
                                 </div>
                             </div>
@@ -123,19 +123,19 @@
                         <div class="row g-3 mb-4">
                             <div class="col-md-4">
                                 <div style="background: #eff6ff; border: 1px solid #dbeafe; border-radius: 12px; padding: 15px; text-align: center;">
-                                    <div style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #3b82f6; margin-bottom: 5px;">Limit Kredit (Updated)</div>
+                                    <div style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #3b82f6; margin-bottom: 5px;">Credit Limit (Updated)</div>
                                     <div style="font-size: 1.1rem; font-weight: 800; color: #1d4ed8;" id="d_limit">...</div>
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div style="background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; text-align: center;">
-                                    <div style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #64748b; margin-bottom: 5px;">Nilai BG Ditetapkan</div>
+                                    <div style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #64748b; margin-bottom: 5px;">Determined BG Amount</div>
                                     <div style="font-size: 1.1rem; font-weight: 800; color: #334155;" id="d_bg_tetap">...</div>
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div style="background: #f0fdf4; border: 1px solid #dcfce7; border-radius: 12px; padding: 15px; text-align: center; position: relative; overflow: hidden;">
-                                    <div style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #16a34a; margin-bottom: 5px;">Total BG Diserahkan</div>
+                                    <div style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #16a34a; margin-bottom: 5px;">Total Submitted BG</div>
                                     <div style="font-size: 1.1rem; font-weight: 800; color: #15803d;" id="d_bg_serah">...</div>
                                     {{-- Icon Background --}}
                                     <i class="ph-duotone ph-check-circle" style="position: absolute; bottom: -10px; right: -10px; font-size: 4rem; color: #22c55e; opacity: 0.1;"></i>
@@ -146,7 +146,7 @@
                         {{-- SECTION 4: RINCIAN BANK --}}
                         <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; margin-bottom: 20px;">
                             <div style="background: #f8fafc; padding: 10px 20px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
-                                <span style="font-size: 0.75rem; font-weight: 700; color: #475569; text-transform: uppercase;">Rincian Bank</span>
+                                <span style="font-size: 0.75rem; font-weight: 700; color: #475569; text-transform: uppercase;">Bank Details</span>
                                 <span class="badge" style="background: #e2e8f0; color: #475569; border-radius: 20px; font-weight: 600; font-size: 0.7rem;" id="bank_count_badge">0 Bank</span>
                             </div>
                             <div id="rincian_bank_list" style="max-height: 200px; overflow-y: auto;">
@@ -157,9 +157,9 @@
                         {{-- SECTION 5: NOTES INPUT --}}
                         <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px;">
                             <label style="font-size: 0.8rem; font-weight: 700; color: #334155; margin-bottom: 8px; display: block;">
-                                <i class="ph-bold ph-note-pencil me-1"></i> Catatan Approval / Rejection <span class="text-danger">*</span>
+                                <i class="ph-bold ph-note-pencil me-1"></i> Approval / Rejection Notes <span class="text-danger">*</span>
                             </label>
-                            <textarea name="notes" class="form-control" rows="2" placeholder="Tuliskan catatan validasi atau alasan penolakan..."
+                            <textarea name="notes" class="form-control" rows="2" placeholder="Write validation notes or rejection reason..."
                                     style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; resize: none;" required></textarea>
                         </div>
 
@@ -167,7 +167,7 @@
 
                     {{-- Footer --}}
                     <div class="modal-footer" style="border: none; background: #fff; padding: 15px 25px 25px;">
-                        <button type="button" class="btn btn-light" data-bs-dismiss="modal" style="font-weight: 600; padding: 10px 24px; border-radius: 50px;">Batal</button>
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal" style="font-weight: 600; padding: 10px 24px; border-radius: 50px;">Cancel</button>
                         <button type="submit" class="btn" id="btnSubmitModal" style="font-weight: 700; padding: 10px 24px; border-radius: 50px; display: flex; align-items: center; gap: 8px;">
                             <span id="btnText">Submit Decision</span>
                             <i class="ph-bold ph-paper-plane-right"></i>
@@ -201,7 +201,7 @@
                 let id = $(this).data('id');
                 Swal.fire({
                     title: 'Quick Approve?',
-                    text: "Dokumen akan langsung disetujui tanpa catatan.",
+                    text: "Document will be approved immediately without notes.",
                     icon: 'question',
                     showCancelButton: true,
                     confirmButtonColor: '#198754',
@@ -217,7 +217,7 @@
                 let id = $(this).data('id');
                 Swal.fire({
                     title: 'Resend Notification?',
-                    text: "Kirim ulang email notifikasi approval ke Finance.",
+                    text: "Resend approval notification email to Finance.",
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonText: 'Yes, Send!'
@@ -298,7 +298,7 @@
                                             </div>
                                             <div>
                                                 <div style="font-weight: 700; font-size: 0.9rem; color: #1e293b;">${bank.bank_name}</div>
-                                                <div style="font-size: 0.75rem; color: #94a3b8;">Bank Penerbit</div>
+                                                <div style="font-size: 0.75rem; color: #94a3b8;">Issuing Bank</div>
                                             </div>
                                         </div>
                                         <div style="text-align: right;">
@@ -311,7 +311,7 @@
                                 `;
                             });
                         } else {
-                            listHtml = `<div style="padding: 20px; text-align: center; font-style: italic; color: #94a3b8; font-size: 0.85rem;">Tidak ada rincian bank</div>`;
+                            listHtml = `<div style="padding: 20px; text-align: center; font-style: italic; color: #94a3b8; font-size: 0.85rem;">No bank details</div>`;
                         }
 
                         $('#rincian_bank_list').html(listHtml);
@@ -335,14 +335,14 @@
                 let notes = $('textarea[name="notes"]').val();
 
                 let isReject = (action === 'reject');
-                let titleText = isReject ? 'Konfirmasi Penolakan?' : 'Konfirmasi Persetujuan?';
+                let titleText = isReject ? 'Confirm Rejection?' : 'Confirm Approval?';
                 let msgText = isReject
-                    ? 'Anda akan <b>MENOLAK</b> pengajuan ini. Dokumen akan dikembalikan ke status revisi.'
-                    : 'Anda akan <b>MENYETUJUI</b> pengajuan ini. Dokumen Lampiran D akan diterbitkan.';
+                    ? 'You are about to <b>REJECT</b> this submission. The document will be returned to revision status.'
+                    : 'You are about to <b>APPROVE</b> this submission. Attachment D document will be issued.';
                 let btnColor = isReject ? '#ef4444' : '#3b82f6';
-                let btnText = isReject ? 'Ya, Tolak!' : 'Ya, Setujui!';
+                let btnText = isReject ? 'Yes, Reject!' : 'Yes, Approve!';
                 let iconType = isReject ? 'warning' : 'question';
-
+                
                 Swal.fire({
                     title: titleText,
                     html: msgText,
@@ -351,7 +351,7 @@
                     confirmButtonColor: btnColor,
                     cancelButtonColor: '#64748b',
                     confirmButtonText: btnText,
-                    cancelButtonText: 'Batal Check',
+                    cancelButtonText: 'Cancel',
                     reverseButtons: true
                 }).then((result) => {
                     if (result.isConfirmed) {

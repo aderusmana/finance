@@ -15,15 +15,15 @@
                     <tr>
                         <td style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 40px; text-align: center;">
                             <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 700; letter-spacing: 0.5px;">Extension Request</h1>
-                            <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0; font-size: 16px;">Pengajuan Penambahan Bank Garansi</p>
+                            <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0; font-size: 16px;">Bank Guarantee Extension Request</p>
                         </td>
                     </tr>
 
                     <tr>
                         <td style="padding: 40px;">
                             <p style="color: #334155; font-size: 16px; line-height: 24px; margin-bottom: 24px;">
-                                Halo <strong>{{ $rec->customer->name ?? 'Customer' }}</strong>, <br><br>
-                                Admin telah membuka akses untuk pengajuan <strong>Extension (Penambahan BG)</strong>. Silakan klik tombol di bawah ini untuk mengisi formulir rincian Bank Garansi yang akan diajukan.
+                                Dear <strong>{{ $rec->customer->name ?? 'Customer' }}</strong>, <br><br>
+                                We have enabled the submission access for <strong>Extension (New BG)</strong>. Please click the button below to fill in the details for the Bank Guarantee.
                             </p>
 
                             <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; margin-bottom: 24px;">
@@ -42,7 +42,7 @@
                             <div style="margin-top: 32px; text-align: center;">
                                 {{-- Tombol Link Portal dengan Token --}}
                                 <a href="{{ route('customer.portal.input-form', ['token' => $rec->token]) }}" style="background-color: #10b981; color: #ffffff; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-weight: 600; font-size: 14px; display: inline-block; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);">
-                                    Isi Formulir Extension
+                                    Fill in the Extension Form
                                 </a>
                             </div>
                         </td>
