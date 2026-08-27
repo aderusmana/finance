@@ -271,7 +271,7 @@ class BgApprovalInboxController extends Controller
             return;
         }
 
-        $customerEmail = $submission->recommendation->customer->email;
+        $customerEmail = $submission->recommendation->customer->email ?? null;
         $salesEmails = User::role('head-SNM')->pluck('email')->toArray();
         $financeEmails = User::role(['manager-finance', 'head-finance'])->pluck('email')->toArray();
 

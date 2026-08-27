@@ -253,7 +253,7 @@ class ApprovalProcessController extends Controller
                     $sub->recommendation->update(['status' => 'approved']);
                 }
 
-                $customerEmail = $sub->recommendation->customer->email;
+                $customerEmail = $sub->recommendation->customer->email ?? null;
                 $salesEmails = User::role('head-SNM')->pluck('email')->toArray();
                 $financeEmails = User::role(['manager-finance', 'head-finance'])->pluck('email')->toArray();
 
