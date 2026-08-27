@@ -95,7 +95,7 @@ class BankGaransiController extends Controller
                 ->addColumn('action', function ($row) {
                     $btn = '<div class="action-btn-group">';
                     $btn .= '<button class="btn btn-info action-btn-hover btn-show" data-id="'.$row->id.'" data-tooltip="View Details">';
-                    $btn .= '<i class="ph-bold ph-eye"></i>';
+                    $btn .= '<i class="ph-bold ph-eye text-white"></i>';
                     $btn .= '</button>';
                     $btn .= '<button class="btn btn-secondary action-btn-hover btn-edit" data-id="'.$row->id.'" data-tooltip="Edit Data">';
                     $btn .= '<i class="ph-bold ph-pencil"></i>';

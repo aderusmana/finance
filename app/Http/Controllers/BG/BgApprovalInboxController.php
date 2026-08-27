@@ -54,16 +54,10 @@ class BgApprovalInboxController extends Controller
                 ->addColumn('action', function ($row) {
                     return '
                         <div class="action-btn-group">
-                            <button class="btn btn-success action-btn-hover btn-quick-approve" data-id="'.$row->id.'" data-tooltip="Quick Approve">
-                                <i class="ph-bold ph-check"></i>
+                            <button class="btn btn-primary action-btn-hover btn-review" data-id="'.$row->id.'" data-tooltip="Review Submission">
+                                <i class="ph-bold ph-eye text-white"></i> Review
                             </button>
-                            <button class="btn btn-warning action-btn-hover btn-review" data-id="'.$row->id.'" data-tooltip="Review with Notes">
-                                <i class="ph-bold ph-pencil-simple text-white"></i>
-                            </button>
-                            <button class="btn btn-danger action-btn-hover btn-reject" data-id="'.$row->id.'" data-tooltip="Reject">
-                                <i class="ph-bold ph-x"></i>
-                            </button>
-                            <button class="btn btn-info action-btn-hover btn-resend" data-id="'.$row->id.'" data-tooltip="Resend Email Notif">
+                            <button class="btn btn-warning action-btn-hover btn-resend" data-id="'.$row->id.'" data-tooltip="Resend Email Notif">
                                 <i class="ph-bold ph-envelope-simple text-white"></i>
                             </button>
                         </div>

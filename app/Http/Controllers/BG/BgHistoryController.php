@@ -67,14 +67,7 @@ class BgHistoryController extends Controller
                 ->editColumn('created_at', function($row){
                     return $row->created_at->format('d M Y H:i');
                 })
-                ->addColumn('action', function ($row) {
-                    return '<div class="action-btn-group">
-                                <button class="btn btn-info action-btn-hover btn-view-history" data-id="'.$row->id.'" data-tooltip="View Changes">
-                                    <i class="ph-bold ph-clock-counter-clockwise"></i>
-                                </button>
-                            </div>';
-                })
-                ->rawColumns(['nominal_change', 'date_change', 'remarks', 'action'])
+                ->rawColumns(['nominal_change', 'date_change', 'remarks'])
                 ->make(true);
         }
 

@@ -52,8 +52,8 @@ class BgReportController extends Controller
                     })
                     ->addColumn('action', function($row) {
                         return '<div class="action-btn-group">
-                                    <button class="btn btn-info action-btn-hover btn-print" data-id="'.$row->id.'" data-category="transactions" data-tooltip="Print Document">
-                                        <i class="ph-bold ph-printer"></i>
+                                    <button class="btn btn-info action-btn-hover btn-print-modal" data-id="'.$row->id.'" data-category="transactions" data-tooltip="Print Document">
+                                        <i class="ph-bold ph-printer text-white"></i>
                                     </button>
                                 </div>';
                     })->rawColumns(['checkbox', 'form_code', 'status', 'action'])
@@ -75,8 +75,8 @@ class BgReportController extends Controller
                     ->addColumn('nominal', fn($row) => 'Rp ' . number_format($row->bg_nominal, 0, ',', '.'))
                     ->addColumn('action', function($row) {
                         return '<div class="action-btn-group">
-                                    <button class="btn btn-info action-btn-hover btn-print" data-id="'.$row->id.'" data-category="expiring" data-tooltip="Print Letters">
-                                        <i class="ph-bold ph-envelope-open"></i>
+                                    <button class="btn btn-info action-btn-hover btn-print-modal" data-id="'.$row->id.'" data-category="expiring" data-tooltip="Print Letters">
+                                        <i class="ph-bold ph-envelope-open text-white"></i>
                                     </button>
                                 </div>';
                     })->rawColumns(['checkbox', 'bg_number', 'action'])

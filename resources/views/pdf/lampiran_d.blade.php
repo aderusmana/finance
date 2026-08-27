@@ -131,7 +131,7 @@
                     if($periods && $periods->count() > 0) {
                         $start = $periods->min('period_date');
                         $end   = $periods->max('period_date');
-                        $periodeTxt = \Carbon\Carbon::parse($start)->translatedFormat('F Y') . ' - ' . \Carbon\Carbon::parse($end)->translatedFormat('F Y');
+                        $periodeTxt = \Carbon\Carbon::parse($start)->locale('id')->translatedFormat('F Y') . ' - ' . \Carbon\Carbon::parse($end)->locale('id')->translatedFormat('F Y');
                     }
                 @endphp
                 {{ $periodeTxt }}

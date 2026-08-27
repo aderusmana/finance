@@ -21,8 +21,8 @@
                             <h4 class="table-title mb-1"><i class="ph-fill ph-clock-counter-clockwise fs-3"></i>Completed Transactions & Changes</h4>
                             <small class="text-white opacity-75 f-s-12">Summary of audit trails, nominal revisions, and Bank Guarantee completion status.</small>
                         </div>
-                        <div>
-                            <a href="{{ route('bg-histories.export') }}" class="btn btn-success text-white fw-bold">
+                        <div class="position-relative z-1">
+                            <a href="{{ route('bg-histories.export') }}" class="btn btn-success text-white fw-bold" style="position: relative; z-index: 2;">
                                 <i class="ph-bold ph-file-xls me-2"></i> Export to Excel
                             </a>
                         </div>
@@ -41,7 +41,6 @@
                                 <th>Remarks</th>
                                 <th>By</th>
                                 <th>Time</th>
-                                <th width="5%">Action</th>
                             </tr>
                         </thead>
                     </table>
@@ -67,7 +66,6 @@
                     {data: 'remarks', name: 'remarks'},
                     {data: 'user', name: 'creator.name'},
                     {data: 'created_at', name: 'created_at', className: 'small text-muted'},
-                    {data: 'action', name: 'action', orderable: false, searchable: false, className: 'text-center'},
                 ]
             });
         });

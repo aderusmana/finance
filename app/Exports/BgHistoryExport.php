@@ -24,7 +24,7 @@ class BgHistoryExport implements FromQuery, WithHeadings, WithMapping, ShouldAut
 
     public function query()
     {
-        $query = BgHistory::with(['bankGaransi.customer', 'creator'])
+        $query = BgHistory::with(['bankGaransi.customer', 'bankGaransi.details', 'creator'])
                     ->orderBy('created_at', 'desc');
 
         if ($this->startDate && $this->endDate) {
@@ -45,15 +45,15 @@ class BgHistoryExport implements FromQuery, WithHeadings, WithMapping, ShouldAut
         
         return [
             $history->created_at->format('d M Y H:i'),
-            $history->bankGaransi->customer->name ?? '-',
-            $history->bankGaransi->bg_number ?? '-',
-            $history->bankGaransi->bank_name ?? '-', // Asumsi ada field bank_name di relation atau detail
+            $history->bankGaransi?->customer?->name ?? '-',
+            $history->bankGaransi?->bg_number ?? '-',
+            ($history->bankGaransi && $history->bankGaransi->details && $history->bankGaransi->details->count() > 0) ? $history->bankGaransi->details->pluck('bank_name')->filter()->implode(', ') : '-', // Load details for bank_name
             $type,
             $history->previous_nominal, // Format angka raw biar bisa di sum di excel
             $history->new_nominal,
             $history->new_exp_date ? \Carbon\Carbon::parse($history->new_exp_date)->format('d M Y') : '-',
             $history->remarks,
-            $history->creator->name ?? 'System',
+            $history->creator?->name ?? 'System',
         ];
     }
 

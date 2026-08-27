@@ -407,6 +407,10 @@ class CustomerBgPortalController extends Controller
                 'token'                => null,
             ]);
 
+            if ($submission->recommendation) {
+                $submission->recommendation->update(['status' => 'uploaded']);
+            }
+
             activity()
                 ->causedBy($submission->recommendation->customer)
                 ->performedOn($submission)

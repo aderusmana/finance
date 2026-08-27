@@ -157,21 +157,25 @@
                         {{-- SECTION 5: NOTES INPUT --}}
                         <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px;">
                             <label style="font-size: 0.8rem; font-weight: 700; color: #334155; margin-bottom: 8px; display: block;">
-                                <i class="ph-bold ph-note-pencil me-1"></i> Approval / Rejection Notes <span class="text-danger">*</span>
+                                <i class="ph-bold ph-note-pencil me-1"></i> Approval / Rejection Notes <span class="text-danger" id="notes_asterisk" style="display:none;">*</span>
                             </label>
-                            <textarea name="notes" class="form-control" rows="2" placeholder="Write validation notes or rejection reason..."
-                                    style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; resize: none;" required></textarea>
+                            <textarea name="notes" id="approval_notes" class="form-control" rows="2" placeholder="Write validation notes or rejection reason..."
+                                    style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; resize: none;"></textarea>
                         </div>
 
                     </div>
 
                     {{-- Footer --}}
-                    <div class="modal-footer" style="border: none; background: #fff; padding: 15px 25px 25px;">
+                    <div class="modal-footer" style="border: none; background: #fff; padding: 15px 25px 25px; display: flex; justify-content: space-between;">
                         <button type="button" class="btn btn-light" data-bs-dismiss="modal" style="font-weight: 600; padding: 10px 24px; border-radius: 50px;">Cancel</button>
-                        <button type="submit" class="btn" id="btnSubmitModal" style="font-weight: 700; padding: 10px 24px; border-radius: 50px; display: flex; align-items: center; gap: 8px;">
-                            <span id="btnText">Submit Decision</span>
-                            <i class="ph-bold ph-paper-plane-right"></i>
-                        </button>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-danger btn-modal-reject" style="font-weight: 700; padding: 10px 24px; border-radius: 50px; display: flex; align-items: center; gap: 8px;">
+                                <i class="ph-bold ph-x"></i> Reject
+                            </button>
+                            <button type="button" class="btn btn-success text-white btn-modal-approve" style="font-weight: 700; padding: 10px 24px; border-radius: 50px; display: flex; align-items: center; gap: 8px;">
+                                <i class="ph-bold ph-check"></i> Approve
+                            </button>
+                        </div>
                     </div>
                 </form>
             </div>
@@ -197,22 +201,6 @@
                 ]
             });
 
-            $(document).on('click', '.btn-quick-approve', function() {
-                let id = $(this).data('id');
-                Swal.fire({
-                    title: 'Quick Approve?',
-                    text: "Document will be approved immediately without notes.",
-                    icon: 'question',
-                    showCancelButton: true,
-                    confirmButtonColor: '#198754',
-                    confirmButtonText: 'Yes, Approve!'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        processApproval(id, 'approve', null);
-                    }
-                });
-            });
-
             $(document).on('click', '.btn-resend', function() {
                 let id = $(this).data('id');
                 Swal.fire({
@@ -232,33 +220,17 @@
 
             $(document).on('click', '.btn-review', function() {
                 let id = $(this).data('id');
-                prepareModal(id, 'approve', 'Review with Notes', 'bg-warning', 'btn-warning');
+                prepareModal(id, 'Review Submission');
             });
 
-            $(document).on('click', '.btn-reject', function() {
-                let id = $(this).data('id');
-                prepareModal(id, 'reject', 'Reject Submission', 'bg-danger', 'btn-danger');
-            });
-
-            function prepareModal(id, action, title, themeColor, btnClass) {
+            function prepareModal(id, title) {
                 $('#submission_id').val(id);
-                $('#action_type').val(action);
+                $('#action_type').val('');
 
                 $('#modalTitle').text(title);
 
                 $('textarea[name="notes"]').val('');
-
-                let btn = $('#btnSubmitModal');
-
-                btn.removeClass('btn-primary btn-danger btn-warning btn-success text-white');
-
-                if(action === 'reject') {
-                    btn.css({ 'background-color': '#ef4444', 'border-color': '#ef4444', 'color': '#ffffff' });
-                    $('#btnText').text('Reject Submission');
-                } else {
-                    btn.css({ 'background-color': '#3b82f6', 'border-color': '#3b82f6', 'color': '#ffffff' });
-                    $('#btnText').text('Approve Submission');
-                }
+                $('#notes_asterisk').hide();
 
                 $('#d_nama, #d_kota, #d_wilayah, #d_periode, #d_sales, #d_top, #d_lead, #d_inflasi, #d_limit, #d_bg_tetap, #d_bg_serah').html('<span class="spinner-border spinner-border-sm text-secondary"></span>');
                 $('#display_form_code').text('LOADING...');
@@ -320,43 +292,53 @@
                 });
             }
 
-            $('#approvalForm').submit(function(e) {
-                e.preventDefault();
-
-                let form = this;
-
-                if (!form.checkValidity()) {
-                    form.reportValidity();
+            $(document).on('click', '.btn-modal-reject', function() {
+                let id = $('#submission_id').val();
+                let notes = $('#approval_notes').val().trim();
+                
+                if (!notes) {
+                    $('#notes_asterisk').show();
+                    Swal.fire('Warning', 'Notes are required when rejecting a submission.', 'warning');
+                    $('#approval_notes').focus();
                     return;
                 }
 
-                let id = $('#submission_id').val();
-                let action = $('#action_type').val();
-                let notes = $('textarea[name="notes"]').val();
-
-                let isReject = (action === 'reject');
-                let titleText = isReject ? 'Confirm Rejection?' : 'Confirm Approval?';
-                let msgText = isReject
-                    ? 'You are about to <b>REJECT</b> this submission. The document will be returned to revision status.'
-                    : 'You are about to <b>APPROVE</b> this submission. Attachment D document will be issued.';
-                let btnColor = isReject ? '#ef4444' : '#3b82f6';
-                let btnText = isReject ? 'Yes, Reject!' : 'Yes, Approve!';
-                let iconType = isReject ? 'warning' : 'question';
-                
                 Swal.fire({
-                    title: titleText,
-                    html: msgText,
-                    icon: iconType,
+                    title: 'Confirm Rejection?',
+                    html: 'You are about to <b>REJECT</b> this submission. The document will be returned to revision status.',
+                    icon: 'warning',
                     showCancelButton: true,
-                    confirmButtonColor: btnColor,
+                    confirmButtonColor: '#ef4444',
                     cancelButtonColor: '#64748b',
-                    confirmButtonText: btnText,
+                    confirmButtonText: 'Yes, Reject!',
                     cancelButtonText: 'Cancel',
                     reverseButtons: true
                 }).then((result) => {
                     if (result.isConfirmed) {
                         $('#approvalModal').modal('hide');
-                        processApproval(id, action, notes);
+                        processApproval(id, 'reject', notes);
+                    }
+                });
+            });
+
+            $(document).on('click', '.btn-modal-approve', function() {
+                let id = $('#submission_id').val();
+                let notes = $('#approval_notes').val().trim();
+
+                Swal.fire({
+                    title: 'Confirm Approval?',
+                    html: 'You are about to <b>APPROVE</b> this submission. Attachment D document will be issued.',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#10b981',
+                    cancelButtonColor: '#64748b',
+                    confirmButtonText: 'Yes, Approve!',
+                    cancelButtonText: 'Cancel',
+                    reverseButtons: true
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $('#approvalModal').modal('hide');
+                        processApproval(id, 'approve', notes);
                     }
                 });
             });
