@@ -19,6 +19,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 use App\Mail\BgUpdateDocumentMail;
+use App\Mail\CustomerFillFormNotification;
 use Illuminate\Support\Facades\Log;
 
 class CustomerBgPortalController extends Controller
@@ -404,11 +405,20 @@ class CustomerBgPortalController extends Controller
                 'submitted_at'         => now(),
                 'upload_completed_at'  => now(),
                 'status'               => 'uploaded',
-                'token'                => null,
+                // 'token'                => null, // DO NOT CLEAR TOKEN TO ALLOW ADMIN REVIEW
             ]);
 
-            if ($submission->recommendation) {
-                $submission->recommendation->update(['status' => 'uploaded']);
+            $rec = $submission->recommendation;
+            $allUploaded = false;
+
+            if ($rec) {
+                // Check if there are any submissions still awaiting upload
+                $pendingCount = $rec->submissions()->whereIn('status', ['awaiting_upload', 'pending_print'])->count();
+                
+                if ($pendingCount === 0) {
+                    $allUploaded = true;
+                    $rec->update(['status' => 'approved']);
+                }
             }
 
             activity()
@@ -418,9 +428,30 @@ class CustomerBgPortalController extends Controller
 
             Log::info("Upload Berhasil untuk Submission ID: " . $submission->id);
 
-            return view('page.customer_portal.form-success', [
-                'type' => 'upload'
-            ]);
+            // Send notification for EVERY document uploaded
+            try {
+                $admins = User::role(['admin-rtm'])->get();
+
+                // 1. System Notification (Web)
+                Notification::send($admins, new SystemNotification(
+                    'Customer Uploaded Document',
+                    "Customer <b>{$rec->customer->name}</b> has uploaded a signed Bank Guarantee document ({$submission->form_code}).",
+                    route('bg-approvals.index'),
+                    'ph-upload-simple',
+                    'success'
+                ));
+
+                // 2. Email Notification to Admins
+                foreach ($admins as $admin) {
+                    if ($admin->email && filter_var($admin->email, FILTER_VALIDATE_EMAIL)) {
+                        Mail::to($admin->email)->queue(new CustomerFillFormNotification($rec, true, $submission));
+                    }
+                }
+            } catch (\Exception $e) {
+                Log::error('Notif Upload Admin Error: ' . $e->getMessage());
+            }
+
+            return redirect()->route('customer.portal.upload-success');
 
         } catch (\Exception $e) {
             Log::error("Error Exception saat upload: " . $e->getMessage());
@@ -521,6 +552,33 @@ class CustomerBgPortalController extends Controller
 
         } catch (\Exception $e) {
             abort(404, 'Document not found or error occurred: ' . $e->getMessage());
+        }
+    }
+
+    public function reviewUpload($token)
+    {
+        $submission = BgSubmission::with('recommendation.customer')->where('token', $token)->first();
+        if (!$submission || !$submission->signed_document_path) {
+            return view('page.customer_portal.invalid');
+        }
+
+        return view('page.customer_portal.admin_review_upload', compact('submission', 'token'));
+    }
+
+    public function downloadSubmissionPdf($token)
+    {
+        try {
+            $submission = BgSubmission::where('token', $token)->firstOrFail();
+            $path = $submission->signed_document_path;
+
+            if ($path && file_exists(public_path($path))) {
+                $fileName = 'Uploaded_Document_' . $submission->form_code . '.pdf';
+                return response()->download(public_path($path), $fileName);
+            }
+
+            return abort(404, 'File not found on server');
+        } catch (\Exception $e) {
+            abort(404, 'Document not found.');
         }
     }
 }

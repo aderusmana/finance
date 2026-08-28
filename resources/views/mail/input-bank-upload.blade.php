@@ -15,9 +15,30 @@
         $token = '#';
         $customer = null;
 
+        $isAdminNotif = isset($isUploadAdminNotif) && $isUploadAdminNotif;
+
         // 1. CEK KONTEKS & INISIALISASI VARIABEL
-        if ($isUploadContext) {
-            // Konteks: Email Konfirmasi Upload (Submission)
+        if ($isAdminNotif) {
+            // Konteks: Email Notifikasi ke Admin (Super Admin / RTM) saat Upload
+            $rec = $recommendation;
+            $customer = $rec->customer;
+
+            $pageTitle = 'Document Uploaded by Customer';
+            $refNumber = 'Ref ID: #' . substr($rec->id, 0, 8);
+
+            // Setup Tombol & Link untuk Approval
+            if (isset($submission) && $submission->token) {
+                $actionUrl = route('customer.portal.review-upload', ['token' => $submission->token]);
+                $downloadUrl = route('customer.portal.download-submission-pdf', ['token' => $submission->token]);
+            } else {
+                $actionUrl = route('bg-approvals.index');
+                $downloadUrl = '#'; 
+            }
+            $btnColor = '#3b82f6';
+            $btnShadow = 'rgba(59, 130, 246, 0.3)';
+            $btnText = 'Review Uploaded Document';
+        } elseif ($isUploadContext) {
+            // Konteks: Email Konfirmasi Upload (Submission) ke Customer
             $rec = $submission->recommendation;
             $token = $submission->token;
             $customer = $rec->customer;
@@ -111,7 +132,10 @@
             <p style="font-size: 15px; line-height: 1.6; color: #334155; margin-bottom: 25px; margin-top: 0;">
                 Dear <strong>{{ $customer->name ?? 'Business Partner' }}</strong>,<br><br>
 
-                @if($isUploadContext)
+                @if($isAdminNotif)
+                    Customer <strong>{{ $customer->name ?? 'Business Partner' }}</strong> has successfully uploaded their signed Bank Guarantee document. 
+                    Please review the submission and verify the document through the Approval Inbox.
+                @elseif($isUploadContext)
                     Thank you, we have successfully received your digital form data.
                     To legally validate this submission, we require the physical documents to be signed.
                 @else
@@ -148,7 +172,16 @@
             @endif
 
             {{-- HERO SECTION (ACTION) --}}
-            @if($isUploadContext)
+            @if($isAdminNotif)
+                <div style="background-color: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px; padding: 25px; margin-bottom: 35px; text-align: center;">
+                    <h3 style="margin: 0 0 10px; color: #1e40af; font-size: 16px; font-weight: 700;">
+                        Document Ready for Review
+                    </h3>
+                    <p style="margin: 0; font-size: 14px; color: #1e3a8a;">
+                        The uploaded document is waiting for your review and approval.
+                    </p>
+                </div>
+            @elseif($isUploadContext)
                 <div style="background-color: #fff7ed; border: 1px solid #fed7aa; border-radius: 10px; padding: 25px; margin-bottom: 35px;">
                     <h3 style="margin: 0 0 15px; color: #9a3412; font-size: 16px; font-weight: 700;">
                         ⚠️ Required Action: Download, Sign & Upload
@@ -263,7 +296,9 @@
             {{-- CTA SECTION --}}
             <div style="text-align: center; padding: 35px 20px; background-color: #f8fafc; border-radius: 12px; border: 1px dashed #cbd5e1;">
                 <p style="font-size: 14px; margin: 0 0 25px; color: #475569; line-height: 1.5;">
-                    @if($isUploadContext)
+                    @if($isAdminNotif)
+                        Click the button below to access the Approval Inbox:
+                    @elseif($isUploadContext)
                         Please download the form for <strong>{{ $targetBg->details->first()->bank_name ?? 'Bank' }}</strong>, then upload it back:
                     @else
                         To proceed with issuing a Bank Guarantee worth <strong>Rp {{ number_format($rec->credit_limit_updated ?? 0, 0, ',', '.') }}</strong>, please complete the guarantee bank details:
@@ -273,7 +308,11 @@
                 @if($isUploadContext)
                     <a href="{{ $downloadUrl }}"
                        style="display: inline-block; background-color: #ffffff; color: #475569; padding: 12px 25px; font-size: 14px; font-weight: 600; text-decoration: none; border-radius: 50px; border: 1px solid #cbd5e1; margin-bottom: 15px; margin-right: 10px;">
-                        ⬇️ Download PDF Form
+                        @if($isAdminNotif)
+                            ⬇️ Download Uploaded Document
+                        @else
+                            ⬇️ Download PDF Form
+                        @endif
                     </a>
                 @endif
 

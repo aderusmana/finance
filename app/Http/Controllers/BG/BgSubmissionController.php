@@ -242,7 +242,9 @@ class BgSubmissionController extends Controller
     }
 
     public function show($id) {
-        return response()->json(BgSubmission::with('recommendation')->findOrFail($id));
+        $sub = BgSubmission::with('recommendation')->findOrFail($id);
+        $sub->file_exists = $sub->signed_document_path && file_exists(public_path($sub->signed_document_path));
+        return response()->json($sub);
     }
 
     public function getEditData($id)

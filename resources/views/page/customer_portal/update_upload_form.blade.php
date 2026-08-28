@@ -299,6 +299,12 @@
                 return;
             }
 
+            const submitBtn = document.getElementById('submitBtn');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Uploading...';
+            }
+
             loadingOverlay.style.display = 'flex';
 
             let width = 0;
@@ -311,9 +317,10 @@
             setTimeout(() => {
                 progressBar.style.width = '100%';
                 setTimeout(() => {
+                    clearInterval(interval);
                     uploadForm.submit();
                 }, 300);
-            }, 1500);
+            }, 1000);
         });
     });
 </script>

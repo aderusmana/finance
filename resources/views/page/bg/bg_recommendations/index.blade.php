@@ -780,7 +780,8 @@
                 $('#calc_rec_limit').text(fmt(recLimit));
 
                 // 4. FK Limit Rule
-                let fkLimit = recLimit * (rule / 100);
+                let activeRule = rule > 0 ? rule : 100;
+                let fkLimit = recLimit * (activeRule / 100);
                 $('#calc_fk_limit').text(fmt(fkLimit));
 
                 // 5. Rounded
@@ -798,7 +799,7 @@
 
                 // 6. Updated Limit Display
                 let setBgUser = parseFloat($('#set_bg').val()) || 0;
-                rawLimitUpdatedValue = (rule > 0) ? setBgUser / (rule / 100) : setBgUser;
+                rawLimitUpdatedValue = setBgUser / (activeRule / 100);
 
                 // Tampilkan TANPA desimal (receh)
                 $('#calc_limit_updated').text(fmt(rawLimitUpdatedValue));
