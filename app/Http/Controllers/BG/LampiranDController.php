@@ -7,13 +7,22 @@ use App\Models\BG\LampiranD;
 use App\Models\BG\LampiranDVersion;
 use App\Models\BG\BgSubmission;
 use App\Models\BG\BankGaransi;
+use App\Models\Master\ApprovalLog;
+use App\Models\Master\ApprovalPath;
+use App\Models\User;
+use App\Traits\ApprovalTrait;
+use App\Jobs\ProcessFinanceApprovalEmail;
+use App\Notifications\SystemNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 use Yajra\DataTables\Facades\DataTables;
 
 class LampiranDController extends Controller
 {
+    use ApprovalTrait;
+
     public function index(Request $request)
     {
         if ($request->ajax()) {
@@ -49,7 +58,7 @@ class LampiranDController extends Controller
             }
 
             // MODE 2: DATA OVERVIEW (DEFAULT - ACTIVE DOCS)
-                $query = LampiranD::with(['submission.recommendation.customer']);
+            $query = LampiranD::with(['submission.recommendation.customer']);
 
             return DataTables::of($query)
                 ->addIndexColumn()
@@ -113,12 +122,16 @@ class LampiranDController extends Controller
 
     public function update(Request $request, $id)
     {
-        // LOGIC SAMA PERSIS SEPERTI SEBELUMNYA (VERSIONING)
         DB::beginTransaction();
         try {
             $lampiranD = LampiranD::with('submission.recommendation.customer')->findOrFail($id);
-            $rec = $lampiranD->submission->recommendation;
-            $customer = $rec->customer;
+            $submission = $lampiranD->submission;
+            $rec = $submission ? $submission->recommendation : null;
+            $customer = $rec ? $rec->customer : null;
+
+            if (!$customer) {
+                throw new \Exception("Data customer terkait tidak ditemukan.");
+            }
 
             // 1. Simpan Snapshot Versi Baru
             $nextVersion = $lampiranD->version_latest + 1;
@@ -132,7 +145,7 @@ class LampiranDController extends Controller
                 'data_snapshot' => $dataSnapshot,
                 'generated_by'  => Auth::id(),
                 'generated_at'  => now(),
-                'remarks'       => $request->remarks ?? 'Edited by User',
+                'remarks'       => $request->remarks ?? 'Revision via Lampiran D Management',
             ]);
 
             // 2. Update Data Utama (Customer, Recommendation, BG)
@@ -164,8 +177,54 @@ class LampiranDController extends Controller
                 'active_version_id' => $version->id
             ]);
 
+            // 4. Trigger Approval Workflow ke Manager Finance
+            if ($submission) {
+                $requester = Auth::user();
+                $submission->update(['status' => 'waiting_approval']);
+
+                $logs = $this->generateApprovalLogs($requester, $submission->id, 'BG', 'Lampiran D');
+
+                if ($logs->isNotEmpty()) {
+                    $firstLog = ApprovalLog::where('category', 'BG')
+                        ->where('related_id', $submission->id)
+                        ->where('status', 'Pending')
+                        ->orderBy('level', 'asc')
+                        ->first();
+
+                    if ($firstLog) {
+                        ProcessFinanceApprovalEmail::dispatch($firstLog, $submission);
+                    }
+                }
+
+                // Kirim notifikasi lonceng ke Manager Finance & Head Finance
+                $approvers = User::role(['manager-finance', 'head-finance'])->get();
+                Notification::send($approvers, new SystemNotification(
+                    'Approval Lampiran D Diperlukan',
+                    "Revisi Lampiran D v{$nextVersion} untuk <b>{$customer->name}</b> menunggu persetujuan Anda.",
+                    route('bg-approvals.index'),
+                    'ph-signature',
+                    'warning'
+                ));
+
+                // Log Activity
+                activity()
+                    ->causedBy($requester)
+                    ->performedOn($submission)
+                    ->useLog('lampiran_d')
+                    ->event('update_version')
+                    ->withProperties([
+                        'version' => $nextVersion,
+                        'customer' => $customer->name,
+                        'remarks' => $request->remarks ?? 'Revision via Lampiran D Management'
+                    ])
+                    ->log("Revisi Lampiran D v{$nextVersion} diajukan dan diteruskan ke Manager Finance.");
+            }
+
             DB::commit();
-            return response()->json(['success' => true, 'message' => 'Data updated to Version ' . $nextVersion]);
+            return response()->json([
+                'success' => true,
+                'message' => 'Data updated to Version ' . $nextVersion . ' & forwarded to Manager Finance for approval.'
+            ]);
 
         } catch (\Exception $e) {
             DB::rollBack();

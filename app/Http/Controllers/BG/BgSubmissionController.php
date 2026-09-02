@@ -24,7 +24,9 @@ use App\Models\BG\BgHistory;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use App\Notifications\SystemNotification;
+use Illuminate\Support\FacadesLog;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Auth;
 
 class BgSubmissionController extends Controller
 {
@@ -367,7 +369,7 @@ class BgSubmissionController extends Controller
 
                 $lampiranD = LampiranD::firstOrCreate(
                     ['bg_submission_id' => $submission->id],
-                    ['version_latest' => 0, 'created_by' => auth()->id()]
+                    ['version_latest' => 0, 'created_by' => Auth::id()]
                 );
 
                 $snapshotData = [
@@ -392,7 +394,7 @@ class BgSubmissionController extends Controller
                     'version_no'    => $nextVersion,
                     'data_snapshot' => $snapshotData,
                     'file_path'     => $submission->signed_document_path,
-                    'generated_by'  => auth()->id(),
+                    'generated_by'  => Auth::id(),
                     'generated_at'  => now(),
                     'remarks'       => 'Correction via Submission Edit (Submission ID: '.$submission->id.')'
                 ]);
@@ -403,9 +405,9 @@ class BgSubmissionController extends Controller
                 ]);
 
                 $requester = auth()->user();
-                $logs = $this->generateApprovalLogs($requester, $submission->id, 'BG', 'Lampiran D');
+                $Logs = $this->generateApprovalLogs($requester, $submission->id, 'BG', 'Lampiran D');
 
-                if ($logs->isEmpty()) throw new \Exception("User Role Manager Finance tidak ditemukan.");
+                if ($Logs->isEmpty()) throw new \Exception("User Role Manager Finance tidak ditemukan.");
 
                 $submission->update(['status' => 'waiting_approval']);
 
@@ -439,7 +441,7 @@ class BgSubmissionController extends Controller
                         ],
                         'approval_status' => 'waiting_finance'
                     ])
-                    ->log("Admin edited Attachment D (Correction) and forwarded it to Finance Approval");
+                    ->Log("Admin edited Attachment D (Correction) and forwarded it to Finance Approval");
 
                 $approvers = User::role(['manager-finance', 'head-finance'])->get();
                 Notification::send($approvers, new SystemNotification(
@@ -555,14 +557,14 @@ class BgSubmissionController extends Controller
                     'details' => $detailsSnapshot
                 ];
 
-                $lampiranD = LampiranD::firstOrCreate(['bg_submission_id' => $submission->id], ['version_latest' => 0, 'created_by' => auth()->id()]);
+                $lampiranD = LampiranD::firstOrCreate(['bg_submission_id' => $submission->id], ['version_latest' => 0, 'created_by' => Auth::id()]);
                 $nextVersion = $lampiranD->version_latest + 1;
                 $newVersion = LampiranDVersion::create([
                     'lampiran_d_id' => $lampiranD->id,
                     'version_no'    => $nextVersion,
                     'data_snapshot' => $snapshotData,
                     'file_path'     => $submission->signed_document_path,
-                    'generated_by'  => auth()->id(),
+                    'generated_by'  => Auth::id(),
                     'generated_at'  => now(),
                     'remarks'       => 'Direct Approved by Admin (Nominal Updated)'
                 ]);
@@ -591,7 +593,7 @@ class BgSubmissionController extends Controller
                         'lampiran_d_ver'  => $nextVersion,
                         'note'            => 'Bypass Approval Workflow'
                     ])
-                    ->log("Admin performed Direct Submit (Bypass Approval). Attachment D issued & BG Approved.");
+                    ->Log("Admin performed Direct Submit (Bypass Approval). Attachment D issued & BG Approved.");
 
                 $submission->update(['status' => 'completed', 'token' => Str::random(60)]);
 
@@ -642,7 +644,7 @@ class BgSubmissionController extends Controller
             'previous_exp_date' => $prevBg ? $prevBg->exp_date : null,
             'new_exp_date'      => $currentBg->exp_date,
             'remarks'           => $remarks,
-            'created_by'        => auth()->id() ?? null
+            'created_by'        => Auth::id()
         ]);
     }
 
@@ -659,7 +661,7 @@ class BgSubmissionController extends Controller
         }
 
         try {
-            $internalUsers = User::role(['super-admin', 'manager-finance', 'head-finance'])->get();
+            $internalUsers = User::role(['super-admin', 'manager-finance', 'head-finance', 'secretary-finance', 'admin-rtm'])->get();
             $custName = $submission->recommendation->customer->name ?? 'Customer';
 
             Notification::send($internalUsers, new SystemNotification(
@@ -670,22 +672,21 @@ class BgSubmissionController extends Controller
                 'success'
             ));
         } catch (\Exception $e) {
-            \Log::error("Gagal kirim notif sistem completion: " . $e->getMessage());
+            Log::error("Gagal kirim notif sistem completion: " . $e->getMessage());
         }
 
         try {
-            $customerEmail = $submission->recommendation->customer->email ?? null;
-            $salesEmails   = User::role('head-SNM')->pluck('email')->toArray();
-            $financeEmails = User::role(['manager-finance', 'head-finance'])->pluck('email')->toArray();
+            $salesEmails   = User::role(['head-SNM', 'admin-rtm'])->pluck('email')->toArray();
+            $financeEmails = User::role(['manager-finance', 'head-finance', 'secretary-finance'])->pluck('email')->toArray();
 
-            $allRecipients = array_merge([$customerEmail], $salesEmails, $financeEmails);
+            $allRecipients = array_merge($salesEmails, $financeEmails);
             $recipients    = array_unique(array_filter($allRecipients, fn($e) => !empty($e) && filter_var($e, FILTER_VALIDATE_EMAIL)));
 
             foreach($recipients as $email) {
                 Mail::to($email)->queue(new CustomerBgReadyMail($submission));
             }
         } catch (\Exception $e) {
-            \Log::error("Gagal kirim email completion: " . $e->getMessage());
+            Log::error("Gagal kirim email completion: " . $e->getMessage());
         }
     }
 }

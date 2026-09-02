@@ -71,9 +71,9 @@ class CheckExpiringBg extends Command
                 $inflationFixed = 130;
                 $delayCounter = 5;
 
-                $internalEmails = User::role(['super-admin', 'manager-finance'])->pluck('email')->toArray();
+                $internalEmails = User::role('admin-rtm')->pluck('email')->toArray();
                 $internalEmails = array_unique(array_filter($internalEmails));
-                $internalUsers = User::role(['super-admin', 'manager-finance', 'head-finance'])->get();
+                $internalUsers = User::role(['admin-rtm', 'manager-finance', 'head-finance'])->get();
 
                 if (!empty($internalEmails)) {
                     Mail::to($internalEmails)->later(

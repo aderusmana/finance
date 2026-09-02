@@ -13,7 +13,7 @@ use App\Mail\CustomerBgReadyMail;
 use App\Models\User;
 use App\Notifications\SystemNotification;
 use Illuminate\Http\Request;
-use Illuminate\Notifications\Notification;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
@@ -137,6 +137,9 @@ class BgApprovalInboxController extends Controller
         $request->validate([
             'id' => 'required',
             'action' => 'required|in:approve,reject',
+            'notes' => 'required_if:action,reject|nullable|string|min:3',
+        ], [
+            'notes.required_if' => 'Alasan penolakan / revisi wajib diisi.'
         ]);
 
         $sub = BgSubmission::with('recommendation.customer')->findOrFail($request->id);
@@ -167,6 +170,20 @@ class BgApprovalInboxController extends Controller
                 ]);
             }
 
+            $custName = $sub->recommendation->customer->name ?? 'Unknown Customer';
+
+            if ($status == 'rejected_by_finance') {
+                $recipients = User::role(['admin-rtm', 'super-admin'])->get();
+                $reasonText = $notes ? " Alasan: <i>\"{$notes}\"</i>. Silakan perbaiki dan submit kembali." : "";
+                Notification::send($recipients, new SystemNotification(
+                    "Lampiran D Perlu Revisi",
+                    "Perubahan Lampiran D untuk <b>{$custName}</b> ditolak oleh Manager Finance.{$reasonText}",
+                    route('lampiran-d.index'),
+                    'ph-x-circle',
+                    'danger'
+                ));
+            }
+
             if ($status == 'completed') {
                 if ($sub->recommendation) {
                     $sub->recommendation->update(['status' => 'approved']);
@@ -188,6 +205,15 @@ class BgApprovalInboxController extends Controller
                 }
 
                 $this->sendCompletionEmails($sub);
+
+                $recipients = User::role(['admin-rtm', 'secretary-finance', 'super-admin'])->get();
+                Notification::send($recipients, new SystemNotification(
+                    "Lampiran D Disetujui",
+                    "Perubahan Lampiran D pada <b>{$custName}</b> telah di-approved oleh Manager Finance dan siap di-download atau digunakan.",
+                    route('lampiran-d.index'),
+                    'ph-check-circle',
+                    'success'
+                ));
             }
 
             DB::commit();
@@ -265,11 +291,10 @@ class BgApprovalInboxController extends Controller
             return;
         }
 
-        $customerEmail = $submission->recommendation->customer->email ?? null;
-        $salesEmails = User::role('head-SNM')->pluck('email')->toArray();
-        $financeEmails = User::role(['manager-finance', 'head-finance'])->pluck('email')->toArray();
+        $salesEmails = User::role(['head-SNM', 'admin-rtm'])->pluck('email')->toArray();
+        $financeEmails = User::role(['manager-finance', 'head-finance', 'secretary-finance'])->pluck('email')->toArray();
 
-        $allRecipients = array_merge([$customerEmail], $salesEmails, $financeEmails);
+        $allRecipients = array_merge($salesEmails, $financeEmails);
         $recipients = array_unique(array_filter($allRecipients, fn($e) => !empty($e) && filter_var($e, FILTER_VALIDATE_EMAIL)));
 
         foreach($recipients as $email) {
