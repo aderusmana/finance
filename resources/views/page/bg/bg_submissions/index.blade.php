@@ -205,8 +205,8 @@
 
                                     {{-- Preview Link if Edit --}}
                                     <div id="current_file_preview" class="d-none mt-2 p-2 bg-white border rounded d-flex align-items-center gap-2">
-                                        <i class="ph-fill ph-check-circle text-success fs-5"></i>
-                                        <span class="small text-success fw-bold">File exists. Re-upload to replace.</span>
+                                        <i id="current_file_preview_icon" class="ph-fill ph-check-circle text-success fs-5"></i>
+                                        <span id="current_file_preview_text" class="small text-success fw-bold">File is available and can be viewed.</span>
                                         <a href="#" id="link_view_file_modal" target="_blank" class="btn btn-sm btn-outline-success ms-auto">View File</a>
                                     </div>
                                 </div>
@@ -569,7 +569,16 @@
                         // Cek File
                         if(data.signed_document_path) {
                             $('#current_file_preview').removeClass('d-none');
-                            $('#link_view_file_modal').attr('href', "{{ asset('') }}" + data.signed_document_path);
+                            
+                            if (data.file_exists) {
+                                $('#current_file_preview_icon').removeClass('ph-warning-circle text-danger').addClass('ph-check-circle text-success');
+                                $('#current_file_preview_text').removeClass('text-danger').addClass('text-success').text('File is available and can be viewed.');
+                                $('#link_view_file_modal').removeClass('disabled btn-outline-danger').addClass('btn-outline-success').attr('target', '_blank').attr('href', "{{ asset('') }}" + data.signed_document_path).text('View File').css('pointer-events', 'auto');
+                            } else {
+                                $('#current_file_preview_icon').removeClass('ph-check-circle text-success').addClass('ph-warning-circle text-danger');
+                                $('#current_file_preview_text').removeClass('text-success').addClass('text-danger').text('File is missing or corrupted.');
+                                $('#link_view_file_modal').addClass('disabled btn-outline-danger').removeClass('btn-outline-success').removeAttr('target').attr('href', '#').text('Error / Missing').css('pointer-events', 'none');
+                            }
 
                             // File jadi opsional kalau edit dan file sudah ada
                             $('#req-star').addClass('d-none');

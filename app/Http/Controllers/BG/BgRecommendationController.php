@@ -78,14 +78,15 @@ class BgRecommendationController extends Controller
                                 </div>';
                     })
                     ->addColumn('action', function ($row) {
-                        return '<div class="action-btn-group"><button type="button" class="btn btn-secondary action-btn-hover btn-process" data-id="'.$row->id.'" data-tooltip="Process Recommendation"><i class="ph-bold ph-magic-wand"></i></button></div>';
+                        return '<div class="d-flex justify-content-center"><button type="button" class="btn btn-primary btn-process text-white fw-bold d-flex align-items-center gap-2" data-id="'.$row->id.'" style="border-radius: 6px;"><i class="ph-bold ph-calculator fs-5"></i> Process</button></div>';
                     })
                     ->rawColumns(['bg_number', 'customer_name', 'current_bg', 'action'])->make(true);
             }
 
             if ($request->has('type') && $request->type == 'history') {
                 $query = BgRecommendation::with('customer')
-                    ->where('bg_recommendations.status', '!=', 'pending');
+                    ->where('bg_recommendations.status', '!=', 'pending')
+                    ->orderBy('updated_at', 'desc');
 
                 return DataTables::of($query)
                     ->addIndexColumn()
@@ -116,7 +117,7 @@ class BgRecommendationController extends Controller
                         return '<span class="badge bg-'.$color.' bg-opacity-10 text-'.$color.' border border-'.$color.' border-opacity-25 px-3 py-1 rounded-pill"><i class="ph-bold '.$icon.' me-1"></i>'.ucfirst(str_replace('_', ' ', $row->status)).'</span>';
                     })
                     ->addColumn('action', function($row){
-                        return '<div class="action-btn-group"><button class="btn btn-secondary action-btn-hover btn-edit-rec" data-id="'.$row->id.'" data-tooltip="Edit Data"><i class="ph-bold ph-pencil"></i></button></div>';
+                        return '<div class="d-flex justify-content-center"><button class="btn btn-warning btn-edit-rec text-white fw-bold d-flex align-items-center gap-2" data-id="'.$row->id.'" style="border-radius: 6px;"><i class="ph-bold ph-pencil-simple fs-5"></i> Edit</button></div>';
                     })
                     ->rawColumns(['bg_number', 'customer_name', 'average', 'recommended_credit_limit', 'set_bg', 'status', 'action'])
                     ->make(true);
@@ -226,17 +227,15 @@ class BgRecommendationController extends Controller
             $timeFactor = $top > 0 ? ($top + $leadTime) / $top : 1;
             $inflationFactor = $inflation / 100;
             $recLimit = $estPpnValue * $timeFactor * $inflationFactor;
-            $fkLimit = $recLimit * ($rulePercent / 100);
+            
+            $activeRule = $rulePercent > 0 ? $rulePercent : 100;
+            $fkLimit = $recLimit * ($activeRule / 100);
             $rounded = round($fkLimit, -6);
 
             if ($request->filled('credit_limit_updated')) {
                 $limitUpdated = (float) $request->credit_limit_updated;
             } else {
-                if ($rulePercent > 0) {
-                     $limitUpdated = $setBg / ($rulePercent / 100);
-                } else {
-                     $limitUpdated = $setBg;
-                }
+                $limitUpdated = $setBg / ($activeRule / 100);
             }
 
             $notes = $request->notes;

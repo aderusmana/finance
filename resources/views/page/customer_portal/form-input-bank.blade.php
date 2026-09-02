@@ -220,7 +220,7 @@
                                                     name="details[{{ $index }}][nominal]"
                                                     class="form-control nominal-input rupiah-format fw-bold text-end @error('details.'.$index.'.nominal') is-invalid @enderror"
                                                     placeholder="0"
-                                                    value="{{ old('details.'.$index.'.nominal', number_format((float)$detail['nominal'], 0, '', '')) }}"
+                                                    value="{{ old('details.'.$index.'.nominal', $detail['nominal'] ? number_format((float)$detail['nominal'], 0, '', '') : '') }}"
                                                     required>
                                                 @error('details.'.$index.'.nominal')
                                                 <div class="invalid-feedback">{{ $message }}</div>

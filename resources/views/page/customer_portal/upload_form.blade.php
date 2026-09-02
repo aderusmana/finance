@@ -240,6 +240,11 @@
                 Swal.fire({ icon: 'warning', title: 'No File', text: 'Please upload a file first.', confirmButtonColor: '#1e40af' });
                 return;
             }
+            const btnSubmit = document.getElementById('btnSubmit');
+            if (btnSubmit) {
+                btnSubmit.disabled = true;
+                btnSubmit.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Uploading...';
+            }
             runLoadingAnimation('Uploading...', 'Do not close this page...', () => {
                 form.submit();
             });
@@ -255,12 +260,12 @@
                 width += Math.floor(Math.random() * 10) + 5;
                 if (width > 100) width = 100;
                 modalProgressBar.style.width = width + '%';
-                if (width === 100) {
+                if (width >= 100) {
                     clearInterval(interval);
-                    setTimeout(() => {
-                        if(title !== 'Uploading...') loadingModal.hide();
-                        if(callback) callback();
-                    }, 500);
+                    if(title !== 'Uploading...') {
+                        setTimeout(() => { loadingModal.hide(); }, 500);
+                    }
+                    if(callback) callback();
                 }
             }, 100);
         }
