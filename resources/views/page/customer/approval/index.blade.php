@@ -3,6 +3,89 @@
 
     @include('components.sample-table-styles')
 
+    {{-- Custom Approval Decision & Beautiful Dialog Styling --}}
+    <style>
+        .decision-btn[data-select-action="approve"]:hover {
+            background: #f0fdf4 !important;
+            border-color: #a7f3d0 !important;
+            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.12) !important;
+        }
+        .decision-btn[data-select-action="review"]:hover {
+            background: #eff6ff !important;
+            border-color: #bfdbfe !important;
+            box-shadow: 0 4px 14px rgba(59, 130, 246, 0.12) !important;
+        }
+        .decision-btn[data-select-action="reject"]:hover {
+            background: #fef2f2 !important;
+            border-color: #fecaca !important;
+            box-shadow: 0 4px 14px rgba(239, 68, 68, 0.12) !important;
+        }
+
+        .decision-btn[data-select-action="approve"].active {
+            background: #ecfdf5 !important;
+            border-color: #10b981 !important;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2) !important;
+        }
+        .decision-btn[data-select-action="review"].active {
+            background: #eff6ff !important;
+            border-color: #3b82f6 !important;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2) !important;
+        }
+        .decision-btn[data-select-action="reject"].active {
+            background: #fef2f2 !important;
+            border-color: #ef4444 !important;
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2) !important;
+        }
+
+        /* Beautiful SweetAlert Custom Popup */
+        .swal2-custom-approval-popup {
+            border-radius: 1.5rem !important;
+            padding: 2rem 1.75rem !important;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.18) !important;
+            position: relative !important;
+            overflow: hidden !important;
+        }
+        .swal2-custom-approval-popup .swal2-html-container {
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow: visible !important;
+        }
+        .swal2-custom-approval-popup .swal2-actions {
+            margin-top: 1.5rem !important;
+            gap: 12px !important;
+        }
+        .btn-swal-confirm {
+            padding: 0.65rem 1.75rem !important;
+            border-radius: 50rem !important;
+            font-weight: 700 !important;
+            font-size: 0.9rem !important;
+            border: none !important;
+            color: white !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+            transition: all 0.2s ease !important;
+            cursor: pointer !important;
+        }
+        .btn-swal-confirm:hover {
+            transform: translateY(-1px) !important;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2) !important;
+        }
+        .btn-swal-cancel {
+            padding: 0.65rem 1.5rem !important;
+            border-radius: 50rem !important;
+            font-weight: 600 !important;
+            font-size: 0.9rem !important;
+            background: #f1f5f9 !important;
+            color: #475569 !important;
+            border: 1px solid #cbd5e1 !important;
+            transition: all 0.2s ease !important;
+            cursor: pointer !important;
+        }
+        .btn-swal-cancel:hover {
+            background: #e2e8f0 !important;
+            color: #1e293b !important;
+        }
+    </style>
+
     {{-- Loading Overlay (Glassmorphism) --}}
     <div id="loading-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(5px); z-index: 9999; display: none; flex-direction: column; align-items: center; justify-content: center;">
         <div class="spinner-border" style="width: 4rem; height: 4rem; color: #2563eb; border-width: 0.3rem;" role="status"></div>
@@ -1077,7 +1160,8 @@
                     const button = $(this);
                     const customerId = button.data('id');
                     const token = button.data('token');
-                    const customerName = button.data('name');
+                    const customerName = button.data('name') || '';
+                    window.currentApprovalCustomerName = customerName;
                     const btnTitle = button.attr('title') || '';
                     const isITInput = btnTitle.includes('Input Code');
 
@@ -1144,33 +1228,30 @@
                                                 @csrf
                                                 <input type="hidden" name="token" value="${token}">
                                                 <input type="hidden" name="action" id="final_action" value="">
+                                                <input type="hidden" name="notes" id="modal_notes" value="">
 
                                                 <label style="color: #475569; font-size: 0.85rem; font-weight: 700; margin-bottom: 12px; display: block;">Choose Your Decision <span class="text-danger">*</span></label>
-                                                <div class="d-flex flex-column flex-md-row gap-3 mb-4">
+                                                <div class="d-flex flex-column flex-md-row gap-3 mb-2">
                                                     <div class="decision-btn flex-fill" data-select-action="approve" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 1rem; padding: 1rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center;">
-                                                        <div style="width: 40px; height: 40px; background: #10b981; color: white; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-right: 15px; box-shadow: 0 4px 10px rgba(16,185,129,0.2);">
+                                                        <div style="width: 40px; height: 40px; background: #10b981; color: white; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-right: 15px; box-shadow: 0 4px 10px rgba(16,185,129,0.2); flex-shrink: 0;">
                                                             <i class="ph-bold ph-check-circle fs-4"></i>
                                                         </div>
                                                         <h6 class="mb-0 fw-bolder" style="color: #1e293b; font-size: 0.95rem;">Approve<br><span style="font-size: 0.75rem; font-weight: 600; color: #64748b;">No Notes</span></h6>
                                                     </div>
 
                                                     <div class="decision-btn flex-fill" data-select-action="review" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 1rem; padding: 1rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center;">
-                                                        <div style="width: 40px; height: 40px; background: #3b82f6; color: white; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-right: 15px; box-shadow: 0 4px 10px rgba(59,130,246,0.2);">
+                                                        <div style="width: 40px; height: 40px; background: #3b82f6; color: white; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-right: 15px; box-shadow: 0 4px 10px rgba(59,130,246,0.2); flex-shrink: 0;">
                                                             <i class="ph-bold ph-note-pencil fs-4"></i>
                                                         </div>
                                                         <h6 class="mb-0 fw-bolder" style="color: #1e293b; font-size: 0.95rem;">Approve<br><span style="font-size: 0.75rem; font-weight: 600; color: #64748b;">With Notes</span></h6>
                                                     </div>
 
                                                     <div class="decision-btn flex-fill" data-select-action="reject" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 1rem; padding: 1rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center;">
-                                                        <div style="width: 40px; height: 40px; background: #ef4444; color: white; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-right: 15px; box-shadow: 0 4px 10px rgba(239,68,68,0.2);">
+                                                        <div style="width: 40px; height: 40px; background: #ef4444; color: white; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-right: 15px; box-shadow: 0 4px 10px rgba(239,68,68,0.2); flex-shrink: 0;">
                                                             <i class="ph-bold ph-x-circle fs-4"></i>
                                                         </div>
                                                         <h6 class="mb-0 fw-bolder" style="color: #1e293b; font-size: 0.95rem;">Reject<br><span style="font-size: 0.75rem; font-weight: 600; color: #64748b;">With Notes</span></h6>
                                                     </div>
-                                                </div>
-                                                <div id="notes_container" style="display: none;">
-                                                    <label for="modal_notes" style="color: #475569; font-size: 0.85rem; font-weight: 700; margin-bottom: 8px; display: block;">Notes / Reasons <span class="text-danger">*</span></label>
-                                                    <textarea class="form-control" id="modal_notes" name="notes" rows="3" placeholder="Type your reason or note here..." style="border: 2px solid #cbd5e1; border-radius: 0.75rem; background: #f8fafc; resize: none;"></textarea>
                                                 </div>
                                             </form>
                                         </div>
@@ -1178,7 +1259,7 @@
                                 `;
 
                                 submitBtnHtml = `
-                                    <button type="submit" form="modalResponseForm" id="final_submit_btn" class="btn rounded-pill px-5 py-2 fw-bold shadow-sm" style="display: none; border: none; color: white;">
+                                    <button type="button" id="final_submit_btn" class="btn rounded-pill px-5 py-2 fw-bold shadow-sm" style="display: none; border: none; color: white;">
                                         Submit Decision
                                     </button>
                                 `;
@@ -1243,67 +1324,298 @@
                     });
                 });
 
-                $(document).on('click', '.decision-btn', function() {
-                    // Reset styling
-                    $('.decision-btn').css({'border': '1px solid #e2e8f0', 'background': '#ffffff', 'opacity': '0.6', 'box-shadow': 'none'});
-                    $('.decision-btn').find('h6').css('color', '#1e293b');
+                // Function to execute dynamic decision flow with SweetAlert confirmation & dialog prompt
+                function executeDecisionFlow(selectedAction) {
+                    const form = $('#modalResponseForm');
+                    const customerName = window.currentApprovalCustomerName || 'Customer';
+                    const topInput = $('#input_top');
+                    const isFinanceForm = topInput.length > 0;
+                    const isTopChanged = isFinanceForm && (String(topInput.val() || '').trim() !== String(topInput.attr('data-original') || '').trim());
 
-                    // Apply Active Styling
-                    $(this).css({'border': '2px solid transparent', 'opacity': '1', 'box-shadow': '0 4px 15px rgba(0,0,0,0.05)'});
-
-                    const selectedAction = $(this).data('select-action');
                     $('#final_action').val(selectedAction);
 
+                    let popupBg = '';
+                    let iconHtml = '';
+                    let titleHtml = '';
+                    let badgeHtml = '';
+                    let messageHtml = '';
+                    let confirmBtnHtml = '';
+                    let confirmBtnBg = '';
+
                     if (selectedAction === 'approve') {
-                        $(this).css({'border-color': '#10b981', 'background': '#f0fdf4'});
-                        $(this).find('h6').css('color', '#047857');
+                        popupBg = 'linear-gradient(180deg, #ecfdf5 0%, #f7fefb 110px, #ffffff 180px)';
+                        iconHtml = `
+                            <div style="width: 64px; height: 64px; background: #d1fae5; border: 2.5px solid #a7f3d0; border-radius: 50%; color: #059669; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 12px; box-shadow: 0 8px 20px rgba(16,185,129,0.2);">
+                                <i class="ph-bold ph-check-circle" style="font-size: 2.25rem;"></i>
+                            </div>
+                        `;
+                        titleHtml = `<h4 class="fw-bolder mb-1" style="color: #065f46;">Konfirmasi Approval</h4>`;
+                        badgeHtml = `
+                            <div class="mb-3">
+                                <span style="background: rgba(16,185,129,0.12); color: #047857; padding: 5px 14px; border-radius: 50rem; font-size: 0.85rem; font-weight: 700; display: inline-block;">
+                                    <i class="ph-bold ph-user me-1"></i>${customerName}
+                                </span>
+                            </div>
+                        `;
+                        messageHtml = `<p style="color: #475569; font-size: 0.95rem; margin-bottom: 0;">Apakah Anda yakin ingin <strong>menyetujui</strong> pengajuan customer ini <span class="text-success fw-bold">tanpa catatan</span>?</p>`;
+                        confirmBtnHtml = '<i class="ph-bold ph-check-circle me-1"></i> Ya, Setujui Sekarang!';
+                        confirmBtnBg = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
                     } else if (selectedAction === 'review') {
-                        $(this).css({'border-color': '#3b82f6', 'background': '#eff6ff'});
-                        $(this).find('h6').css('color', '#1d4ed8');
+                        popupBg = 'linear-gradient(180deg, #eff6ff 0%, #f8faff 110px, #ffffff 180px)';
+                        iconHtml = `
+                            <div style="width: 64px; height: 64px; background: #dbeafe; border: 2.5px solid #bfdbfe; border-radius: 50%; color: #2563eb; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 12px; box-shadow: 0 8px 20px rgba(37,99,235,0.2);">
+                                <i class="ph-bold ph-note-pencil" style="font-size: 2.25rem;"></i>
+                            </div>
+                        `;
+                        titleHtml = `<h4 class="fw-bolder mb-1" style="color: #1e40af;">Konfirmasi Approve dengan Catatan</h4>`;
+                        badgeHtml = `
+                            <div class="mb-3">
+                                <span style="background: rgba(59,130,246,0.12); color: #1d4ed8; padding: 5px 14px; border-radius: 50rem; font-size: 0.85rem; font-weight: 700; display: inline-block;">
+                                    <i class="ph-bold ph-user me-1"></i>${customerName}
+                                </span>
+                            </div>
+                        `;
+                        messageHtml = `<p style="color: #475569; font-size: 0.95rem; margin-bottom: 0;">Apakah Anda yakin ingin menyetujui pengajuan customer ini dengan <strong>menyertakan catatan</strong>?</p>`;
+                        confirmBtnHtml = '<i class="ph-bold ph-arrow-right me-1"></i> Ya, Lanjutkan Isi Catatan';
+                        confirmBtnBg = 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)';
                     } else if (selectedAction === 'reject') {
-                        $(this).css({'border-color': '#ef4444', 'background': '#fef2f2'});
-                        $(this).find('h6').css('color', '#b91c1c');
+                        popupBg = 'linear-gradient(180deg, #fef2f2 0%, #fff5f5 110px, #ffffff 180px)';
+                        iconHtml = `
+                            <div style="width: 64px; height: 64px; background: #fee2e2; border: 2.5px solid #fecaca; border-radius: 50%; color: #dc2626; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 12px; box-shadow: 0 8px 20px rgba(239,68,68,0.2);">
+                                <i class="ph-bold ph-x-circle" style="font-size: 2.25rem;"></i>
+                            </div>
+                        `;
+                        titleHtml = `<h4 class="fw-bolder mb-1" style="color: #991b1b;">Konfirmasi Penolakan</h4>`;
+                        badgeHtml = `
+                            <div class="mb-3">
+                                <span style="background: rgba(239,68,68,0.12); color: #b91c1c; padding: 5px 14px; border-radius: 50rem; font-size: 0.85rem; font-weight: 700; display: inline-block;">
+                                    <i class="ph-bold ph-user me-1"></i>${customerName}
+                                </span>
+                            </div>
+                        `;
+                        messageHtml = `<p style="color: #475569; font-size: 0.95rem; margin-bottom: 0;">Apakah Anda yakin ingin <strong>menolak</strong> pengajuan customer ini? Alasan penolakan wajib disertakan.</p>`;
+                        confirmBtnHtml = '<i class="ph-bold ph-arrow-right me-1"></i> Ya, Lanjutkan Tolak';
+                        confirmBtnBg = 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)';
                     }
 
-                    const notesContainer = $('#notes_container');
-                    const notesInput = $('#modal_notes');
-                    const submitBtn = $('#final_submit_btn');
+                    const step1Html = `
+                        <div class="text-center px-2 py-1">
+                            ${iconHtml}
+                            ${titleHtml}
+                            ${badgeHtml}
+                            ${messageHtml}
+                        </div>
+                    `;
 
-                    if(selectedAction === 'approve') {
-                        notesContainer.slideUp();
-                        notesInput.removeAttr('required').val('');
-                        submitBtn.css('background', 'linear-gradient(135deg, #10b981 0%, #059669 100%)')
-                                .html('<i class="ph-bold ph-check-circle me-2"></i> Submit Approve').fadeIn();
-                    } else if (selectedAction === 'review') {
-                        notesContainer.slideDown();
-                        notesInput.attr('required', 'required');
-                        submitBtn.css('background', 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)')
-                                .html('<i class="ph-bold ph-paper-plane-tilt me-2"></i> Approve with Notes').fadeIn();
-                    } else if (selectedAction === 'reject') {
-                        notesContainer.slideDown();
-                        notesInput.attr('required', 'required');
-                        submitBtn.css('background', 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)')
-                                .html('<i class="ph-bold ph-x-circle me-2"></i> Submit Reject').fadeIn();
+                    // Step 1: Dialog Konfirmasi Awal dengan visual elegan & dinamis
+                    Swal.fire({
+                        html: step1Html,
+                        background: popupBg,
+                        showCancelButton: true,
+                        confirmButtonText: confirmBtnHtml,
+                        cancelButtonText: 'Batal',
+                        target: document.getElementById('viewModal'),
+                        customClass: {
+                            popup: 'swal2-custom-approval-popup',
+                            confirmButton: 'btn-swal-confirm',
+                            cancelButton: 'btn-swal-cancel'
+                        },
+                        didOpen: (popup) => {
+                            const confirmBtn = popup.querySelector('.btn-swal-confirm');
+                            if (confirmBtn) confirmBtn.style.background = confirmBtnBg;
+                        },
+                        buttonsStyling: false
+                    }).then((result) => {
+                        if (!result.isConfirmed) {
+                            $('.decision-btn').removeClass('active');
+                            $('#final_action').val('');
+                            return;
+                        }
+
+                        // Jika Approve langsung tanpa catatan:
+                        if (selectedAction === 'approve') {
+                            if (isTopChanged) {
+                                Swal.fire({
+                                    title: 'Catatan Wajib Diisi',
+                                    text: 'Anda telah mengubah Term of Payment (TOP), sehingga wajib menyertakan catatan approval.',
+                                    icon: 'warning',
+                                    target: document.getElementById('viewModal')
+                                }).then(() => {
+                                    executeDecisionFlow('review');
+                                });
+                                return;
+                            }
+                            $('#modal_notes').val('');
+                            processApprovalAjax(form);
+                            return;
+                        }
+
+                        // Step 2: Dialog Isi Catatan / Alasan (Disesuaikan background & tampilannya dengan pilihan)
+                        let step2Bg = '';
+                        let step2IconHtml = '';
+                        let step2Title = '';
+                        let step2BadgeColor = '';
+                        let step2TextareaBg = '';
+                        let step2BorderColor = '';
+                        let step2FocusBorder = '';
+                        let step2FocusGlow = '';
+                        let step2Placeholder = '';
+                        let step2Label = '';
+                        let step2SubmitText = '';
+                        let step2SubmitBg = '';
+                        let step2NoticeHtml = '';
+
+                        if (selectedAction === 'review') {
+                            step2Bg = 'linear-gradient(180deg, #eff6ff 0%, #f8faff 130px, #ffffff 100%)';
+                            step2IconHtml = `
+                                <div style="width: 58px; height: 58px; background: #dbeafe; border: 2.5px solid #bfdbfe; border-radius: 16px; color: #2563eb; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 12px; box-shadow: 0 8px 18px rgba(37,99,235,0.18);">
+                                    <i class="ph-bold ph-note-pencil" style="font-size: 2rem;"></i>
+                                </div>
+                            `;
+                            step2Title = `<h4 class="fw-bolder mb-1" style="color: #1e40af;">Catatan Approval</h4>`;
+                            step2BadgeColor = 'background: rgba(59,130,246,0.12); color: #1d4ed8;';
+                            step2TextareaBg = '#f8faff';
+                            step2BorderColor = '#bfdbfe';
+                            step2FocusBorder = '#3b82f6';
+                            step2FocusGlow = 'rgba(59, 130, 246, 0.2)';
+                            step2Label = 'Catatan / Rekomendasi Approval';
+                            step2Placeholder = 'Tuliskan catatan approval atau rekomendasi Anda secara jelas di sini...';
+                            step2SubmitText = '<i class="ph-bold ph-check-circle me-1"></i> Simpan & Setujui';
+                            step2SubmitBg = 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)';
+
+                            if (isTopChanged) {
+                                step2NoticeHtml = `
+                                    <div class="alert alert-warning py-2 px-3 mb-3 text-start d-flex align-items-center gap-2" style="font-size: 0.85rem; border-radius: 0.75rem; border: 1px solid #fde68a; background: #fffbeb;">
+                                        <i class="ph-bold ph-warning-circle fs-5 text-warning flex-shrink-0"></i>
+                                        <span>Anda telah mengubah Term of Payment (TOP). Mohon jelaskan alasan perubahan pada catatan di bawah.</span>
+                                    </div>
+                                `;
+                            }
+                        } else if (selectedAction === 'reject') {
+                            step2Bg = 'linear-gradient(180deg, #fef2f2 0%, #fffbfa 130px, #ffffff 100%)';
+                            step2IconHtml = `
+                                <div style="width: 58px; height: 58px; background: #fee2e2; border: 2.5px solid #fecaca; border-radius: 16px; color: #dc2626; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 12px; box-shadow: 0 8px 18px rgba(220,38,38,0.18);">
+                                    <i class="ph-bold ph-warning-circle" style="font-size: 2rem;"></i>
+                                </div>
+                            `;
+                            step2Title = `<h4 class="fw-bolder mb-1" style="color: #991b1b;">Alasan Penolakan</h4>`;
+                            step2BadgeColor = 'background: rgba(239,68,68,0.12); color: #b91c1c;';
+                            step2TextareaBg = '#fffbfa';
+                            step2BorderColor = '#fecaca';
+                            step2FocusBorder = '#ef4444';
+                            step2FocusGlow = 'rgba(239, 68, 68, 0.2)';
+                            step2Label = 'Alasan Penolakan';
+                            step2Placeholder = 'Tuliskan alasan penolakan secara jelas agar dapat ditindaklanjuti...';
+                            step2SubmitText = '<i class="ph-bold ph-x-circle me-1"></i> Kirim Penolakan';
+                            step2SubmitBg = 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)';
+                        }
+
+                        const step2Html = `
+                            <div class="text-center px-1">
+                                ${step2IconHtml}
+                                ${step2Title}
+                                <div class="mb-3">
+                                    <span style="${step2BadgeColor} padding: 4px 14px; border-radius: 50rem; font-size: 0.825rem; font-weight: 700; display: inline-block;">
+                                        <i class="ph-bold ph-user me-1"></i>${customerName}
+                                    </span>
+                                </div>
+                                ${step2NoticeHtml}
+                                <div class="text-start mt-2">
+                                    <label class="fw-bold mb-1" style="font-size: 0.775rem; text-transform: uppercase; color: #64748b; letter-spacing: 0.5px;">${step2Label} <span class="text-danger">*</span></label>
+                                    <textarea id="swal_custom_notes" class="form-control" rows="4" placeholder="${step2Placeholder}" 
+                                              style="border: 2px solid ${step2BorderColor}; border-radius: 0.85rem; background: ${step2TextareaBg}; font-size: 0.9rem; padding: 0.85rem; resize: none; transition: all 0.2s;" 
+                                              onfocus="this.style.borderColor='${step2FocusBorder}'; this.style.boxShadow='0 0 0 4px ${step2FocusGlow}';" 
+                                              onblur="this.style.borderColor='${step2BorderColor}'; this.style.boxShadow='none';"></textarea>
+                                </div>
+                            </div>
+                        `;
+
+                        Swal.fire({
+                            html: step2Html,
+                            background: step2Bg,
+                            showCancelButton: true,
+                            confirmButtonText: step2SubmitText,
+                            cancelButtonText: 'Batal',
+                            target: document.getElementById('viewModal'),
+                            customClass: {
+                                popup: 'swal2-custom-approval-popup',
+                                confirmButton: 'btn-swal-confirm',
+                                cancelButton: 'btn-swal-cancel'
+                            },
+                            didOpen: (popup) => {
+                                const confirmBtn = popup.querySelector('.btn-swal-confirm');
+                                if (confirmBtn) confirmBtn.style.background = step2SubmitBg;
+                                const textarea = popup.querySelector('#swal_custom_notes');
+                                if (textarea) textarea.focus();
+                            },
+                            buttonsStyling: false,
+                            preConfirm: () => {
+                                const noteInput = document.getElementById('swal_custom_notes');
+                                const val = noteInput ? noteInput.value.trim() : '';
+                                if (!val) {
+                                    Swal.showValidationMessage(selectedAction === 'reject' ? 'Alasan penolakan wajib diisi!' : 'Catatan approval wajib diisi!');
+                                    return false;
+                                }
+                                if (val.length < 3) {
+                                    Swal.showValidationMessage('Alasan/catatan terlalu singkat. Mohon jelaskan lebih rinci.');
+                                    return false;
+                                }
+                                return val;
+                            }
+                        }).then((inputResult) => {
+                            if (inputResult.isConfirmed) {
+                                const finalNote = inputResult.value || '';
+                                $('#modal_notes').val(finalNote);
+                                processApprovalAjax(form);
+                            } else {
+                                $('.decision-btn').removeClass('active');
+                                $('#final_action').val('');
+                            }
+                        });
+                    });
+                }
+
+                $(document).on('click', '.decision-btn', function() {
+                    const selectedAction = $(this).data('select-action');
+                    if (!selectedAction) return;
+
+                    $('.decision-btn').removeClass('active');
+                    $(this).addClass('active');
+
+                    executeDecisionFlow(selectedAction);
+                });
+
+                $(document).on('click', '#final_submit_btn', function(e) {
+                    e.preventDefault();
+                    const action = $('#final_action').val();
+                    if (!action) {
+                        Swal.fire({
+                            title: 'Pilih Keputusan',
+                            text: 'Silakan pilih keputusan terlebih dahulu (Approve / Review / Reject).',
+                            icon: 'warning',
+                            target: document.getElementById('viewModal')
+                        });
+                        return;
                     }
+                    executeDecisionFlow(action);
                 });
 
                 $(document).on('submit', '#modalResponseForm', function(e) {
                     e.preventDefault();
 
                     const form = $(this);
-                    const action = $('#final_action').val();
-                    const notesValue = $('#modal_notes').val() ? $('#modal_notes').val().trim() : '';
-
                     const customerCodeInput = $('#it_update_code');
                     const isITForm = customerCodeInput.length > 0;
-
-                    const topInput = $('#input_top');
-                    const isFinanceForm = topInput.length > 0;
 
                     if (isITForm) {
                         const inputCode = customerCodeInput.val().trim();
                         if (!inputCode) {
-                            Swal.fire('Error', 'Customer Code is required!', 'error');
+                            Swal.fire({
+                                title: 'Error',
+                                text: 'Customer Code is required!',
+                                icon: 'error',
+                                target: document.getElementById('viewModal')
+                            });
                             return;
                         }
 
@@ -1315,74 +1627,6 @@
                             confirmButtonColor: '#059669',
                             confirmButtonText: 'Yes, Activate Now!',
                             cancelButtonText: 'Batal',
-                            target: document.getElementById('viewModal')
-                        }).then((result) => {
-                            if (result.isConfirmed) processApprovalAjax(form);
-                        });
-                    }
-                    else {
-                        if (!action) {
-                            Swal.fire('Warning', 'Please select your decision (Approve / Reject) first.', 'warning');
-                            return;
-                        }
-
-                        const isReject = action === 'reject';
-                        const isApprove = action === 'approve';
-
-                        if (isReject) {
-                            if (!notesValue || !/[a-zA-Z]/.test(notesValue)) {
-                                Swal.fire('Warning', 'Reason for rejection is required and must be clear.', 'warning');
-                                return;
-                            }
-                        }
-                        else if (action === 'review') {
-                            if (isFinanceForm) {
-                                const currentTop = String(topInput.val() || '').trim();
-                                const originalTop = String(topInput.attr('data-original') || '').trim();
-
-                                if (currentTop !== originalTop) {
-                                    if (!notesValue) {
-                                        Swal.fire('Warning', 'Notes are required because you have changed the Term of Payment (TOP).', 'warning');
-                                        return;
-                                    }
-                                }
-                            }
-                            else {
-                                // Review: notes optional — hanya validasi format jika diisi
-                                if (notesValue && !/[a-zA-Z]{2,}/.test(notesValue)) {
-                                    Swal.fire('Warning', 'If filling notes, please use clear sentences.', 'warning');
-                                    return;
-                                }
-                            }
-                        }
-
-                        let title = 'Confirm Action?';
-                        let text = 'Proceed with this decision?';
-                        let confirmColor = '#3b82f6';
-                        let icon = 'question';
-
-                        if (isReject) {
-                            title = 'Confirm Rejection?';
-                            text = "This application will be rejected and returned.";
-                            icon = 'warning';
-                            confirmColor = '#ef4444';
-                        } else if (isApprove) {
-                            title = 'Approve without Notes?';
-                            text = "You will approve this application without providing any notes.";
-                            confirmColor = '#10b981';
-                        } else {
-                            title = 'Submit Approval?';
-                            text = "Submit the approval along with any notes or data changes?";
-                        }
-
-                        Swal.fire({
-                            title: title,
-                            text: text,
-                            icon: icon,
-                            showCancelButton: true,
-                            confirmButtonColor: confirmColor,
-                            confirmButtonText: 'Yes, Submit!',
-                            cancelButtonText: 'Cancel',
                             target: document.getElementById('viewModal'),
                             customClass: {
                                 confirmButton: 'btn rounded-pill px-4 fw-bold border-0 shadow-sm text-white',
@@ -1392,7 +1636,21 @@
                         }).then((result) => {
                             if (result.isConfirmed) processApprovalAjax(form);
                         });
+                        return;
                     }
+
+                    const action = $('#final_action').val();
+                    if (!action) {
+                        Swal.fire({
+                            title: 'Pilih Keputusan',
+                            text: 'Silakan klik salah satu opsi keputusan (Approve / Review / Reject) terlebih dahulu.',
+                            icon: 'warning',
+                            target: document.getElementById('viewModal')
+                        });
+                        return;
+                    }
+
+                    executeDecisionFlow(action);
                 });
 
                 function processApprovalAjax(form) {
