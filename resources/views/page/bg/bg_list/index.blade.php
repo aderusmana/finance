@@ -17,9 +17,9 @@
 
     <div class="row">
         <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-4 table-controls-header flex-wrap">
                 {{-- Filters --}}
-                <div class="d-none d-md-flex align-items-center gap-2 mb-3">
+                <div class="d-flex align-items-center gap-2 mb-3 filter-container-responsive flex-wrap customer-filter-bar">
                     <span class="text-muted fw-bold me-1"><i class="ph-bold ph-funnel"></i> Filter:</span>
                     <select id="statusFilter" class="form-select select2" style="width: 150px;">
                         <option value="all">All Status</option>
@@ -38,7 +38,7 @@
                     <button id="resetFilters" class="btn btn-sm btn-secondary border" title="Reset Filters"><i class="ph-bold ph-arrow-counter-clockwise"></i></button>
                 </div>
                 {{-- Create Button --}}
-                <div class="ms-auto d-flex">
+                <div class="ms-auto d-flex page-action-buttons">
                     <button class="btn btn-primary" type="button" id="btn-create-bg">
                         <i class="ph-bold ph-plus"></i> <span>New Bank Garansi</span>
                     </button>

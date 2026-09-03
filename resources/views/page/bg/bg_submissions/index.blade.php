@@ -17,7 +17,7 @@
         <div class="col-12">
 
             {{-- NAVIGATION PILLS (TABS) --}}
-            <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-4 tab-header-container flex-wrap">
                 <ul class="nav nav-pills gap-2" id="pills-tab" role="tablist" style="background: #f1f5f9; padding: 5px; border-radius: 12px; display: inline-flex;">
                     <li class="nav-item" role="presentation">
                         <button class="nav-link active fw-bold px-4 rounded-pill" id="pills-active-tab" data-bs-toggle="pill" data-bs-target="#pills-active" type="button" role="tab">
@@ -46,7 +46,7 @@
 
                     {{-- Filter --}}
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <div class="d-flex align-items-center gap-2">
+                        <div class="d-flex align-items-center gap-2 filter-container-responsive flex-wrap">
                             <span class="text-muted fw-bold me-1"><i class="ph-bold ph-funnel"></i> Filter:</span>
                             <select id="statusFilter" class="form-select select2" style="width: 180px;">
                                 <option value="all">Show All Active</option>

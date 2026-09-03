@@ -1,0 +1,578 @@
+/* ==========================================================================
+   RESPONSIVE TABLE CARDS & MOBILE CONTROLS SYSTEM
+   Strictly scoped for mobile devices (max-width: 767.98px)
+   Desktop layout (min-width: 768px) is 100% UNTOUCHED
+   ========================================================================== */
+
+@media (max-width: 767.98px) {
+
+    /* ==========================================================================
+       1. GLOBAL TABLE CONTAINER OVERRIDES FOR MOBILE
+       ========================================================================== */
+    .table-responsive {
+        overflow-x: visible !important;
+        border: none !important;
+        margin-bottom: 1rem !important;
+    }
+
+    .main-table-container {
+        box-shadow: none !important;
+        background: transparent !important;
+        border: none !important;
+        padding: 0 !important;
+    }
+
+    .table-header-enhanced {
+        border-radius: 14px !important;
+        margin-bottom: 1rem !important;
+        padding: 1rem 1.25rem !important;
+    }
+
+    /* ==========================================================================
+       2. DYNAMIC TABLE TO CARD CONVERSION
+       Targets standard data tables while strictly protecting modals
+       ========================================================================== */
+    
+    /* MODAL TABLE PROTECTION: NEVER convert tables inside modals into cards */
+    .modal table,
+    .modal-dialog table,
+    table.no-card,
+    .no-card table {
+        display: table !important;
+        width: 100% !important;
+    }
+    .modal thead,
+    .modal-dialog thead,
+    table.no-card thead {
+        display: table-header-group !important;
+    }
+    .modal tbody,
+    .modal-dialog tbody,
+    table.no-card tbody {
+        display: table-row-group !important;
+    }
+    .modal tr,
+    .modal-dialog tr,
+    table.no-card tr {
+        display: table-row !important;
+        margin-bottom: 0 !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        padding: 0 !important;
+    }
+    .modal th,
+    .modal td,
+    .modal-dialog th,
+    .modal-dialog td,
+    table.no-card th,
+    table.no-card td {
+        display: table-cell !important;
+        padding: 8px 10px !important;
+    }
+    .modal td::before,
+    .modal-dialog td::before,
+    table.no-card td::before {
+        display: none !important;
+    }
+
+    /* CARD CONVERSION TARGETS */
+    #sampleTable:not(.no-card):not(.modal table),
+    table.display:not(.no-card):not(.modal table),
+    table.dataTable:not(.no-card):not(.modal table),
+    table.table-card-enabled:not(.no-card):not(.modal table),
+    .main-table-container table:not(.no-card):not(.modal table) {
+        display: block !important;
+        width: 100% !important;
+        border: none !important;
+        background: transparent !important;
+        border-collapse: separate !important;
+        border-spacing: 0 12px !important;
+    }
+
+    /* Hide desktop table header on mobile */
+    #sampleTable:not(.no-card):not(.modal table) thead,
+    table.display:not(.no-card):not(.modal table) thead,
+    table.dataTable:not(.no-card):not(.modal table) thead,
+    table.table-card-enabled:not(.no-card):not(.modal table) thead,
+    .main-table-container table:not(.no-card):not(.modal table) thead {
+        display: none !important;
+    }
+
+    /* Tbody becomes a flex card container */
+    #sampleTable:not(.no-card):not(.modal table) tbody,
+    table.display:not(.no-card):not(.modal table) tbody,
+    table.dataTable:not(.no-card):not(.modal table) tbody,
+    table.table-card-enabled:not(.no-card):not(.modal table) tbody,
+    .main-table-container table:not(.no-card):not(.modal table) tbody {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 14px !important;
+        width: 100% !important;
+        background: transparent !important;
+    }
+
+    /* EACH ROW BECOMES A LUXURIOUS MODERN CARD */
+    #sampleTable:not(.no-card):not(.modal table) tbody tr,
+    table.display:not(.no-card):not(.modal table) tbody tr,
+    table.dataTable:not(.no-card):not(.modal table) tbody tr,
+    table.table-card-enabled:not(.no-card):not(.modal table) tbody tr,
+    .main-table-container table:not(.no-card):not(.modal table) tbody tr {
+        display: flex !important;
+        flex-direction: column !important;
+        background: #ffffff !important;
+        border-radius: 16px !important;
+        border: 1px solid #e2e8f0 !important;
+        box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05), 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+        padding: 16px !important;
+        position: relative !important;
+        transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+        margin-bottom: 0 !important;
+    }
+
+    #sampleTable:not(.no-card):not(.modal table) tbody tr:active,
+    table.display:not(.no-card):not(.modal table) tbody tr:active {
+        transform: scale(0.99) !important;
+        box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06) !important;
+    }
+
+    /* Striping and background reset */
+    #sampleTable tbody tr:nth-child(even),
+    #sampleTable tbody tr:nth-child(odd),
+    table.display tbody tr:nth-child(even),
+    table.display tbody tr:nth-child(odd) {
+        background: #ffffff !important;
+    }
+
+    /* CELL BASE STYLING INSIDE CARD */
+    #sampleTable:not(.no-card):not(.modal table) tbody td,
+    table.display:not(.no-card):not(.modal table) tbody td,
+    table.dataTable:not(.no-card):not(.modal table) tbody td,
+    table.table-card-enabled:not(.no-card):not(.modal table) tbody td,
+    .main-table-container table:not(.no-card):not(.modal table) tbody td {
+        display: flex !important;
+        border: none !important;
+        padding: 6px 0 !important;
+        background: transparent !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    /* --------------------------------------------------------------------------
+       CARD ELEMENT SPECIFICS (DYNAMIC ORDERING & POSITIONING)
+       -------------------------------------------------------------------------- */
+
+    /* NUMBER PILL (#1, #2, etc.) */
+    tbody tr td[data-col-type="number"] {
+        order: 0 !important;
+        position: absolute !important;
+        top: 14px !important;
+        right: 14px !important;
+        width: auto !important;
+        padding: 2px 8px !important;
+        background: #f1f5f9 !important;
+        color: #475569 !important;
+        font-size: 0.75rem !important;
+        font-weight: 700 !important;
+        border-radius: 9999px !important;
+        border: 1px solid #e2e8f0 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        z-index: 2 !important;
+    }
+    tbody tr td[data-col-type="number"]::before {
+        content: '#' !important;
+        margin-right: 1px !important;
+        opacity: 0.65 !important;
+    }
+
+    /* CARD TITLE / MAIN ENTITY (Customer, Name, Title, etc.) */
+    tbody tr td[data-col-type="title"] {
+        order: 1 !important;
+        font-size: 1.05rem !important;
+        font-weight: 700 !important;
+        color: #0f172a !important;
+        padding-right: 48px !important; /* Space for number pill */
+        padding-bottom: 10px !important;
+        margin-bottom: 8px !important;
+        border-bottom: 1px solid #f1f5f9 !important;
+        display: flex !important;
+        align-items: center !important;
+        flex-wrap: wrap !important;
+        gap: 8px !important;
+    }
+    tbody tr td[data-col-type="title"]::before {
+        display: none !important;
+    }
+    tbody tr td[data-col-type="title"] .symbol-label {
+        margin-right: 6px !important;
+        flex-shrink: 0 !important;
+    }
+
+    /* CODE / REFERENCE BADGE (Nik, Customer Code, Form Code, etc.) */
+    tbody tr td[data-col-type="code"] {
+        order: 2 !important;
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        padding: 6px 0 !important;
+        border-bottom: 1px dashed #f1f5f9 !important;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+        font-size: 0.85rem !important;
+    }
+    tbody tr td[data-col-type="code"]::before {
+        content: attr(data-label) !important;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+        font-size: 0.725rem !important;
+        font-weight: 600 !important;
+        color: #64748b !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5px !important;
+        flex-shrink: 0 !important;
+    }
+
+    /* STATUS ROW (Approval Status, Account Status, etc.) */
+    tbody tr td[data-col-type="status"] {
+        order: 3 !important;
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        padding: 6px 0 !important;
+        border-bottom: 1px dashed #f1f5f9 !important;
+    }
+    tbody tr td[data-col-type="status"]::before {
+        content: attr(data-label) !important;
+        font-size: 0.725rem !important;
+        font-weight: 600 !important;
+        color: #64748b !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5px !important;
+        flex-shrink: 0 !important;
+    }
+    tbody tr td[data-col-type="status"] .badge,
+    tbody tr td[data-col-type="status"] .status-badge {
+        font-size: 0.75rem !important;
+        padding: 4px 10px !important;
+        border-radius: 9999px !important;
+    }
+
+    /* GENERAL ATTRIBUTE ROWS (Dynamic Key-Value) */
+    tbody tr td:not([data-col-type="title"]):not([data-col-type="number"]):not([data-col-type="action"]):not([data-col-type="code"]):not([data-col-type="status"]),
+    tbody tr td[data-col-type="data"] {
+        order: 10 !important;
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        padding: 6px 0 !important;
+        border-bottom: 1px dashed #f1f5f9 !important;
+        font-size: 0.875rem !important;
+        color: #334155 !important;
+    }
+    tbody tr td:not([data-col-type="title"]):not([data-col-type="number"]):not([data-col-type="action"]):not([data-col-type="code"]):not([data-col-type="status"])::before,
+    tbody tr td[data-col-type="data"]::before {
+        content: attr(data-label) !important;
+        font-size: 0.725rem !important;
+        font-weight: 600 !important;
+        color: #64748b !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.4px !important;
+        flex-shrink: 0 !important;
+        max-width: 45% !important;
+        margin-right: 12px !important;
+    }
+
+    /* ACTION FOOTER ROW (Buttons at Card Bottom) */
+    tbody tr td[data-col-type="action"] {
+        order: 99 !important;
+        margin-top: 10px !important;
+        padding-top: 12px !important;
+        padding-bottom: 0 !important;
+        border-top: 1px solid #f1f5f9 !important;
+        border-bottom: none !important;
+        display: flex !important;
+        justify-content: flex-end !important;
+        align-items: center !important;
+        gap: 8px !important;
+        flex-wrap: wrap !important;
+        width: 100% !important;
+    }
+    tbody tr td[data-col-type="action"]::before {
+        display: none !important;
+    }
+
+    /* Action buttons inside card footer: full touch friendly */
+    tbody tr td[data-col-type="action"] .action-btn-group,
+    tbody tr td[data-col-type="action"] .btn-group {
+        display: flex !important;
+        gap: 8px !important;
+        width: 100% !important;
+        flex-wrap: wrap !important;
+    }
+    tbody tr td[data-col-type="action"] .btn,
+    tbody tr td[data-col-type="action"] .action-btn-hover,
+    tbody tr td[data-col-type="action"] .btn-action-modern {
+        flex: 1 1 auto !important;
+        min-height: 38px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 6px 14px !important;
+        font-size: 0.85rem !important;
+        font-weight: 600 !important;
+        border-radius: 10px !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+    }
+
+    /* EMPTY TABLE STATE CARD */
+    tbody tr.table-card-empty,
+    tbody tr td.dataTables_empty {
+        display: block !important;
+        text-align: center !important;
+        padding: 2.5rem 1rem !important;
+        background: #f8fafc !important;
+        border-radius: 16px !important;
+        border: 1px dashed #cbd5e1 !important;
+        color: #64748b !important;
+        font-weight: 500 !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+    tbody tr td.dataTables_empty::before {
+        display: none !important;
+    }
+
+
+    /* ==========================================================================
+       3. RESPONSIVE TABS & NAVIGATION PILLS
+       ========================================================================= */
+    .nav-pills,
+    .nav-tabs,
+    #pills-tab {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        -webkit-overflow-scrolling: touch !important;
+        padding: 5px !important;
+        width: 100% !important;
+        margin-bottom: 12px !important;
+        scrollbar-width: none !important; /* Firefox */
+        border-radius: 14px !important;
+    }
+    .nav-pills::-webkit-scrollbar,
+    .nav-tabs::-webkit-scrollbar,
+    #pills-tab::-webkit-scrollbar {
+        display: none !important; /* Chrome, Safari */
+    }
+    .nav-pills .nav-item,
+    .nav-tabs .nav-item {
+        flex-shrink: 0 !important;
+    }
+    .nav-pills .nav-link,
+    .nav-tabs .nav-link {
+        white-space: nowrap !important;
+        padding: 8px 18px !important;
+        font-size: 0.85rem !important;
+        border-radius: 50rem !important;
+        display: inline-flex !important;
+        align-items: center !important;
+    }
+
+    /* Container wrapping tabs + action button */
+    .tab-header-container,
+    div:has(> #pills-tab),
+    div:has(> .nav-pills) {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 12px !important;
+    }
+    #active-actions,
+    div:has(> #pills-tab) > div:last-child {
+        width: 100% !important;
+    }
+    #active-actions .btn,
+    div:has(> #pills-tab) > div:last-child .btn {
+        width: 100% !important;
+        min-height: 42px !important;
+        justify-content: center !important;
+        border-radius: 12px !important;
+    }
+
+
+    /* ==========================================================================
+       4. RESPONSIVE FILTERS & SEARCH CONTROLS
+       ========================================================================== */
+    .filter-container-responsive,
+    .customer-filter-bar,
+    .filter-wrapper {
+        display: flex !important;
+        flex-direction: column !important;
+        width: 100% !important;
+        gap: 10px !important;
+        margin-bottom: 16px !important;
+    }
+
+    /* Filter row label & controls */
+    .filter-container-responsive .text-muted,
+    .customer-filter-bar .text-muted {
+        font-size: 0.85rem !important;
+        margin-bottom: 2px !important;
+    }
+
+    /* Select2 & standard dropdowns expansion on mobile */
+    .filter-container-responsive .select2-container,
+    .customer-filter-bar .select2-container,
+    .filter-container-responsive select,
+    .customer-filter-bar select {
+        width: 100% !important;
+        min-width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    .select2-container--bootstrap-5 .select2-selection,
+    .select2-container--default .select2-selection {
+        min-height: 40px !important;
+        border-radius: 10px !important;
+        display: flex !important;
+        align-items: center !important;
+    }
+
+    /* Reset filter button touch size */
+    .filter-container-responsive #resetFilters,
+    .customer-filter-bar #resetFilters,
+    #resetFilters {
+        min-height: 40px !important;
+        width: 100% !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        border-radius: 10px !important;
+    }
+
+
+    /* ==========================================================================
+       5. RESPONSIVE PAGE HEADERS & ACTION BUTTONS
+       ========================================================================== */
+    .table-controls-header,
+    .page-action-header {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 14px !important;
+    }
+
+    .page-action-buttons,
+    .ms-auto.d-flex.gap-2 {
+        margin-left: 0 !important;
+        width: 100% !important;
+        display: flex !important;
+        gap: 8px !important;
+        flex-wrap: wrap !important;
+    }
+
+    .page-action-buttons .btn,
+    .ms-auto.d-flex.gap-2 .btn {
+        flex: 1 1 auto !important;
+        min-height: 42px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        border-radius: 10px !important;
+        font-weight: 600 !important;
+    }
+
+
+    /* ==========================================================================
+       6. DATATABLES CONTROLS (SEARCH, LENGTH, PAGINATION)
+       ========================================================================== */
+    .dataTables_wrapper {
+        padding: 0 !important;
+    }
+
+    .dataTables_wrapper .dataTables_filter,
+    .dt-container .dt-search {
+        float: none !important;
+        text-align: left !important;
+        width: 100% !important;
+        margin-bottom: 14px !important;
+    }
+
+    .dataTables_wrapper .dataTables_filter label,
+    .dt-container .dt-search label {
+        width: 100% !important;
+        display: flex !important;
+        flex-direction: column !important;
+        font-weight: 600 !important;
+        font-size: 0.85rem !important;
+        color: #475569 !important;
+        gap: 6px !important;
+    }
+
+    .dataTables_wrapper .dataTables_filter input,
+    .dt-container .dt-search input {
+        width: 100% !important;
+        min-height: 42px !important;
+        border-radius: 10px !important;
+        border: 1px solid #cbd5e1 !important;
+        padding: 8px 14px !important;
+        font-size: 16px !important; /* Prevents auto-zoom on iOS */
+        margin-left: 0 !important;
+        box-sizing: border-box !important;
+    }
+
+    .dataTables_wrapper .dataTables_length,
+    .dt-container .dt-length {
+        float: none !important;
+        width: 100% !important;
+        margin-bottom: 12px !important;
+        font-size: 0.85rem !important;
+    }
+
+    .dataTables_wrapper .dataTables_length select,
+    .dt-container .dt-length select {
+        min-height: 38px !important;
+        border-radius: 8px !important;
+        padding: 4px 10px !important;
+        border: 1px solid #cbd5e1 !important;
+    }
+
+    .dataTables_wrapper .dataTables_info,
+    .dt-container .dt-info {
+        float: none !important;
+        text-align: center !important;
+        width: 100% !important;
+        margin: 12px 0 6px 0 !important;
+        font-size: 0.8rem !important;
+        color: #64748b !important;
+    }
+
+    .dataTables_wrapper .dataTables_paginate,
+    .dt-container .dt-paging {
+        float: none !important;
+        display: flex !important;
+        justify-content: center !important;
+        flex-wrap: wrap !important;
+        width: 100% !important;
+        gap: 4px !important;
+        margin-top: 10px !important;
+    }
+
+    .dataTables_wrapper .dataTables_paginate .paginate_button,
+    .dt-container .dt-paging .page-link,
+    div.dt-paging nav ul.pagination {
+        display: flex !important;
+        justify-content: center !important;
+        flex-wrap: wrap !important;
+    }
+
+    .dataTables_wrapper .dataTables_paginate .paginate_button {
+        min-width: 36px !important;
+        height: 36px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        border-radius: 8px !important;
+        font-size: 0.85rem !important;
+        padding: 0 10px !important;
+        margin: 2px !important;
+    }
+}

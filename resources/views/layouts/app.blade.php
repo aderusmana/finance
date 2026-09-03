@@ -56,6 +56,8 @@
 
     <!-- Responsive css-->
     <link href="{{ asset('assets/') }}/css/responsive.css" rel="stylesheet" type="text/css">
+    <!-- Responsive Table Cards & Mobile Controls -->
+    <link href="{{ asset('assets/css/responsive-table-cards.css') }}" rel="stylesheet" type="text/css">
 
     <!-- Data Table css-->
     <link href="{{ asset('assets') }}/vendor/datatable/jquery.dataTables.min.css" rel="stylesheet" type="text/css">
@@ -412,6 +414,9 @@
 
 
 
+
+    <!-- Responsive Table Cards & Mobile Controls Engine -->
+    <script src="{{ asset('assets/js/responsive-table-cards.js') }}"></script>
 
     @stack('scripts')
 </body>

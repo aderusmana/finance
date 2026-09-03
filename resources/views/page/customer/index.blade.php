@@ -23,8 +23,8 @@
 
     <div class="row">
         <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <div class="d-none d-md-flex align-items-center gap-2 mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-4 table-controls-header flex-wrap">
+                <div class="d-flex align-items-center gap-2 mb-3 filter-container-responsive flex-wrap customer-filter-bar">
                     <span class="text-muted fw-bold me-1"><i class="ph-bold ph-funnel"></i> Filter:</span>
 
                     <select id="statusFilter" class="form-select select2" style="width: 9.375rem;">
@@ -45,7 +45,7 @@
                     </button>
                 </div>
 
-                <div class="ms-auto d-flex gap-2">
+                <div class="ms-auto d-flex gap-2 page-action-buttons">
                     @can('import customer')
                         <button class="btn btn-success" type="button" data-bs-toggle="modal" data-bs-target="#importModal">
                             <i class="ph-bold ph-file-csv"></i>
