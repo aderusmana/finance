@@ -35,9 +35,9 @@
         {{-- 2. CONTROL BAR (FILTER & STATS) --}}
         <div class="row m-2 mb-3">
             <div class="col-12">
-                <div class="d-flex flex-wrap gap-3 align-items-center justify-content-between" style="background: #ffffff; border-radius: 1.25rem; box-shadow: 0 4px 20px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; padding: 1.25rem 1.5rem; z-index: 2; position: relative;">
+                <div class="d-flex flex-wrap gap-3 align-items-center justify-content-between control-bar-container" style="background: #ffffff; border-radius: 1.25rem; box-shadow: 0 4px 20px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; padding: 1.25rem 1.5rem; z-index: 2; position: relative;">
 
-                    <div class="d-flex align-items-center gap-3 flex-wrap">
+                    <div class="d-flex align-items-center gap-2 gap-md-3 flex-wrap filter-container-responsive">
                         <div class="d-flex align-items-center gap-2 bg-light rounded-pill px-3 py-1 border">
                             <i class="ph-bold ph-funnel text-primary"></i>
                             <span class="text-muted fw-bold" style="font-size: 0.85rem;">FILTER</span>
@@ -59,32 +59,32 @@
                         </button>
                     </div>
 
-                    <div class="d-flex gap-3 mt-3 mt-md-0">
-                        <div class="d-flex align-items-center gap-2 px-3 py-2" style="background: linear-gradient(180deg, #fffbeb 0%, #fef3c7 100%); border: 1px solid #fde68a; border-radius: 1rem; box-shadow: 0 2px 5px rgba(217, 119, 6, 0.1);">
-                            <div style="width: 32px; height: 32px; background: #f59e0b; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white;">
-                                <i class="ph-bold ph-hourglass-high fs-6"></i>
+                    <div class="customer-approval-stats d-flex gap-2 gap-md-3 mt-3 mt-md-0 w-100 w-md-auto">
+                        <div class="stat-badge-card d-flex align-items-center gap-2 px-2 px-md-3 py-2 flex-fill" style="background: linear-gradient(180deg, #fffbeb 0%, #fef3c7 100%); border: 1px solid #fde68a; border-radius: 1rem; box-shadow: 0 2px 5px rgba(217, 119, 6, 0.1);">
+                            <div class="stat-icon-box" style="width: 30px; height: 30px; background: #f59e0b; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; flex-shrink: 0;">
+                                <i class="ph-bold ph-hourglass-high" style="font-size: 0.85rem;"></i>
                             </div>
-                            <div class="d-flex flex-column line-height-sm">
-                                <span style="font-size: 0.7rem; color: #b45309; font-weight: 700; text-transform: uppercase;">Pending</span>
-                                <span style="font-size: 1.1rem; color: #92400e; font-weight: 800;">{{ $pendingCount }}</span>
-                            </div>
-                        </div>
-                        <div class="d-flex align-items-center gap-2 px-3 py-2" style="background: linear-gradient(180deg, #eff6ff 0%, #dbeafe 100%); border: 1px solid #bfdbfe; border-radius: 1rem; box-shadow: 0 2px 5px rgba(37, 99, 235, 0.1);">
-                            <div style="width: 32px; height: 32px; background: #3b82f6; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white;">
-                                <i class="ph-bold ph-spinner fs-6"></i>
-                            </div>
-                            <div class="d-flex flex-column line-height-sm">
-                                <span style="font-size: 0.7rem; color: #1d4ed8; font-weight: 700; text-transform: uppercase;">Processing</span>
-                                <span style="font-size: 1.1rem; color: #1e3a8a; font-weight: 800;">{{ $processingCount }}</span>
+                            <div class="d-flex flex-column line-height-sm overflow-hidden">
+                                <span class="stat-title" style="font-size: 0.65rem; color: #b45309; font-weight: 700; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Pending</span>
+                                <span class="stat-val" style="font-size: 1.05rem; color: #92400e; font-weight: 800; line-height: 1;">{{ $pendingCount }}</span>
                             </div>
                         </div>
-                        <div class="d-flex align-items-center gap-2 px-3 py-2" style="background: linear-gradient(180deg, #f0fdf4 0%, #dcfce7 100%); border: 1px solid #86efac; border-radius: 1rem; box-shadow: 0 2px 5px rgba(22, 163, 74, 0.1);">
-                            <div style="width: 32px; height: 32px; background: #10b981; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white;">
-                                <i class="ph-bold ph-seal-check fs-6"></i>
+                        <div class="stat-badge-card d-flex align-items-center gap-2 px-2 px-md-3 py-2 flex-fill" style="background: linear-gradient(180deg, #eff6ff 0%, #dbeafe 100%); border: 1px solid #bfdbfe; border-radius: 1rem; box-shadow: 0 2px 5px rgba(37, 99, 235, 0.1);">
+                            <div class="stat-icon-box" style="width: 30px; height: 30px; background: #3b82f6; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; flex-shrink: 0;">
+                                <i class="ph-bold ph-spinner" style="font-size: 0.85rem;"></i>
                             </div>
-                            <div class="d-flex flex-column line-height-sm">
-                                <span style="font-size: 0.7rem; color: #15803d; font-weight: 700; text-transform: uppercase;">Approved</span>
-                                <span style="font-size: 1.1rem; color: #166534; font-weight: 800;">{{ $approvedCount }}</span>
+                            <div class="d-flex flex-column line-height-sm overflow-hidden">
+                                <span class="stat-title" style="font-size: 0.65rem; color: #1d4ed8; font-weight: 700; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Processing</span>
+                                <span class="stat-val" style="font-size: 1.05rem; color: #1e3a8a; font-weight: 800; line-height: 1;">{{ $processingCount }}</span>
+                            </div>
+                        </div>
+                        <div class="stat-badge-card d-flex align-items-center gap-2 px-2 px-md-3 py-2 flex-fill" style="background: linear-gradient(180deg, #f0fdf4 0%, #dcfce7 100%); border: 1px solid #86efac; border-radius: 1rem; box-shadow: 0 2px 5px rgba(22, 163, 74, 0.1);">
+                            <div class="stat-icon-box" style="width: 30px; height: 30px; background: #10b981; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; flex-shrink: 0;">
+                                <i class="ph-bold ph-seal-check" style="font-size: 0.85rem;"></i>
+                            </div>
+                            <div class="d-flex flex-column line-height-sm overflow-hidden">
+                                <span class="stat-title" style="font-size: 0.65rem; color: #15803d; font-weight: 700; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Approved</span>
+                                <span class="stat-val" style="font-size: 1.05rem; color: #166534; font-weight: 800; line-height: 1;">{{ $approvedCount }}</span>
                             </div>
                         </div>
                     </div>
