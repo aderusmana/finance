@@ -1,4 +1,4 @@
-<nav class="semi-nav dark-sidebar selected">
+<nav class="semi-nav dark-sidebar selected" id="main-sidebar">
     <div class="app-logo">
         <a class="logo d-inline-block" href="{{ route('dashboard') }}">
             <img alt="#" src="{{ asset('assets') }}/images/logo/logohitam.png"></a>
@@ -191,3 +191,100 @@
     </div>
 
 </nav>
+
+{{-- Custom Sidebar Scroll Styles & Auto-Recalculate Handler --}}
+<style>
+    /* Strictly target #main-sidebar ONLY so DataTables pagination nav is completely unaffected */
+    #main-sidebar {
+        display: flex !important;
+        flex-direction: column !important;
+        height: 100vh !important;
+        max-height: 100vh !important;
+        overflow: hidden !important;
+        position: fixed !important;
+    }
+
+    #main-sidebar .app-logo {
+        flex-shrink: 0 !important;
+        height: 70px !important;
+        max-height: 70px !important;
+    }
+
+    #main-sidebar .app-nav,
+    #main-sidebar #app-simple-bar {
+        flex: 1 1 auto !important;
+        height: calc(100vh - 70px) !important;
+        max-height: calc(100vh - 70px) !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+
+    /* Force SimpleBar internal wrappers to constrain within available height */
+    #main-sidebar #app-simple-bar .simplebar-wrapper,
+    #main-sidebar #app-simple-bar .simplebar-mask,
+    #main-sidebar #app-simple-bar .simplebar-offset {
+        height: 100% !important;
+        max-height: 100% !important;
+    }
+
+    #main-sidebar #app-simple-bar .simplebar-content-wrapper {
+        height: 100% !important;
+        max-height: 100% !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+    }
+
+    /* Bottom padding for the navigation list so items are never obscured */
+    #main-sidebar .main-nav {
+        padding-bottom: 5rem !important;
+    }
+
+    /* Sleek slim scrollbar for sidebar */
+    #main-sidebar #app-simple-bar::-webkit-scrollbar,
+    #main-sidebar #app-simple-bar .simplebar-content-wrapper::-webkit-scrollbar {
+        width: 6px !important;
+    }
+
+    #main-sidebar #app-simple-bar::-webkit-scrollbar-track,
+    #main-sidebar #app-simple-bar .simplebar-content-wrapper::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.04) !important;
+    }
+
+    #main-sidebar #app-simple-bar::-webkit-scrollbar-thumb,
+    #main-sidebar #app-simple-bar .simplebar-content-wrapper::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.22) !important;
+        border-radius: 4px !important;
+    }
+
+    #main-sidebar #app-simple-bar::-webkit-scrollbar-thumb:hover,
+    #main-sidebar #app-simple-bar .simplebar-content-wrapper::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.45) !important;
+    }
+
+    #main-sidebar #app-simple-bar,
+    #main-sidebar #app-simple-bar .simplebar-content-wrapper {
+        scrollbar-width: thin !important;
+        scrollbar-color: rgba(255, 255, 255, 0.22) rgba(255, 255, 255, 0.04) !important;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const sidebar = document.getElementById('main-sidebar');
+        const bar = document.getElementById('app-simple-bar');
+        if (!sidebar || !bar) return;
+
+        function recalcSidebar() {
+            if (window.SimpleBar) {
+                const inst = SimpleBar.instances.get(bar);
+                if (inst && typeof inst.recalculate === 'function') {
+                    inst.recalculate();
+                }
+            }
+        }
+
+        sidebar.addEventListener('shown.bs.collapse', recalcSidebar);
+        sidebar.addEventListener('hidden.bs.collapse', recalcSidebar);
+    });
+</script>
