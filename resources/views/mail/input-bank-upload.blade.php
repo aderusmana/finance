@@ -14,74 +14,35 @@
         $bankDetails = [];
         $token = '#';
         $customer = null;
+        $candidateBgs = collect();
 
         $isAdminNotif = isset($isUploadAdminNotif) && $isUploadAdminNotif;
 
         // 1. CEK KONTEKS & INISIALISASI VARIABEL
         if ($isAdminNotif) {
             // Konteks: Email Notifikasi ke Admin (Super Admin / RTM) saat Upload
-            $rec = $recommendation;
-            $customer = $rec->customer;
+            $rec = isset($submission) && $submission->recommendation ? $submission->recommendation : ($recommendation ?? null);
+            $customer = $rec ? $rec->customer : null;
 
             $pageTitle = 'Document Uploaded by Customer';
-            $refNumber = 'Ref ID: #' . substr($rec->id, 0, 8);
+            $refNumber = isset($submission) ? 'Form Code: #' . $submission->form_code : ('Ref ID: #' . ($rec ? substr($rec->id, 0, 8) : '-'));
 
-            // Setup Tombol & Link untuk Approval
-            if (isset($submission) && $submission->token) {
-                $actionUrl = route('customer.portal.review-upload', ['token' => $submission->token]);
-                $downloadUrl = route('customer.portal.download-submission-pdf', ['token' => $submission->token]);
-            } else {
-                $actionUrl = route('bg-approvals.index');
-                $downloadUrl = '#'; 
-            }
+            // Setup Tombol & Link untuk Admin RTM
+            $actionUrl = route('bg-submissions.index');
+            $downloadUrl = (isset($submission) && $submission->token) 
+                ? route('customer.portal.download-submission-pdf', ['token' => $submission->token]) 
+                : '#';
             $btnColor = '#3b82f6';
             $btnShadow = 'rgba(59, 130, 246, 0.3)';
-            $btnText = 'Review Uploaded Document';
+            $btnText = 'Review Submission & Complete BG';
         } elseif ($isUploadContext) {
             // Konteks: Email Konfirmasi Upload (Submission) ke Customer
             $rec = $submission->recommendation;
             $token = $submission->token;
-            $customer = $rec->customer;
+            $customer = $rec ? $rec->customer : null;
 
             $pageTitle = 'Confirmation of BG Application';
             $refNumber = 'Form Code: #' . $submission->form_code;
-
-            // Logika pencarian BG Spesifik (Existing/New)
-            $submissionTime = \Carbon\Carbon::parse($submission->created_at);
-            $startTime = $submissionTime->copy()->subMinutes(2);
-            $endTime   = $submissionTime->copy()->addMinutes(2);
-            $customerId = $rec ? $rec->customer_id : null;
-
-            if ($customerId) {
-                $candidateBgs = \App\Models\BG\BankGaransi::where('customer_id', $customerId)
-                    ->whereBetween('created_at', [$startTime, $endTime])
-                    ->with('details')
-                    ->orderBy('id', 'asc')
-                    ->get();
-
-                if ($candidateBgs->isEmpty()) {
-                    // Fallback cek updated_at untuk existing
-                    $candidateBgs = \App\Models\BG\BankGaransi::where('customer_id', $customerId)
-                        ->whereBetween('updated_at', [$startTime, $endTime])
-                        ->with('details')
-                        ->orderBy('id', 'asc')
-                        ->get();
-                }
-
-                $siblings = \App\Models\BG\BgSubmission::where('bg_recommendation_id', $rec->id)
-                    ->whereBetween('created_at', [$startTime, $endTime])
-                    ->orderBy('id', 'asc')
-                    ->pluck('id')
-                    ->toArray();
-
-                $myIndex = array_search($submission->id, $siblings);
-
-                if ($myIndex !== false && isset($candidateBgs[$myIndex])) {
-                    $targetBg = $candidateBgs[$myIndex];
-                } else {
-                    $targetBg = $candidateBgs->first();
-                }
-            }
 
             // Setup Tombol & Link untuk Upload
             $actionUrl = route('customer.portal.upload-form', ['token' => $token]);
@@ -116,6 +77,40 @@
             $btnShadow = 'none';
             $btnText = 'Invalid Link';
         }
+
+        // Ambil Data Seluruh Bank Garansi jika ada submission
+        if (isset($submission) && $submission && $rec) {
+            $submissionTime = \Carbon\Carbon::parse($submission->created_at);
+            $startTime = $submissionTime->copy()->subMinutes(5);
+            $endTime   = $submissionTime->copy()->addMinutes(5);
+            $customerId = $rec->customer_id;
+
+            if ($customerId) {
+                $candidateBgs = \App\Models\BG\BankGaransi::where('customer_id', $customerId)
+                    ->whereBetween('created_at', [$startTime, $endTime])
+                    ->with('details')
+                    ->orderBy('id', 'asc')
+                    ->get();
+
+                if ($candidateBgs->isEmpty()) {
+                    $candidateBgs = \App\Models\BG\BankGaransi::where('customer_id', $customerId)
+                        ->where('status', 'draft')
+                        ->with('details')
+                        ->latest()
+                        ->get();
+                }
+
+                if ($candidateBgs->isEmpty()) {
+                    $candidateBgs = \App\Models\BG\BankGaransi::where('customer_id', $customerId)
+                        ->with('details')
+                        ->latest()
+                        ->take(3)
+                        ->get();
+                }
+
+                $targetBg = $candidateBgs->first();
+            }
+        }
     @endphp
 
     <div style="max-width: 680px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 8px 20px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;">
@@ -130,43 +125,62 @@
 
             {{-- GREETING --}}
             <p style="font-size: 15px; line-height: 1.6; color: #334155; margin-bottom: 25px; margin-top: 0;">
-                Dear <strong>{{ $customer->name ?? 'Business Partner' }}</strong>,<br><br>
-
                 @if($isAdminNotif)
-                    Customer <strong>{{ $customer->name ?? 'Business Partner' }}</strong> has successfully uploaded their signed Bank Guarantee document. 
-                    Please review the submission and verify the document through the Approval Inbox.
+                    Halo <strong>Tim Admin-RTM / Sales</strong>,<br><br>
+                    Customer <strong>{{ $customer->name ?? 'Distributor' }}</strong> telah berhasil mengunggah dokumen konfirmasi Bank Garansi yang telah ditandatangani dan dicap perusahaan (Form Code: <strong>{{ isset($submission) ? $submission->form_code : '' }}</strong>).<br><br>
+                    Silakan review dokumen tersebut dan lengkapi <em>Nomor Resmi Bank Garansi</em>, <em>Tanggal Jatuh Tempo</em>, dan <em>Scan Dokumen Bank Garansi Asli</em> sebelum diteruskan untuk validasi Finance (Bu Rita).
                 @elseif($isUploadContext)
+                    Dear <strong>{{ $customer->name ?? 'Business Partner' }}</strong>,<br><br>
                     Thank you, we have successfully received your digital form data.
                     To legally validate this submission, we require the physical documents to be signed.
                 @else
+                    Dear <strong>{{ $customer->name ?? 'Business Partner' }}</strong>,<br><br>
                     Based on the latest sales performance evaluation and risk management policies, we have approved the update to your Bank Guarantee facility. Here are the final management decisions:
                 @endif
             </p>
 
-            {{-- INFO BANK GARANSI SPESIFIK (HANYA MUNCUL DI EMAIL UPLOAD) --}}
-            @if($isUploadContext && $targetBg && $targetBg->details->first())
-                <div style="background-color: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; padding: 15px; margin-bottom: 25px;">
+            {{-- INFO BANK GARANSI (MUNCUL DI EMAIL UPLOAD CUSTOMER & ADMIN - MENDUKUNG MULTI-BANK) --}}
+            @if(($isUploadContext || $isAdminNotif) && isset($candidateBgs) && $candidateBgs->count() > 0)
+                <div style="background-color: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; padding: 18px; margin-bottom: 25px;">
                     <table style="width: 100%; border-collapse: collapse;">
                         <tr>
-                            <td colspan="2" style="padding-bottom: 10px; border-bottom: 1px solid #e2e8f0; font-size: 11px; text-transform: uppercase; color: #64748b; font-weight: 700;">
-                                Document Details
+                            <td colspan="2" style="padding-bottom: 12px; border-bottom: 1px solid #e2e8f0; font-size: 11px; text-transform: uppercase; color: #64748b; font-weight: 700; letter-spacing: 0.5px;">
+                                Document Details @if($candidateBgs->count() > 1) (Multi-Bank: {{ $candidateBgs->count() }} Bank) @endif
                             </td>
                         </tr>
-                        <tr>
-                            <td style="padding: 10px 0 5px; color: #64748b; font-size: 13px;">Bank Name</td>
-                            <td style="padding: 10px 0 5px; text-align: right; color: #1e293b; font-weight: 700; font-size: 14px;">
-                                {{ $targetBg->details->first()->bank_name ?? '-' }}
-                                @if($targetBg->details->first()->branch_name)
-                                    <span style="color: #64748b; font-weight: normal; font-size: 12px;">({{ $targetBg->details->first()->branch_name }})</span>
-                                @endif
-                            </td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 5px 0; color: #64748b; font-size: 13px;">Nominal</td>
-                            <td style="padding: 5px 0; text-align: right; color: #15803d; font-weight: 700; font-size: 14px;">
-                                Rp {{ number_format($targetBg->bg_nominal, 0, ',', '.') }}
-                            </td>
-                        </tr>
+                        @foreach($candidateBgs as $idx => $bgItem)
+                            @php
+                                $dFirst = $bgItem->details ? $bgItem->details->first() : null;
+                                $bName = $dFirst && $dFirst->bank_name ? $dFirst->bank_name : ($bgItem->bank_name ?? 'Bank');
+                                $bBranch = $dFirst && $dFirst->branch_name ? ' ('.$dFirst->branch_name.')' : '';
+                            @endphp
+                            <tr style="{{ !$loop->last ? 'border-bottom: 1px dashed #e2e8f0;' : '' }}">
+                                <td style="padding: 10px 0; color: #64748b; font-size: 13px;">
+                                    @if($candidateBgs->count() > 1)
+                                        <span style="display: inline-block; background-color: #eff6ff; color: #2563eb; font-weight: 700; font-size: 11px; padding: 2px 8px; border-radius: 4px; margin-right: 6px;">Bank {{ $idx + 1 }}</span>
+                                    @else
+                                        Bank Name:
+                                    @endif
+                                    <strong style="color: #1e293b; font-size: 14px;">{{ $bName }}</strong>
+                                    @if($bBranch)
+                                        <span style="color: #64748b; font-size: 12px;">{{ $bBranch }}</span>
+                                    @endif
+                                </td>
+                                <td style="padding: 10px 0; text-align: right; color: #15803d; font-weight: 700; font-size: 14px; font-family: monospace;">
+                                    Rp {{ number_format($bgItem->bg_nominal, 0, ',', '.') }}
+                                </td>
+                            </tr>
+                        @endforeach
+                        @if($candidateBgs->count() > 1)
+                            <tr style="border-top: 2px solid #cbd5e1;">
+                                <td style="padding: 12px 0 5px; color: #1e293b; font-size: 13px; font-weight: 700;">
+                                    Total Nominal Bank Garansi
+                                </td>
+                                <td style="padding: 12px 0 5px; text-align: right; color: #15803d; font-weight: 800; font-size: 15px; font-family: monospace;">
+                                    Rp {{ number_format($candidateBgs->sum('bg_nominal'), 0, ',', '.') }}
+                                </td>
+                            </tr>
+                        @endif
                     </table>
                 </div>
             @endif

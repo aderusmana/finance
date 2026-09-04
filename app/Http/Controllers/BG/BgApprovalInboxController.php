@@ -45,7 +45,10 @@ class BgApprovalInboxController extends Controller
                 })
                 ->addColumn('bg_nominal', function($row){
                     $total = BankGaransi::where('customer_id', $row->recommendation->customer_id)
-                            ->where('created_at', $row->created_at)
+                            ->whereBetween('created_at', [
+                                $row->created_at->copy()->subMinutes(5),
+                                $row->created_at->copy()->addMinutes(5)
+                            ])
                             ->sum('bg_nominal');
 
                     if ($total == 0 && $row->bg_nominal > 0) {
@@ -86,9 +89,16 @@ class BgApprovalInboxController extends Controller
         $cust = $rec->customer;
 
         $bgs = BankGaransi::where('customer_id', $cust->id)
-                ->where('created_at', $sub->created_at)
+                ->whereBetween('created_at', [
+                    $sub->created_at->copy()->subMinutes(5),
+                    $sub->created_at->copy()->addMinutes(5)
+                ])
                 ->with('details')
                 ->get();
+
+        if ($bgs->isEmpty()) {
+            $bgs = BankGaransi::where('customer_id', $cust->id)->latest()->take(3)->with('details')->get();
+        }
 
         $totalNominal = $bgs->sum('bg_nominal');
         if ($totalNominal == 0 && $sub->bg_nominal > 0) {
@@ -210,17 +220,27 @@ class BgApprovalInboxController extends Controller
 
                 // Update Status SEMUA BG dalam batch ini
                 $bgs = BankGaransi::where('customer_id', $rec->customer_id)
-                        ->where('created_at', $sub->created_at)
+                        ->whereBetween('created_at', [
+                            $sub->created_at->copy()->subMinutes(5),
+                            $sub->created_at->copy()->addMinutes(5)
+                        ])
                         ->get();
 
+                if ($bgs->isEmpty()) {
+                    $bgs = BankGaransi::where('customer_id', $rec->customer_id)->latest()->take(3)->get();
+                }
+
                 foreach($bgs as $bg) {
-                    $bg->update([
+                    $bgUpdateData = [
                         'status'           => 'approved',
                         'issued_date'      => now(),
                         'exp_date'         => $sub->exp_date ?? $bg->exp_date ?? now()->addYear(),
-                        'bg_number'        => $sub->bg_number ?? $bg->bg_number,
                         'warkat_file_path' => $sub->warkat_file_path ?? $bg->warkat_file_path,
-                    ]);
+                    ];
+                    if ($bgs->count() === 1 && $sub->bg_number) {
+                        $bgUpdateData['bg_number'] = $sub->bg_number;
+                    }
+                    $bg->update($bgUpdateData);
                     $this->addToHistoryLogic($sub, $bg);
                 }
 

@@ -434,17 +434,23 @@ class CustomerBgPortalController extends Controller
 
             Log::info("Upload Dokumen Konfirmasi Berhasil untuk Submission ID: " . $submission->id);
 
-            // Send notification to Sales (sales, dep-SNM) and Admin RTM to complete Bank Guarantee details
+            // Send instant notification and email to Admin RTM & Sales
             try {
-                $salesUsers = User::role(['sales', 'dep-SNM', 'admin-rtm'])->get();
+                $recipients = User::role(['admin-rtm', 'sales', 'dep-SNM'])->get();
 
-                Notification::send($salesUsers, new SystemNotification(
+                Notification::sendNow($recipients, new SystemNotification(
                     'Customer Uploaded Confirmation Document',
-                    "Customer <b>{$rec->customer->name}</b> has uploaded the signed confirmation document ({$submission->form_code}). Please complete Bank Guarantee number, expiration date, and original warkat scan.",
+                    "Customer <b>{$rec->customer->name}</b> telah mengunggah dokumen konfirmasi Bank Garansi ({$submission->form_code}). Menunggu pengisian nomor BG & scan dokumen Bank Garansi oleh tim Sales / Admin.",
                     route('bg-submissions.index'),
                     'ph-upload-simple',
                     'success'
                 ));
+
+                foreach ($recipients as $recipient) {
+                    if ($recipient->email && filter_var($recipient->email, FILTER_VALIDATE_EMAIL)) {
+                        Mail::to($recipient->email)->send(new CustomerFillFormNotification($rec, true, $submission));
+                    }
+                }
             } catch (\Exception $e) {
                 Log::error('Notif Upload Sales/Admin Error: ' . $e->getMessage());
             }

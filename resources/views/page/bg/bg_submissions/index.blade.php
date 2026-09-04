@@ -452,27 +452,46 @@
                                         <label class="small fw-bold">8. Credit Limit (Rp)</label>
                                         <input type="text" class="form-control rupiah-input" name="limit_kredit" value="${formatRupiah(d.limit_kredit)}">
                                     </div>
-                                    <div class="col-md-12">
+                                    <div class="col-md-6">
                                         <label class="small fw-bold">9. Determined BG Amount (Rp)</label>
                                         <input type="text" class="form-control rupiah-input" name="nilai_bg_ditetapkan" value="${formatRupiah(d.nilai_bg_ditetapkan)}">
                                     </div>
+                                    <div class="col-md-6">
+                                        <label class="small fw-bold">10. Nilai BG Diserahkan (Total Rp)</label>
+                                        <input type="text" class="form-control rupiah-input bg-light fw-bold text-success" id="input_total_bg_diserahkan" name="nilai_bg_diserahkan" value="${formatRupiah(d.nilai_bg_diserahkan)}" readonly>
+                                    </div>
                                 </div>
-                                <h6 class="fw-bold text-primary border-bottom pb-2 mt-4">B. Bank Details</h6>
+                                <div class="d-flex align-items-center justify-content-between border-bottom pb-2 mt-4">
+                                    <h6 class="fw-bold text-primary mb-0">B. Bank Details ${d.is_multi_bank ? `<span class="badge bg-primary bg-opacity-10 text-primary border ms-2">Multi-Bank (${d.details.length} Bank)</span>` : ''}</h6>
+                                </div>
                             `;
 
-                            if(d.details) {
+                            if(d.details && d.details.length > 0) {
                                 d.details.forEach((item, index) => {
                                     html += `
-                                        <div class="card mb-2 border-start border-3 border-primary">
+                                        <div class="card mb-2 border-start border-3 border-primary shadow-sm">
                                             <div class="card-body p-2">
                                                 <input type="hidden" name="details[${item.id}][id]" value="${item.id}">
-                                                <div class="d-flex justify-content-between mb-1"><strong class="text-primary small">Bank ${index+1}</strong></div>
+                                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                                    <strong class="text-primary small"><i class="ph-bold ph-bank me-1"></i> Bank ${index+1}: ${item.bank_name || ''}</strong>
+                                                    ${item.parent_bg_number ? `<span class="badge bg-light text-dark border"><i class="ph-bold ph-hash me-1"></i>${item.parent_bg_number}</span>` : ''}
+                                                </div>
                                                 <div class="row g-2">
-                                                    <div class="col-md-4"><label class="small text-muted">Bank</label><input type="text" class="form-control form-control-sm" name="details[${item.id}][bank_name]" value="${item.bank_name}"></div>
-                                                    <div class="col-md-4"><label class="small text-muted">Branch</label><input type="text" class="form-control form-control-sm" name="details[${item.id}][branch_name]" value="${item.branch_name}"></div>
-                                                    <div class="col-md-4">
-                                                        <label class="small text-muted">Nominal</label>
-                                                        <input type="text" class="form-control form-control-sm rupiah-input" name="details[${item.id}][nominal]" value="${formatRupiah(item.nominal)}">
+                                                    <div class="col-md-3">
+                                                        <label class="small text-muted">Bank Name</label>
+                                                        <input type="text" class="form-control form-control-sm" name="details[${item.id}][bank_name]" value="${item.bank_name}">
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <label class="small text-muted">Branch</label>
+                                                        <input type="text" class="form-control form-control-sm" name="details[${item.id}][branch_name]" value="${item.branch_name}">
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <label class="small text-muted">Nominal (Rp)</label>
+                                                        <input type="text" class="form-control form-control-sm rupiah-input detail-nominal-input" name="details[${item.id}][nominal]" value="${formatRupiah(item.nominal)}">
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <label class="small text-muted">No BG Bank</label>
+                                                        <input type="text" class="form-control form-control-sm" name="details[${item.id}][bg_number]" value="${item.parent_bg_number || ''}" placeholder="No BG Bank">
                                                     </div>
                                                 </div>
                                             </div>
@@ -485,8 +504,9 @@
                                 <h6 class="fw-bold text-primary border-bottom pb-2 mt-4"><i class="ph-bold ph-shield-check me-1"></i> C. Kelengkapan Bank Garansi (Diisi Tim Sales / Admin)</h6>
                                 <div class="row g-3">
                                     <div class="col-md-6">
-                                        <label class="small fw-bold">Nomor Resmi Bank Garansi <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" name="bg_number" value="${d.bg_number || ''}" placeholder="Contoh: BG-2026-0003" required>
+                                        <label class="small fw-bold">Nomor Dokumen / Ref BG <span class="${d.is_multi_bank ? 'text-muted' : 'text-danger'}">${d.is_multi_bank ? '(Opsional - Multi Bank)' : '*'}</span></label>
+                                        <input type="text" class="form-control" name="bg_number" value="${d.bg_number || ''}" placeholder="Contoh: BG-2026-0003" ${d.is_multi_bank ? '' : 'required'}>
+                                        ${d.is_multi_bank ? '<small class="text-muted d-block" style="font-size:11px;">Nomor masing-masing bank dapat diisi pada kolom "No BG Bank" di atas.</small>' : ''}
                                     </div>
                                     <div class="col-md-6">
                                         <label class="small fw-bold">Tanggal Jatuh Tempo (Expired Date) <span class="text-danger">*</span></label>
@@ -511,6 +531,16 @@
                             Swal.fire('Error', res.message, 'error');
                         }
                     });
+                });
+
+                // Auto-sum details nominal to total BG diserahkan
+                $(document).on('keyup', '.detail-nominal-input', function() {
+                    let total = 0;
+                    $('.detail-nominal-input').each(function() {
+                        let val = $(this).val().replace(/[^0-9]/g, '');
+                        if (val) total += parseInt(val, 10);
+                    });
+                    $('#input_total_bg_diserahkan').val(new Intl.NumberFormat('id-ID').format(total));
                 });
 
                 // --- LISTENER INPUT RUPIAH (AUTO FORMAT SAAT KETIK) ---

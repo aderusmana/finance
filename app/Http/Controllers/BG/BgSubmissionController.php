@@ -144,26 +144,66 @@ class BgSubmissionController extends Controller
     private function generateCustomerColumn($row) {
         $customerName = $row->recommendation->customer->name ?? '-';
 
-        $siblingSubmissions = BgSubmission::where('bg_recommendation_id', $row->bg_recommendation_id)
-                                ->where('created_at', $row->created_at)
-                                ->orderBy('id', 'asc')->pluck('id')->toArray();
-
-        $myIndex = array_search($row->id, $siblingSubmissions);
-
+        $createdAt = $row->created_at;
         $candidateBgs = BankGaransi::where('customer_id', $row->recommendation->customer_id)
-                            ->where('created_at', $row->created_at)
-                            ->orderBy('id', 'asc')->with('details')->get();
+                            ->whereBetween('created_at', [
+                                $createdAt->copy()->subMinutes(5),
+                                $createdAt->copy()->addMinutes(5)
+                            ])
+                            ->orderBy('id', 'asc')
+                            ->with('details')
+                            ->get();
 
-        $bg = isset($candidateBgs[$myIndex]) ? $candidateBgs[$myIndex] : $candidateBgs->first();
-
-        $bgNumber = $bg ? $bg->bg_number : 'No BG Ref';
-        $bankName = $bg && $bg->details->first() ? $bg->details->first()->bank_name : '-';
-        $nominal  = $bg ? number_format($bg->bg_nominal, 0, ',', '.') : '0';
-
+        if ($candidateBgs->isEmpty()) {
+            $candidateBgs = BankGaransi::where('customer_id', $row->recommendation->customer_id)
+                                ->latest()
+                                ->take(3)
+                                ->with('details')
+                                ->get();
+        }
 
         $badgeClass = in_array($row->status, ['completed', 'approved'])
                         ? 'bg-success bg-opacity-10 text-success border-success'
                         : 'bg-light text-primary border-primary-subtle';
+
+        // Multi-Bank display
+        if ($candidateBgs->count() > 1) {
+            $totalNominal = $candidateBgs->sum('bg_nominal');
+            $bgNumbers = $candidateBgs->pluck('bg_number')->filter()->implode(', ');
+
+            $banksHtml = '';
+            foreach ($candidateBgs as $b) {
+                $bName = $b->details->first()->bank_name ?? 'Bank';
+                $bNom = number_format($b->bg_nominal, 0, ',', '.');
+                $banksHtml .= '<span class="badge bg-light text-dark border px-2 py-1" style="font-size: 11px;">
+                    <i class="ph-bold ph-bank text-primary me-1"></i><strong>'.$bName.'</strong>: Rp '.$bNom.'
+                </span>';
+            }
+
+            return '
+            <div class="d-flex flex-column">
+                <div class="mb-1">
+                    <span class="fw-bold text-dark">'.$customerName.'</span>
+                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle rounded-pill px-2 small ms-1">
+                        <i class="ph-bold ph-stack me-1"></i> Multi-Bank ('.$candidateBgs->count().' Bank)
+                    </span>
+                    '.($bgNumbers ? '<div class="text-muted" style="font-size: 11px;">Ref: '.$bgNumbers.'</div>' : '').'
+                </div>
+                <div class="d-flex flex-wrap align-items-center gap-1 mb-1">
+                    '.$banksHtml.'
+                </div>
+                <div>
+                    <span class="text-muted small">Total: </span>
+                    <span class="fw-bold text-dark small">Rp '.number_format($totalNominal, 0, ',', '.').'</span>
+                </div>
+            </div>';
+        }
+
+        // Single Bank display
+        $bg = $candidateBgs->first();
+        $bgNumber = $bg ? $bg->bg_number : 'No BG Ref';
+        $bankName = $bg && $bg->details->first() ? $bg->details->first()->bank_name : '-';
+        $nominal  = $bg ? number_format($bg->bg_nominal, 0, ',', '.') : '0';
 
         return '
         <div class="d-flex flex-column">
@@ -257,49 +297,50 @@ class BgSubmissionController extends Controller
         $rec = $submission->recommendation;
         $customer = $rec->customer;
         $metadata = json_decode($rec->notes, true) ?? [];
-        $targetBg = null;
+        $batchBgs = collect();
 
         if (isset($metadata['action']) && $metadata['action'] === 'existing' && !empty($metadata['target_bg_id'])) {
             $targetBg = BankGaransi::where('id', $metadata['target_bg_id'])
                         ->with('details')
                         ->first();
+            if ($targetBg) $batchBgs->push($targetBg);
         }
         else {
-            $siblingSubmissions = BgSubmission::where('bg_recommendation_id', $rec->id)
-                                    ->where('created_at', $submission->created_at)
-                                    ->orderBy('id', 'asc')
-                                    ->pluck('id')
-                                    ->toArray();
-
-            $myIndex = array_search($submission->id, $siblingSubmissions);
-
             $createdAt = $submission->created_at;
-            $candidateBgs = BankGaransi::where('customer_id', $customer->id)
-                                ->whereBetween('created_at', [$createdAt->copy()->subSeconds(5), $createdAt->copy()->addSeconds(5)])
+            $batchBgs = BankGaransi::where('customer_id', $customer->id)
+                                ->whereBetween('created_at', [
+                                    $createdAt->copy()->subMinutes(5),
+                                    $createdAt->copy()->addMinutes(5)
+                                ])
                                 ->with('details')
                                 ->orderBy('id', 'asc')
                                 ->get();
-
-            $targetBg = isset($candidateBgs[$myIndex]) ? $candidateBgs[$myIndex] : null;
         }
 
-        if (!$targetBg) {
-            $targetBg = BankGaransi::where('customer_id', $customer->id)
+        if ($batchBgs->isEmpty()) {
+            $latestBg = BankGaransi::where('customer_id', $customer->id)
                 ->where('status', 'draft')
                 ->latest()
                 ->with('details')
                 ->first();
+            if ($latestBg) $batchBgs->push($latestBg);
         }
 
-        if (!$targetBg) {
+        if ($batchBgs->isEmpty()) {
              return response()->json(['success' => false, 'message' => 'Bank Guarantee data not found (Timestamp mismatch & No ID).']);
         }
 
-        $totalBgDiserahkan = $targetBg->bg_nominal;
+        $isMultiBank = $batchBgs->count() > 1;
+        $totalBgDiserahkan = $batchBgs->sum('bg_nominal');
         $specificDetails = [];
-        foreach($targetBg->details as $detail) {
-            $detail->parent_bg_id = $targetBg->id;
-            $specificDetails[] = $detail;
+        foreach($batchBgs as $bgItem) {
+            foreach ($bgItem->details as $detail) {
+                $detail->parent_bg_id = $bgItem->id;
+                $detail->parent_bg_number = $bgItem->bg_number;
+                $detail->parent_exp_date = $bgItem->exp_date ? Carbon::parse($bgItem->exp_date)->format('Y-m-d') : '';
+                $detail->parent_warkat = $bgItem->warkat_file_path ? asset($bgItem->warkat_file_path) : null;
+                $specificDetails[] = $detail;
+            }
         }
 
         $periodeString = '-';
@@ -313,12 +354,19 @@ class BgSubmissionController extends Controller
             }
         }
 
+        $firstBg = $batchBgs->first();
+        $bgNumber = $submission->bg_number ?? ($firstBg->bg_number ?? '');
+        $expDate = $submission->exp_date ? Carbon::parse($submission->exp_date)->format('Y-m-d') : ($firstBg && $firstBg->exp_date ? Carbon::parse($firstBg->exp_date)->format('Y-m-d') : '');
+        $warkatFileUrl = $submission->warkat_file_path ? asset($submission->warkat_file_path) : ($firstBg && $firstBg->warkat_file_path ? asset($firstBg->warkat_file_path) : null);
+
         $data = [
             'submission_id' => $submission->id,
-            'bg_id' => $targetBg->id,
-            'bg_number' => $submission->bg_number ?? ($targetBg->bg_number ?? ''),
-            'exp_date' => $submission->exp_date ? Carbon::parse($submission->exp_date)->format('Y-m-d') : ($targetBg->exp_date ? Carbon::parse($targetBg->exp_date)->format('Y-m-d') : ''),
-            'warkat_file_url' => $submission->warkat_file_path ? asset($submission->warkat_file_path) : ($targetBg->warkat_file_path ? asset($targetBg->warkat_file_path) : null),
+            'bg_id' => $firstBg->id,
+            'is_multi_bank' => $isMultiBank,
+            'bg_count' => $batchBgs->count(),
+            'bg_number' => $bgNumber,
+            'exp_date' => $expDate,
+            'warkat_file_url' => $warkatFileUrl,
             'nama_distributor' => $customer->name,
             'kota' => $customer->city,
             'wilayah_kerja' => $customer->area ?? '-',
@@ -370,7 +418,13 @@ class BgSubmissionController extends Controller
                         $detailObj = BgDetail::findOrFail($detailId);
                         $detailObj->update(['bank_name' => $val['bank_name'], 'branch_name' => $val['branch_name'], 'nominal' => $val['nominal']]);
                         $parentBg = BankGaransi::find($detailObj->bank_garansi_id);
-                        if ($parentBg) $parentBg->update(['bg_nominal' => $val['nominal']]);
+                        if ($parentBg) {
+                            $parentBgUpdate = ['bg_nominal' => $val['nominal']];
+                            if (!empty($val['bg_number'])) {
+                                $parentBgUpdate['bg_number'] = $val['bg_number'];
+                            }
+                            $parentBg->update($parentBgUpdate);
+                        }
                     }
                 }
 
@@ -565,29 +619,18 @@ class BgSubmissionController extends Controller
                     $createdAt = $submission->created_at;
                     $allBatchBgs = BankGaransi::where('customer_id', $customer->id)
                             ->whereBetween('created_at', [
-                                $createdAt->copy()->subSeconds(5),
-                                $createdAt->copy()->addSeconds(5)
+                                $createdAt->copy()->subMinutes(5),
+                                $createdAt->copy()->addMinutes(5)
                             ])
                             ->with('details')
                             ->orderBy('id', 'asc')
                             ->get();
 
-                    $siblingSubmissions = BgSubmission::where('bg_recommendation_id', $rec->id)
-                                            ->whereBetween('created_at', [
-                                                $createdAt->copy()->subSeconds(5),
-                                                $createdAt->copy()->addSeconds(5)
-                                            ])
-                                            ->orderBy('id', 'asc')
-                                            ->pluck('id')
-                                            ->toArray();
-
-                    $myIndex = array_search($submission->id, $siblingSubmissions);
-
-                    if ($myIndex !== false && isset($allBatchBgs[$myIndex])) {
-                        $targetBgToUpdate = $allBatchBgs[$myIndex];
-                    } else {
-                        $targetBgToUpdate = $allBatchBgs->first();
+                    if ($allBatchBgs->isEmpty()) {
+                        $allBatchBgs = BankGaransi::where('customer_id', $customer->id)->latest()->take(3)->with('details')->get();
                     }
+
+                    $targetBgToUpdate = $allBatchBgs->first();
                 }
 
                 if ($allBatchBgs->isEmpty() || !$targetBgToUpdate) {
@@ -646,14 +689,17 @@ class BgSubmissionController extends Controller
                 ]);
                 $lampiranD->update(['version_latest' => $nextVersion, 'active_version_id' => $newVersion->id]);
 
-                if($targetBgToUpdate->status != 'approved') {
-                    $targetBgToUpdate->update([
-                        'status'      => 'approved',
-                        'issued_date' => now(),
-                        'exp_date'    => now()->addYear(),
-                    ]);
+                foreach ($allBatchBgs as $bgItem) {
+                    if ($bgItem->status != 'approved') {
+                        $bgItem->update([
+                            'status'           => 'approved',
+                            'issued_date'      => now(),
+                            'exp_date'         => $submission->exp_date ?? ($bgItem->exp_date ?? now()->addYear()),
+                            'warkat_file_path' => $submission->warkat_file_path ?? $bgItem->warkat_file_path,
+                        ]);
 
-                    $this->addToBgHistory($submission, $targetBgToUpdate);
+                        $this->addToBgHistory($submission, $bgItem);
+                    }
                 }
 
                 activity()
