@@ -685,93 +685,88 @@ class BgSubmissionController extends Controller
                     'file_path'     => $submission->signed_document_path,
                     'generated_by'  => Auth::id(),
                     'generated_at'  => now(),
-                    'remarks'       => 'Direct Approved by Admin (Nominal Updated)'
+                    'remarks'       => 'Verified by Admin & Forwarded to Secretary Finance'
                 ]);
                 $lampiranD->update(['version_latest' => $nextVersion, 'active_version_id' => $newVersion->id]);
 
-                foreach ($allBatchBgs as $bgItem) {
-                    if ($bgItem->status != 'approved') {
-                        $bgItem->update([
-                            'status'           => 'approved',
-                            'issued_date'      => now(),
-                            'exp_date'         => $submission->exp_date ?? ($bgItem->exp_date ?? now()->addYear()),
-                            'warkat_file_path' => $submission->warkat_file_path ?? $bgItem->warkat_file_path,
+                // Update submission status to waiting_approval
+                $submission->update(['status' => 'waiting_approval']);
+
+                // Create approval log for Bu Rita (secretary-finance)
+                $requester = auth()->user();
+                $Logs = $this->generateApprovalLogs($requester, $submission->id, 'BG', 'Lampiran D');
+
+                $rita = User::role('secretary-finance')->first();
+                if (!$rita) {
+                    $rita = User::role(['manager-finance', 'head-finance'])->first();
+                }
+
+                if ($rita) {
+                    $existingLog = ApprovalLog::where('category', 'BG')
+                        ->where('related_id', $submission->id)
+                        ->where('approver_nik', $rita->nik)
+                        ->where('status', 'Pending')
+                        ->first();
+
+                    if (!$existingLog) {
+                        $newLog = ApprovalLog::create([
+                            'category'      => 'BG',
+                            'sub_category'  => 'Lampiran D',
+                            'related_id'    => $submission->id,
+                            'approver_nik'  => $rita->nik,
+                            'approver_name' => $rita->name,
+                            'status'        => 'Pending',
+                            'level'         => 1,
+                            'token'         => Str::random(60),
                         ]);
 
-                        $this->addToBgHistory($submission, $bgItem);
+                        ProcessFinanceApprovalEmail::dispatch($newLog, $submission);
                     }
+                }
+
+                $firstLog = ApprovalLog::where('category', 'BG')
+                    ->where('related_id', $submission->id)
+                    ->where('status', 'Pending')
+                    ->orderBy('level', 'asc')
+                    ->first();
+
+                if ($firstLog && (!$rita || $firstLog->approver_nik !== $rita->nik)) {
+                    ProcessFinanceApprovalEmail::dispatch($firstLog, $submission);
                 }
 
                 activity()
                     ->causedBy(auth()->user())
                     ->performedOn($submission)
                     ->useLog('bg_submission')
-                    ->event('direct_approve')
+                    ->event('forward_to_finance')
                     ->withProperties([
                         'form_code'       => $submission->form_code,
                         'customer'        => $customer->name,
-                        'bg_number'       => $targetBgToUpdate->bg_number,
-                        'bg_nominal'      => $targetBgToUpdate->bg_nominal,
                         'lampiran_d_ver'  => $nextVersion,
-                        'note'            => 'Bypass Approval Workflow'
+                        'approval_status' => 'waiting_finance'
                     ])
-                    ->Log("Admin performed Direct Submit (Bypass Approval). Attachment D issued & BG Approved.");
+                    ->Log("Admin memverifikasi hasil upload dokumen dan meneruskan pengajuan untuk validasi Bu Rita (Secretary Finance)");
 
-                $submission->update(['status' => 'completed', 'token' => Str::random(60), 'validated_by' => Auth::id(), 'validated_at' => now()]);
+                $approvers = User::role(['secretary-finance', 'manager-finance', 'head-finance'])->get();
+                Notification::send($approvers, new SystemNotification(
+                    'Validasi Lampiran D & Bank Garansi (Bu Rita)',
+                    "Pengajuan Bank Garansi untuk <b>{$customer->name}</b> ({$submission->form_code}) telah diverifikasi oleh Admin dan menunggu validasi Anda.",
+                    route('bg-approvals.index'),
+                    'ph-signature',
+                    'warning'
+                ));
 
-                $pendingSiblings = BgSubmission::where('bg_recommendation_id', $submission->bg_recommendation_id)
-                                    ->where('status', '!=', 'completed')
-                                    ->where('status', '!=', 'approved')
-                                    ->count();
-
-                if ($pendingSiblings == 0 && $submission->recommendation) {
-                    $submission->recommendation->update(['status' => 'approved']);
-                }
-
-                // Background update credit limit to customer
-                if ($customer && $rec) {
-                    $customer->update([
-                        'credit_limit'          => $rec->credit_limit_updated,
-                        'approved_credit_limit' => $rec->credit_limit_updated,
-                    ]);
-
-                    CreditLimit::create([
-                        'customer_id'           => $customer->id,
-                        'bank_garansi_id'       => $targetBgToUpdate->id ?? null,
-                        'recommendation_id'     => $rec->id,
-                        'requested_limit'       => $rec->credit_limit_updated,
-                        'approved_limit'        => $rec->credit_limit_updated,
-                        'lampiran_d_version_id' => $newVersion->id ?? null,
-                        'approved_by'           => Auth::id(),
-                        'approved_at'           => now(),
-                    ]);
-
-                    // Inform IT team (Informational only, background calculation completed)
-                    try {
-                        $itUsers = User::role('it')->get();
-                        if ($itUsers->isNotEmpty()) {
-                            Notification::send($itUsers, new SystemNotification(
-                                "Info IT: Background Credit Limit Sync Selesai",
-                                "Pembaruan Credit Limit untuk <b>{$customer->name}</b> sebesar <b>Rp " . number_format($rec->credit_limit_updated, 0, ',', '.') . "</b> telah selesai diproses di background. Tidak perlu verifikasi/pengecekan lagi.",
-                                route('customers.index'),
-                                'ph-check-circle',
-                                'info'
-                            ));
-
-                            $itEmails = $itUsers->pluck('email')->filter(fn($e) => !empty($e) && filter_var($e, FILTER_VALIDATE_EMAIL))->toArray();
-                            foreach ($itEmails as $itEmail) {
-                                Mail::to($itEmail)->queue(new CreditLimitUpdatedItMail($submission, auth()->user()->name ?? 'Admin'));
-                            }
-                        }
-                    } catch (\Exception $e) {
-                        Log::error("Gagal notifikasi IT: " . $e->getMessage());
-                    }
-                }
-
-                $this->sendCompletionEmails($submission);
+                $admins = User::role(['super-admin'])->get();
+                Notification::send($admins, new SystemNotification(
+                    'Submission Forwarded',
+                    "Lampiran D untuk <b>{$customer->name}</b> telah diteruskan ke Secretary Finance.",
+                    route('bg-submissions.index'),
+                    'ph-paper-plane-tilt',
+                    'info'
+                ));
 
                 DB::commit();
-                return response()->json(['success' => true, 'message' => 'Document approved & History recorded once.']);
+                return response()->json(['success' => true, 'message' => 'Dokumen berhasil diverifikasi dan diteruskan untuk validasi Bu Rita (Secretary Finance).']);
 
             } catch (\Exception $e) {
                 DB::rollBack();

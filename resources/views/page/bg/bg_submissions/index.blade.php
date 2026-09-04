@@ -246,7 +246,7 @@
                         </div>
                         <div>
                             <button type="button" class="btn btn-success fw-bold px-4" id="btn-trigger-approve">
-                                <i class="ph-bold ph-check-circle me-1"></i> Approve & Process
+                                <i class="ph-bold ph-paper-plane-right me-1"></i> Forward to Finance
                             </button>
                         </div>
                     </div>
@@ -382,14 +382,14 @@
                     }, 500);
                 });
 
-                // --- DIRECT APPROVE ---
+                // --- FORWARD TO FINANCE ---
                 $('#btn-trigger-approve').click(function() {
                     Swal.fire({
-                        title: 'Confirm Approval',
-                        text: "Ensure the document is correct. Status will change to Completed.",
-                        icon: 'warning',
+                        title: 'Forward to Finance?',
+                        text: "Dokumen telah diverifikasi dan akan diteruskan untuk validasi Bu Rita (Secretary Finance).",
+                        icon: 'question',
                         showCancelButton: true,
-                        confirmButtonText: 'Yes, Approve',
+                        confirmButtonText: 'Ya, Teruskan ke Finance',
                         confirmButtonColor: '#198754'
                     }).then((result) => {
                         if (result.isConfirmed) {
