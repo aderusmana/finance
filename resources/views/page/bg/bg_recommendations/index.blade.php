@@ -193,11 +193,11 @@
                 <div class="modal-header bg-light border-bottom px-4 py-3">
                     <div class="d-flex align-items-center">
                         <div class="bg-primary bg-opacity-10 text-primary rounded-3 d-flex align-items-center justify-content-center me-3 shadow-sm" style="width: 48px; height: 48px;">
-                            <i class="ph-bold ph-calculator f-s-24"></i>
+                            <i class="ph-bold ph-calculator f-s-24 text-white"></i>
                         </div>
                         <div>
-                            <h5 class="modal-title fw-bold text-dark mb-0">Credit Analysis & Recommendation</h5>
-                            <small class="text-muted">System-assisted credit limit calculation</small>
+                            <h5 class="modal-title fw-bold text-white mb-0">Credit Analysis & Recommendation</h5>
+                            <small class="text-white">System-assisted credit limit calculation</small>
                         </div>
                     </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -344,7 +344,7 @@
     <div class="modal fade" id="periodModal" tabindex="-1" data-bs-backdrop="static" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content border-0 shadow-lg">
-                <div class="modal-header bg-warning text-dark">
+                <div class="modal-header bg-warning text-white">
                     <h5 class="modal-title fw-bold"><i class="ph-bold ph-calendar-blank me-2"></i>Sales Details Per Period</h5>
                     <button type="button" class="btn-close" id="btnClosePeriodModal"></button>
                 </div>

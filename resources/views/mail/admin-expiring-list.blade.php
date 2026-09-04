@@ -92,7 +92,7 @@
                             </table>
 
                             <div style="text-align: center; margin-top: 30px;">
-                                <a href="{{ url('/bg-recommendations') }}" style="background-color: #3182ce; color: #ffffff; padding: 12px 25px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 14px; display: inline-block; box-shadow: 0 4px 6px rgba(49, 130, 206, 0.25);">
+                                <a href="{{ url('bg/bg-recommendations') }}" style="background-color: #3182ce; color: #ffffff; padding: 12px 25px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 14px; display: inline-block; box-shadow: 0 4px 6px rgba(49, 130, 206, 0.25);">
                                     Open Dashboard
                                 </a>
                             </div>
