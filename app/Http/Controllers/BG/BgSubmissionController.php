@@ -89,6 +89,52 @@ class BgSubmissionController extends Controller
                             </button>';
                         }
 
+                        if ($row->status === 'uploaded') {
+                            return '
+                            <button type="button"
+                                    class="status-badge-lg bg-info text-light fw-bold btn-view-file shadow-sm px-3"
+                                    data-url="'.$url.'"
+                                    data-id="'.$row->id.'"
+                                    data-status="uploaded"
+                                    data-bs-toggle="tooltip"
+                                    title="Verifikasi Dokumen Upload Customer">
+                                <i class="ph-bold ph-file-search me-1"></i> Verifikasi Upload
+                            </button>';
+                        }
+
+                        if ($row->status === 'waiting_sales_input') {
+                            return '
+                            <div class="d-flex align-items-center justify-content-center gap-1">
+                                <button type="button"
+                                        class="btn btn-sm btn-warning text-dark fw-bold rounded-pill px-3 btn-input-sales shadow-sm"
+                                        data-id="'.$row->id.'"
+                                        title="Isi No BG, Exp Date & Upload Warkat">
+                                    <i class="ph-bold ph-pencil-simple me-1"></i> Lengkapi Data BG
+                                </button>
+                                <button type="button"
+                                        class="btn btn-sm btn-light border rounded-circle btn-view-file shadow-sm"
+                                        data-url="'.$url.'"
+                                        data-id="'.$row->id.'"
+                                        data-status="waiting_sales_input"
+                                        title="Lihat Dokumen TTD">
+                                    <i class="ph-bold ph-eye"></i>
+                                </button>
+                            </div>';
+                        }
+
+                        if ($row->status === 'waiting_approval') {
+                            return '
+                            <button type="button"
+                                    class="status-badge-lg bg-primary text-light fw-bold btn-view-file shadow-sm px-3"
+                                    data-url="'.$url.'"
+                                    data-id="'.$row->id.'"
+                                    data-status="waiting_approval"
+                                    data-bs-toggle="tooltip"
+                                    title="Menunggu Validasi Finance (Bu Rita)">
+                                <i class="ph-bold ph-hourglass-medium me-1"></i> Waiting Finance
+                            </button>';
+                        }
+
                         return '
                         <button type="button"
                                 class="status-badge-lg bg-primary text-light fw-bold btn-view-file shadow-sm px-3"
@@ -105,15 +151,39 @@ class BgSubmissionController extends Controller
                 ->addColumn('status', function($row){
                     $color = 'secondary';
                     $icon = 'circle';
+                    $label = ucwords(str_replace('_', ' ', $row->status));
 
-                    if($row->status === 'uploaded') { $color = 'info'; $icon = 'upload-simple'; }
-                    if($row->status === 'awaiting_upload') { $color = 'warning'; $icon = 'hourglass'; }
-                    if($row->status === 'completed') { $color = 'success'; $icon = 'check-circle'; }
-                    if($row->status === 'approved') { $color = 'success'; $icon = 'check-circle'; }
-                    if($row->status === 'pending_print') { $color = 'secondary'; $icon = 'printer'; }
+                    if($row->status === 'uploaded') { 
+                        $color = 'info'; 
+                        $icon = 'upload-simple'; 
+                        $label = 'Uploaded (Need Verification)';
+                    }
+                    if($row->status === 'waiting_sales_input') { 
+                        $color = 'warning'; 
+                        $icon = 'pencil-simple-line'; 
+                        $label = 'Waiting Sales Input';
+                    }
+                    if($row->status === 'waiting_approval') { 
+                        $color = 'primary'; 
+                        $icon = 'hourglass-medium'; 
+                        $label = 'Waiting Finance (Bu Rita)';
+                    }
+                    if($row->status === 'awaiting_upload') { 
+                        $color = 'warning'; 
+                        $icon = 'hourglass'; 
+                    }
+                    if($row->status === 'completed' || $row->status === 'approved') { 
+                        $color = 'success'; 
+                        $icon = 'check-circle'; 
+                        $label = 'Completed';
+                    }
+                    if($row->status === 'pending_print') { 
+                        $color = 'secondary'; 
+                        $icon = 'printer'; 
+                    }
 
                     return '<span class="status-badge-lg bg-'.$color.' text-light border btn-status" data-id="'.$row->id.'">
-                                <i class="ph-bold ph-'.$icon.' me-1"></i> '.ucwords(str_replace('_', ' ', $row->status)).'
+                                <i class="ph-bold ph-'.$icon.' me-1"></i> '.$label.'
                             </span>';
                 })
                 ->addColumn('action', function ($row) use ($type) {
@@ -685,88 +755,54 @@ class BgSubmissionController extends Controller
                     'file_path'     => $submission->signed_document_path,
                     'generated_by'  => Auth::id(),
                     'generated_at'  => now(),
-                    'remarks'       => 'Verified by Admin & Forwarded to Secretary Finance'
+                    'remarks'       => 'Upload verified by Admin-RTM. Forwarded to Sales for BG details completion.'
                 ]);
                 $lampiranD->update(['version_latest' => $nextVersion, 'active_version_id' => $newVersion->id]);
 
-                // Update submission status to waiting_approval
-                $submission->update(['status' => 'waiting_approval']);
-
-                // Create approval log for Bu Rita (secretary-finance)
-                $requester = auth()->user();
-                $Logs = $this->generateApprovalLogs($requester, $submission->id, 'BG', 'Lampiran D');
-
-                $rita = User::role('secretary-finance')->first();
-                if (!$rita) {
-                    $rita = User::role(['manager-finance', 'head-finance'])->first();
-                }
-
-                if ($rita) {
-                    $existingLog = ApprovalLog::where('category', 'BG')
-                        ->where('related_id', $submission->id)
-                        ->where('approver_nik', $rita->nik)
-                        ->where('status', 'Pending')
-                        ->first();
-
-                    if (!$existingLog) {
-                        $newLog = ApprovalLog::create([
-                            'category'      => 'BG',
-                            'sub_category'  => 'Lampiran D',
-                            'related_id'    => $submission->id,
-                            'approver_nik'  => $rita->nik,
-                            'approver_name' => $rita->name,
-                            'status'        => 'Pending',
-                            'level'         => 1,
-                            'token'         => Str::random(60),
-                        ]);
-
-                        ProcessFinanceApprovalEmail::dispatch($newLog, $submission);
-                    }
-                }
-
-                $firstLog = ApprovalLog::where('category', 'BG')
-                    ->where('related_id', $submission->id)
-                    ->where('status', 'Pending')
-                    ->orderBy('level', 'asc')
-                    ->first();
-
-                if ($firstLog && (!$rita || $firstLog->approver_nik !== $rita->nik)) {
-                    ProcessFinanceApprovalEmail::dispatch($firstLog, $submission);
-                }
+                // Update submission status to waiting_sales_input
+                $submission->update([
+                    'status'       => 'waiting_sales_input',
+                    'reviewed_at'  => now(),
+                    'validated_by' => Auth::id(),
+                ]);
 
                 activity()
                     ->causedBy(auth()->user())
                     ->performedOn($submission)
                     ->useLog('bg_submission')
-                    ->event('forward_to_finance')
+                    ->event('verify_upload')
                     ->withProperties([
                         'form_code'       => $submission->form_code,
                         'customer'        => $customer->name,
                         'lampiran_d_ver'  => $nextVersion,
-                        'approval_status' => 'waiting_finance'
+                        'status'          => 'waiting_sales_input'
                     ])
-                    ->Log("Admin memverifikasi hasil upload dokumen dan meneruskan pengajuan untuk validasi Bu Rita (Secretary Finance)");
+                    ->Log("Admin-RTM memverifikasi hasil upload dokumen konfirmasi ({$submission->form_code}). Pengajuan diteruskan ke tim Sales untuk melengkapi nomor BG, expired date, nominal, dan warkat.");
 
-                $approvers = User::role(['secretary-finance', 'manager-finance', 'head-finance'])->get();
-                Notification::send($approvers, new SystemNotification(
-                    'Validasi Lampiran D & Bank Garansi (Bu Rita)',
-                    "Pengajuan Bank Garansi untuk <b>{$customer->name}</b> ({$submission->form_code}) telah diverifikasi oleh Admin dan menunggu validasi Anda.",
-                    route('bg-approvals.index'),
-                    'ph-signature',
-                    'warning'
-                ));
+                // Notify Sales (role sales, dep-SNM, and recommendation approver)
+                $salesUsers = User::role(['sales', 'dep-SNM'])->get();
+                if ($rec && $rec->sales_approved_by) {
+                    $specificSales = User::find($rec->sales_approved_by);
+                    if ($specificSales && !$salesUsers->contains('id', $specificSales->id)) {
+                        $salesUsers->push($specificSales);
+                    }
+                }
 
-                $admins = User::role(['super-admin'])->get();
-                Notification::send($admins, new SystemNotification(
-                    'Submission Forwarded',
-                    "Lampiran D untuk <b>{$customer->name}</b> telah diteruskan ke Secretary Finance.",
-                    route('bg-submissions.index'),
-                    'ph-paper-plane-tilt',
-                    'info'
-                ));
+                if ($salesUsers->isNotEmpty()) {
+                    Notification::send($salesUsers, new SystemNotification(
+                        'Upload Diverifikasi: Silakan Lengkapi Data BG',
+                        "Dokumen konfirmasi Bank Garansi untuk <b>{$customer->name}</b> ({$submission->form_code}) telah diverifikasi oleh Admin-RTM. Silakan tim Sales melengkapi Nomor BG, Expired Date, Nominal, dan Upload scan warkat Bank Garansi.",
+                        route('bg-submissions.index'),
+                        'ph-pencil-simple-line',
+                        'warning'
+                    ));
+                }
 
                 DB::commit();
-                return response()->json(['success' => true, 'message' => 'Dokumen berhasil diverifikasi dan diteruskan untuk validasi Bu Rita (Secretary Finance).']);
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Dokumen berhasil diverifikasi! Notifikasi telah dikirim ke tim Sales untuk melengkapi nomor BG, expired date, nominal, dan scan warkat.'
+                ]);
 
             } catch (\Exception $e) {
                 DB::rollBack();
