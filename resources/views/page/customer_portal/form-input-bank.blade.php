@@ -125,16 +125,19 @@
                         </div>
                         @endif
 
-                        {{-- Info Box (Limit) --}}
+                        {{-- Info Box (SET BG) --}}
                         @if(!$isExisting)
-                        <div class="info-box" style="background-color: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; padding: 15px; margin-bottom: 25px;">
+                        <div class="info-box" style="background-color: #f0fdf4; border: 1px dashed #86efac; border-radius: 8px; padding: 15px; margin-bottom: 25px;">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
-                                    <small class="text-uppercase text-muted fw-bold" style="font-size: 0.75rem;">Credit Limit Updated</small>
-                                    <div class="text-dark fw-bold fs-5">Rp {{ number_format($rec->credit_limit_updated ?? 0, 0, ',', '.') }}</div>
+                                    <small class="text-uppercase text-success fw-bold" style="font-size: 0.75rem; letter-spacing: 0.5px;">SET BG (Approved Nominal)</small>
+                                    <div class="text-success fw-bold fs-4">Rp {{ number_format($rec->set_bg ?? 0, 0, ',', '.') }}</div>
+                                    @if(!empty($rec->credit_limit_updated))
+                                    <small class="text-muted" style="font-size: 0.75rem;">Credit Limit: Rp {{ number_format($rec->credit_limit_updated, 0, ',', '.') }}</small>
+                                    @endif
                                 </div>
-                                <span class="badge bg-light text-dark border px-3 py-2 rounded-pill">
-                                    <i class="bi bi-info-circle me-1"></i> {{ $isExtension ? 'Extension Mode' : 'New Submission' }}
+                                <span class="badge bg-white text-success border border-success border-opacity-25 px-3 py-2 rounded-pill shadow-sm">
+                                    <i class="bi bi-shield-check me-1"></i> {{ $isExtension ? 'Extension Mode' : 'New Submission' }}
                                 </span>
                             </div>
                         </div>

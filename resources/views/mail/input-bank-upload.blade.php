@@ -196,10 +196,10 @@
             @else
                 <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 30px; text-align: center; margin-bottom: 35px;">
                     <p style="margin: 0; font-size: 12px; text-transform: uppercase; letter-spacing: 1.5px; color: #15803d; font-weight: 700;">
-                        Latest Approved Credit Limit
+                        SET BG (Approved Nominal)
                     </p>
                     <h1 style="margin: 10px 0 10px; font-size: 38px; color: #15803d; letter-spacing: -1px; font-weight: 800;">
-                        Rp {{ number_format($rec->credit_limit_updated ?? 0, 0, ',', '.') }}
+                        Rp {{ number_format($rec->set_bg ?? 0, 0, ',', '.') }}
                     </h1>
                 </div>
             @endif
@@ -215,6 +215,12 @@
                     <td style="padding: 12px 0; border-bottom: 1px solid #f1f5f9; color: #475569;">Approved BG Nominal (Set BG)</td>
                     <td style="padding: 12px 0; border-bottom: 1px solid #f1f5f9; text-align: right; color: #1e3a8a; font-weight: 700;">
                         Rp {{ number_format($rec->set_bg ?? 0, 0, ',', '.') }}
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px 0; border-bottom: 1px solid #f1f5f9; color: #475569;">Updated Credit Limit</td>
+                    <td style="padding: 12px 0; border-bottom: 1px solid #f1f5f9; text-align: right; color: #334155; font-weight: 600;">
+                        Rp {{ number_format($rec->credit_limit_updated ?? 0, 0, ',', '.') }}
                     </td>
                 </tr>
                 <tr>
@@ -301,7 +307,7 @@
                     @elseif($isUploadContext)
                         Please download the form for <strong>{{ $targetBg->details->first()->bank_name ?? 'Bank' }}</strong>, then upload it back:
                     @else
-                        To proceed with issuing a Bank Guarantee worth <strong>Rp {{ number_format($rec->credit_limit_updated ?? 0, 0, ',', '.') }}</strong>, please complete the guarantee bank details:
+                        To proceed with issuing a Bank Guarantee worth <strong>Rp {{ number_format($rec->set_bg ?? 0, 0, ',', '.') }}</strong>, please complete the guarantee bank details:
                     @endif
                 </p>
 
@@ -330,7 +336,7 @@
 
         {{-- FOOTER --}}
         <div style="background-color: #1e293b; color: #94a3b8; padding: 30px; text-align: center; font-size: 12px; line-height: 1.6;">
-            <p style="margin: 0 0 10px;">This email was sent automatically by the Credit Management System.</p>
+            <p style="margin: 0 0 10px;">This email was sent automatically by the Customer Portal.</p>
             <p style="margin: 0;">&copy; {{ date('Y') }} <strong>PT. Sinar Meadow International Indonesia</strong>.<br>Automated System Notification.</p>
         </div>
 
