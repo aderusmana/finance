@@ -26,6 +26,7 @@ use Illuminate\Support\Str;
 use App\Models\Customer\CreditLimit;
 use App\Mail\CreditLimitUpdatedItMail;
 use App\Notifications\SystemNotification;
+use App\Mail\SalesFillBgNotificationMail;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Auth;
@@ -592,7 +593,6 @@ class BgSubmissionController extends Controller
                     $existingLog = ApprovalLog::where('category', 'BG')
                         ->where('related_id', $submission->id)
                         ->where('approver_nik', $rita->nik)
-                        ->where('status', 'Pending')
                         ->first();
 
                     if (!$existingLog) {
@@ -608,6 +608,12 @@ class BgSubmissionController extends Controller
                         ]);
 
                         ProcessFinanceApprovalEmail::dispatch($newLog, $submission);
+                    } else {
+                        $existingLog->update([
+                            'status' => 'Pending',
+                            'token'  => Str::random(60),
+                        ]);
+                        ProcessFinanceApprovalEmail::dispatch($existingLog, $submission);
                     }
                 }
 
@@ -662,7 +668,10 @@ class BgSubmissionController extends Controller
                 ));
 
                 DB::commit();
-                return response()->json(['success' => true, 'message' => 'Data corrected & forwarded to Finance (Log Recorded).']);
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Data Bank Garansi berhasil disimpan dan diajukan ke Finance (Bu Rita) untuk validasi.'
+                ]);
 
             } catch (\Exception $e) {
                 DB::rollBack();
@@ -670,7 +679,7 @@ class BgSubmissionController extends Controller
             }
         }
 
-        if ($request->action_type == 'direct_submit') {
+        if ($request->action_type == 'direct_submit' || $request->action_type == 'verify_upload') {
 
             DB::beginTransaction();
             try {
@@ -796,6 +805,16 @@ class BgSubmissionController extends Controller
                         'ph-pencil-simple-line',
                         'warning'
                     ));
+
+                    foreach ($salesUsers as $sUser) {
+                        if (!empty($sUser->email) && filter_var($sUser->email, FILTER_VALIDATE_EMAIL)) {
+                            try {
+                                Mail::to($sUser->email)->queue(new SalesFillBgNotificationMail($submission, $sUser));
+                            } catch (\Exception $me) {
+                                Log::error("Failed sending SalesFillBgNotificationMail to {$sUser->email}: " . $me->getMessage());
+                            }
+                        }
+                    }
                 }
 
                 DB::commit();

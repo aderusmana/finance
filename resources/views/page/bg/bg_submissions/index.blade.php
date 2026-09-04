@@ -48,11 +48,13 @@
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <div class="d-flex align-items-center gap-2 filter-container-responsive flex-wrap">
                             <span class="text-muted fw-bold me-1"><i class="ph-bold ph-funnel"></i> Filter:</span>
-                            <select id="statusFilter" class="form-select select2" style="width: 180px;">
+                            <select id="statusFilter" class="form-select select2" style="width: 220px;">
                                 <option value="all">Show All Active</option>
                                 <option value="pending_print">Pending Print</option>
                                 <option value="awaiting_upload">Awaiting Upload</option>
-                                <option value="uploaded">Uploaded (Need Review)</option>
+                                <option value="uploaded">Uploaded (Need Verification)</option>
+                                <option value="waiting_sales_input">Waiting Sales Input</option>
+                                <option value="waiting_approval">Waiting Finance (Bu Rita)</option>
                             </select>
                         </div>
                     </div>
@@ -236,17 +238,17 @@
                 </div>
                 <div class="modal-body p-0 bg-light position-relative" id="fileContentArea" style="height: 100%;"></div>
 
-                {{-- Footer Action (Hanya muncul jika status process) --}}
+                {{-- Footer Action --}}
                 <div class="modal-footer bg-white shadow-lg py-3" id="viewFileFooter" style="z-index: 1050;">
                     <div class="d-flex justify-content-between w-100 align-items-center">
                         <div>
                             <button type="button" class="btn btn-warning text-white fw-bold" id="btn-trigger-edit">
-                                <i class="ph-bold ph-pencil-simple me-1"></i> Edit Data
+                                <i class="ph-bold ph-pencil-simple me-1"></i> Lengkapi / Edit Data BG
                             </button>
                         </div>
                         <div>
                             <button type="button" class="btn btn-success fw-bold px-4" id="btn-trigger-approve">
-                                <i class="ph-bold ph-paper-plane-right me-1"></i> Forward to Finance
+                                <i class="ph-bold ph-paper-plane-right me-1"></i> Verifikasi Dokumen & Kirim ke Sales
                             </button>
                         </div>
                     </div>
@@ -255,24 +257,26 @@
         </div>
     </div>
 
-    {{-- 3. Modal Edit Data (Correction) --}}
+    {{-- 3. Modal Edit Data (Correction / Sales Input) --}}
     <div class="modal fade" id="editBgDataModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
         <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content">
-                <div class="modal-header bg-warning text-white">
-                    <h5 class="modal-title"><i class="ph-bold ph-pencil"></i> Correct Data</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
+                <div class="modal-header bg-primary text-white p-3">
+                    <h5 class="modal-title fw-bold"><i class="ph-bold ph-pencil-simple me-2"></i> Lengkapi Data Bank Garansi (Tim Sales)</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <form id="editBgForm">
+                <form id="editBgForm" enctype="multipart/form-data">
                     @csrf
                     <input type="hidden" name="submission_id" id="edit_submission_id">
                     <input type="hidden" name="action_type" value="edit_submit">
-                    <div class="modal-body">
+                    <div class="modal-body p-4" style="max-height: 75vh; overflow-y: auto;">
                         <div id="bankDetailsContainer"></div> {{-- Diisi AJAX --}}
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary fw-bold">Save Changes</button>
+                    <div class="modal-footer bg-light p-3">
+                        <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-success fw-bold rounded-pill px-4 shadow-sm" id="btn-save-edit-bg">
+                            <i class="ph-bold ph-paper-plane-right me-1"></i> Simpan & Ajukan ke Finance (Bu Rita)
+                        </button>
                     </div>
                 </form>
             </div>
@@ -368,6 +372,20 @@
                     } else {
                         $('#viewFileFooter').show();
                         $('#viewFileModal .modal-header').removeClass('bg-success').addClass('bg-dark');
+
+                        if (status === 'uploaded') {
+                            $('#btn-trigger-approve').show().html('<i class="ph-bold ph-check-circle me-1"></i> Verifikasi Dokumen & Kirim ke Sales');
+                            $('#btn-trigger-edit').hide();
+                        } else if (status === 'waiting_sales_input') {
+                            $('#btn-trigger-approve').hide();
+                            $('#btn-trigger-edit').show().html('<i class="ph-bold ph-pencil-simple me-1"></i> Lengkapi Data BG (Sales)');
+                        } else if (status === 'waiting_approval') {
+                            $('#btn-trigger-approve').hide();
+                            $('#btn-trigger-edit').show().html('<i class="ph-bold ph-pencil-simple me-1"></i> Koreksi Data BG');
+                        } else {
+                            $('#btn-trigger-approve').show().html('<i class="ph-bold ph-paper-plane-right me-1"></i> Verifikasi Dokumen');
+                            $('#btn-trigger-edit').show().html('<i class="ph-bold ph-pencil-simple me-1"></i> Edit Data');
+                        }
                     }
 
                     $('#viewFileModal').modal('show');
@@ -382,24 +400,31 @@
                     }, 500);
                 });
 
-                // --- FORWARD TO FINANCE ---
+                // --- DIRECT INPUT SALES BUTTON FROM TABLE ---
+                $(document).on('click', '.btn-input-sales', function() {
+                    currentSubmissionId = $(this).data('id');
+                    $('#btn-trigger-edit').trigger('click');
+                });
+
+                // --- VERIFY & FORWARD TO SALES ---
                 $('#btn-trigger-approve').click(function() {
                     Swal.fire({
-                        title: 'Forward to Finance?',
-                        text: "Dokumen telah diverifikasi dan akan diteruskan untuk validasi Bu Rita (Secretary Finance).",
+                        title: 'Verifikasi Dokumen & Kirim ke Sales?',
+                        text: "Dokumen hasil upload customer dinyatakan valid dan akan diteruskan ke tim Sales untuk melengkapi nomor BG, expired date, nominal, dan scan warkat.",
                         icon: 'question',
                         showCancelButton: true,
-                        confirmButtonText: 'Ya, Teruskan ke Finance',
-                        confirmButtonColor: '#198754'
+                        confirmButtonText: 'Ya, Verifikasi & Kirim ke Sales',
+                        confirmButtonColor: '#198754',
+                        cancelButtonText: 'Batal'
                     }).then((result) => {
                         if (result.isConfirmed) {
                             let url = "{{ route('bg-submissions.process-review', ':id') }}".replace(':id', currentSubmissionId);
-                            Swal.fire({ title: 'Processing...', didOpen: () => Swal.showLoading() });
+                            Swal.fire({ title: 'Memproses...', didOpen: () => Swal.showLoading() });
 
-                            $.post(url, { _token: "{{ csrf_token() }}", action_type: 'direct_submit' }, function(res) {
+                            $.post(url, { _token: "{{ csrf_token() }}", action_type: 'verify_upload' }, function(res) {
                                 if(res.success) {
                                     $('#viewFileModal').modal('hide');
-                                    Swal.fire('Success', res.message, 'success');
+                                    Swal.fire('Berhasil', res.message, 'success');
                                     sampleTable.ajax.reload();
                                 } else {
                                     Swal.fire('Error', res.message, 'error');
@@ -501,7 +526,7 @@
                             }
 
                             html += `
-                                <h6 class="fw-bold text-primary border-bottom pb-2 mt-4"><i class="ph-bold ph-shield-check me-1"></i> C. Kelengkapan Bank Garansi (Diisi Tim Sales / Admin)</h6>
+                                <h6 class="fw-bold text-primary border-bottom pb-2 mt-4"><i class="ph-bold ph-shield-check me-1"></i> C. Kelengkapan Bank Garansi (Diisi Tim Sales)</h6>
                                 <div class="row g-3">
                                     <div class="col-md-6">
                                         <label class="small fw-bold">Nomor Dokumen / Ref BG <span class="${d.is_multi_bank ? 'text-muted' : 'text-danger'}">${d.is_multi_bank ? '(Opsional - Multi Bank)' : '*'}</span></label>
