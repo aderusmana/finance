@@ -32,6 +32,7 @@ use App\Http\Controllers\BG\LampiranDController;
 use App\Http\Controllers\LogisticOrder\LogisticOrderController;
 use App\Http\Controllers\Master\CustomerShipToController;
 use App\Http\Controllers\Master\DistributorController;
+use App\Http\Controllers\BG\SalesBgSubmissionController;
 use App\Http\Controllers\Master\SystemLogController;
 use Illuminate\Support\Facades\Route;
 
@@ -167,10 +168,17 @@ Route::middleware('auth')->group(function () {
         Route::get('bg-histories/export', [BgHistoryController::class, 'export'])->name('bg-histories.export');
         Route::resource('bg-histories', BgHistoryController::class)->only(['index', 'destroy']);
         Route::post('bg-recommendations/{id}/periods', [BgRecommendationController::class, 'savePeriods'])->name('bg-recommendations.save-periods');
+        Route::post('bg-recommendations/{id}/sales-approve', [BgRecommendationController::class, 'salesApprove'])->name('bg-recommendations.sales-approve');
+        Route::post('bg-recommendations/{id}/sales-reject', [BgRecommendationController::class, 'salesReject'])->name('bg-recommendations.sales-reject');
+        Route::post('bg-recommendations/{id}/resubmit-duplicate', [BgRecommendationController::class, 'resubmitDuplicate'])->name('bg-recommendations.resubmit-duplicate');
         Route::get('customer/bg-form/{id}', [BgRecommendationController::class, 'showForm'])->name('customer.bg.form');
         Route::post('customer/bg-form/{id}', [BgRecommendationController::class, 'submitDetails'])->name('customer.bg.submit');
         Route::get('bg-submissions/{id}/edit-data', [BgSubmissionController::class, 'getEditData'])->name('bg-submissions.get-edit-data');
         Route::post('bg-submissions/{id}/process-review', [BgSubmissionController::class, 'processReview'])->name('bg-submissions.process-review');
+        Route::get('sales-submissions', [SalesBgSubmissionController::class, 'index'])->name('sales-submissions.index');
+        Route::get('sales-submissions/create', [SalesBgSubmissionController::class, 'create'])->name('sales-submissions.create');
+        Route::post('sales-submissions', [SalesBgSubmissionController::class, 'store'])->name('sales-submissions.store');
+        Route::get('sales-submissions/customer-bgs/{customerId}', [SalesBgSubmissionController::class, 'getCustomerBgs'])->name('sales-submissions.customer-bgs');
         Route::resource('lampiran-d', LampiranDController::class);
         Route::get('lampiran-d/{id}/versions', [LampiranDController::class, 'versions'])->name('lampiran-d.versions');
         Route::get('lampiran-d/version/{versionId}', [LampiranDController::class, 'showVersionDetail'])->name('lampiran-d.version.show');

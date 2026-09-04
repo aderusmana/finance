@@ -7,15 +7,18 @@ use App\Models\BG\BgSubmission;
 use App\Models\BG\BankGaransi;
 use App\Models\BG\BgHistory;
 use App\Models\BG\LampiranD;
+use App\Models\Customer\CreditLimit;
 use App\Models\Master\ApprovalLog;
 use App\Jobs\ProcessFinanceApprovalEmail;
 use App\Mail\CustomerBgReadyMail;
+use App\Mail\CreditLimitUpdatedItMail;
 use App\Models\User;
 use App\Notifications\SystemNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Yajra\DataTables\Facades\DataTables;
 
@@ -27,9 +30,9 @@ class BgApprovalInboxController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            // Ambil Submission yang statusnya 'waiting_approval'
+            // Ambil Submission yang statusnya 'waiting_approval' atau 'uploaded'
             $query = BgSubmission::with(['recommendation.customer'])
-                        ->where('status', 'waiting_approval')
+                        ->whereIn('status', ['waiting_approval', 'uploaded'])
                         ->orderBy('updated_at', 'desc');
 
             return DataTables::of($query)
@@ -41,10 +44,13 @@ class BgApprovalInboxController extends Controller
                     return '<span class="fw-bold text-primary">'.$row->form_code.'</span>';
                 })
                 ->addColumn('bg_nominal', function($row){
-                    // --- PERBAIKAN: SUM SEMUA NOMINAL BG DALAM BATCH INI ---
                     $total = BankGaransi::where('customer_id', $row->recommendation->customer_id)
-                            ->where('created_at', $row->created_at) // Mencocokkan timestamp batch submission
+                            ->where('created_at', $row->created_at)
                             ->sum('bg_nominal');
+
+                    if ($total == 0 && $row->bg_nominal > 0) {
+                        $total = $row->bg_nominal;
+                    }
 
                     return 'Rp ' . number_format($total, 0, ',', '.');
                 })
@@ -71,7 +77,7 @@ class BgApprovalInboxController extends Controller
     }
 
     /**
-     * Mengambil Data Lampiran D KOMPLIT untuk Modal (Ajax)
+     * Mengambil Data Lampiran D & Warkat KOMPLIT untuk Modal (Ajax)
      */
     public function getModalData($id)
     {
@@ -79,25 +85,25 @@ class BgApprovalInboxController extends Controller
         $rec = $sub->recommendation;
         $cust = $rec->customer;
 
-        // --- PERBAIKAN: AMBIL SEMUA BG & DETAILNYA ---
         $bgs = BankGaransi::where('customer_id', $cust->id)
                 ->where('created_at', $sub->created_at)
-                ->with('details') // Load relasi details untuk ambil nama bank
+                ->with('details')
                 ->get();
 
         $totalNominal = $bgs->sum('bg_nominal');
+        if ($totalNominal == 0 && $sub->bg_nominal > 0) {
+            $totalNominal = $sub->bg_nominal;
+        }
 
-        // Buat Array Rincian Bank untuk dikirim ke JS
         $rincianBank = [];
         foreach ($bgs as $bgItem) {
             $detail = $bgItem->details->first();
             $rincianBank[] = [
-                'bank_name' => $detail ? $detail->bank_name : 'Bank',
+                'bank_name' => $detail ? $detail->bank_name : ($bgItem->bank_name ?? 'Bank'),
                 'nominal'   => number_format($bgItem->bg_nominal, 0, ',', '.')
             ];
         }
 
-        // Cek periode
         $periodeStr = '-';
         if ($rec->periods && $rec->periods->count() > 0) {
             $start = $rec->periods->min('period_date');
@@ -106,12 +112,19 @@ class BgApprovalInboxController extends Controller
                           \Carbon\Carbon::parse($end)->translatedFormat('F Y');
         }
 
+        $firstBg = $bgs->first();
+        $bgNumber = $sub->bg_number ?? ($firstBg->bg_number ?? '-');
+        $expDate = $sub->exp_date ? \Carbon\Carbon::parse($sub->exp_date)->format('d M Y') : ($firstBg && $firstBg->exp_date ? \Carbon\Carbon::parse($firstBg->exp_date)->format('d M Y') : '-');
+        $warkatUrl = $sub->warkat_file_path ? asset($sub->warkat_file_path) : ($firstBg && $firstBg->warkat_file_path ? asset($firstBg->warkat_file_path) : null);
+        $signedDocUrl = $sub->signed_document_path ? asset($sub->signed_document_path) : null;
+
         return response()->json([
             'success' => true,
             'data' => [
                 'nama_distributor' => $cust->name,
                 'kota' => $cust->city,
                 'wilayah' => $cust->area ?? '-',
+                'custom_address' => $sub->custom_address ?? $cust->address1,
                 'periode' => $periodeStr,
                 'avg_sales' => number_format($rec->average, 0, ',', '.'),
                 'top' => $rec->top,
@@ -119,18 +132,19 @@ class BgApprovalInboxController extends Controller
                 'inflasi' => $rec->inflation,
                 'limit_kredit' => number_format($rec->credit_limit_updated, 0, ',', '.'),
                 'bg_ditetapkan' => number_format($rec->set_bg, 0, ',', '.'),
-
-                // Data Baru
                 'bg_diserahkan_total' => number_format($totalNominal, 0, ',', '.'),
-                'rincian_bank' => $rincianBank, // Array list bank
-
+                'rincian_bank' => $rincianBank,
                 'form_code' => $sub->form_code,
+                'bg_number' => $bgNumber,
+                'exp_date' => $expDate,
+                'warkat_url' => $warkatUrl,
+                'signed_doc_url' => $signedDocUrl,
             ]
         ]);
     }
 
     /**
-     * Proses Utama: Approve / Reject / Quick Approve
+     * Proses Utama: Approve / Reject
      */
     public function process(Request $request)
     {
@@ -153,31 +167,36 @@ class BgApprovalInboxController extends Controller
         DB::beginTransaction();
         try {
             $status = ($request->action == 'reject') ? 'rejected_by_finance' : 'completed';
-            $notes  = $request->notes ?? 'Processed via Dashboard (Quick Action)';
+            $notes  = $request->notes ?? 'Processed via Dashboard by Secretary Finance';
             $newToken = ($status == 'completed') ? Str::random(60) : null;
+
             $sub->update([
-                'status' => $status,
-                'token' => $newToken,
-                'reviewed_at' => now()
+                'status'        => $status,
+                'token'         => $newToken,
+                'reviewed_at'   => now(),
+                'validated_by'  => auth()->id(),
+                'validated_at'  => now(),
             ]);
 
             if ($log) {
                 $log->update([
-                    'status' => ($request->action == 'reject') ? 'Rejected' : 'Approved',
-                    'notes' => $notes,
+                    'status'     => ($request->action == 'reject') ? 'Rejected' : 'Approved',
+                    'notes'      => $notes,
                     'updated_at' => now(),
-                    'token' => null
+                    'token'      => null
                 ]);
             }
 
-            $custName = $sub->recommendation->customer->name ?? 'Unknown Customer';
+            $cust = $sub->recommendation->customer ?? null;
+            $custName = $cust ? $cust->name : 'Unknown Customer';
+            $rec = $sub->recommendation;
 
             if ($status == 'rejected_by_finance') {
                 $recipients = User::role(['admin-rtm', 'super-admin'])->get();
                 $reasonText = $notes ? " Alasan: <i>\"{$notes}\"</i>. Silakan perbaiki dan submit kembali." : "";
                 Notification::send($recipients, new SystemNotification(
                     "Lampiran D Perlu Revisi",
-                    "Perubahan Lampiran D untuk <b>{$custName}</b> ditolak oleh Manager Finance.{$reasonText}",
+                    "Perubahan Lampiran D untuk <b>{$custName}</b> ditolak oleh Finance.{$reasonText}",
                     route('lampiran-d.index'),
                     'ph-x-circle',
                     'danger'
@@ -185,31 +204,75 @@ class BgApprovalInboxController extends Controller
             }
 
             if ($status == 'completed') {
-                if ($sub->recommendation) {
-                    $sub->recommendation->update(['status' => 'approved']);
+                if ($rec) {
+                    $rec->update(['status' => 'approved']);
                 }
 
                 // Update Status SEMUA BG dalam batch ini
-                $bgs = BankGaransi::where('customer_id', $sub->recommendation->customer_id)
-                        ->where('created_at', $sub->created_at) // Pakai created_at agar semua kena
+                $bgs = BankGaransi::where('customer_id', $rec->customer_id)
+                        ->where('created_at', $sub->created_at)
                         ->get();
 
                 foreach($bgs as $bg) {
                     $bg->update([
-                        'status'      => 'approved',
-                        'issued_date' => now(),
-                        'exp_date'    => now()->addYear(),
+                        'status'           => 'approved',
+                        'issued_date'      => now(),
+                        'exp_date'         => $sub->exp_date ?? $bg->exp_date ?? now()->addYear(),
+                        'bg_number'        => $sub->bg_number ?? $bg->bg_number,
+                        'warkat_file_path' => $sub->warkat_file_path ?? $bg->warkat_file_path,
                     ]);
-                    // Add history per BG
                     $this->addToHistoryLogic($sub, $bg);
                 }
 
+                // Background calculation & sync of Credit Limit to Customer
+                if ($cust && $rec) {
+                    $cust->update([
+                        'credit_limit'          => $rec->credit_limit_updated,
+                        'approved_credit_limit' => $rec->credit_limit_updated,
+                    ]);
+
+                    $lampiranD = LampiranD::where('bg_submission_id', $sub->id)->first();
+                    CreditLimit::create([
+                        'customer_id'           => $cust->id,
+                        'bank_garansi_id'       => $bgs->first()->id ?? null,
+                        'recommendation_id'     => $rec->id,
+                        'requested_limit'       => $rec->credit_limit_updated,
+                        'approved_limit'        => $rec->credit_limit_updated,
+                        'lampiran_d_version_id' => $lampiranD ? $lampiranD->active_version_id : null,
+                        'approved_by'           => auth()->id(),
+                        'approved_at'           => now(),
+                    ]);
+                }
+
+                // Inform IT team (Informational only, background calculation completed)
+                try {
+                    $itUsers = User::role('it')->get();
+                    if ($itUsers->isNotEmpty()) {
+                        Notification::send($itUsers, new SystemNotification(
+                            "Info IT: Background Credit Limit Sync Selesai",
+                            "Pembaruan Credit Limit untuk <b>{$custName}</b> sebesar <b>Rp " . number_format($rec->credit_limit_updated, 0, ',', '.') . "</b> telah selesai diproses di background setelah validasi Bu Rita. Tidak perlu verifikasi/pengecekan lagi.",
+                            route('customers.index'),
+                            'ph-check-circle',
+                            'info'
+                        ));
+
+                        $itEmails = $itUsers->pluck('email')->filter(fn($e) => !empty($e) && filter_var($e, FILTER_VALIDATE_EMAIL))->toArray();
+                        $validatorName = auth()->user()->name ?? 'Secretary Finance (Bu Rita)';
+                        foreach ($itEmails as $itEmail) {
+                            Mail::to($itEmail)->queue(new CreditLimitUpdatedItMail($sub, $validatorName));
+                        }
+                    }
+                } catch (\Exception $e) {
+                    Log::error("Gagal notifikasi IT: " . $e->getMessage());
+                }
+
+                // Send Lampiran D strictly to admin-rtm and purchasing_manager_email only
                 $this->sendCompletionEmails($sub);
 
                 $recipients = User::role(['admin-rtm', 'secretary-finance', 'super-admin'])->get();
                 Notification::send($recipients, new SystemNotification(
-                    "Lampiran D Disetujui",
-                    "Perubahan Lampiran D pada <b>{$custName}</b> telah di-approved oleh Manager Finance dan siap di-download atau digunakan.",
+                    "Lampiran D & BG Validated",
+                    "Bank Guarantee & Lampiran D untuk <b>{$custName}</b> telah divalidasi oleh Secretary Finance (Bu Rita) dan Credit Limit otomatis diperbarui.",
                     route('lampiran-d.index'),
                     'ph-check-circle',
                     'success'
@@ -263,7 +326,7 @@ class BgApprovalInboxController extends Controller
                     ->orderBy('id', 'desc')
                     ->first();
 
-        $remarks = 'Approved via Dashboard';
+        $remarks = 'Approved by Secretary Finance';
         $lampiranD = LampiranD::where('bg_submission_id', $submission->id)->with('activeVersion')->first();
         if ($lampiranD && $lampiranD->activeVersion) {
             $remarks = $lampiranD->activeVersion->remarks;
@@ -280,6 +343,9 @@ class BgApprovalInboxController extends Controller
         ]);
     }
 
+    /**
+     * Send Lampiran D strictly to admin-rtm and manager purchasing only
+     */
     private function sendCompletionEmails($submission)
     {
         $pendingSiblings = BgSubmission::where('bg_recommendation_id', $submission->bg_recommendation_id)
@@ -291,13 +357,19 @@ class BgApprovalInboxController extends Controller
             return;
         }
 
-        $salesEmails = User::role(['head-SNM', 'admin-rtm'])->pluck('email')->toArray();
-        $financeEmails = User::role(['manager-finance', 'head-finance', 'secretary-finance'])->pluck('email')->toArray();
+        $rec = $submission->recommendation;
+        $cust = $rec ? $rec->customer : null;
 
-        $allRecipients = array_merge($salesEmails, $financeEmails);
-        $recipients = array_unique(array_filter($allRecipients, fn($e) => !empty($e) && filter_var($e, FILTER_VALIDATE_EMAIL)));
+        // Lampiran D dikirim HANYA ke admin-rtm dan manager purchasing
+        $adminRtmEmails = User::role('admin-rtm')->pluck('email')->toArray();
+        $purchasingEmail = ($cust && !empty($cust->purchasing_manager_email)) ? [$cust->purchasing_manager_email] : [];
 
-        foreach($recipients as $email) {
+        $targetEmails = array_unique(array_filter(
+            array_merge($adminRtmEmails, $purchasingEmail),
+            fn($e) => !empty($e) && filter_var($e, FILTER_VALIDATE_EMAIL)
+        ));
+
+        foreach($targetEmails as $email) {
             Mail::to($email)->queue(new CustomerBgReadyMail($submission));
         }
     }

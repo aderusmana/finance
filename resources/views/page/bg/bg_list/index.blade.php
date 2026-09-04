@@ -15,6 +15,26 @@
         </div>
     </div>
 
+    {{-- Nav Pills for Active vs Expired --}}
+    <div class="row mb-3">
+        <div class="col-12">
+            <ul class="nav nav-pills" id="bgListTabs" role="tablist">
+                <li class="nav-item me-2" role="presentation">
+                    <button class="nav-link active rounded-pill px-4 fw-semibold tab-bg-filter" data-tab="active" type="button">
+                        <i class="ph-bold ph-shield-check me-1"></i> Active Bank Garansi 
+                        <span class="badge bg-success ms-1 rounded-pill">{{ $stats['active'] ?? 0 }}</span>
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link rounded-pill px-4 fw-semibold tab-bg-filter" data-tab="expired" type="button">
+                        <i class="ph-bold ph-clock-counter-clockwise me-1"></i> History BG Expired 
+                        <span class="badge bg-danger ms-1 rounded-pill">{{ $stats['expired'] ?? 0 }}</span>
+                    </button>
+                </li>
+            </ul>
+        </div>
+    </div>
+
     <div class="row">
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center mb-4 table-controls-header flex-wrap">
@@ -37,8 +57,11 @@
                     </select>
                     <button id="resetFilters" class="btn btn-sm btn-secondary border" title="Reset Filters"><i class="ph-bold ph-arrow-counter-clockwise"></i></button>
                 </div>
-                {{-- Create Button --}}
-                <div class="ms-auto d-flex page-action-buttons">
+                {{-- Create & Action Buttons --}}
+                <div class="ms-auto d-flex gap-2 page-action-buttons">
+                    <a href="{{ route('sales-submissions.index') }}?action=create" class="btn btn-outline-primary shadow-sm" title="Pengajuan Sales (Adendum & Tambah BG)">
+                        <i class="ph-bold ph-paper-plane-tilt me-1"></i> <span>Pengajuan Sales</span>
+                    </a>
                     <button class="btn btn-primary" type="button" id="btn-create-bg">
                         <i class="ph-bold ph-plus"></i> <span>New Bank Garansi</span>
                     </button>
@@ -262,11 +285,14 @@
             $('.select2').select2({ theme: 'bootstrap-5' });
             $('.select2-modal').select2({ dropdownParent: $('#bgModal'), theme: 'bootstrap-5', placeholder: 'Select Option' });
 
+            let activeBgTab = 'active';
+
             const table = $('#sampleTable').DataTable({
                 processing: true, serverSide: true,
                 ajax: {
                     url: "{{ route('bg-list.index') }}",
                     data: function(d) {
+                        d.tab = activeBgTab;
                         d.status = $('#statusFilter').val();
                         d.bg_type = $('#typeFilter').val();
                     }
@@ -294,6 +320,18 @@
 
             $('#statusFilter, #typeFilter').on('change', function() { table.ajax.reload(); });
             $('#resetFilters').on('click', function() { $('#statusFilter, #typeFilter').val('all').trigger('change'); });
+
+            $('.tab-bg-filter').on('click', function() {
+                $('.tab-bg-filter').removeClass('active');
+                $(this).addClass('active');
+                activeBgTab = $(this).data('tab');
+                if (activeBgTab === 'expired') {
+                    $('#statusFilter').val('all').prop('disabled', true);
+                } else {
+                    $('#statusFilter').prop('disabled', false);
+                }
+                table.ajax.reload();
+            });
 
             let isPopulating = false;
             let currentSequence = 0;

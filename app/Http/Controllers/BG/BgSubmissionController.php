@@ -23,8 +23,10 @@ use App\Models\User;
 use App\Models\BG\BgHistory;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
+use App\Models\Customer\CreditLimit;
+use App\Mail\CreditLimitUpdatedItMail;
 use App\Notifications\SystemNotification;
-use Illuminate\Support\FacadesLog;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Auth;
 
@@ -314,6 +316,9 @@ class BgSubmissionController extends Controller
         $data = [
             'submission_id' => $submission->id,
             'bg_id' => $targetBg->id,
+            'bg_number' => $submission->bg_number ?? ($targetBg->bg_number ?? ''),
+            'exp_date' => $submission->exp_date ? Carbon::parse($submission->exp_date)->format('Y-m-d') : ($targetBg->exp_date ? Carbon::parse($targetBg->exp_date)->format('Y-m-d') : ''),
+            'warkat_file_url' => $submission->warkat_file_path ? asset($submission->warkat_file_path) : ($targetBg->warkat_file_path ? asset($targetBg->warkat_file_path) : null),
             'nama_distributor' => $customer->name,
             'kota' => $customer->city,
             'wilayah_kerja' => $customer->area ?? '-',
@@ -409,9 +414,78 @@ class BgSubmissionController extends Controller
                 $requester = auth()->user();
                 $Logs = $this->generateApprovalLogs($requester, $submission->id, 'BG', 'Lampiran D');
 
-                if ($Logs->isEmpty()) throw new \Exception("User Role Manager Finance tidak ditemukan.");
+                $subUpdate = ['status' => 'waiting_approval'];
+                if ($request->filled('bg_number')) {
+                    $subUpdate['bg_number'] = $request->bg_number;
+                }
+                if ($request->filled('exp_date')) {
+                    $subUpdate['exp_date'] = $request->exp_date;
+                }
+                if ($request->hasFile('warkat_file')) {
+                    $wFile = $request->file('warkat_file');
+                    $wFilename = 'Warkat_' . $submission->form_code . '_' . time() . '.' . $wFile->getClientOriginalExtension();
+                    $wPath = $wFile->storeAs('bg_documents/warkat', $wFilename, 'public');
+                    $subUpdate['warkat_file_path'] = 'storage/' . $wPath;
+                }
+                $submission->update($subUpdate);
 
-                $submission->update(['status' => 'waiting_approval']);
+                // Sync BG data to BankGaransi batch records
+                $createdAt = Carbon::parse($submission->created_at);
+                $batchBgs = BankGaransi::where('customer_id', $customer->id)
+                            ->whereBetween('created_at', [
+                                $createdAt->copy()->subMinutes(5),
+                                $createdAt->copy()->addMinutes(5)
+                            ])
+                            ->get();
+
+                if ($batchBgs->isEmpty()) {
+                    $batchBgs = BankGaransi::where('customer_id', $customer->id)->latest()->take(3)->get();
+                }
+
+                foreach ($batchBgs as $bgItem) {
+                    $bgUpdateData = [];
+                    if ($request->filled('bg_number') && $batchBgs->count() === 1) {
+                        $bgUpdateData['bg_number'] = $request->bg_number;
+                    }
+                    if ($request->filled('exp_date')) {
+                        $bgUpdateData['exp_date'] = $request->exp_date;
+                    }
+                    if (isset($subUpdate['warkat_file_path'])) {
+                        $bgUpdateData['warkat_file_path'] = $subUpdate['warkat_file_path'];
+                    }
+                    if (!empty($bgUpdateData)) {
+                        $bgItem->update($bgUpdateData);
+                    }
+                }
+
+                // Bu Rita (secretary-finance) validation log
+                $rita = User::role('secretary-finance')->first();
+                if (!$rita) {
+                    $rita = User::role(['manager-finance', 'head-finance'])->first();
+                }
+
+                if ($rita) {
+                    $existingLog = ApprovalLog::where('category', 'BG')
+                        ->where('related_id', $submission->id)
+                        ->where('approver_nik', $rita->nik)
+                        ->where('status', 'Pending')
+                        ->first();
+
+                    if (!$existingLog) {
+                        $newLog = ApprovalLog::create([
+                            'category'      => 'BG',
+                            'sub_category'  => 'Lampiran D',
+                            'related_id'    => $submission->id,
+                            'approver_nik'  => $rita->nik,
+                            'approver_name' => $rita->name,
+                            'status'        => 'Pending',
+                            'level'         => 1,
+                            'token'         => Str::random(60),
+                        ]);
+
+                        ProcessFinanceApprovalEmail::dispatch($newLog, $submission);
+                    }
+                }
 
                 $firstLog = ApprovalLog::where('category', 'BG')
                     ->where('related_id', $submission->id)
@@ -419,7 +493,7 @@ class BgSubmissionController extends Controller
                     ->orderBy('level', 'asc')
                     ->first();
 
-                if ($firstLog) {
+                if ($firstLog && (!$rita || $firstLog->approver_nik !== $rita->nik)) {
                     ProcessFinanceApprovalEmail::dispatch($firstLog, $submission);
                 }
 
@@ -443,12 +517,12 @@ class BgSubmissionController extends Controller
                         ],
                         'approval_status' => 'waiting_finance'
                     ])
-                    ->Log("Admin edited Attachment D (Correction) and forwarded it to Finance Approval");
+                    ->Log("Tim Sales / Admin melengkapi data Bank Garansi (No: {$request->bg_number}, Exp: {$request->exp_date}) dan meneruskan untuk validasi Bu Rita (Finance)");
 
-                $approvers = User::role(['manager-finance', 'head-finance'])->get();
+                $approvers = User::role(['secretary-finance', 'manager-finance', 'head-finance'])->get();
                 Notification::send($approvers, new SystemNotification(
-                    'Approval Required',
-                    "Attachment D for <b>{$customer->name}</b> is awaiting your approval.",
+                    'Approval Required (Bu Rita)',
+                    "Kelengkapan Bank Garansi untuk <b>{$customer->name}</b> ({$submission->form_code}) telah diisi oleh tim Sales dan menunggu validasi Anda.",
                     route('bg-approvals.index'),
                     'ph-signature',
                     'warning'
@@ -597,7 +671,7 @@ class BgSubmissionController extends Controller
                     ])
                     ->Log("Admin performed Direct Submit (Bypass Approval). Attachment D issued & BG Approved.");
 
-                $submission->update(['status' => 'completed', 'token' => Str::random(60)]);
+                $submission->update(['status' => 'completed', 'token' => Str::random(60), 'validated_by' => Auth::id(), 'validated_at' => now()]);
 
                 $pendingSiblings = BgSubmission::where('bg_recommendation_id', $submission->bg_recommendation_id)
                                     ->where('status', '!=', 'completed')
@@ -606,6 +680,46 @@ class BgSubmissionController extends Controller
 
                 if ($pendingSiblings == 0 && $submission->recommendation) {
                     $submission->recommendation->update(['status' => 'approved']);
+                }
+
+                // Background update credit limit to customer
+                if ($customer && $rec) {
+                    $customer->update([
+                        'credit_limit'          => $rec->credit_limit_updated,
+                        'approved_credit_limit' => $rec->credit_limit_updated,
+                    ]);
+
+                    CreditLimit::create([
+                        'customer_id'           => $customer->id,
+                        'bank_garansi_id'       => $targetBgToUpdate->id ?? null,
+                        'recommendation_id'     => $rec->id,
+                        'requested_limit'       => $rec->credit_limit_updated,
+                        'approved_limit'        => $rec->credit_limit_updated,
+                        'lampiran_d_version_id' => $newVersion->id ?? null,
+                        'approved_by'           => Auth::id(),
+                        'approved_at'           => now(),
+                    ]);
+
+                    // Inform IT team (Informational only, background calculation completed)
+                    try {
+                        $itUsers = User::role('it')->get();
+                        if ($itUsers->isNotEmpty()) {
+                            Notification::send($itUsers, new SystemNotification(
+                                "Info IT: Background Credit Limit Sync Selesai",
+                                "Pembaruan Credit Limit untuk <b>{$customer->name}</b> sebesar <b>Rp " . number_format($rec->credit_limit_updated, 0, ',', '.') . "</b> telah selesai diproses di background. Tidak perlu verifikasi/pengecekan lagi.",
+                                route('customers.index'),
+                                'ph-check-circle',
+                                'info'
+                            ));
+
+                            $itEmails = $itUsers->pluck('email')->filter(fn($e) => !empty($e) && filter_var($e, FILTER_VALIDATE_EMAIL))->toArray();
+                            foreach ($itEmails as $itEmail) {
+                                Mail::to($itEmail)->queue(new CreditLimitUpdatedItMail($submission, auth()->user()->name ?? 'Admin'));
+                            }
+                        }
+                    } catch (\Exception $e) {
+                        Log::error("Gagal notifikasi IT: " . $e->getMessage());
+                    }
                 }
 
                 $this->sendCompletionEmails($submission);
@@ -678,10 +792,14 @@ class BgSubmissionController extends Controller
         }
 
         try {
-            $salesEmails   = User::role(['head-SNM', 'admin-rtm'])->pluck('email')->toArray();
-            $financeEmails = User::role(['manager-finance', 'head-finance', 'secretary-finance'])->pluck('email')->toArray();
+            $rec = $submission->recommendation;
+            $cust = $rec ? $rec->customer : null;
 
-            $allRecipients = array_merge($salesEmails, $financeEmails);
+            // STRICT: Lampiran D dikirim HANYA ke admin-rtm dan manager purchasing
+            $adminRtmEmails = User::role('admin-rtm')->pluck('email')->toArray();
+            $purchasingEmail = ($cust && !empty($cust->purchasing_manager_email)) ? [$cust->purchasing_manager_email] : [];
+
+            $allRecipients = array_merge($adminRtmEmails, $purchasingEmail);
             $recipients    = array_unique(array_filter($allRecipients, fn($e) => !empty($e) && filter_var($e, FILTER_VALIDATE_EMAIL)));
 
             foreach($recipients as $email) {

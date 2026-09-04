@@ -53,6 +53,24 @@ class BankGaransiController extends Controller
                     'customers.name as customer_name_real'
                 ]);
 
+            // Tab filter: active vs expired
+            if ($request->has('tab') && $request->tab === 'expired') {
+                $query->where(function($q) {
+                    $q->where('bank_garansi.status', 'expired')
+                      ->orWhere('bank_garansi.exp_date', '<', now()->toDateString());
+                });
+            } else if (!$request->has('tab') || $request->tab === 'active') {
+                if (!$request->has('status') || $request->status === 'all') {
+                    $query->where(function($q) {
+                        $q->where('bank_garansi.status', '!=', 'expired')
+                          ->where(function($sub) {
+                              $sub->whereNull('bank_garansi.exp_date')
+                                  ->orWhere('bank_garansi.exp_date', '>=', now()->toDateString());
+                          });
+                    });
+                }
+            }
+
             if ($request->has('status') && $request->status != 'all') {
                 $query->where('bank_garansi.status', $request->status);
             }
@@ -116,9 +134,10 @@ class BankGaransiController extends Controller
                         ->get();
 
         $stats = [
-            'total' => BankGaransi::count(),
-            'active' => BankGaransi::where('status', 'approved')->count(),
-            'draft' => BankGaransi::where('status', 'draft')->count(),
+            'total'    => BankGaransi::count(),
+            'active'   => BankGaransi::where('status', '!=', 'expired')->where(function($q){ $q->whereNull('exp_date')->orWhere('exp_date', '>=', now()->toDateString()); })->count(),
+            'expired'  => BankGaransi::where('status', 'expired')->orWhere('exp_date', '<', now()->toDateString())->count(),
+            'draft'    => BankGaransi::where('status', 'draft')->count(),
             'expiring' => BankGaransi::where('exp_date', '<', now()->addMonth())->where('status', 'approved')->count(),
         ];
 

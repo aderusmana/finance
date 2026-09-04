@@ -154,6 +154,36 @@
                             </div>
                         </div>
 
+                        {{-- SECTION 4B: VERIFIKASI BANK GARANSI & DOKUMEN UPLOAD --}}
+                        <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px; margin-bottom: 20px;">
+                            <h6 style="font-size: 0.75rem; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px;">
+                                <i class="ph-bold ph-shield-check text-primary me-1"></i> Verifikasi Dokumen Bank Garansi
+                            </h6>
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <div class="p-2 border rounded bg-light">
+                                        <div class="text-muted small" style="font-size: 0.75rem;">Nomor Bank Garansi</div>
+                                        <div class="fw-bold font-monospace text-dark" id="d_bg_number">-</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="p-2 border rounded bg-light">
+                                        <div class="text-muted small" style="font-size: 0.75rem;">Tanggal Jatuh Tempo (Expired)</div>
+                                        <div class="fw-bold text-danger" id="d_exp_date">-</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="d-flex gap-2 flex-wrap">
+                                <a href="#" target="_blank" id="btn_view_warkat" class="btn btn-outline-primary btn-sm rounded-pill px-3 d-none">
+                                    <i class="ph-bold ph-file-text me-1"></i> Buka Scan Bank Garansi Asli
+                                </a>
+                                <a href="#" target="_blank" id="btn_view_signed" class="btn btn-outline-success btn-sm rounded-pill px-3 d-none">
+                                    <i class="ph-bold ph-file-pdf me-1"></i> Buka Dokumen Bertandatangan
+                                </a>
+                                <span id="no_files_badge" class="text-muted small fst-italic d-none">Belum ada file terlampir.</span>
+                            </div>
+                        </div>
+
                         {{-- SECTION 5: NOTES INPUT --}}
                         <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px;">
                             <label style="font-size: 0.8rem; font-weight: 700; color: #334155; margin-bottom: 8px; display: block;">
@@ -288,6 +318,31 @@
 
                         $('#rincian_bank_list').html(listHtml);
                         $('#bank_count_badge').text(count + ' Bank');
+
+                        // Verifikasi Warkat & Dokumen
+                        $('#d_bg_number').text(d.bg_number || '-');
+                        $('#d_exp_date').text(d.exp_date || '-');
+
+                        let hasFile = false;
+                        if(d.warkat_url) {
+                            $('#btn_view_warkat').attr('href', d.warkat_url).removeClass('d-none');
+                            hasFile = true;
+                        } else {
+                            $('#btn_view_warkat').addClass('d-none');
+                        }
+
+                        if(d.signed_doc_url) {
+                            $('#btn_view_signed').attr('href', d.signed_doc_url).removeClass('d-none');
+                            hasFile = true;
+                        } else {
+                            $('#btn_view_signed').addClass('d-none');
+                        }
+
+                        if(!hasFile) {
+                            $('#no_files_badge').removeClass('d-none');
+                        } else {
+                            $('#no_files_badge').addClass('d-none');
+                        }
                     }
                 });
             }

@@ -481,6 +481,30 @@
                                 });
                             }
 
+                            html += `
+                                <h6 class="fw-bold text-primary border-bottom pb-2 mt-4"><i class="ph-bold ph-shield-check me-1"></i> C. Kelengkapan Bank Garansi (Diisi Tim Sales / Admin)</h6>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="small fw-bold">Nomor Resmi Bank Garansi <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" name="bg_number" value="${d.bg_number || ''}" placeholder="Contoh: BG-2026-0003" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="small fw-bold">Tanggal Jatuh Tempo (Expired Date) <span class="text-danger">*</span></label>
+                                        <input type="date" class="form-control" name="exp_date" value="${d.exp_date || ''}" required>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <label class="small fw-bold">Scan Dokumen Bank Garansi Asli (Warkat)</label>
+                                        <input type="file" class="form-control" name="warkat_file" accept=".pdf,.jpg,.jpeg,.png">
+                                        ${d.warkat_file_url ? `
+                                            <div class="mt-2 small text-muted">
+                                                <i class="ph-bold ph-file-text text-primary me-1"></i> File scan BG saat ini: 
+                                                <a href="${d.warkat_file_url}" target="_blank" class="fw-bold text-primary text-decoration-underline">Buka File Warkat</a>
+                                            </div>
+                                        ` : '<small class="text-muted d-block mt-1">Unggah scan file Bank Garansi asli (PDF/JPG/PNG, Maks. 10MB) jika sudah tersedia.</small>'}
+                                    </div>
+                                </div>
+                            `;
+
                             $('#bankDetailsContainer').html(html);
                             $('#editBgDataModal').modal('show');
                         } else {
@@ -499,34 +523,48 @@
                     }
                 });
 
-                // --- SAVE EDIT FORM (CLEANING DATA SEBELUM KIRIM) ---
+                // --- SAVE EDIT FORM (WITH FILE SUPPORT & CLEANING) ---
                 $('#editBgForm').on('submit', function(e) {
                     e.preventDefault();
 
-                    // [UPDATE] Gunakan serializeArray agar bisa dimanipulasi
-                    let formDataArray = $(this).serializeArray();
+                    let formData = new FormData(this);
 
-                    // Loop untuk membersihkan titik (.) pada field rupiah sebelum dikirim ke Controller
-                    formDataArray.forEach(function(item) {
-                        // Cek jika field adalah field uang
-                        if (['rata_rata_penjualan', 'limit_kredit', 'nilai_bg_ditetapkan'].includes(item.name) || item.name.includes('[nominal]')) {
-                            // Hapus titik agar menjadi angka murni (contoh: 2.000.000 -> 2000000)
-                            item.value = item.value.replace(/\./g, '');
+                    // Bersihkan titik (.) pada field rupiah sebelum dikirim ke Controller
+                    ['rata_rata_penjualan', 'limit_kredit', 'nilai_bg_ditetapkan'].forEach(function(fieldName) {
+                        if (formData.has(fieldName)) {
+                            formData.set(fieldName, formData.get(fieldName).replace(/\./g, ''));
                         }
                     });
+
+                    // Loop untuk field nominal pada details
+                    for (let pair of formData.entries()) {
+                        if (pair[0].includes('[nominal]') && typeof pair[1] === 'string') {
+                            formData.set(pair[0], pair[1].replace(/\./g, ''));
+                        }
+                    }
 
                     let url = "{{ route('bg-submissions.process-review', ':id') }}".replace(':id', $('#edit_submission_id').val());
 
                     Swal.fire({ title: 'Saving...', didOpen: () => Swal.showLoading() });
 
-                    // Gunakan $.param untuk mengubah array kembali menjadi query string
-                    $.post(url, $.param(formDataArray), function(res) {
-                        if(res.success) {
-                            Swal.fire('Success', res.message, 'success');
-                            $('#editBgDataModal').modal('hide');
-                            sampleTable.ajax.reload();
-                        } else {
-                            Swal.fire('Error', res.message, 'error');
+                    $.ajax({
+                        url: url,
+                        type: 'POST',
+                        data: formData,
+                        processData: false,
+                        contentType: false,
+                        success: function(res) {
+                            if(res.success) {
+                                Swal.fire('Success', res.message, 'success');
+                                $('#editBgDataModal').modal('hide');
+                                sampleTable.ajax.reload();
+                            } else {
+                                Swal.fire('Error', res.message, 'error');
+                            }
+                        },
+                        error: function(xhr) {
+                            let msg = xhr.responseJSON?.message || 'Failed to process request';
+                            Swal.fire('Error', msg, 'error');
                         }
                     });
                 });

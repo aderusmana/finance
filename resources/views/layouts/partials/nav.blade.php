@@ -172,6 +172,7 @@
                         <li><a href="{{ route('bg-list.index') }}">BG List</a></li>
                         <li><a href="{{ route('bg-histories.index') }}">BG Histories</a></li>
                         <li><a href="{{ route('bg-submissions.index') }}">Submissions</a></li>
+                        <li><a href="{{ route('sales-submissions.index') }}">Pengajuan Sales (Adendum/Tambah)</a></li>
                         <li><a href="{{ route('bg-recommendations.index') }}">Recommendations</a></li>
                         <li><a href="{{ route('lampiran-d.index') }}">Lampiran D</a></li>
                         <!-- <li><a href="#">Lampiran D Versions</a></li> -->
