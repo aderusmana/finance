@@ -54,7 +54,7 @@
                             <p style="margin: 0 0 15px; font-family: 'Segoe UI', Arial, sans-serif; font-size: 15px; color: #1e293b; line-height: 1.5;">Halo <strong>{{ $user->name ?? ($salesUser->name ?? 'Tim Admin-RTM') }}</strong>,</p>
                             <p style="margin: 0 0 25px; font-family: 'Segoe UI', Arial, sans-serif; font-size: 14px; line-height: 1.6; color: #475569;">
                                 Dokumen konfirmasi Bank Garansi yang diunggah oleh distributor telah diverifikasi.
-                                Selanjutnya, mohon kesediaan <strong>Admin-RTM</strong> untuk <strong>melengkapi data Bank Garansi</strong> (Nomor BG per bank, Tanggal Jatuh Tempo / Expired Date, penyesuaian Nominal jika ada, serta Scan Dokumen Bank Garansi Asli / Warkat & Lampiran D Asli) agar proses dapat diajukan kepada <strong>Bu Rita (Secretary Finance)</strong> untuk validasi.
+                                Selanjutnya, mohon kesediaan <strong>Admin-RTM</strong> untuk <strong>melengkapi data Bank Garansi</strong> (Nomor BG per bank, Tanggal Jatuh Tempo / Expired Date, penyesuaian Nominal jika ada, serta Scan Dokumen Bank Garansi Asli & Lampiran D Asli) agar proses dapat diajukan kepada <strong>Bu Rita (Secretary Finance)</strong> untuk validasi.
                             </p>
 
                             {{-- 1. DATA DISTRIBUTOR --}}
@@ -87,9 +87,9 @@
                                         <strong style="color: #92400e; font-size: 13px; display: block; margin-bottom: 6px;">Hal-hal yang perlu dilengkapi oleh Admin-RTM:</strong>
                                         <ol style="margin: 0; padding-left: 20px; font-size: 13px; color: #78350f; line-height: 1.6;">
                                             <li><strong>Nomor BG:</strong> Masukkan nomor Bank Garansi resmi untuk setiap bank penerbit.</li>
-                                            <li><strong>Nominal BG:</strong> Pastikan nominal per bank telah sesuai dengan warkat fisik.</li>
-                                            <li><strong>Expired Date:</strong> Masukkan tanggal jatuh tempo warkat Bank Garansi masing-masing bank.</li>
-                                            <li><strong>Scan File BG Asli (Warkat):</strong> Unggah scan asli berkas Bank Garansi fisik (dapat lebih dari 1 file per bank).</li>
+                                            <li><strong>Nominal BG:</strong> Pastikan nominal per bank telah sesuai dengan berkas fisik Bank Garansi.</li>
+                                            <li><strong>Expired Date:</strong> Masukkan tanggal jatuh tempo Bank Garansi masing-masing bank.</li>
+                                            <li><strong>Scan File BG Asli:</strong> Unggah scan berkas asli Bank Garansi fisik (dapat lebih dari 1 file per bank).</li>
                                             <li><strong>Scan File Lampiran D Asli:</strong> Unggah scan berkas Lampiran D asli bertandatangan (dapat lebih dari 1 file per bank).</li>
                                         </ol>
                                     </td>

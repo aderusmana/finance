@@ -2,6 +2,65 @@
     @section('title', 'Submission Center')
     @include('components.sample-table-styles')
 
+    <style>
+        /* Fix Select2 inside Bootstrap 5 Input Group agar sejajar dengan icon */
+        .input-group > .select2-container,
+        .input-group > .select2-container--bootstrap-5 {
+            position: relative;
+            flex: 1 1 auto;
+            width: 1% !important;
+            min-width: 0;
+        }
+
+        .input-group > .select2-container .select2-selection,
+        .input-group > .select2-container--bootstrap-5 .select2-selection {
+            height: 100% !important;
+            min-height: 38px;
+            border-top-left-radius: 0 !important;
+            border-bottom-left-radius: 0 !important;
+            border-top-right-radius: 0.375rem !important;
+            border-bottom-right-radius: 0.375rem !important;
+            display: flex;
+            align-items: center;
+            border-color: #dee2e6;
+            border-left: 0 !important;
+        }
+
+        .input-group > .select2-container .select2-selection--single,
+        .input-group > .select2-container--bootstrap-5 .select2-selection--single {
+            padding-top: 0;
+            padding-bottom: 0;
+        }
+
+        .input-group > .select2-container .select2-selection--single .select2-selection__rendered,
+        .input-group > .select2-container--bootstrap-5 .select2-selection--single .select2-selection__rendered {
+            padding-left: 0.75rem;
+            padding-right: 2rem;
+            line-height: normal;
+            color: #212529;
+        }
+
+        .input-group > .select2-container .select2-selection--single .select2-selection__arrow,
+        .input-group > .select2-container--bootstrap-5 .select2-selection--single .select2-selection__arrow {
+            height: 100%;
+            top: 0;
+            right: 8px;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-group:focus-within {
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+            border-radius: 0.375rem;
+        }
+
+        .input-group:focus-within > .input-group-text,
+        .input-group:focus-within > .select2-container .select2-selection,
+        .input-group:focus-within > .select2-container--bootstrap-5 .select2-selection {
+            border-color: #86b7fe;
+        }
+    </style>
+
     {{-- HEADER --}}
     <div class="row m-1 mb-4">
         <div class="col-12">
@@ -169,8 +228,8 @@
                             <div class="col-12">
                                 <label class="form-label fw-bold small text-uppercase text-muted">Customer / Recommendation <span class="text-danger">*</span></label>
                                 <div class="input-group">
-                                    <span class="input-group-text bg-light border-end-0"><i class="ph-bold ph-user"></i></span>
-                                    <select name="bg_recommendation_id" id="bg_recommendation_id" class="form-select select2-modal border-start-0 ps-0" required style="width: 100%;">
+                                    <span class="input-group-text bg-light"><i class="ph-bold ph-user"></i></span>
+                                    <select name="bg_recommendation_id" id="bg_recommendation_id" class="form-select select2-modal" required>
                                         <option></option>
                                         @foreach($recommendations as $r)
                                             <option value="{{ $r->id }}">
@@ -266,7 +325,7 @@
                         <h5 class="modal-title fw-bold text-white d-flex align-items-center gap-2 mb-0">
                             <i class="ph-bold ph-shield-check fs-5"></i> <span>Kelengkapan Data Bank Garansi</span>
                         </h5>
-                        <small class="text-white d-block mt-1" id="modalSubTitle" style="font-size: 11px; opacity: 0.85;">Input Nomor BG resmi dari bank, tanggal jatuh tempo, dan unggah scan warkat fisik.</small>
+                        <small class="text-white d-block mt-1" id="modalSubTitle" style="font-size: 11px; opacity: 0.85;">Input Nomor BG resmi dari bank, tanggal jatuh tempo, dan unggah berkas fisik.</small>
                     </div>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
@@ -297,7 +356,7 @@
             $(document).ready(function() {
                 // Initialize Select2 in Modal
                 $('.select2').select2({ theme: 'bootstrap-5' });
-                $('.select2-modal').select2({ dropdownParent: $('#submissionModal'), theme: 'bootstrap-5', placeholder: 'Select Customer...' });
+                $('.select2-modal').select2({ dropdownParent: $('#submissionModal'), theme: 'bootstrap-5', placeholder: 'Select Customer...', width: '100%' });
 
                 let currentSubmissionId = null;
 
@@ -554,7 +613,7 @@
                                         </h6>
                                         ${d.is_multi_bank ? `<span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle rounded-pill px-2.5 py-1 small"><i class="ph-bold ph-stack me-1"></i>Multi-Bank (${d.details.length} Bank Penerbit)</span>` : '<span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary-subtle rounded-pill px-2.5 py-1 small">Single-Bank (1 Bank)</span>'}
                                     </div>
-                                    <span class="text-muted small">Input Nomor BG Resmi & Unggah Berkas Warkat Asli</span>
+                                    <span class="text-muted small">Input Nomor BG Resmi & Unggah Berkas Asli</span>
                                 </div>
                             `;
 
@@ -569,7 +628,7 @@
                                                 </div>
                                                 <div class="d-flex align-items-center gap-1.5">
                                                     ${item.is_temporary ? `
-                                                        <span class="badge bg-warning bg-opacity-15 text-warning-emphasis border border-warning-subtle px-2.5 py-1 rounded-pill" title="Nomor referensi sementara yang akan ditimpa dengan nomor resmi dari warkat">
+                                                        <span class="badge bg-warning bg-opacity-15 text-warning-emphasis border border-warning-subtle px-2.5 py-1 rounded-pill" title="Nomor referensi sementara yang akan ditimpa dengan nomor resmi dari bank">
                                                             <i class="ph-bold ph-clock-countdown me-1"></i>Ref Draft: ${item.parent_bg_number || 'Belum Diisi'}
                                                         </span>
                                                     ` : `
@@ -618,7 +677,7 @@
                                                                value="${item.is_temporary ? '' : (item.parent_bg_number || '')}" 
                                                                placeholder="Contoh: 0021/BG/BCA/2026 (Wajib diisi)" required>
                                                         <div class="form-text text-muted mt-1" style="font-size: 11px;">
-                                                            <i class="ph-bold ph-info text-primary me-0.5"></i> Masukkan nomor resmi dari warkat bank fisik (akan menimpa ref draft: ${item.parent_bg_number || '-'}).
+                                                            <i class="ph-bold ph-info text-primary me-0.5"></i> Masukkan nomor resmi dari bank (akan menimpa ref draft: ${item.parent_bg_number || '-'}).
                                                         </div>
                                                     </div>
                                                     <div class="col-md-6">
@@ -629,17 +688,17 @@
                                                                name="details[${item.id}][exp_date]" 
                                                                value="${item.parent_exp_date || d.exp_date || ''}" required>
                                                         <div class="form-text text-muted mt-1" style="font-size: 11px;">
-                                                            <i class="ph-bold ph-calendar-check text-secondary me-0.5"></i> Tanggal berakhirnya masa berlaku warkat BG.
+                                                            <i class="ph-bold ph-calendar-check text-secondary me-0.5"></i> Tanggal berakhirnya masa berlaku Bank Garansi.
                                                         </div>
                                                     </div>
                                                 </div>
 
-                                                {{-- BARIS 3: 2 KOLOM SEJAJAR (Scan File Warkat BG & Lampiran D) --}}
+                                                {{-- BARIS 3: 2 KOLOM SEJAJAR (Scan File BG & Lampiran D) --}}
                                                 <div class="row g-3">
                                                     <div class="col-md-6">
                                                         <div class="p-3 rounded-3 border bg-light bg-opacity-50 h-100">
                                                             <label class="form-label small fw-semibold text-dark mb-1 d-flex justify-content-between align-items-center">
-                                                                <span><i class="ph-bold ph-file-text text-primary me-1"></i>Scan Berkas Warkat BG Asli</span>
+                                                                <span><i class="ph-bold ph-file-text text-primary me-1"></i>Scan Berkas BG Asli</span>
                                                                 <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle" style="font-size: 10px;">Bisa > 1 file</span>
                                                             </label>
                                                             <input type="file" class="form-control form-control-sm bg-white rounded-2 file-multi-input" name="details[${item.id}][warkat_files][]" multiple accept=".pdf,.jpg,.jpeg,.png">
@@ -659,7 +718,7 @@
                                                             ` : (item.parent_warkat ? `
                                                                 <div class="mt-2">
                                                                     <a href="${item.parent_warkat}" target="_blank" class="badge bg-light text-primary border text-decoration-none py-1 px-2 d-inline-flex align-items-center gap-1">
-                                                                        <i class="ph-bold ph-file-pdf"></i> Buka File Warkat
+                                                                        <i class="ph-bold ph-file-pdf"></i> Buka File BG
                                                                     </a>
                                                                 </div>
                                                             ` : '')}
@@ -706,7 +765,7 @@
                                 <div class="alert alert-primary bg-primary bg-opacity-10 border border-primary-subtle rounded-3 p-3 mt-3 d-flex align-items-center gap-3">
                                     <div class="fs-4 text-primary flex-shrink-0"><i class="ph-duotone ph-info"></i></div>
                                     <div class="small text-dark">
-                                        <strong>Pemberitahuan:</strong> Nomor BG resmi dan berkas fisik scan warkat yang Anda input akan <strong>otomatis menimpa (menggantikan)</strong> data referensi sementara pada sistem, dan pengajuan akan diteruskan ke Finance (Bu Rita) untuk validasi.
+                                        <strong>Pemberitahuan:</strong> Nomor BG resmi dan berkas fisik scan yang Anda input akan <strong>otomatis menimpa (menggantikan)</strong> data referensi sementara pada sistem, dan pengajuan akan diteruskan ke Finance (Bu Rita) untuk validasi.
                                     </div>
                                 </div>
                             `;
