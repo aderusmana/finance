@@ -12,12 +12,12 @@ class SalesFillBgNotificationMail extends Mailable
     use Queueable, SerializesModels;
 
     public $submission;
-    public $salesUser;
+    public $user;
 
-    public function __construct(BgSubmission $submission, $salesUser = null)
+    public function __construct(BgSubmission $submission, $user = null)
     {
         $this->submission = $submission;
-        $this->salesUser = $salesUser;
+        $this->user = $user;
     }
 
     public function build()
@@ -30,7 +30,8 @@ class SalesFillBgNotificationMail extends Mailable
                     ->with([
                         'submission' => $this->submission,
                         'customer'   => $customer,
-                        'salesUser'  => $this->salesUser,
+                        'user'       => $this->user,
+                        'salesUser'  => $this->user, // backward compatibility
                     ]);
     }
 }

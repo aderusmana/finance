@@ -434,13 +434,13 @@ class CustomerBgPortalController extends Controller
 
             Log::info("Upload Dokumen Konfirmasi Berhasil untuk Submission ID: " . $submission->id);
 
-            // Send instant notification and email to Admin RTM & Sales
+            // Send instant notification and email to Admin RTM only (bukan ke Sales)
             try {
-                $recipients = User::role(['admin-rtm', 'sales', 'dep-SNM'])->get();
+                $recipients = User::role(['admin-rtm'])->get();
 
                 Notification::sendNow($recipients, new SystemNotification(
                     'Customer Uploaded Confirmation Document',
-                    "Customer <b>{$rec->customer->name}</b> telah mengunggah dokumen konfirmasi Bank Garansi ({$submission->form_code}). Menunggu pengisian nomor BG & scan dokumen Bank Garansi oleh tim Sales / Admin.",
+                    "Customer <b>{$rec->customer->name}</b> telah mengunggah dokumen konfirmasi Bank Garansi ({$submission->form_code}). Menunggu verifikasi dokumen oleh Admin-RTM.",
                     route('bg-submissions.index'),
                     'ph-upload-simple',
                     'success'
@@ -452,7 +452,7 @@ class CustomerBgPortalController extends Controller
                     }
                 }
             } catch (\Exception $e) {
-                Log::error('Notif Upload Sales/Admin Error: ' . $e->getMessage());
+                Log::error('Notif Upload Admin Error: ' . $e->getMessage());
             }
 
             return redirect()->route('customer.portal.upload-success');

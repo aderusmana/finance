@@ -44,17 +44,17 @@
                     <tr>
                         <td bgcolor="#d97706" style="background-color: #d97706; background: linear-gradient(135deg, #0f172a 0%, #d97706 100%); padding: 30px; text-align: center; color: #ffffff;">
                             <h2 style="margin: 0; font-family: 'Segoe UI', Arial, sans-serif; font-size: 22px; font-weight: 700; letter-spacing: 0.5px; color: #ffffff; line-height: 1.3;">Tindakan Diperlukan: Lengkapi Data BG</h2>
-                            <p style="margin: 6px 0 0; font-family: 'Segoe UI', Arial, sans-serif; font-size: 14px; color: #fef3c7; line-height: 1.4;">Divisi Sales & Marketing (Tim Sales)</p>
+                            <p style="margin: 6px 0 0; font-family: 'Segoe UI', Arial, sans-serif; font-size: 14px; color: #fef3c7; line-height: 1.4;">Tim Admin-RTM & Finance</p>
                         </td>
                     </tr>
 
                     {{-- CONTENT --}}
                     <tr>
                         <td style="padding: 30px 35px; background-color: #ffffff;">
-                            <p style="margin: 0 0 15px; font-family: 'Segoe UI', Arial, sans-serif; font-size: 15px; color: #1e293b; line-height: 1.5;">Halo <strong>{{ $salesUser->name ?? 'Tim Sales' }}</strong>,</p>
+                            <p style="margin: 0 0 15px; font-family: 'Segoe UI', Arial, sans-serif; font-size: 15px; color: #1e293b; line-height: 1.5;">Halo <strong>{{ $user->name ?? ($salesUser->name ?? 'Tim Admin-RTM') }}</strong>,</p>
                             <p style="margin: 0 0 25px; font-family: 'Segoe UI', Arial, sans-serif; font-size: 14px; line-height: 1.6; color: #475569;">
-                                Dokumen konfirmasi Bank Garansi yang diunggah oleh distributor telah diverifikasi oleh <strong>Admin-RTM</strong>.
-                                Selanjutnya, mohon kesediaan tim Sales untuk <strong>melengkapi data Bank Garansi</strong> (Nomor BG per bank, Tanggal Jatuh Tempo / Expired Date, penyesuaian Nominal jika ada, dan Scan Dokumen Bank Garansi Asli / Warkat) agar proses dapat diajukan kepada <strong>Bu Rita (Secretary Finance)</strong> untuk validasi.
+                                Dokumen konfirmasi Bank Garansi yang diunggah oleh distributor telah diverifikasi.
+                                Selanjutnya, mohon kesediaan <strong>Admin-RTM</strong> untuk <strong>melengkapi data Bank Garansi</strong> (Nomor BG per bank, Tanggal Jatuh Tempo / Expired Date, penyesuaian Nominal jika ada, serta Scan Dokumen Bank Garansi Asli / Warkat & Lampiran D Asli) agar proses dapat diajukan kepada <strong>Bu Rita (Secretary Finance)</strong> untuk validasi.
                             </p>
 
                             {{-- 1. DATA DISTRIBUTOR --}}
@@ -76,7 +76,7 @@
                                 </tr>
                                 <tr>
                                     <td style="padding: 8px 0; border-bottom: 1px solid #f1f5f9; color: #64748b; width: 40%; font-family: 'Segoe UI', Arial, sans-serif;">Status Saat Ini</td>
-                                    <td style="padding: 8px 0; border-bottom: 1px solid #f1f5f9; font-weight: 700; color: #d97706; text-align: right; font-family: 'Segoe UI', Arial, sans-serif;">Menunggu Pengisian Data oleh Sales</td>
+                                    <td style="padding: 8px 0; border-bottom: 1px solid #f1f5f9; font-weight: 700; color: #d97706; text-align: right; font-family: 'Segoe UI', Arial, sans-serif;">Menunggu Pengisian Data Bank Garansi</td>
                                 </tr>
                             </table>
 
@@ -84,12 +84,13 @@
                             <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; margin-bottom: 25px; border-collapse: separate;">
                                 <tr>
                                     <td style="padding: 14px 18px; font-family: 'Segoe UI', Arial, sans-serif;">
-                                        <strong style="color: #92400e; font-size: 13px; display: block; margin-bottom: 6px;">Hal-hal yang perlu diisi oleh Sales:</strong>
+                                        <strong style="color: #92400e; font-size: 13px; display: block; margin-bottom: 6px;">Hal-hal yang perlu dilengkapi oleh Admin-RTM:</strong>
                                         <ol style="margin: 0; padding-left: 20px; font-size: 13px; color: #78350f; line-height: 1.6;">
                                             <li><strong>Nomor BG:</strong> Masukkan nomor Bank Garansi resmi untuk setiap bank penerbit.</li>
                                             <li><strong>Nominal BG:</strong> Pastikan nominal per bank telah sesuai dengan warkat fisik.</li>
-                                            <li><strong>Expired Date:</strong> Masukkan tanggal jatuh tempo warkat Bank Garansi.</li>
-                                            <li><strong>Upload File Warkat:</strong> Unggah scan asli warkat Bank Garansi fisik (PDF/JPG/PNG).</li>
+                                            <li><strong>Expired Date:</strong> Masukkan tanggal jatuh tempo warkat Bank Garansi masing-masing bank.</li>
+                                            <li><strong>Scan File BG Asli (Warkat):</strong> Unggah scan asli berkas Bank Garansi fisik (dapat lebih dari 1 file per bank).</li>
+                                            <li><strong>Scan File Lampiran D Asli:</strong> Unggah scan berkas Lampiran D asli bertandatangan (dapat lebih dari 1 file per bank).</li>
                                         </ol>
                                     </td>
                                 </tr>

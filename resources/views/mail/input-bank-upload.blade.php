@@ -56,7 +56,7 @@
                 ? route('customer.portal.download-submission-pdf', ['token' => $submission->token]) 
                 : '#';
             $btnColor = '#3b82f6';
-            $btnText = 'Review Submission & Complete BG';
+            $btnText = 'Review & Verifikasi Dokumen';
         } elseif ($isUploadContext) {
             // Konteks: Email Konfirmasi Upload (Submission) ke Customer
             $rec = $submission->recommendation;
@@ -156,9 +156,9 @@
                             {{-- GREETING --}}
                             <p style="font-family: 'Segoe UI', Arial, sans-serif; font-size: 15px; line-height: 1.6; color: #334155; margin: 0 0 25px 0;">
                                 @if($isAdminNotif)
-                                    Halo <strong>Tim Admin-RTM / Sales</strong>,<br><br>
+                                    Halo <strong>Tim Admin-RTM</strong>,<br><br>
                                     Customer <strong>{{ $customer->name ?? 'Distributor' }}</strong> telah berhasil mengunggah dokumen konfirmasi Bank Garansi yang telah ditandatangani dan dicap perusahaan (Form Code: <strong>{{ isset($submission) ? $submission->form_code : '' }}</strong>).<br><br>
-                                    Silakan review dokumen tersebut dan lengkapi <em>Nomor Resmi Bank Garansi</em>, <em>Tanggal Jatuh Tempo</em>, dan <em>Scan Dokumen Bank Garansi Asli</em> sebelum diteruskan untuk validasi Finance (Bu Rita).
+                                    Silakan review dan verifikasi dokumen tersebut melalui Submission Center agar pengajuan dapat diproses dan diteruskan ke tim Sales untuk melengkapi data Bank Garansi.
                                 @elseif($isUploadContext)
                                     Dear <strong>{{ $customer->name ?? 'Business Partner' }}</strong>,<br><br>
                                     Thank you, we have successfully received your digital form data.
@@ -225,10 +225,10 @@
                                     <tr>
                                         <td style="padding: 20px; text-align: center; font-family: 'Segoe UI', Arial, sans-serif;">
                                             <h3 style="margin: 0 0 8px; color: #1e40af; font-size: 16px; font-weight: 700;">
-                                                Document Ready for Review
+                                                Document Ready for Verification
                                             </h3>
                                             <p style="margin: 0; font-size: 14px; color: #1e3a8a;">
-                                                The uploaded document is waiting for your review and approval.
+                                                Dokumen yang diunggah distributor menunggu review dan verifikasi oleh Admin-RTM.
                                             </p>
                                         </td>
                                     </tr>

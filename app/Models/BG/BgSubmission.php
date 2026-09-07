@@ -14,7 +14,8 @@ class BgSubmission extends Model
     protected $fillable = [
         'bg_recommendation_id', 'form_code', 'signed_document_path',
         'custom_address', 'bg_number', 'bg_nominal', 'exp_date',
-        'warkat_file_path', 'submission_type', 'validated_by', 'validated_at',
+        'warkat_file_path', 'lampiran_d_file_path', 'warkat_files', 'lampiran_d_files',
+        'submission_type', 'validated_by', 'validated_at',
         'submitted_at', 'upload_completed_at', 'status', 'token'
     ];
 
@@ -25,6 +26,8 @@ class BgSubmission extends Model
         'submitted_at' => 'datetime',
         'upload_completed_at' => 'datetime',
         'validated_at' => 'datetime',
+        'warkat_files' => 'array',
+        'lampiran_d_files' => 'array',
     ];
 
     public function recommendation()
