@@ -508,7 +508,7 @@
 
                 $('#btn-trigger-edit').click(function() {
                     $('#viewFileModal').modal('hide');
-                    Swal.fire({ title: 'Opening Editor...', didOpen: () => Swal.showLoading() });
+                    Swal.fire({ title: 'Opening Modal...', didOpen: () => Swal.showLoading() });
 
                     let url = "{{ route('bg-submissions.get-edit-data', ':id') }}".replace(':id', currentSubmissionId);
 
