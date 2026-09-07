@@ -527,21 +527,29 @@ class BgSubmissionController extends Controller
             try {
                 $rec = $submission->recommendation;
                 $customer = $rec->customer;
-                $customer->update(['name' => $request->nama_distributor, 'city' => $request->kota, 'area' => $request->wilayah_kerja]);
+                
+                if ($request->filled('nama_distributor')) {
+                    $custUpdate = ['name' => $request->nama_distributor];
+                    if ($request->filled('kota')) $custUpdate['city'] = $request->kota;
+                    if ($request->filled('wilayah_kerja')) $custUpdate['area'] = $request->wilayah_kerja;
+                    $customer->update($custUpdate);
+                }
 
                 $oldRecData = [
                     'limit' => $rec->credit_limit_updated,
                     'set_bg' => $rec->set_bg
                 ];
 
-                $rec->update([
-                    'average' => $request->rata_rata_penjualan,
-                    'top' => $request->syarat_pembayaran,
-                    'lead_time' => $request->lead_time,
-                    'inflation' => $request->faktor_fluktuasi,
-                    'credit_limit_updated' => $request->limit_kredit,
-                    'set_bg' => $request->nilai_bg_ditetapkan
-                ]);
+                $recUpdate = [];
+                if ($request->filled('rata_rata_penjualan')) $recUpdate['average'] = $request->rata_rata_penjualan;
+                if ($request->filled('syarat_pembayaran')) $recUpdate['top'] = $request->syarat_pembayaran;
+                if ($request->filled('lead_time')) $recUpdate['lead_time'] = $request->lead_time;
+                if ($request->filled('faktor_fluktuasi')) $recUpdate['inflation'] = $request->faktor_fluktuasi;
+                if ($request->filled('limit_kredit')) $recUpdate['credit_limit_updated'] = $request->limit_kredit;
+                if ($request->filled('nilai_bg_ditetapkan')) $recUpdate['set_bg'] = $request->nilai_bg_ditetapkan;
+                if (!empty($recUpdate)) {
+                    $rec->update($recUpdate);
+                }
 
                 $allBgNumbers = [];
                 $allExpDates = [];

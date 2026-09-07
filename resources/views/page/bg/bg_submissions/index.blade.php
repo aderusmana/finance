@@ -261,15 +261,12 @@
     <div class="modal fade" id="editBgDataModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
         <div class="modal-dialog modal-dialog-centered modal-xl">
             <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
-                <div class="modal-header text-white py-3 px-4" style="background: linear-gradient(135deg, #1d4ed8, #2563eb);">
-                    <div class="d-flex align-items-center gap-2.5">
-                        <div class="bg-white bg-opacity-20 p-2 rounded-3 text-white">
-                            <i class="ph-bold ph-shield-check fs-5"></i>
-                        </div>
-                        <div>
-                            <h5 class="modal-title fw-bold text-white mb-0">Kelengkapan Data Bank Garansi</h5>
-                            <small class="text-white text-opacity-75" id="modalSubTitle">Input Nomor BG resmi dari bank, tanggal jatuh tempo, dan unggah scan warkat fisik.</small>
-                        </div>
+                <div class="modal-header bg-primary text-white py-3 px-4">
+                    <div>
+                        <h5 class="modal-title fw-bold text-white d-flex align-items-center gap-2 mb-0">
+                            <i class="ph-bold ph-shield-check fs-5"></i> <span>Kelengkapan Data Bank Garansi</span>
+                        </h5>
+                        <small class="text-white d-block mt-1" id="modalSubTitle" style="font-size: 11px; opacity: 0.85;">Input Nomor BG resmi dari bank, tanggal jatuh tempo, dan unggah scan warkat fisik.</small>
                     </div>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
@@ -463,7 +460,7 @@
                             $('#edit_submission_id').val(d.submission_id);
 
                             if (d.form_code) {
-                                $('#modalSubTitle').html(`<span class="fw-semibold text-white">${d.form_code}</span> • <span class="text-white-50">${d.nama_distributor || 'Bank Guarantee'}</span>`);
+                                $('#modalSubTitle').html(`<span class="fw-semibold text-white">${d.form_code}</span> • <span style="opacity: 0.85;">${d.nama_distributor || 'Bank Guarantee'}</span>`);
                             }
 
                             let html = `
@@ -482,7 +479,7 @@
                                         </div>
                                         <div class="d-flex align-items-center gap-2">
                                             ${d.signed_document_url ? `
-                                                <a href="${d.signed_document_url}" target="_blank" class="btn btn-sm btn-white text-primary border border-primary-subtle rounded-2 shadow-xs fw-semibold px-3 py-1.5 d-inline-flex align-items-center gap-1.5" title="Buka berkas pengajuan bertanda tangan customer">
+                                                <a href="${d.signed_document_url}" target="_blank" class="btn btn-sm btn-light bg-white text-primary border border-primary-subtle rounded-2 shadow-xs fw-semibold px-3 py-1.5 d-inline-flex align-items-center gap-1.5" title="Buka berkas pengajuan bertanda tangan customer">
                                                     <i class="ph-bold ph-file-text fs-6"></i> <span>Lihat Dokumen Pengajuan (TTD)</span>
                                                 </a>
                                             ` : ''}
