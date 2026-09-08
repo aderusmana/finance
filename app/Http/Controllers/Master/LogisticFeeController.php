@@ -71,6 +71,31 @@ class LogisticFeeController extends Controller
                         </div>
                     ';
                 })
+                ->addColumn('customer_sort_name', function($row) {
+                    $sortName = $row->customer->sort_name ?? null;
+                    if (!$sortName) {
+                        return '<div class="d-inline-flex align-items-center justify-content-center" style="background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%); border: 1px solid #cbd5e1; border-radius: 2rem; padding: 2px 14px; box-shadow: 0 1px 2px rgba(0,0,0,0.03);">
+                                    <span style="color: #94a3b8; font-weight: 700; font-size: 0.85rem;">-</span>
+                                </div>';
+                    }
+                    return '
+                        <div class="d-inline-flex align-items-center gap-1" style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 4px 10px; border-radius: 8px; box-shadow: inset 0 2px 4px rgba(255,255,255,0.8), 0 1px 2px rgba(0,0,0,0.02);">
+                            <i class="ph-bold ph-tag" style="color: #16a34a; font-size: 0.95rem;"></i>
+                            <span class="fw-bold" style="color: #166534; font-size: 0.85rem; letter-spacing: 0.3px;">' . e($sortName) . '</span>
+                        </div>
+                    ';
+                })
+                ->filterColumn('customer_sort_name', function($query, $keyword) {
+                    $query->whereHas('customer', function($q) use ($keyword) {
+                        $q->where('sort_name', 'like', "%{$keyword}%");
+                    });
+                })
+                ->orderColumn('customer_sort_name', function($query, $order) {
+                    $query->orderBy(
+                        Customer::select('sort_name')->whereColumn('customers.id', 'distributor_customers.customer_id'),
+                        $order
+                    );
+                })
                 ->editColumn('logistic_fee', function($row) {
                     $fee = 'Rp ' . number_format($row->logistic_fee, 0, ',', '.');
 
@@ -149,7 +174,7 @@ class LogisticFeeController extends Controller
                     ';
                 })
 
-                ->rawColumns(['distributor_code', 'distributor_name', 'customer_code', 'customer_name', 'logistic_fee', 'status', 'route_to', 'action'])
+                ->rawColumns(['distributor_code', 'distributor_name', 'customer_code', 'customer_name', 'customer_sort_name', 'logistic_fee', 'status', 'route_to', 'action'])
                 ->with([
                     'total_active' => DistributorCustomer::where('status', '!=', 'Pending')->count(),
                     'total_pending' => DistributorCustomer::where('status', 'Pending')->count(),
@@ -294,6 +319,7 @@ class LogisticFeeController extends Controller
             'id' => $logisticFee->id,
             'distributor_info' => ($logisticFee->distributor->code ?? '-') . ' - ' . ($logisticFee->distributor->name ?? '-'),
             'customer_info' => ($logisticFee->customer->customer_code ?? $logisticFee->customer->code ?? '-') . ' - ' . ($logisticFee->customer->name ?? '-'),
+            'customer_sort_name' => $logisticFee->customer->sort_name ?? '-',
             'logistic_fee' => $logisticFee->status === 'Pending' ? $logisticFee->proposed_fee : $logisticFee->logistic_fee,
         ]);
     }
@@ -489,12 +515,16 @@ class LogisticFeeController extends Controller
                 ->addColumn('customer', function($row) {
                     $dc = DistributorCustomer::find($row->related_id);
                     $name = $dc->customer->name ?? '-';
+                    $sortName = $dc->customer->sort_name ?? '';
                     return '
                         <div class="d-flex align-items-center gap-2">
                             <div style="width: 32px; height: 32px; background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); color: #16a34a; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
                                 <i class="ph-fill ph-storefront fs-6"></i>
                             </div>
-                            <span class="fw-bolder" style="color: #1e293b; font-size: 0.9rem;">' . $name . '</span>
+                            <div>
+                                <span class="fw-bolder" style="color: #1e293b; font-size: 0.9rem;">' . $name . '</span>
+                                ' . ($sortName ? '<div class="text-muted" style="font-size: 0.75rem;"><i class="ph-bold ph-tag me-1" style="color: #16a34a;"></i>' . e($sortName) . '</div>' : '') . '
+                            </div>
                         </div>
                     ';
                 })
@@ -535,6 +565,7 @@ class LogisticFeeController extends Controller
             'log_id' => $log->id,
             'distributor' => $data->distributor->name ?? '-',
             'customer' => $data->customer->name ?? '-',
+            'customer_sort_name' => $data->customer->sort_name ?? '-',
             'old_fee' => 'Rp ' . number_format($data->logistic_fee, 0, ',', '.'),
             'new_fee' => 'Rp ' . number_format($data->proposed_fee, 0, ',', '.'),
         ]);
@@ -716,12 +747,16 @@ class LogisticFeeController extends Controller
                 // --- KOLOM CUSTOMER ---
                 ->addColumn('customer', function($row) {
                     $name = $row->distributorCustomer->customer->name ?? '-';
+                    $sortName = $row->distributorCustomer->customer->sort_name ?? '';
                     return '
                         <div class="d-flex align-items-center gap-2">
                             <div style="width: 28px; height: 28px; background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); color: #16a34a; border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
                                 <i class="ph-fill ph-storefront fs-6"></i>
                             </div>
-                            <span class="fw-bolder" style="color: #1e293b; font-size: 0.85rem;">' . $name . '</span>
+                            <div>
+                                <span class="fw-bolder" style="color: #1e293b; font-size: 0.85rem;">' . $name . '</span>
+                                ' . ($sortName ? '<div class="text-muted" style="font-size: 0.75rem;"><i class="ph-bold ph-tag me-1" style="color: #16a34a;"></i>' . e($sortName) . '</div>' : '') . '
+                            </div>
                         </div>
                     ';
                 })

@@ -99,7 +99,12 @@
                                 </tr>
                                 <tr>
                                     <td style="padding: 12px 16px; border-bottom: 1px solid #e2e8f0; font-size: 13px; color: #64748b; font-weight: 600; font-family: 'Segoe UI', Arial, sans-serif;">Customer</td>
-                                    <td style="padding: 12px 16px; border-bottom: 1px solid #e2e8f0; font-size: 14px; font-weight: 600; text-align: right; color: #0f172a; font-family: 'Segoe UI', Arial, sans-serif;">{{ $logisticData->customer->name ?? '-' }}</td>
+                                    <td style="padding: 12px 16px; border-bottom: 1px solid #e2e8f0; font-size: 14px; font-weight: 600; text-align: right; color: #0f172a; font-family: 'Segoe UI', Arial, sans-serif;">
+                                        {{ $logisticData->customer->name ?? '-' }}
+                                        @if(!empty($logisticData->customer->sort_name))
+                                            <br><span style="font-size: 12px; font-weight: 600; color: #16a34a;">({{ $logisticData->customer->sort_name }})</span>
+                                        @endif
+                                    </td>
                                 </tr>
                                 <tr>
                                     <td style="padding: 12px 16px; border-bottom: 1px solid #e2e8f0; font-size: 13px; color: #64748b; font-weight: 600; font-family: 'Segoe UI', Arial, sans-serif;">Harga {{ $type === 'request' ? 'Saat Ini' : 'Sebelumnya' }}</td>

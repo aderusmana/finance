@@ -44,6 +44,11 @@
                         <div style="margin-bottom: 1.5rem; background-color: rgba(255,255,255,0.8); padding: 0.875rem 1.25rem; border-radius: 12px; border: 1px solid #e2e8f0;">
                             <div style="font-size: 0.7rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.2rem;">Customer</div>
                             <div style="font-size: 1rem; font-weight: 700; color: #0f172a;">{{ $logisticData->customer->name ?? '-' }}</div>
+                            @if(!empty($logisticData->customer->sort_name))
+                                <div style="font-size: 0.8rem; font-weight: 600; color: #16a34a; margin-top: 0.35rem; display: flex; align-items: center; gap: 4px;">
+                                    <i class="ph-bold ph-tag"></i> {{ $logisticData->customer->sort_name }}
+                                </div>
+                            @endif
                         </div>
 
                         <div style="background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 1.25rem; box-shadow: 0 8px 20px rgba(0,0,0,0.02); position: relative; overflow: hidden;">
