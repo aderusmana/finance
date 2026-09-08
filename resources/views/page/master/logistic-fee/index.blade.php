@@ -97,6 +97,7 @@
                                         <th style="background-color: #f8fafc; color: #475569; font-weight: 700; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.5px; padding: 1.25rem 1.5rem; border-bottom: 2px solid #e2e8f0;">Distributor Name</th>
                                         <th style="background-color: #f8fafc; color: #475569; font-weight: 700; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.5px; padding: 1.25rem 1.5rem; border-bottom: 2px solid #e2e8f0;">Customer Code</th>
                                         <th style="background-color: #f8fafc; color: #475569; font-weight: 700; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.5px; padding: 1.25rem 1.5rem; border-bottom: 2px solid #e2e8f0;">Customer Name</th>
+                                        <th style="background-color: #f8fafc; color: #475569; font-weight: 700; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.5px; padding: 1.25rem 1.5rem; border-bottom: 2px solid #e2e8f0;">Customer Sort Name</th>
                                         <th style="background-color: #f8fafc; color: #475569; font-weight: 700; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.5px; padding: 1.25rem 1.5rem; border-bottom: 2px solid #e2e8f0; width: 15%;"><i class="ph-bold ph-currency-circle-dollar me-1" style="color: #4f46e5;"></i> Logistic Fee / ctn</th>
                                         <th class="text-center" style="background-color: #f8fafc; color: #475569; font-weight: 700; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.5px; padding: 1.25rem 1.5rem; border-bottom: 2px solid #e2e8f0; width: 10%;">Status</th>
                                         <th class="text-center" style="background-color: #f8fafc; color: #475569; font-weight: 700; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.5px; padding: 1.25rem 1.5rem; border-bottom: 2px solid #e2e8f0; width: 10%;">Route to</th>
@@ -142,7 +143,7 @@
                                     <select name="customer_id" id="customer_id" class="form-select custom-select-inline" style="width: 100%;">
                                         <option value="">-- Type to search --</option>
                                         @foreach ($customers as $customer)
-                                            <option value="{{ $customer->id }}">{{ $customer->customer_code ?? ($customer->code ?? '-') }} - {{ $customer->name }}</option>
+                                            <option value="{{ $customer->id }}">{{ $customer->customer_code ?? ($customer->code ?? '-') }} - {{ $customer->name }}{{ !empty($customer->sort_name) ? ' [' . $customer->sort_name . ']' : '' }}</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -153,9 +154,13 @@
                                     <label class="form-label fw-bold" style="color: #64748b; font-size: 0.85rem;">Distributor</label>
                                     <input type="text" id="distributor_info" class="form-control fw-bold" readonly style="background-color: #f1f5f9; border: none; color: #334155; border-radius: 0.75rem; padding: 0.6rem 1rem;">
                                 </div>
-                                <div class="mb-4">
+                                <div class="mb-3">
                                     <label class="form-label fw-bold" style="color: #64748b; font-size: 0.85rem;">Customer</label>
                                     <input type="text" id="customer_info" class="form-control fw-bold" readonly style="background-color: #f1f5f9; border: none; color: #334155; border-radius: 0.75rem; padding: 0.6rem 1rem;">
+                                </div>
+                                <div class="mb-4">
+                                    <label class="form-label fw-bold" style="color: #64748b; font-size: 0.85rem;">Customer Sort Name</label>
+                                    <input type="text" id="customer_sort_name_info" class="form-control fw-bold" readonly style="background-color: #f1f5f9; border: none; color: #334155; border-radius: 0.75rem; padding: 0.6rem 1rem;">
                                 </div>
 
                                 <div class="mb-4 p-3" style="background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 1rem;">
@@ -255,6 +260,7 @@
                         { data: 'distributor_name', name: 'distributor.name' },
                         { data: 'customer_code', name: 'customer.code' },
                         { data: 'customer_name', name: 'customer.name' },
+                        { data: 'customer_sort_name', name: 'customer.sort_name' },
                         { data: 'logistic_fee', name: 'logistic_fee' },
                         { data: 'status', name: 'status', className: 'text-center' },
                         { data: 'route_to', name: 'route_to', className: 'text-center' },
@@ -299,7 +305,8 @@
                         custSelect.empty().append('<option value="">-- Type to search --</option>');
                         $.each(data, function(k, v) {
                             let code = v.customer_code ? v.customer_code : v.code;
-                            custSelect.append('<option value="'+v.id+'">'+code+' - '+v.name+'</option>');
+                            let sortName = v.sort_name ? ' [' + v.sort_name + ']' : '';
+                            custSelect.append('<option value="'+v.id+'">'+code+' - '+v.name + sortName + '</option>');
                         });
                         refreshCustomerSelect2();
                     });
@@ -380,6 +387,7 @@
                         $('#dataId').val(data.id);
                         $('#distributor_info').val(data.distributor_info);
                         $('#customer_info').val(data.customer_info);
+                        $('#customer_sort_name_info').val(data.customer_sort_name || '-');
                         $('#old_logistic_fee').val(data.logistic_fee);
                         $('#current_logistic_fee').text('Rp ' + formatRupiah(data.logistic_fee.toString()));
                         $('#logistic_fee').val('');

@@ -85,6 +85,10 @@
                                         <td style="color: #64748b; padding: 6px 0;"><i class="ph-fill ph-storefront me-2" style="color: #16a34a;"></i>Customer</td>
                                         <td class="fw-bold" style="color: #1e293b; padding: 6px 0;" id="txt_customer">: -</td>
                                     </tr>
+                                    <tr>
+                                        <td style="color: #64748b; padding: 6px 0;"><i class="ph-fill ph-tag me-2" style="color: #0ea5e9;"></i>Customer Sort Name</td>
+                                        <td class="fw-bold" style="color: #1e293b; padding: 6px 0;" id="txt_customer_sort_name">: -</td>
+                                    </tr>
                                 </table>
                             </div>
 
@@ -176,6 +180,7 @@
                     $('#log_id').val(data.log_id);
                     $('#txt_distributor').text(': ' + data.distributor);
                     $('#txt_customer').text(': ' + data.customer);
+                    $('#txt_customer_sort_name').text(': ' + (data.customer_sort_name || '-'));
                     $('#txt_old_fee').text(data.old_fee);
                     $('#txt_new_fee').text(data.new_fee);
                     $('#notes').val('').css('border-color', '#cbd5e1'); // Reset border color

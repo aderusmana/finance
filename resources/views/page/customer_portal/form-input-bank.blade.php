@@ -146,6 +146,23 @@
                         <form action="{{ route('customer.portal.store-input', $token) }}" method="POST" id="bgForm">
                             @csrf
 
+                            {{-- Customer Address Section --}}
+                            <div class="card border-0 shadow-sm mb-4" style="background-color: #f8fafc; border-radius: 10px; border: 1px solid #e2e8f0 !important;">
+                                <div class="card-body p-3">
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-bold text-muted text-uppercase mb-1"><i class="bi bi-building me-1 text-primary"></i> Customer Name</label>
+                                            <input type="text" class="form-control bg-white fw-bold" value="{{ $rec->customer->name ?? '-' }}" readonly>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-bold text-muted text-uppercase mb-1"><i class="bi bi-geo-alt me-1 text-danger"></i> Customer Operational Address <span class="text-danger">*</span></label>
+                                            <textarea name="custom_address" class="form-control bg-white" rows="2" placeholder="Enter operational address..." required>{{ old('custom_address', $rec->customer->penagihan_address ?? $rec->customer->address1 ?? $rec->customer->shipping_to_address ?? '') }}</textarea>
+                                            <small class="text-muted" style="font-size: 0.72rem;"><i class="bi bi-info-circle me-1"></i>Please verify/edit this address if your current operational location differs from master data.</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                             <div id="bank-rows">
                                 @foreach($details as $index => $detail)
                                 {{-- Bank Row --}}

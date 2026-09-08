@@ -23,8 +23,11 @@ use App\Models\User;
 use App\Models\BG\BgHistory;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
+use App\Models\Customer\CreditLimit;
+use App\Mail\CreditLimitUpdatedItMail;
 use App\Notifications\SystemNotification;
-use Illuminate\Support\FacadesLog;
+use App\Mail\SalesFillBgNotificationMail;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Auth;
 
@@ -78,54 +81,115 @@ class BgSubmissionController extends Controller
                         if ($type === 'history') {
                             return '
                             <button type="button"
-                                    class="btn btn-sm btn-outline-success fw-bold rounded-pill px-3 btn-view-file shadow-sm"
+                                    class="btn btn-sm btn-outline-success fw-semibold rounded-2 px-3 py-1 btn-view-file shadow-sm d-inline-flex align-items-center gap-1.5"
                                     data-url="'.$url.'"
                                     data-id="'.$row->id.'"
                                     data-status="completed"
                                     title="View Final Document">
-                                <i class="ph-bold ph-check-circle me-1"></i> View Document
+                                <i class="ph-bold ph-check-circle"></i> <span>View Document</span>
+                            </button>';
+                        }
+
+                        if ($row->status === 'uploaded') {
+                            return '
+                            <button type="button"
+                                    class="btn btn-sm btn-info text-white fw-semibold rounded-2 px-3 py-1 btn-view-file shadow-sm d-inline-flex align-items-center gap-1.5"
+                                    data-url="'.$url.'"
+                                    data-id="'.$row->id.'"
+                                    data-status="uploaded"
+                                    data-bs-toggle="tooltip"
+                                    title="Verifikasi Dokumen Upload Customer">
+                                <i class="ph-bold ph-file-search"></i> <span>Verifikasi Upload</span>
+                            </button>';
+                        }
+
+                        if ($row->status === 'waiting_sales_input') {
+                            return '
+                            <button type="button"
+                                    class="btn btn-sm btn-primary text-white fw-semibold rounded-2 px-3 py-1 btn-input-sales shadow-sm text-nowrap d-inline-flex align-items-center gap-1.5"
+                                    data-id="'.$row->id.'"
+                                    data-bs-toggle="tooltip"
+                                    title="Lengkapi Data Bank Garansi">
+                                <i class="ph-bold ph-pencil-simple"></i> <span>Lengkapi Data BG</span>
+                            </button>';
+                        }
+
+                        if ($row->status === 'waiting_approval') {
+                            return '
+                            <button type="button"
+                                    class="btn btn-sm btn-outline-primary fw-semibold rounded-2 px-3 py-1 btn-view-file shadow-sm d-inline-flex align-items-center gap-1.5"
+                                    data-url="'.$url.'"
+                                    data-id="'.$row->id.'"
+                                    data-status="waiting_approval"
+                                    data-bs-toggle="tooltip"
+                                    title="Menunggu Validasi Finance (Bu Rita)">
+                                <i class="ph-bold ph-hourglass-medium"></i> <span>Waiting Finance</span>
                             </button>';
                         }
 
                         return '
                         <button type="button"
-                                class="status-badge-lg bg-primary text-light fw-bold btn-view-file shadow-sm px-3"
+                                class="btn btn-sm btn-primary fw-semibold rounded-2 px-3 py-1 btn-view-file shadow-sm d-inline-flex align-items-center gap-1.5"
                                 data-url="'.$url.'"
                                 data-id="'.$row->id.'"
                                 data-status="process"
                                 data-bs-toggle="tooltip"
                                 title="Review Document & Process">
-                            <i class="ph-bold ph-file-search me-1"></i> Review & Process
+                            <i class="ph-bold ph-file-search"></i> <span>Review & Process</span>
                         </button>';
                     }
-                    return '<span class="status-badge-lg bg-secondary border border-secondary border-opacity-25"><i class="ph-bold ph-file"></i> No File</span>';
+                    return '<span class="badge bg-light text-muted border rounded-2 py-1 px-2"><i class="ph-bold ph-file me-1"></i> No File</span>';
                 })
                 ->addColumn('status', function($row){
                     $color = 'secondary';
                     $icon = 'circle';
+                    $label = ucwords(str_replace('_', ' ', $row->status));
 
-                    if($row->status === 'uploaded') { $color = 'info'; $icon = 'upload-simple'; }
-                    if($row->status === 'awaiting_upload') { $color = 'warning'; $icon = 'hourglass'; }
-                    if($row->status === 'completed') { $color = 'success'; $icon = 'check-circle'; }
-                    if($row->status === 'approved') { $color = 'success'; $icon = 'check-circle'; }
-                    if($row->status === 'pending_print') { $color = 'secondary'; $icon = 'printer'; }
+                    if($row->status === 'uploaded') { 
+                        $color = 'info'; 
+                        $icon = 'upload-simple'; 
+                        $label = 'Uploaded (Need Verification)';
+                    }
+                    if($row->status === 'waiting_sales_input') { 
+                        $color = 'warning'; 
+                        $icon = 'pencil-simple-line'; 
+                        $label = 'Menunggu Lengkapi BG';
+                    }
+                    if($row->status === 'waiting_approval') { 
+                        $color = 'primary'; 
+                        $icon = 'hourglass-medium'; 
+                        $label = 'Waiting Finance (Bu Rita)';
+                    }
+                    if($row->status === 'awaiting_upload') { 
+                        $color = 'warning'; 
+                        $icon = 'hourglass'; 
+                    }
+                    if($row->status === 'completed' || $row->status === 'approved') { 
+                        $color = 'success'; 
+                        $icon = 'check-circle'; 
+                        $label = 'Completed';
+                    }
+                    if($row->status === 'pending_print') { 
+                        $color = 'secondary'; 
+                        $icon = 'printer'; 
+                    }
 
-                    return '<span class="status-badge-lg bg-'.$color.' text-light border btn-status" data-id="'.$row->id.'">
-                                <i class="ph-bold ph-'.$icon.' me-1"></i> '.ucwords(str_replace('_', ' ', $row->status)).'
+                    return '<span class="badge bg-'.$color.' text-light py-1.5 px-2.5 rounded-2 d-inline-flex align-items-center gap-1 shadow-sm btn-status" style="font-size: 11px; font-weight: 600;" data-id="'.$row->id.'">
+                                <i class="ph-bold ph-'.$icon.'"></i> '.$label.'
                             </span>';
                 })
                 ->addColumn('action', function ($row) use ($type) {
-                    $btn = '<div class="action-btn-group">';
+                    $btn = '<div class="d-inline-flex align-items-center gap-1.5">';
 
                     if ($type === 'active') {
-                        $btn .= '<button type="button" class="btn btn-secondary action-btn-hover btn-edit-submission" data-id="' . $row->id . '" title="Edit Admin">
+                        $btn .= '<button type="button" class="btn btn-sm btn-outline-secondary rounded-2 px-2 py-1 btn-edit-submission shadow-sm" data-id="' . $row->id . '" title="Edit Admin">
                                     <i class="ph-bold ph-pencil-simple"></i>
                                  </button>
-                                 <button type="button" class="btn btn-danger action-btn-hover btn-delete" data-id="' . $row->id . '" title="Delete">
+                                 <button type="button" class="btn btn-sm btn-outline-danger rounded-2 px-2 py-1 btn-delete shadow-sm" data-id="' . $row->id . '" title="Delete">
                                     <i class="ph-bold ph-trash"></i>
                                  </button>';
                     } else if ($type === 'history') {
-                        $btn .= '<span class="text-muted small"><i class="ph-bold ph-lock-key"></i> Locked</span>';
+                        $btn .= '<span class="badge bg-light text-muted border py-1.5 px-2 rounded-2"><i class="ph-bold ph-lock-key me-1"></i> Locked</span>';
                     }
 
                     $btn .= '</div>';
@@ -142,32 +206,74 @@ class BgSubmissionController extends Controller
     private function generateCustomerColumn($row) {
         $customerName = $row->recommendation->customer->name ?? '-';
 
-        $siblingSubmissions = BgSubmission::where('bg_recommendation_id', $row->bg_recommendation_id)
-                                ->where('created_at', $row->created_at)
-                                ->orderBy('id', 'asc')->pluck('id')->toArray();
-
-        $myIndex = array_search($row->id, $siblingSubmissions);
-
+        $createdAt = $row->created_at;
         $candidateBgs = BankGaransi::where('customer_id', $row->recommendation->customer_id)
-                            ->where('created_at', $row->created_at)
-                            ->orderBy('id', 'asc')->with('details')->get();
+                            ->whereBetween('created_at', [
+                                $createdAt->copy()->subMinutes(5),
+                                $createdAt->copy()->addMinutes(5)
+                            ])
+                            ->orderBy('id', 'asc')
+                            ->with('details')
+                            ->get();
 
-        $bg = isset($candidateBgs[$myIndex]) ? $candidateBgs[$myIndex] : $candidateBgs->first();
-
-        $bgNumber = $bg ? $bg->bg_number : 'No BG Ref';
-        $bankName = $bg && $bg->details->first() ? $bg->details->first()->bank_name : '-';
-        $nominal  = $bg ? number_format($bg->bg_nominal, 0, ',', '.') : '0';
-
+        if ($candidateBgs->isEmpty()) {
+            $candidateBgs = BankGaransi::where('customer_id', $row->recommendation->customer_id)
+                                ->latest()
+                                ->take(3)
+                                ->with('details')
+                                ->get();
+        }
 
         $badgeClass = in_array($row->status, ['completed', 'approved'])
                         ? 'bg-success bg-opacity-10 text-success border-success'
                         : 'bg-light text-primary border-primary-subtle';
 
+        // Multi-Bank display
+        if ($candidateBgs->count() > 1) {
+            $totalNominal = $candidateBgs->sum('bg_nominal');
+            $bgNumbers = $candidateBgs->pluck('bg_number')->filter()->implode(', ');
+            $isTempMulti = empty($bgNumbers) || str_contains($bgNumbers, 'PENDING') || preg_match('/BG-\d{4}-\d{4}/', $bgNumbers);
+
+            $banksHtml = '';
+            foreach ($candidateBgs as $b) {
+                $bName = $b->details->first()->bank_name ?? 'Bank';
+                $bNom = number_format($b->bg_nominal, 0, ',', '.');
+                $banksHtml .= '<span class="badge bg-light text-dark border px-2 py-1" style="font-size: 11px;">
+                    <i class="ph-bold ph-bank text-primary me-1"></i><strong>'.$bName.'</strong>: Rp '.$bNom.'
+                </span>';
+            }
+
+            return '
+            <div class="d-flex flex-column">
+                <div class="mb-1">
+                    <span class="fw-bold text-dark">'.$customerName.'</span>
+                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle rounded-pill px-2 small ms-1">
+                        <i class="ph-bold ph-stack me-1"></i> Multi-Bank ('.$candidateBgs->count().' Bank)
+                    </span>
+                    '.($bgNumbers ? '<div class="mt-0.5">'.($isTempMulti ? '<span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary-subtle py-0.5 px-1.5" style="font-size: 10px;"><i class="ph-bold ph-clock me-1"></i>Draft: '.$bgNumbers.'</span>' : '<span class="badge bg-success bg-opacity-10 text-success border border-success-subtle py-0.5 px-1.5 fw-semibold" style="font-size: 10px;"><i class="ph-bold ph-shield-check me-1"></i>No BG: '.$bgNumbers.'</span>').'</div>' : '').'
+                </div>
+                <div class="d-flex flex-wrap align-items-center gap-1 mb-1">
+                    '.$banksHtml.'
+                </div>
+                <div>
+                    <span class="text-muted small">Total: </span>
+                    <span class="fw-bold text-dark small">Rp '.number_format($totalNominal, 0, ',', '.').'</span>
+                </div>
+            </div>';
+        }
+
+        // Single Bank display
+        $bg = $candidateBgs->first();
+        $bgNumber = ($bg && $bg->bg_number) ? $bg->bg_number : ($row->bg_number ?: 'No BG Ref');
+        $bankName = $bg && $bg->details->first() ? $bg->details->first()->bank_name : '-';
+        $nominal  = $bg ? number_format($bg->bg_nominal, 0, ',', '.') : '0';
+        $isTempSingle = empty($bgNumber) || strtoupper($bgNumber) === 'PENDING' || preg_match('/^BG-\d{4}-\d{4}$/', $bgNumber);
+
         return '
         <div class="d-flex flex-column">
             <div class="mb-1">
                 <span class="fw-bold text-dark">'.$customerName.'</span>
-                <span class="text-muted small ms-1"> - '.$bgNumber.'</span>
+                '.($isTempSingle ? '<span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary-subtle py-0.5 px-1.5 ms-1" style="font-size: 10px;"><i class="ph-bold ph-clock me-1"></i>Draft: '.$bgNumber.'</span>' : '<span class="badge bg-success bg-opacity-10 text-success border border-success-subtle py-0.5 px-1.5 ms-1 fw-semibold" style="font-size: 10px;"><i class="ph-bold ph-shield-check me-1"></i>'.$bgNumber.'</span>').'
             </div>
             <div class="d-flex align-items-center gap-2">
                 <span class="badge '.$badgeClass.' border rounded-pill px-2">
@@ -255,49 +361,92 @@ class BgSubmissionController extends Controller
         $rec = $submission->recommendation;
         $customer = $rec->customer;
         $metadata = json_decode($rec->notes, true) ?? [];
-        $targetBg = null;
+        $batchBgs = collect();
 
         if (isset($metadata['action']) && $metadata['action'] === 'existing' && !empty($metadata['target_bg_id'])) {
             $targetBg = BankGaransi::where('id', $metadata['target_bg_id'])
                         ->with('details')
                         ->first();
+            if ($targetBg) $batchBgs->push($targetBg);
         }
         else {
-            $siblingSubmissions = BgSubmission::where('bg_recommendation_id', $rec->id)
-                                    ->where('created_at', $submission->created_at)
-                                    ->orderBy('id', 'asc')
-                                    ->pluck('id')
-                                    ->toArray();
-
-            $myIndex = array_search($submission->id, $siblingSubmissions);
-
             $createdAt = $submission->created_at;
-            $candidateBgs = BankGaransi::where('customer_id', $customer->id)
-                                ->whereBetween('created_at', [$createdAt->copy()->subSeconds(5), $createdAt->copy()->addSeconds(5)])
+            $batchBgs = BankGaransi::where('customer_id', $customer->id)
+                                ->whereBetween('created_at', [
+                                    $createdAt->copy()->subMinutes(5),
+                                    $createdAt->copy()->addMinutes(5)
+                                ])
                                 ->with('details')
                                 ->orderBy('id', 'asc')
                                 ->get();
-
-            $targetBg = isset($candidateBgs[$myIndex]) ? $candidateBgs[$myIndex] : null;
         }
 
-        if (!$targetBg) {
-            $targetBg = BankGaransi::where('customer_id', $customer->id)
+        if ($batchBgs->isEmpty()) {
+            $latestBg = BankGaransi::where('customer_id', $customer->id)
                 ->where('status', 'draft')
                 ->latest()
                 ->with('details')
                 ->first();
+            if ($latestBg) $batchBgs->push($latestBg);
         }
 
-        if (!$targetBg) {
+        if ($batchBgs->isEmpty()) {
              return response()->json(['success' => false, 'message' => 'Bank Guarantee data not found (Timestamp mismatch & No ID).']);
         }
 
-        $totalBgDiserahkan = $targetBg->bg_nominal;
+        $isMultiBank = $batchBgs->count() > 1;
+        $totalBgDiserahkan = $batchBgs->sum('bg_nominal');
         $specificDetails = [];
-        foreach($targetBg->details as $detail) {
-            $detail->parent_bg_id = $targetBg->id;
-            $specificDetails[] = $detail;
+        foreach($batchBgs as $bgItem) {
+            $warkatFiles = [];
+            if (!empty($bgItem->warkat_files) && is_array($bgItem->warkat_files)) {
+                foreach ($bgItem->warkat_files as $f) {
+                    $warkatFiles[] = [
+                        'path' => $f,
+                        'url'  => asset($f),
+                        'name' => basename($f)
+                    ];
+                }
+            } elseif (!empty($bgItem->warkat_file_path)) {
+                $warkatFiles[] = [
+                    'path' => $bgItem->warkat_file_path,
+                    'url'  => asset($bgItem->warkat_file_path),
+                    'name' => basename($bgItem->warkat_file_path)
+                ];
+            }
+
+            $lampiranDFiles = [];
+            if (!empty($bgItem->lampiran_d_files) && is_array($bgItem->lampiran_d_files)) {
+                foreach ($bgItem->lampiran_d_files as $f) {
+                    $lampiranDFiles[] = [
+                        'path' => $f,
+                        'url'  => asset($f),
+                        'name' => basename($f)
+                    ];
+                }
+            } elseif (!empty($bgItem->lampiran_d_file_path)) {
+                $lampiranDFiles[] = [
+                    'path' => $bgItem->lampiran_d_file_path,
+                    'url'  => asset($bgItem->lampiran_d_file_path),
+                    'name' => basename($bgItem->lampiran_d_file_path)
+                ];
+            }
+
+            $isTemp = empty($bgItem->bg_number) 
+                || strtoupper(trim($bgItem->bg_number)) === 'PENDING' 
+                || preg_match('/^BG-\d{4}-\d{4}$/', trim($bgItem->bg_number));
+
+            foreach ($bgItem->details as $detail) {
+                $detail->parent_bg_id = $bgItem->id;
+                $detail->parent_bg_number = $bgItem->bg_number;
+                $detail->is_temporary = $isTemp ? true : false;
+                $detail->parent_exp_date = $bgItem->exp_date ? Carbon::parse($bgItem->exp_date)->format('Y-m-d') : '';
+                $detail->parent_warkat = $bgItem->warkat_file_path ? asset($bgItem->warkat_file_path) : null;
+                $detail->parent_lampiran_d = $bgItem->lampiran_d_file_path ? asset($bgItem->lampiran_d_file_path) : null;
+                $detail->parent_warkat_files = $warkatFiles;
+                $detail->parent_lampiran_d_files = $lampiranDFiles;
+                $specificDetails[] = $detail;
+            }
         }
 
         $periodeString = '-';
@@ -311,9 +460,43 @@ class BgSubmissionController extends Controller
             }
         }
 
+        $firstBg = $batchBgs->first();
+        $bgNumber = $submission->bg_number ?? ($firstBg->bg_number ?? '');
+        $expDate = $submission->exp_date ? Carbon::parse($submission->exp_date)->format('Y-m-d') : ($firstBg && $firstBg->exp_date ? Carbon::parse($firstBg->exp_date)->format('Y-m-d') : '');
+        $warkatFileUrl = $submission->warkat_file_path ? asset($submission->warkat_file_path) : ($firstBg && $firstBg->warkat_file_path ? asset($firstBg->warkat_file_path) : null);
+        $lampiranDFileUrl = $submission->lampiran_d_file_path ? asset($submission->lampiran_d_file_path) : ($firstBg && $firstBg->lampiran_d_file_path ? asset($firstBg->lampiran_d_file_path) : null);
+
+        $subWarkatFiles = [];
+        if (!empty($submission->warkat_files) && is_array($submission->warkat_files)) {
+            foreach ($submission->warkat_files as $f) {
+                $subWarkatFiles[] = ['path' => $f, 'url' => asset($f), 'name' => basename($f)];
+            }
+        } elseif (!empty($submission->warkat_file_path)) {
+            $subWarkatFiles[] = ['path' => $submission->warkat_file_path, 'url' => asset($submission->warkat_file_path), 'name' => basename($submission->warkat_file_path)];
+        }
+
+        $subLampiranDFiles = [];
+        if (!empty($submission->lampiran_d_files) && is_array($submission->lampiran_d_files)) {
+            foreach ($submission->lampiran_d_files as $f) {
+                $subLampiranDFiles[] = ['path' => $f, 'url' => asset($f), 'name' => basename($f)];
+            }
+        } elseif (!empty($submission->lampiran_d_file_path)) {
+            $subLampiranDFiles[] = ['path' => $submission->lampiran_d_file_path, 'url' => asset($submission->lampiran_d_file_path), 'name' => basename($submission->lampiran_d_file_path)];
+        }
+
         $data = [
             'submission_id' => $submission->id,
-            'bg_id' => $targetBg->id,
+            'form_code' => $submission->form_code,
+            'signed_document_url' => $submission->signed_document_path ? asset($submission->signed_document_path) : null,
+            'bg_id' => $firstBg->id,
+            'is_multi_bank' => $isMultiBank,
+            'bg_count' => $batchBgs->count(),
+            'bg_number' => $bgNumber,
+            'exp_date' => $expDate,
+            'warkat_file_url' => $warkatFileUrl,
+            'lampiran_d_file_url' => $lampiranDFileUrl,
+            'submission_warkat_files' => $subWarkatFiles,
+            'submission_lampiran_d_files' => $subLampiranDFiles,
             'nama_distributor' => $customer->name,
             'kota' => $customer->city,
             'wilayah_kerja' => $customer->area ?? '-',
@@ -344,28 +527,102 @@ class BgSubmissionController extends Controller
             try {
                 $rec = $submission->recommendation;
                 $customer = $rec->customer;
-                $customer->update(['name' => $request->nama_distributor, 'city' => $request->kota, 'area' => $request->wilayah_kerja]);
+                
+                if ($request->filled('nama_distributor')) {
+                    $custUpdate = ['name' => $request->nama_distributor];
+                    if ($request->filled('kota')) $custUpdate['city'] = $request->kota;
+                    if ($request->filled('wilayah_kerja')) $custUpdate['area'] = $request->wilayah_kerja;
+                    $customer->update($custUpdate);
+                }
 
                 $oldRecData = [
                     'limit' => $rec->credit_limit_updated,
                     'set_bg' => $rec->set_bg
                 ];
 
-                $rec->update([
-                    'average' => $request->rata_rata_penjualan,
-                    'top' => $request->syarat_pembayaran,
-                    'lead_time' => $request->lead_time,
-                    'inflation' => $request->faktor_fluktuasi,
-                    'credit_limit_updated' => $request->limit_kredit,
-                    'set_bg' => $request->nilai_bg_ditetapkan
-                ]);
+                $recUpdate = [];
+                if ($request->filled('rata_rata_penjualan')) $recUpdate['average'] = $request->rata_rata_penjualan;
+                if ($request->filled('syarat_pembayaran')) $recUpdate['top'] = $request->syarat_pembayaran;
+                if ($request->filled('lead_time')) $recUpdate['lead_time'] = $request->lead_time;
+                if ($request->filled('faktor_fluktuasi')) $recUpdate['inflation'] = $request->faktor_fluktuasi;
+                if ($request->filled('limit_kredit')) $recUpdate['credit_limit_updated'] = $request->limit_kredit;
+                if ($request->filled('nilai_bg_ditetapkan')) $recUpdate['set_bg'] = $request->nilai_bg_ditetapkan;
+                if (!empty($recUpdate)) {
+                    $rec->update($recUpdate);
+                }
+
+                $allBgNumbers = [];
+                $allExpDates = [];
+                $allWarkatPaths = [];
+                $allLampiranDPaths = [];
 
                 if(isset($request->details)) {
                     foreach ($request->details as $detailId => $val) {
                         $detailObj = BgDetail::findOrFail($detailId);
-                        $detailObj->update(['bank_name' => $val['bank_name'], 'branch_name' => $val['branch_name'], 'nominal' => $val['nominal']]);
+                        $detailObj->update([
+                            'bank_name'   => $val['bank_name'] ?? $detailObj->bank_name,
+                            'branch_name' => $val['branch_name'] ?? $detailObj->branch_name,
+                            'nominal'     => $val['nominal'] ?? $detailObj->nominal
+                        ]);
+
                         $parentBg = BankGaransi::find($detailObj->bank_garansi_id);
-                        if ($parentBg) $parentBg->update(['bg_nominal' => $val['nominal']]);
+                        if ($parentBg) {
+                            $parentBgUpdate = ['bg_nominal' => $val['nominal'] ?? $parentBg->bg_nominal];
+                            if (!empty($val['bg_number'])) {
+                                $parentBgUpdate['bg_number'] = $val['bg_number'];
+                                $allBgNumbers[] = $val['bg_number'];
+                            }
+                            if (!empty($val['exp_date'])) {
+                                $parentBgUpdate['exp_date'] = $val['exp_date'];
+                                $allExpDates[] = $val['exp_date'];
+                            }
+
+                            // Upload multiple scan Warkat BG files for this bank
+                            $existingWarkatFiles = is_array($parentBg->warkat_files) ? $parentBg->warkat_files : ($parentBg->warkat_file_path ? [$parentBg->warkat_file_path] : []);
+                            if ($request->hasFile("details.{$detailId}.warkat_files")) {
+                                $uploadedWarkats = $request->file("details.{$detailId}.warkat_files");
+                                if (!is_array($uploadedWarkats)) $uploadedWarkats = [$uploadedWarkats];
+                                foreach ($uploadedWarkats as $wFile) {
+                                    if ($wFile && $wFile->isValid()) {
+                                        $wFilename = 'Warkat_' . $submission->form_code . '_bg' . $parentBg->id . '_' . time() . '_' . uniqid() . '.' . $wFile->getClientOriginalExtension();
+                                        $wPath = $wFile->storeAs('bg_documents/warkat', $wFilename, 'public');
+                                        $existingWarkatFiles[] = 'storage/' . $wPath;
+                                    }
+                                }
+                                $existingWarkatFiles = array_values(array_unique($existingWarkatFiles));
+                                $parentBgUpdate['warkat_files'] = $existingWarkatFiles;
+                                if (!empty($existingWarkatFiles)) {
+                                    $parentBgUpdate['warkat_file_path'] = $existingWarkatFiles[0];
+                                }
+                            }
+                            if (!empty($existingWarkatFiles)) {
+                                $allWarkatPaths = array_merge($allWarkatPaths, $existingWarkatFiles);
+                            }
+
+                            // Upload multiple scan Lampiran D files for this bank
+                            $existingLampiranDFiles = is_array($parentBg->lampiran_d_files) ? $parentBg->lampiran_d_files : ($parentBg->lampiran_d_file_path ? [$parentBg->lampiran_d_file_path] : []);
+                            if ($request->hasFile("details.{$detailId}.lampiran_d_files")) {
+                                $uploadedLampirans = $request->file("details.{$detailId}.lampiran_d_files");
+                                if (!is_array($uploadedLampirans)) $uploadedLampirans = [$uploadedLampirans];
+                                foreach ($uploadedLampirans as $ldFile) {
+                                    if ($ldFile && $ldFile->isValid()) {
+                                        $ldFilename = 'LampiranD_' . $submission->form_code . '_bg' . $parentBg->id . '_' . time() . '_' . uniqid() . '.' . $ldFile->getClientOriginalExtension();
+                                        $ldPath = $ldFile->storeAs('bg_documents/lampiran_d', $ldFilename, 'public');
+                                        $existingLampiranDFiles[] = 'storage/' . $ldPath;
+                                    }
+                                }
+                                $existingLampiranDFiles = array_values(array_unique($existingLampiranDFiles));
+                                $parentBgUpdate['lampiran_d_files'] = $existingLampiranDFiles;
+                                if (!empty($existingLampiranDFiles)) {
+                                    $parentBgUpdate['lampiran_d_file_path'] = $existingLampiranDFiles[0];
+                                }
+                            }
+                            if (!empty($existingLampiranDFiles)) {
+                                $allLampiranDPaths = array_merge($allLampiranDPaths, $existingLampiranDFiles);
+                            }
+
+                            $parentBg->update($parentBgUpdate);
+                        }
                     }
                 }
 
@@ -409,9 +666,141 @@ class BgSubmissionController extends Controller
                 $requester = auth()->user();
                 $Logs = $this->generateApprovalLogs($requester, $submission->id, 'BG', 'Lampiran D');
 
-                if ($Logs->isEmpty()) throw new \Exception("User Role Manager Finance tidak ditemukan.");
+                $subUpdate = ['status' => 'waiting_approval'];
+                if (!empty($allBgNumbers)) {
+                    $subUpdate['bg_number'] = implode(', ', array_unique($allBgNumbers));
+                } elseif ($request->filled('bg_number')) {
+                    $subUpdate['bg_number'] = trim($request->bg_number);
+                }
 
-                $submission->update(['status' => 'waiting_approval']);
+                if ($request->filled('exp_date')) {
+                    $subUpdate['exp_date'] = $request->exp_date;
+                } elseif (!empty($allExpDates)) {
+                    $subUpdate['exp_date'] = $allExpDates[0];
+                }
+
+                // Global or root warkat upload
+                $subWarkatFiles = is_array($submission->warkat_files) ? $submission->warkat_files : ($submission->warkat_file_path ? [$submission->warkat_file_path] : []);
+                if ($request->hasFile('warkat_file')) {
+                    $wFile = $request->file('warkat_file');
+                    $wFilename = 'Warkat_' . $submission->form_code . '_' . time() . '.' . $wFile->getClientOriginalExtension();
+                    $wPath = $wFile->storeAs('bg_documents/warkat', $wFilename, 'public');
+                    $subWarkatFiles[] = 'storage/' . $wPath;
+                }
+                if ($request->hasFile('warkat_files')) {
+                    $wFiles = $request->file('warkat_files');
+                    if (!is_array($wFiles)) $wFiles = [$wFiles];
+                    foreach ($wFiles as $wFile) {
+                        if ($wFile && $wFile->isValid()) {
+                            $wFilename = 'Warkat_' . $submission->form_code . '_' . time() . '_' . uniqid() . '.' . $wFile->getClientOriginalExtension();
+                            $wPath = $wFile->storeAs('bg_documents/warkat', $wFilename, 'public');
+                            $subWarkatFiles[] = 'storage/' . $wPath;
+                        }
+                    }
+                }
+                if (!empty($allWarkatPaths)) {
+                    $subWarkatFiles = array_merge($subWarkatFiles, $allWarkatPaths);
+                }
+                $subWarkatFiles = array_values(array_unique($subWarkatFiles));
+                if (!empty($subWarkatFiles)) {
+                    $subUpdate['warkat_files'] = $subWarkatFiles;
+                    $subUpdate['warkat_file_path'] = $subWarkatFiles[0];
+                }
+
+                // Global or root lampiran d upload
+                $subLampiranDFiles = is_array($submission->lampiran_d_files) ? $submission->lampiran_d_files : ($submission->lampiran_d_file_path ? [$submission->lampiran_d_file_path] : []);
+                if ($request->hasFile('lampiran_d_file')) {
+                    $ldFile = $request->file('lampiran_d_file');
+                    $ldFilename = 'LampiranD_' . $submission->form_code . '_' . time() . '.' . $ldFile->getClientOriginalExtension();
+                    $ldPath = $ldFile->storeAs('bg_documents/lampiran_d', $ldFilename, 'public');
+                    $subLampiranDFiles[] = 'storage/' . $ldPath;
+                }
+                if ($request->hasFile('lampiran_d_files')) {
+                    $ldFiles = $request->file('lampiran_d_files');
+                    if (!is_array($ldFiles)) $ldFiles = [$ldFiles];
+                    foreach ($ldFiles as $ldFile) {
+                        if ($ldFile && $ldFile->isValid()) {
+                            $ldFilename = 'LampiranD_' . $submission->form_code . '_' . time() . '_' . uniqid() . '.' . $ldFile->getClientOriginalExtension();
+                            $ldPath = $ldFile->storeAs('bg_documents/lampiran_d', $ldFilename, 'public');
+                            $subLampiranDFiles[] = 'storage/' . $ldPath;
+                        }
+                    }
+                }
+                if (!empty($allLampiranDPaths)) {
+                    $subLampiranDFiles = array_merge($subLampiranDFiles, $allLampiranDPaths);
+                }
+                $subLampiranDFiles = array_values(array_unique($subLampiranDFiles));
+                if (!empty($subLampiranDFiles)) {
+                    $subUpdate['lampiran_d_files'] = $subLampiranDFiles;
+                    $subUpdate['lampiran_d_file_path'] = $subLampiranDFiles[0];
+                }
+
+                $submission->update($subUpdate);
+
+                // Sync BG data to BankGaransi batch records (fallback for submissions without details)
+                if (empty($request->details)) {
+                    $createdAt = Carbon::parse($submission->created_at);
+                    $batchBgs = BankGaransi::where('customer_id', $customer->id)
+                                ->whereBetween('created_at', [
+                                    $createdAt->copy()->subMinutes(5),
+                                    $createdAt->copy()->addMinutes(5)
+                                ])
+                                ->get();
+
+                    if ($batchBgs->isEmpty()) {
+                        $batchBgs = BankGaransi::where('customer_id', $customer->id)->latest()->take(3)->get();
+                    }
+
+                    foreach ($batchBgs as $bgItem) {
+                        $bgUpdateData = [];
+                        if ($request->filled('bg_number') && $batchBgs->count() === 1) {
+                            $bgUpdateData['bg_number'] = trim($request->bg_number);
+                        }
+                        if ($request->filled('exp_date') && empty($bgItem->exp_date)) {
+                            $bgUpdateData['exp_date'] = $request->exp_date;
+                        }
+                        if (isset($subUpdate['warkat_file_path']) && empty($bgItem->warkat_file_path)) {
+                            $bgUpdateData['warkat_file_path'] = $subUpdate['warkat_file_path'];
+                        }
+                        if (!empty($bgUpdateData)) {
+                            $bgItem->update($bgUpdateData);
+                        }
+                    }
+                }
+
+                // Bu Rita (secretary-finance) validation log
+                $rita = User::role('secretary-finance')->first();
+                if (!$rita) {
+                    $rita = User::role(['manager-finance', 'head-finance'])->first();
+                }
+
+                if ($rita) {
+                    $existingLog = ApprovalLog::where('category', 'BG')
+                        ->where('related_id', $submission->id)
+                        ->where('approver_nik', $rita->nik)
+                        ->first();
+
+                    if (!$existingLog) {
+                        $newLog = ApprovalLog::create([
+                            'category'      => 'BG',
+                            'sub_category'  => 'Lampiran D',
+                            'related_id'    => $submission->id,
+                            'approver_nik'  => $rita->nik,
+                            'approver_name' => $rita->name,
+                            'status'        => 'Pending',
+                            'level'         => 1,
+                            'token'         => Str::random(60),
+                        ]);
+
+                        ProcessFinanceApprovalEmail::dispatch($newLog, $submission);
+                    } else {
+                        $existingLog->update([
+                            'status' => 'Pending',
+                            'token'  => Str::random(60),
+                        ]);
+                        ProcessFinanceApprovalEmail::dispatch($existingLog, $submission);
+                    }
+                }
 
                 $firstLog = ApprovalLog::where('category', 'BG')
                     ->where('related_id', $submission->id)
@@ -419,7 +808,7 @@ class BgSubmissionController extends Controller
                     ->orderBy('level', 'asc')
                     ->first();
 
-                if ($firstLog) {
+                if ($firstLog && (!$rita || $firstLog->approver_nik !== $rita->nik)) {
                     ProcessFinanceApprovalEmail::dispatch($firstLog, $submission);
                 }
 
@@ -443,12 +832,12 @@ class BgSubmissionController extends Controller
                         ],
                         'approval_status' => 'waiting_finance'
                     ])
-                    ->Log("Admin edited Attachment D (Correction) and forwarded it to Finance Approval");
+                    ->Log("Tim Sales / Admin melengkapi data Bank Garansi (No: {$request->bg_number}, Exp: {$request->exp_date}) dan meneruskan untuk validasi Bu Rita (Finance)");
 
-                $approvers = User::role(['manager-finance', 'head-finance'])->get();
+                $approvers = User::role(['secretary-finance', 'manager-finance', 'head-finance'])->get();
                 Notification::send($approvers, new SystemNotification(
-                    'Approval Required',
-                    "Attachment D for <b>{$customer->name}</b> is awaiting your approval.",
+                    'Approval Required (Bu Rita)',
+                    "Kelengkapan Bank Garansi untuk <b>{$customer->name}</b> ({$submission->form_code}) telah diisi oleh tim Sales dan menunggu validasi Anda.",
                     route('bg-approvals.index'),
                     'ph-signature',
                     'warning'
@@ -464,7 +853,10 @@ class BgSubmissionController extends Controller
                 ));
 
                 DB::commit();
-                return response()->json(['success' => true, 'message' => 'Data corrected & forwarded to Finance (Log Recorded).']);
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Data Bank Garansi berhasil disimpan dan diajukan ke Finance (Bu Rita) untuk validasi.'
+                ]);
 
             } catch (\Exception $e) {
                 DB::rollBack();
@@ -472,7 +864,7 @@ class BgSubmissionController extends Controller
             }
         }
 
-        if ($request->action_type == 'direct_submit') {
+        if ($request->action_type == 'direct_submit' || $request->action_type == 'verify_upload') {
 
             DB::beginTransaction();
             try {
@@ -491,29 +883,18 @@ class BgSubmissionController extends Controller
                     $createdAt = $submission->created_at;
                     $allBatchBgs = BankGaransi::where('customer_id', $customer->id)
                             ->whereBetween('created_at', [
-                                $createdAt->copy()->subSeconds(5),
-                                $createdAt->copy()->addSeconds(5)
+                                $createdAt->copy()->subMinutes(5),
+                                $createdAt->copy()->addMinutes(5)
                             ])
                             ->with('details')
                             ->orderBy('id', 'asc')
                             ->get();
 
-                    $siblingSubmissions = BgSubmission::where('bg_recommendation_id', $rec->id)
-                                            ->whereBetween('created_at', [
-                                                $createdAt->copy()->subSeconds(5),
-                                                $createdAt->copy()->addSeconds(5)
-                                            ])
-                                            ->orderBy('id', 'asc')
-                                            ->pluck('id')
-                                            ->toArray();
-
-                    $myIndex = array_search($submission->id, $siblingSubmissions);
-
-                    if ($myIndex !== false && isset($allBatchBgs[$myIndex])) {
-                        $targetBgToUpdate = $allBatchBgs[$myIndex];
-                    } else {
-                        $targetBgToUpdate = $allBatchBgs->first();
+                    if ($allBatchBgs->isEmpty()) {
+                        $allBatchBgs = BankGaransi::where('customer_id', $customer->id)->latest()->take(3)->with('details')->get();
                     }
+
+                    $targetBgToUpdate = $allBatchBgs->first();
                 }
 
                 if ($allBatchBgs->isEmpty() || !$targetBgToUpdate) {
@@ -568,50 +949,61 @@ class BgSubmissionController extends Controller
                     'file_path'     => $submission->signed_document_path,
                     'generated_by'  => Auth::id(),
                     'generated_at'  => now(),
-                    'remarks'       => 'Direct Approved by Admin (Nominal Updated)'
+                    'remarks'       => 'Upload verified by Admin-RTM. Forwarded to Sales for BG details completion.'
                 ]);
                 $lampiranD->update(['version_latest' => $nextVersion, 'active_version_id' => $newVersion->id]);
 
-                if($targetBgToUpdate->status != 'approved') {
-                    $targetBgToUpdate->update([
-                        'status'      => 'approved',
-                        'issued_date' => now(),
-                        'exp_date'    => now()->addYear(),
-                    ]);
-
-                    $this->addToBgHistory($submission, $targetBgToUpdate);
-                }
+                // Update submission status to waiting_sales_input
+                $submission->update([
+                    'status'       => 'waiting_sales_input',
+                    'reviewed_at'  => now(),
+                    'validated_by' => Auth::id(),
+                ]);
 
                 activity()
                     ->causedBy(auth()->user())
                     ->performedOn($submission)
                     ->useLog('bg_submission')
-                    ->event('direct_approve')
+                    ->event('verify_upload')
                     ->withProperties([
                         'form_code'       => $submission->form_code,
                         'customer'        => $customer->name,
-                        'bg_number'       => $targetBgToUpdate->bg_number,
-                        'bg_nominal'      => $targetBgToUpdate->bg_nominal,
                         'lampiran_d_ver'  => $nextVersion,
-                        'note'            => 'Bypass Approval Workflow'
+                        'status'          => 'waiting_sales_input'
                     ])
-                    ->Log("Admin performed Direct Submit (Bypass Approval). Attachment D issued & BG Approved.");
+                    ->Log("Admin-RTM memverifikasi hasil upload dokumen konfirmasi ({$submission->form_code}). Pengajuan siap dilengkapi data Bank Garansi (Nomor BG, Expired Date, Scan Warkat & Lampiran D) oleh Admin-RTM.");
 
-                $submission->update(['status' => 'completed', 'token' => Str::random(60)]);
-
-                $pendingSiblings = BgSubmission::where('bg_recommendation_id', $submission->bg_recommendation_id)
-                                    ->where('status', '!=', 'completed')
-                                    ->where('status', '!=', 'approved')
-                                    ->count();
-
-                if ($pendingSiblings == 0 && $submission->recommendation) {
-                    $submission->recommendation->update(['status' => 'approved']);
+                // Notify Admin-RTM only (NOT sales)
+                $adminRtmUsers = User::role('admin-rtm')->get();
+                if ($adminRtmUsers->isEmpty()) {
+                    $adminRtmUsers = collect([auth()->user()]);
                 }
 
-                $this->sendCompletionEmails($submission);
+                if ($adminRtmUsers->isNotEmpty()) {
+                    Notification::send($adminRtmUsers, new SystemNotification(
+                        'Upload Diverifikasi: Silakan Lengkapi Data BG',
+                        "Dokumen konfirmasi Bank Garansi untuk <b>{$customer->name}</b> ({$submission->form_code}) telah diverifikasi. Silakan Admin-RTM melengkapi Nomor BG, Expired Date, dan Upload scan warkat & Lampiran D asli.",
+                        route('bg-submissions.index'),
+                        'ph-pencil-simple-line',
+                        'warning'
+                    ));
+
+                    foreach ($adminRtmUsers as $admUser) {
+                        if (!empty($admUser->email) && filter_var($admUser->email, FILTER_VALIDATE_EMAIL)) {
+                            try {
+                                Mail::to($admUser->email)->queue(new SalesFillBgNotificationMail($submission, $admUser));
+                            } catch (\Exception $me) {
+                                Log::error("Failed sending SalesFillBgNotificationMail to {$admUser->email}: " . $me->getMessage());
+                            }
+                        }
+                    }
+                }
 
                 DB::commit();
-                return response()->json(['success' => true, 'message' => 'Document approved & History recorded once.']);
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Dokumen berhasil diverifikasi! Notifikasi telah dikirim ke Admin-RTM untuk melengkapi data Bank Garansi.'
+                ]);
 
             } catch (\Exception $e) {
                 DB::rollBack();
@@ -678,10 +1070,14 @@ class BgSubmissionController extends Controller
         }
 
         try {
-            $salesEmails   = User::role(['head-SNM', 'admin-rtm'])->pluck('email')->toArray();
-            $financeEmails = User::role(['manager-finance', 'head-finance', 'secretary-finance'])->pluck('email')->toArray();
+            $rec = $submission->recommendation;
+            $cust = $rec ? $rec->customer : null;
 
-            $allRecipients = array_merge($salesEmails, $financeEmails);
+            // STRICT: Lampiran D dikirim HANYA ke admin-rtm dan manager purchasing
+            $adminRtmEmails = User::role('admin-rtm')->pluck('email')->toArray();
+            $purchasingEmail = ($cust && !empty($cust->purchasing_manager_email)) ? [$cust->purchasing_manager_email] : [];
+
+            $allRecipients = array_merge($adminRtmEmails, $purchasingEmail);
             $recipients    = array_unique(array_filter($allRecipients, fn($e) => !empty($e) && filter_var($e, FILTER_VALIDATE_EMAIL)));
 
             foreach($recipients as $email) {

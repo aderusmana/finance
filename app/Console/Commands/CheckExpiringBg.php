@@ -8,13 +8,9 @@ use App\Models\BG\BgRecommendation;
 use App\Models\BG\Tax;
 use App\Models\User;
 use App\Mail\AdminExpiringNotification;
-use App\Mail\SuratDistributorMail;
-use App\Mail\SuratBankMail;
 use Illuminate\Support\Facades\Mail;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
-use App\Helpers\DocumentHelper;
-use Illuminate\Support\Facades\URL;
 use App\Notifications\SystemNotification;
 use Illuminate\Support\Facades\Notification;
 use Spatie\Permission\Models\Role;
@@ -31,29 +27,30 @@ class CheckExpiringBg extends Command
 
         $this->info("Checking Bank Guarantee expiry for: " . $today->format('d F Y'));
 
-        // Logic Perhitungan:
+        // Aturan Pengecekan Akhir Bulan (Horizon 2 Bulan ke Depan):
         // 1. BG yang expired hari ini atau sudah jatuh tempo (exp_date <= today)
-        // 2. Batch bulanan 60-90 hari ke depan (H-60 dan H-90):
-        //    a. Batch A: 2 bulan ke depan (addMonths(2)), khusus tanggal 1 s/d 15
-        //    b. Batch B: 3 bulan ke depan (addMonths(3)), khusus tanggal 16 s/d 31
-        $targetMonth1 = $today->copy()->addMonths(2); // Untuk batch tanggal 1-15 (H-60)
-        $targetMonth2 = $today->copy()->addMonths(3); // Untuk batch tanggal > 15 (H-90)
+        // 2. Horizon 2 bulan ke depan:
+        //    - Tanggal 1 s/d 15 di 2 bulan ke depan (Bulan M + 2): Masuk ke perhitungan bulan sekarang (Bulan M)
+        //    - Tanggal 16 s/d akhir bulan di 2 bulan ke depan (Bulan M + 2): Masuk ke perhitungan bulan depannya (Bulan M + 1)
+        //    - Tanggal 16 s/d akhir bulan di 1 bulan ke depan (Bulan M + 1): Masuk ke perhitungan bulan sekarang (Bulan M)
+        $monthPlus1 = $today->copy()->addMonths(1);
+        $monthPlus2 = $today->copy()->addMonths(2);
 
         $expiringBgs = BankGaransi::with('customer')
             ->where('status', 'approved')
-            ->where(function($query) use ($todayDate, $targetMonth1, $targetMonth2) {
+            ->where(function($query) use ($todayDate, $monthPlus1, $monthPlus2) {
                 // 1. BG yang expired hari ini atau sudah lewat jatuh tempo
                 $query->whereDate('exp_date', '<=', $todayDate)
-                // 2. Batch A: Tanggal 1-15 (Target 2 bulan ke depan)
-                ->orWhere(function($q) use ($targetMonth1) {
-                    $q->whereMonth('exp_date', $targetMonth1->month)
-                      ->whereYear('exp_date', $targetMonth1->year)
+                // 2. Tanggal 1-15 di 2 bulan ke depan (masuk ke bulan sekarang)
+                ->orWhere(function($q) use ($monthPlus2) {
+                    $q->whereMonth('exp_date', $monthPlus2->month)
+                      ->whereYear('exp_date', $monthPlus2->year)
                       ->whereDay('exp_date', '<=', 15);
                 })
-                // 3. Batch B: Tanggal >15 (Target 3 bulan ke depan)
-                ->orWhere(function($q) use ($targetMonth2) {
-                    $q->whereMonth('exp_date', $targetMonth2->month)
-                      ->whereYear('exp_date', $targetMonth2->year)
+                // 3. Tanggal 16-akhir bulan di 1 bulan ke depan (limpahan bulan lalu, masuk ke bulan sekarang)
+                ->orWhere(function($q) use ($monthPlus1) {
+                    $q->whereMonth('exp_date', $monthPlus1->month)
+                      ->whereYear('exp_date', $monthPlus1->year)
                       ->whereDay('exp_date', '>', 15);
                 });
             })
@@ -137,49 +134,6 @@ class CheckExpiringBg extends Command
                             'ph-clock-warning', 
                             'danger' 
                         ));
-                    }
-
-                    if ($cust->email) {
-                        $nomorPkd = DocumentHelper::generatePKDNumber($bg->temp_recommendation_id, $cust->name, now());
-
-                        $financeUser = User::role('manager-finance')->first() ?? User::role('head-finance')->first();
-                        $financeName = $financeUser ? $financeUser->name : 'Manager Finance';
-
-                        $dataPdf = [
-                            'customer'      => $cust,
-                            'bg'            => $bg,
-                            'nomor_pkd'     => $nomorPkd,
-                            'expired_date'  => $bg->exp_date,
-                            'bank_name'     => $bg->bank_name ?? '-',
-                            'branch_name'   => $bg->branch_name ?? '-',
-                            'bank_address'  => $bg->bank_address ?? $bg->branch_name ?? '-',
-                            'nominal'       => $bg->bg_nominal,
-                            'finance_name'  => $financeName,
-                        ];
-
-                        $linkDistributor = URL::temporarySignedRoute(
-                            'public.bg.download', now()->addDays(7),
-                            ['bg_id' => $bg->id, 'type' => 'distributor']
-                        );
-
-                        $linkBank = URL::temporarySignedRoute(
-                            'public.bg.download', now()->addDays(7),
-                            ['bg_id' => $bg->id, 'type' => 'bank']
-                        );
-
-                        Mail::to($cust->email)->later(
-                            now()->addSeconds($delayCounter),
-                            new SuratDistributorMail($cust, $dataPdf, $linkDistributor)
-                        );
-                        $delayCounter += 5;
-
-                        Mail::to($cust->email)->later(
-                            now()->addSeconds($delayCounter),
-                            new SuratBankMail($cust, $dataPdf, $linkBank)
-                        );
-                        $delayCounter += 5;
-
-                        $this->info("Notifications scheduled for Customer: {$cust->name}");
                     }
                 }
 
