@@ -48,7 +48,7 @@
                         <li><a href="{{ route('positions.index') }}">Position</a></li>
                         <li><a href="{{ route('permissions.index') }}">Permission</a></li>
                         <li><a href="{{ route('roles.index') }}">Role</a></li>
-                        <li><a href="{{ route('master-export.index') }}"><i class="ph-bold ph-download-simple me-1"></i> Export Data</a></li>
+                        {{-- <li><a href="{{ route('master-export.index') }}"><i class="ph-bold ph-download-simple me-1"></i> Export Data</a></li> --}}
                     </ul>
                 </li>
             @endcan

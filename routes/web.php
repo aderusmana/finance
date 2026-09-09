@@ -153,6 +153,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/master-export/customer', [MasterExportController::class, 'exportCustomer'])->name('master-export.customer');
     Route::get('/master-export/logistic-fee', [MasterExportController::class, 'exportLogisticFee'])->name('master-export.logistic-fee');
     Route::get('/master-export/distributor', [MasterExportController::class, 'exportDistributor'])->name('master-export.distributor');
+    Route::get('/master-export/customer-ship-to', [MasterExportController::class, 'exportCustomerShipTo'])->name('master-export.customer-ship-to');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

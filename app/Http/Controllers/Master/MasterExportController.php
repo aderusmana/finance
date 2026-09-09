@@ -7,9 +7,11 @@ use Illuminate\Http\Request;
 use App\Models\Customer\Customer;
 use App\Models\Customer\Distributor;
 use App\Models\Customer\DistributorCustomer;
+use App\Models\Customer\CustomerShipTo;
 use App\Exports\CustomerExport;
 use App\Exports\LogisticFeeExport;
 use App\Exports\DistributorExport;
+use App\Exports\CustomerShipToExport;
 use Maatwebsite\Excel\Facades\Excel;
 
 class MasterExportController extends Controller
@@ -31,6 +33,9 @@ class MasterExportController extends Controller
                 'total'  => Distributor::count(),
                 'linked' => Distributor::whereNotNull('customer_id')->count(),
                 'manual' => Distributor::whereNull('customer_id')->count(),
+            ],
+            'ship_tos' => [
+                'total' => CustomerShipTo::count(),
             ],
         ];
 
@@ -58,5 +63,12 @@ class MasterExportController extends Controller
         $filename = 'export_distributors_' . now()->format('Ymd_His') . '.xlsx';
 
         return Excel::download(new DistributorExport(), $filename);
+    }
+
+    public function exportCustomerShipTo()
+    {
+        $filename = 'export_customer_ship_tos_' . now()->format('Ymd_His') . '.xlsx';
+
+        return Excel::download(new CustomerShipToExport(), $filename);
     }
 }
