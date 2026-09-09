@@ -34,6 +34,7 @@ use App\Http\Controllers\Master\CustomerShipToController;
 use App\Http\Controllers\Master\DistributorController;
 use App\Http\Controllers\BG\SalesBgSubmissionController;
 use App\Http\Controllers\Master\SystemLogController;
+use App\Http\Controllers\Master\MasterExportController;
 use Illuminate\Support\Facades\Route;
 
 // Redirect root to the named login route (actual login routes are defined in routes/auth.php)
@@ -146,6 +147,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/logistic-fees-log', [LogisticFeeController::class, 'logList'])->name('logistic-fees.log');
 
     Route::get('/get-customers-by-distributor/{distributor_id}', [DistributorController::class, 'getCustomersByDistributor']);
+
+    // MASTER EXPORT CENTER
+    Route::get('/master-export', [MasterExportController::class, 'index'])->name('master-export.index');
+    Route::get('/master-export/customer', [MasterExportController::class, 'exportCustomer'])->name('master-export.customer');
+    Route::get('/master-export/logistic-fee', [MasterExportController::class, 'exportLogisticFee'])->name('master-export.logistic-fee');
+    Route::get('/master-export/distributor', [MasterExportController::class, 'exportDistributor'])->name('master-export.distributor');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
