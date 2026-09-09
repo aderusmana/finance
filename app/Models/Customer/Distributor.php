@@ -6,7 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class Distributor extends Model
 {
-    protected $fillable = ['code', 'name', 'email'];
+    protected $fillable = ['customer_id', 'code', 'name', 'email'];
+
+    public function customer()
+    {
+        return $this->belongsTo(Customer::class, 'customer_id');
+    }
 
     public function customers()
     {

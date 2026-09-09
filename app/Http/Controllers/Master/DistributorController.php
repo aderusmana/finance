@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Master;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Customer\Distributor;
+use App\Models\Customer\Customer;
 use Yajra\DataTables\Facades\DataTables;
 
 class DistributorController extends Controller
@@ -12,29 +13,43 @@ class DistributorController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $data = Distributor::query();
+            $data = Distributor::with('customer')->select('distributors.*');
 
             return DataTables::of($data)
                 ->addIndexColumn()
+                ->editColumn('name', function($row) {
+                    $badge = '';
+                    if ($row->customer_id && $row->customer) {
+                        $badge = ' <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill px-2 py-1 ms-1" style="font-size: 0.72rem;" title="Terhubung dengan Master Customer"><i class="ph-bold ph-link-simple"></i> Customer</span>';
+                    }
+                    return '<span>' . e($row->name) . '</span>' . $badge;
+                })
                 ->addColumn('action', function($row){
                     return '
                         <button class="btn btn-sm btn-primary btn-edit" data-id="'.$row->id.'"><i class="ph-bold ph-pencil"></i> Edit</button>
                         <button class="btn btn-sm btn-danger btn-delete" data-id="'.$row->id.'"><i class="ph-bold ph-trash"></i> Hapus</button>
                     ';
                 })
-                ->rawColumns(['action'])
+                ->rawColumns(['name', 'action'])
                 ->make(true);
         }
 
-        return view('page.master.distributor.index');
+        $customers = Customer::whereNotNull('code')
+            ->where('code', '!=', '')
+            ->orderByRaw("CASE WHEN code LIKE 'ID%' OR code LIKE 'IE%' THEN 0 ELSE 1 END")
+            ->orderBy('code', 'asc')
+            ->get(['id', 'code', 'name', 'email']);
+
+        return view('page.master.distributor.index', compact('customers'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'code' => 'required|unique:distributors,code',
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:distributors,email'
+            'customer_id' => 'nullable|exists:customers,id',
+            'code'        => 'required|unique:distributors,code',
+            'name'        => 'required|string|max:255',
+            'email'       => 'required|email|unique:distributors,email'
         ]);
 
         Distributor::create($request->all());
@@ -44,7 +59,7 @@ class DistributorController extends Controller
 
     public function show($id)
     {
-        $distributor = Distributor::findOrFail($id);
+        $distributor = Distributor::with('customer')->findOrFail($id);
         return response()->json($distributor);
     }
 
@@ -53,9 +68,10 @@ class DistributorController extends Controller
         $distributor = Distributor::findOrFail($id);
 
         $request->validate([
-            'code' => 'required|unique:distributors,code,'.$id,
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:distributors,email,'.$id
+            'customer_id' => 'nullable|exists:customers,id',
+            'code'        => 'required|unique:distributors,code,'.$id,
+            'name'        => 'required|string|max:255',
+            'email'       => 'required|email|unique:distributors,email,'.$id
         ]);
 
         $distributor->update($request->all());
