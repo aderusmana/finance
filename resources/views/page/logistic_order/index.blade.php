@@ -271,7 +271,7 @@
                                             <option value="">-- Select Customer --</option>
                                             @foreach ($customers as $c)
                                                 <option value="{{ $c->id }}">
-                                                    {{ $c->customer_code ?? ($c->code ?? '-') }} - {{ $c->name }}
+                                                    {{ $c->customer_code ?? ($c->code ?? '-') }} - {{ $c->name }} - {{ $c->sort_name}}
                                                 </option>
                                             @endforeach
                                         </select>
