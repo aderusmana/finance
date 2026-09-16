@@ -24,6 +24,7 @@ class CustomerShipToExport implements FromQuery, WithHeadings, WithMapping, Shou
         return [
             $shipTo->customer->code ?? '-',
             $shipTo->customer->name ?? '-',
+            $shipTo->customer->sort_name ?? '-',
             $shipTo->ship_to_code ?? '-',
             $shipTo->ship_to_name ?? '-',
             $shipTo->ship_to_address_1 ?? '-',
@@ -40,6 +41,7 @@ class CustomerShipToExport implements FromQuery, WithHeadings, WithMapping, Shou
         return [
             'KODE CUSTOMER',
             'NAMA CUSTOMER',
+            'CUSTOMER SORT NAME',
             'KODE SHIP TO',
             'NAMA LOKASI SHIP TO / OUTLET',
             'ALAMAT 1',
