@@ -175,7 +175,7 @@
                             </div>
                             <div class="d-flex gap-2 flex-wrap">
                                 <a href="#" target="_blank" id="btn_view_warkat" class="btn btn-outline-primary btn-sm rounded-pill px-3 d-none">
-                                    <i class="ph-bold ph-file-text me-1"></i> Buka Scan Bank Garansi Asli
+                                    <i class="ph-bold ph-file-text me-1"></i> Buka Scan Sertifikat Bank Garansi Asli
                                 </a>
                                 <a href="#" target="_blank" id="btn_view_signed" class="btn btn-outline-success btn-sm rounded-pill px-3 d-none">
                                     <i class="ph-bold ph-file-pdf me-1"></i> Buka Dokumen Bertandatangan

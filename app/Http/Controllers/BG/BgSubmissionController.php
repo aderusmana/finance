@@ -49,7 +49,11 @@ class BgSubmissionController extends Controller
                 $query->whereNotIn('status', ['completed', 'approved']);
 
                 if ($request->has('status_filter') && $request->status_filter != 'all') {
-                    $query->where('status', $request->status_filter);
+                    if ($request->status_filter === 'waiting_bank_issuance') {
+                        $query->whereIn('status', ['waiting_bank_issuance', 'waiting_sales_input']);
+                    } else {
+                        $query->where('status', $request->status_filter);
+                    }
                 }
             }
 
@@ -103,18 +107,36 @@ class BgSubmissionController extends Controller
                             </button>';
                         }
 
-                        if ($row->status === 'waiting_sales_input') {
+                        if ($row->status === 'waiting_bank_issuance' || $row->status === 'waiting_sales_input') {
                             return '
-                            <button type="button"
-                                    class="btn btn-sm btn-primary text-white fw-semibold rounded-2 px-3 py-1 btn-input-sales shadow-sm text-nowrap d-inline-flex align-items-center gap-1.5"
-                                    data-id="'.$row->id.'"
-                                    data-bs-toggle="tooltip"
-                                    title="Lengkapi Data Bank Garansi">
-                                <i class="ph-bold ph-pencil-simple"></i> <span>Lengkapi Data BG</span>
-                            </button>';
+                            <div class="d-inline-flex align-items-center gap-1">
+                                <button type="button"
+                                        class="btn btn-sm btn-primary text-white fw-semibold rounded-2 px-3 py-1 btn-input-sales shadow-sm text-nowrap d-inline-flex align-items-center gap-1.5"
+                                        data-id="'.$row->id.'"
+                                        data-bs-toggle="tooltip"
+                                        title="Input Sertifikat Bank Garansi & Tanggal Jatuh Tempo">
+                                    <i class="ph-bold ph-file-plus"></i> <span>Input Sertifikat BG</span>
+                                </button>
+                                <a href="'.route('bg-reports.download', ['id' => $row->id, 'doc_type' => 'lampiran_d']).'" target="_blank"
+                                   class="btn btn-sm btn-outline-danger fw-semibold rounded-2 px-2 py-1 shadow-sm d-inline-flex align-items-center gap-1"
+                                   data-bs-toggle="tooltip"
+                                   title="Unduh Berkas Lampiran D untuk TTD Basah & Pengajuan ke Bank">
+                                    <i class="ph-bold ph-file-pdf"></i> <span>Berkas Bank</span>
+                                </a>
+                            </div>';
                         }
 
                         if ($row->status === 'waiting_approval') {
+                            if (auth()->check() && auth()->user()->hasAnyRole(['secretary-finance', 'manager-finance', 'super-admin'])) {
+                                return '
+                                <a href="'.route('bg-approvals.index').'"
+                                   class="btn btn-sm btn-success text-white fw-semibold rounded-2 px-3 py-1 shadow-sm d-inline-flex align-items-center gap-1.5"
+                                   data-bs-toggle="tooltip"
+                                   title="Verifikasi & Approve Pengajuan di Approval Inbox">
+                                    <i class="ph-bold ph-check-circle"></i> <span>Verifikasi & Approve</span>
+                                </a>';
+                            }
+
                             return '
                             <button type="button"
                                     class="btn btn-sm btn-outline-primary fw-semibold rounded-2 px-3 py-1 btn-view-file shadow-sm d-inline-flex align-items-center gap-1.5"
@@ -122,8 +144,8 @@ class BgSubmissionController extends Controller
                                     data-id="'.$row->id.'"
                                     data-status="waiting_approval"
                                     data-bs-toggle="tooltip"
-                                    title="Menunggu Validasi Finance (Bu Rita)">
-                                <i class="ph-bold ph-hourglass-medium"></i> <span>Waiting Finance</span>
+                                    title="Menunggu Verifikasi Akhir Bu Rita (Secretary Finance)">
+                                <i class="ph-bold ph-hourglass-medium"></i> <span>Menunggu Bu Rita</span>
                             </button>';
                         }
 
@@ -150,15 +172,15 @@ class BgSubmissionController extends Controller
                         $icon = 'upload-simple'; 
                         $label = 'Uploaded (Need Verification)';
                     }
-                    if($row->status === 'waiting_sales_input') { 
+                    if($row->status === 'waiting_bank_issuance' || $row->status === 'waiting_sales_input') { 
                         $color = 'warning'; 
-                        $icon = 'pencil-simple-line'; 
-                        $label = 'Menunggu Lengkapi BG';
+                        $icon = 'bank'; 
+                        $label = 'Menunggu Terbit Bank & TTD';
                     }
                     if($row->status === 'waiting_approval') { 
                         $color = 'primary'; 
                         $icon = 'hourglass-medium'; 
-                        $label = 'Waiting Finance (Bu Rita)';
+                        $label = 'Menunggu Verifikasi Bu Rita';
                     }
                     if($row->status === 'awaiting_upload') { 
                         $color = 'warning'; 
@@ -832,12 +854,12 @@ class BgSubmissionController extends Controller
                         ],
                         'approval_status' => 'waiting_finance'
                     ])
-                    ->Log("Tim Sales / Admin melengkapi data Bank Garansi (No: {$request->bg_number}, Exp: {$request->exp_date}) dan meneruskan untuk validasi Bu Rita (Finance)");
+                    ->log("Admin RTM melengkapi data fisik Sertifikat Bank Garansi (No: {$request->bg_number}, Exp: {$request->exp_date}) dan meneruskan untuk verifikasi akhir Bu Rita (Finance)");
 
                 $approvers = User::role(['secretary-finance', 'manager-finance', 'head-finance'])->get();
                 Notification::send($approvers, new SystemNotification(
-                    'Approval Required (Bu Rita)',
-                    "Kelengkapan Bank Garansi untuk <b>{$customer->name}</b> ({$submission->form_code}) telah diisi oleh tim Sales dan menunggu validasi Anda.",
+                    'Verifikasi Sertifikat Bank Garansi (Bu Rita)',
+                    "Admin RTM telah mengunggah Sertifikat Bank Garansi resmi untuk <b>{$customer->name}</b> ({$submission->form_code}). Mohon verifikasi kesesuaian fisik dan terbitkan persetujuan akhir.",
                     route('bg-approvals.index'),
                     'ph-signature',
                     'warning'
@@ -845,8 +867,8 @@ class BgSubmissionController extends Controller
 
                 $admins = User::role(['super-admin'])->get();
                 Notification::send($admins, new SystemNotification(
-                    'Submission Forwarded',
-                    "Attachment D for <b>{$customer->name}</b> was forwarded to Finance.",
+                    'Submission Forwarded to Finance',
+                    "Lampiran D & Sertifikat BG untuk <b>{$customer->name}</b> telah diajukan ke Bu Rita untuk verifikasi akhir.",
                     route('bg-submissions.index'),
                     'ph-paper-plane-tilt',
                     'info'
@@ -855,7 +877,7 @@ class BgSubmissionController extends Controller
                 DB::commit();
                 return response()->json([
                     'success' => true,
-                    'message' => 'Data Bank Garansi berhasil disimpan dan diajukan ke Finance (Bu Rita) untuk validasi.'
+                    'message' => 'Sertifikat Bank Garansi berhasil disimpan dan diajukan ke Finance (Bu Rita) untuk verifikasi akhir.'
                 ]);
 
             } catch (\Exception $e) {
@@ -953,9 +975,9 @@ class BgSubmissionController extends Controller
                 ]);
                 $lampiranD->update(['version_latest' => $nextVersion, 'active_version_id' => $newVersion->id]);
 
-                // Update submission status to waiting_sales_input
+                // Update submission status to waiting_bank_issuance
                 $submission->update([
-                    'status'       => 'waiting_sales_input',
+                    'status'       => 'waiting_bank_issuance',
                     'reviewed_at'  => now(),
                     'validated_by' => Auth::id(),
                 ]);
@@ -969,11 +991,35 @@ class BgSubmissionController extends Controller
                         'form_code'       => $submission->form_code,
                         'customer'        => $customer->name,
                         'lampiran_d_ver'  => $nextVersion,
-                        'status'          => 'waiting_sales_input'
+                        'status'          => 'waiting_bank_issuance'
                     ])
-                    ->Log("Admin-RTM memverifikasi hasil upload dokumen konfirmasi ({$submission->form_code}). Pengajuan siap dilengkapi data Bank Garansi (Nomor BG, Expired Date, Scan Warkat & Lampiran D) oleh Admin-RTM.");
+                    ->log("Admin-RTM memverifikasi hasil upload dokumen konfirmasi ({$submission->form_code}). Berkas Lampiran D & Surat Bank siap diproses TTD basah dan pengajuan ke Bank.");
 
-                // Notify Admin-RTM only (NOT sales)
+                // Notifikasi ke Secretary Finance (Bu Rita) untuk download berkas & proses TTD basah
+                try {
+                    $ritaUsers = User::role(['secretary-finance'])->get();
+                    if ($ritaUsers->isNotEmpty()) {
+                        // 1. Notifikasi lonceng di Web
+                        Notification::send($ritaUsers, new SystemNotification(
+                            'Berkas Siap TTD Basah & Pengajuan Bank',
+                            "Distributor <b>{$customer->name}</b> telah mengonfirmasi bank penjamin ({$submission->form_code}). Berkas Lampiran D dan Surat Pengantar Bank siap diunduh untuk proses tanda tangan basah dan pengajuan ke Bank.",
+                            route('bg-submissions.index'),
+                            'ph-printer',
+                            'info'
+                        ));
+
+                        // 2. Notifikasi via Email
+                        foreach ($ritaUsers as $rita) {
+                            if (!empty($rita->email)) {
+                                Mail::to($rita->email)->queue(new \App\Mail\SecretaryBankDocumentsReadyMail($submission, $rita));
+                            }
+                        }
+                    }
+                } catch (\Exception $ne) {
+                    Log::error("Gagal notifikasi ke Bu Rita: " . $ne->getMessage());
+                }
+
+                // Notifikasi ke Admin-RTM
                 $adminRtmUsers = User::role('admin-rtm')->get();
                 if ($adminRtmUsers->isEmpty()) {
                     $adminRtmUsers = collect([auth()->user()]);
@@ -981,28 +1027,18 @@ class BgSubmissionController extends Controller
 
                 if ($adminRtmUsers->isNotEmpty()) {
                     Notification::send($adminRtmUsers, new SystemNotification(
-                        'Upload Diverifikasi: Silakan Lengkapi Data BG',
-                        "Dokumen konfirmasi Bank Garansi untuk <b>{$customer->name}</b> ({$submission->form_code}) telah diverifikasi. Silakan Admin-RTM melengkapi Nomor BG, Expired Date, dan Upload scan warkat & Lampiran D asli.",
+                        'Upload Diverifikasi: Dokumen dalam Proses Bank & TTD',
+                        "Dokumen konfirmasi untuk <b>{$customer->name}</b> ({$submission->form_code}) telah diverifikasi. Menunggu proses TTD basah & penerbitan fisik Sertifikat Bank Garansi oleh Bank.",
                         route('bg-submissions.index'),
-                        'ph-pencil-simple-line',
+                        'ph-bank',
                         'warning'
                     ));
-
-                    foreach ($adminRtmUsers as $admUser) {
-                        if (!empty($admUser->email) && filter_var($admUser->email, FILTER_VALIDATE_EMAIL)) {
-                            try {
-                                Mail::to($admUser->email)->queue(new SalesFillBgNotificationMail($submission, $admUser));
-                            } catch (\Exception $me) {
-                                Log::error("Failed sending SalesFillBgNotificationMail to {$admUser->email}: " . $me->getMessage());
-                            }
-                        }
-                    }
                 }
 
                 DB::commit();
                 return response()->json([
                     'success' => true,
-                    'message' => 'Dokumen berhasil diverifikasi! Notifikasi telah dikirim ke Admin-RTM untuk melengkapi data Bank Garansi.'
+                    'message' => 'Dokumen berhasil diverifikasi! Berkas siap diunduh untuk proses tanda tangan basah dan pengajuan ke Bank.'
                 ]);
 
             } catch (\Exception $e) {

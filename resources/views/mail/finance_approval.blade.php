@@ -124,20 +124,24 @@
                                                 @if($submission->warkat_file_path)
                                                 <td bgcolor="#eff6ff" style="border-radius: 6px; border: 1px solid #bfdbfe; padding: 0; background-color: #eff6ff;">
                                                     <a href="{{ asset($submission->warkat_file_path) }}" target="_blank" style="display: inline-block; padding: 8px 16px; font-family: 'Segoe UI', Arial, sans-serif; color: #2563eb; text-decoration: none; font-size: 13px; font-weight: 600;">
-                                                        📄 Buka Scan Bank Garansi
+                                                        📄 Buka Scan Sertifikat Bank Garansi Asli
                                                     </a>
                                                 </td>
-                                                @endif
-                                                @if($submission->warkat_file_path && $submission->signed_document_path)
-                                                <td width="10" style="width: 10px;">&nbsp;</td>
                                                 @endif
                                                 @if($submission->signed_document_path)
+                                                <td width="10" style="width: 10px;">&nbsp;</td>
                                                 <td bgcolor="#f0fdf4" style="border-radius: 6px; border: 1px solid #bbf7d0; padding: 0; background-color: #f0fdf4;">
                                                     <a href="{{ asset($submission->signed_document_path) }}" target="_blank" style="display: inline-block; padding: 8px 16px; font-family: 'Segoe UI', Arial, sans-serif; color: #16a34a; text-decoration: none; font-size: 13px; font-weight: 600;">
-                                                        📑 Buka Formulir Bertandatangan
+                                                        📑 Buka Dokumen Konfirmasi (TTD)
                                                     </a>
                                                 </td>
                                                 @endif
+                                                <td width="10" style="width: 10px;">&nbsp;</td>
+                                                <td bgcolor="#fef2f2" style="border-radius: 6px; border: 1px solid #fecaca; padding: 0; background-color: #fef2f2;">
+                                                    <a href="{{ route('bg-reports.download', ['id' => $submission->id, 'doc_type' => 'lampiran_d']) }}" target="_blank" style="display: inline-block; padding: 8px 16px; font-family: 'Segoe UI', Arial, sans-serif; color: #dc2626; text-decoration: none; font-size: 13px; font-weight: 600;">
+                                                        📥 Unduh Lampiran D (PDF)
+                                                    </a>
+                                                </td>
                                             </tr>
                                         </table>
                                     </td>
@@ -146,7 +150,7 @@
 
                             {{-- ACTION BUTTONS (Bulletproof Outlook Buttons) --}}
                             <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px dashed #cbd5e1;">
-                                <p style="margin: 0 0 15px; font-family: 'Segoe UI', Arial, sans-serif; font-size: 13px; color: #64748b; font-weight: 600;">Pilih tindakan validasi di bawah ini:</p>
+                                <p style="margin: 0 0 15px; font-family: 'Segoe UI', Arial, sans-serif; font-size: 13px; color: #64748b; font-weight: 600;">Pilih tindakan verifikasi &amp; approval di bawah ini:</p>
 
                                 <table border="0" cellpadding="0" cellspacing="0" align="center" style="margin: 0 auto; border-collapse: separate;">
                                     <tr>
@@ -154,7 +158,7 @@
                                             <a href="{{ route('approval.process', ['token' => $log->token, 'action' => 'approve']) }}"
                                                target="_blank"
                                                style="display: inline-block; padding: 12px 22px; font-family: 'Segoe UI', Arial, sans-serif; font-size: 14px; font-weight: bold; color: #ffffff; text-decoration: none; border-radius: 50px; border: 1px solid #16a34a; line-height: 1.2;">
-                                                ✅ Quick Approve
+                                                ✅ Quick Approve (Email)
                                             </a>
                                         </td>
                                         <td width="10" style="width: 10px;">&nbsp;</td>
@@ -162,7 +166,7 @@
                                             <a href="{{ route('approval.form', ['token' => $log->token, 'action' => 'review']) }}"
                                                target="_blank"
                                                style="display: inline-block; padding: 12px 22px; font-family: 'Segoe UI', Arial, sans-serif; font-size: 14px; font-weight: bold; color: #ffffff; text-decoration: none; border-radius: 50px; border: 1px solid #2563eb; line-height: 1.2;">
-                                                📝 Review / Detail Form
+                                                📝 Review Form di Web
                                             </a>
                                         </td>
                                         <td width="10" style="width: 10px;">&nbsp;</td>
@@ -175,10 +179,16 @@
                                         </td>
                                     </tr>
                                 </table>
+
+                                <div style="margin-top: 18px;">
+                                    <a href="{{ route('bg-approvals.index') }}" target="_blank" style="font-family: 'Segoe UI', Arial, sans-serif; font-size: 13px; color: #2563eb; text-decoration: underline; font-weight: 600;">
+                                        🌐 Atau buka menu Approval Inbox di Web
+                                    </a>
+                                </div>
                             </div>
 
-                            <p style="font-family: 'Segoe UI', Arial, sans-serif; font-size: 12px; color: #94a3b8; text-align: center; margin: 25px 0 0; line-height: 1.4;">
-                                Link validasi di atas aktif selama status pengajuan masih Pending. Anda juga dapat melakukan validasi melalui dashboard web pada menu Approval Inbox.
+                            <p style="font-family: 'Segoe UI', Arial, sans-serif; font-size: 12px; color: #94a3b8; text-align: center; margin: 20px 0 0; line-height: 1.4;">
+                                Link validasi di atas aktif selama status pengajuan masih Pending. Anda juga dapat melakukan validasi kapan saja melalui dashboard web pada menu Approval Inbox.
                             </p>
                         </td>
                     </tr>

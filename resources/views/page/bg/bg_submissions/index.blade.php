@@ -107,13 +107,13 @@
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <div class="d-flex align-items-center gap-2 filter-container-responsive flex-wrap">
                             <span class="text-muted fw-bold me-1"><i class="ph-bold ph-funnel"></i> Filter:</span>
-                            <select id="statusFilter" class="form-select select2" style="width: 220px;">
+                            <select id="statusFilter" class="form-select select2" style="width: 240px;">
                                 <option value="all">Show All Active</option>
                                 <option value="pending_print">Pending Print</option>
                                 <option value="awaiting_upload">Awaiting Upload</option>
                                 <option value="uploaded">Uploaded (Need Verification)</option>
-                                <option value="waiting_sales_input">Menunggu Lengkapi BG</option>
-                                <option value="waiting_approval">Waiting Finance (Bu Rita)</option>
+                                <option value="waiting_bank_issuance">Menunggu Terbit Bank & TTD</option>
+                                <option value="waiting_approval">Menunggu Verifikasi Bu Rita</option>
                             </select>
                         </div>
                     </div>
@@ -323,9 +323,9 @@
                 <div class="modal-header bg-primary text-white py-3 px-4">
                     <div>
                         <h5 class="modal-title fw-bold text-white d-flex align-items-center gap-2 mb-0">
-                            <i class="ph-bold ph-shield-check fs-5"></i> <span>Kelengkapan Data Bank Garansi</span>
+                            <i class="ph-bold ph-shield-check fs-5"></i> <span>Input Sertifikat Bank Garansi & Masa Berlaku</span>
                         </h5>
-                        <small class="text-white d-block mt-1" id="modalSubTitle" style="font-size: 11px; opacity: 0.85;">Input Nomor BG resmi dari bank, tanggal jatuh tempo, dan unggah berkas fisik.</small>
+                        <small class="text-white d-block mt-1" id="modalSubTitle" style="font-size: 11px; opacity: 0.85;">Input Nomor BG resmi dari bank, tanggal jatuh tempo, dan unggah scan sertifikat asli.</small>
                     </div>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
@@ -341,7 +341,7 @@
                             <i class="ph-bold ph-x me-1"></i> Batal
                         </button>
                         <button type="submit" class="btn btn-success fw-bold rounded-2 px-4 py-2 shadow-sm d-inline-flex align-items-center gap-2" id="btn-save-edit-bg">
-                            <i class="ph-bold ph-check-circle fs-5"></i> <span>Simpan & Ajukan ke Finance (Bu Rita)</span>
+                            <i class="ph-bold ph-check-circle fs-5"></i> <span>Simpan & Ajukan ke Bu Rita (Verifikasi Akhir)</span>
                         </button>
                     </div>
                 </form>
@@ -442,12 +442,12 @@
                         if (status === 'uploaded') {
                             $('#btn-trigger-approve').show().html('<i class="ph-bold ph-check-circle me-1"></i> Verifikasi Dokumen');
                             $('#btn-trigger-edit').hide();
-                        } else if (status === 'waiting_sales_input') {
+                        } else if (status === 'waiting_bank_issuance' || status === 'waiting_sales_input') {
                             $('#btn-trigger-approve').hide();
-                            $('#btn-trigger-edit').show().html('<i class="ph-bold ph-pencil-simple me-1"></i> Lengkapi Data BG');
+                            $('#btn-trigger-edit').show().html('<i class="ph-bold ph-file-plus me-1"></i> Input Sertifikat BG');
                         } else if (status === 'waiting_approval') {
                             $('#btn-trigger-approve').hide();
-                            $('#btn-trigger-edit').show().html('<i class="ph-bold ph-pencil-simple me-1"></i> Koreksi Data BG');
+                            $('#btn-trigger-edit').show().html('<i class="ph-bold ph-pencil-simple me-1"></i> Koreksi Sertifikat BG');
                         } else {
                             $('#btn-trigger-approve').show().html('<i class="ph-bold ph-check-circle me-1"></i> Verifikasi Dokumen');
                             $('#btn-trigger-edit').show().html('<i class="ph-bold ph-pencil-simple me-1"></i> Edit Data BG');
@@ -698,7 +698,7 @@
                                                     <div class="col-md-6">
                                                         <div class="p-3 rounded-3 border bg-light bg-opacity-50 h-100">
                                                             <label class="form-label small fw-semibold text-dark mb-1 d-flex justify-content-between align-items-center">
-                                                                <span><i class="ph-bold ph-file-text text-primary me-1"></i>Scan Berkas BG Asli</span>
+                                                                <span><i class="ph-bold ph-file-text text-primary me-1"></i>Scan Sertifikat Bank Garansi Asli</span>
                                                                 <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle" style="font-size: 10px;">Bisa > 1 file</span>
                                                             </label>
                                                             <input type="file" class="form-control form-control-sm bg-white rounded-2 file-multi-input" name="details[${item.id}][warkat_files][]" multiple accept=".pdf,.jpg,.jpeg,.png">
@@ -710,7 +710,7 @@
                                                                     <div class="d-flex flex-wrap gap-1">
                                                                         ${item.parent_warkat_files.map((wf, wIdx) => `
                                                                             <a href="${wf.url}" target="_blank" class="badge bg-light text-primary border text-decoration-none py-1 px-2 d-inline-flex align-items-center gap-1 shadow-xs" title="${wf.name}">
-                                                                                <i class="ph-bold ph-file-pdf"></i> BG ${wIdx+1}
+                                                                                <i class="ph-bold ph-file-pdf"></i> Sertifikat BG ${wIdx+1}
                                                                             </a>
                                                                         `).join('')}
                                                                     </div>
@@ -718,7 +718,7 @@
                                                             ` : (item.parent_warkat ? `
                                                                 <div class="mt-2">
                                                                     <a href="${item.parent_warkat}" target="_blank" class="badge bg-light text-primary border text-decoration-none py-1 px-2 d-inline-flex align-items-center gap-1">
-                                                                        <i class="ph-bold ph-file-pdf"></i> Buka File BG
+                                                                        <i class="ph-bold ph-file-pdf"></i> Buka Sertifikat BG
                                                                     </a>
                                                                 </div>
                                                             ` : '')}
@@ -727,7 +727,7 @@
                                                     <div class="col-md-6">
                                                         <div class="p-3 rounded-3 border bg-light bg-opacity-50 h-100">
                                                             <label class="form-label small fw-semibold text-dark mb-1 d-flex justify-content-between align-items-center">
-                                                                <span><i class="ph-bold ph-file-check text-success me-1"></i>Scan Berkas Lampiran D Asli</span>
+                                                                <span><i class="ph-bold ph-file-check text-success me-1"></i>Scan Dokumen Lampiran D (TTD Basah)</span>
                                                                 <span class="badge bg-success bg-opacity-10 text-success border border-success-subtle" style="font-size: 10px;">Bisa > 1 file</span>
                                                             </label>
                                                             <input type="file" class="form-control form-control-sm bg-white rounded-2 file-multi-input" name="details[${item.id}][lampiran_d_files][]" multiple accept=".pdf,.jpg,.jpeg,.png">
@@ -765,7 +765,7 @@
                                 <div class="alert alert-primary bg-primary bg-opacity-10 border border-primary-subtle rounded-3 p-3 mt-3 d-flex align-items-center gap-3">
                                     <div class="fs-4 text-primary flex-shrink-0"><i class="ph-duotone ph-info"></i></div>
                                     <div class="small text-dark">
-                                        <strong>Pemberitahuan:</strong> Nomor BG resmi dan berkas fisik scan yang Anda input akan <strong>otomatis menimpa (menggantikan)</strong> data referensi sementara pada sistem, dan pengajuan akan diteruskan ke Finance (Bu Rita) untuk validasi.
+                                        <strong>Pemberitahuan:</strong> Nomor BG resmi dan scan Sertifikat Bank Garansi asli yang Anda input akan disimpan ke sistem dan diajukan ke Bu Rita (Secretary Finance) untuk verifikasi akhir.
                                     </div>
                                 </div>
                             `;
