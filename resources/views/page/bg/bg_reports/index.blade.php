@@ -232,8 +232,9 @@
                     {val: 'submission_form', text: 'Submission Form'}
                 ],
                 'expiring': [
-                    {val: 'distributor', text: 'Distributor Letter'},
-                    {val: 'bank', text: 'Bank Letter'}
+                    {val: 'all_letters', text: 'Semua Berkas (Surat Bank + Distributor)'},
+                    {val: 'bank', text: 'Surat Bank'},
+                    {val: 'distributor', text: 'Surat Distributor'}
                 ]
             };
 
@@ -487,31 +488,44 @@
                 } else if (category === 'expiring') {
                     modalTitle = '<i class="ph-bold ph-envelope-open me-2 text-light"></i> Print Cover Letter';
                     
-                    // URL Route untuk Surat Distributor & Surat Bank
+                    let urlAll = `${baseUrl}/letters/${id}/all`;
                     let urlDistributor = `${baseUrl}/letters/${id}/distributor`;
                     let urlBank = `${baseUrl}/letters/${id}/bank`;
 
                     htmlOptions = `
                         <div class="row g-3">
-                            <div class="col-6">
-                                <a href="${urlDistributor}" target="_blank" class="card h-100 text-decoration-none border shadow-sm hover-elevate bg-white" onclick="$('#printModal').modal('hide')">
-                                    <div class="card-body text-center p-4">
-                                        <div class="bg-primary bg-opacity-10 text-primary d-inline-flex align-items-center justify-content-center rounded-circle mb-3" style="width: 60px; height: 60px;">
-                                            <i class="ph-duotone ph-buildings fs-1"></i>
+                            <div class="col-12">
+                                <a href="${urlAll}" class="card text-decoration-none border border-primary border-opacity-25 shadow-sm hover-elevate bg-primary bg-opacity-10" onclick="$('#printModal').modal('hide')">
+                                    <div class="card-body d-flex align-items-center gap-3 p-3">
+                                        <div class="bg-primary text-white d-inline-flex align-items-center justify-content-center rounded-circle" style="width: 48px; height: 48px; min-width: 48px;">
+                                            <i class="ph-bold ph-file-zip fs-4"></i>
                                         </div>
-                                        <h6 class="fw-bold text-dark mb-1">Distributor Letter</h6>
-                                        <span class="text-muted small">Official notification to customer</span>
+                                        <div>
+                                            <h6 class="fw-bold text-dark mb-0">Download Semua Berkas (ZIP)</h6>
+                                            <span class="text-muted small">Surat Bank & Surat Distributor dalam format ZIP terpisah</span>
+                                        </div>
                                     </div>
                                 </a>
                             </div>
                             <div class="col-6">
                                 <a href="${urlBank}" target="_blank" class="card h-100 text-decoration-none border shadow-sm hover-elevate bg-white" onclick="$('#printModal').modal('hide')">
-                                    <div class="card-body text-center p-4">
-                                        <div class="bg-success bg-opacity-10 text-success d-inline-flex align-items-center justify-content-center rounded-circle mb-3" style="width: 60px; height: 60px;">
-                                            <i class="ph-duotone ph-bank fs-1"></i>
+                                    <div class="card-body text-center p-3">
+                                        <div class="bg-success bg-opacity-10 text-success d-inline-flex align-items-center justify-content-center rounded-circle mb-2" style="width: 48px; height: 48px;">
+                                            <i class="ph-duotone ph-bank fs-2"></i>
                                         </div>
-                                        <h6 class="fw-bold text-dark mb-1">Bank Letter</h6>
-                                        <span class="text-muted small">Disbursement letter for bank</span>
+                                        <h6 class="fw-bold text-dark mb-1">Surat Bank</h6>
+                                        <span class="text-muted small">Pengantar ke Bank</span>
+                                    </div>
+                                </a>
+                            </div>
+                            <div class="col-6">
+                                <a href="${urlDistributor}" target="_blank" class="card h-100 text-decoration-none border shadow-sm hover-elevate bg-white" onclick="$('#printModal').modal('hide')">
+                                    <div class="card-body text-center p-3">
+                                        <div class="bg-primary bg-opacity-10 text-primary d-inline-flex align-items-center justify-content-center rounded-circle mb-2" style="width: 48px; height: 48px;">
+                                            <i class="ph-duotone ph-buildings fs-2"></i>
+                                        </div>
+                                        <h6 class="fw-bold text-dark mb-1">Surat Distributor</h6>
+                                        <span class="text-muted small">Pemberitahuan Customer</span>
                                     </div>
                                 </a>
                             </div>

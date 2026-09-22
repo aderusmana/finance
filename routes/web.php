@@ -197,6 +197,7 @@ Route::middleware('auth')->group(function () {
         Route::get('reports', [BgReportController::class, 'index'])->name('bg-reports.index');
         Route::post('reports/bulk-download', [BgReportController::class, 'bulkDownload'])->name('bg-reports.bulk-download');
         Route::get('reports/download/{id}/{doc_type}', [BgReportController::class, 'downloadDoc'])->name('bg-reports.download');
+        Route::get('reports/download-package/{id}', [BgReportController::class, 'downloadPackage'])->name('bg-reports.download-package');
         Route::get('reports/letters/{id}/{letter_type}', [BgReportController::class, 'downloadLetters'])->name('bg-reports.download-letters');
         Route::post('bg/request-existing/{id}', [BankGaransiController::class, 'requestExisting'])->name('bg.request.existing');
         Route::post('bg/request-extension', [BankGaransiController::class, 'requestExtension'])->name('bg.request.extension');

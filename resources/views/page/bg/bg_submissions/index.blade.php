@@ -375,7 +375,7 @@
                         { data: 'customer_name', name: 'recommendation.customer.name' },
                         { data: 'form_code', name: 'form_code' },
                         { data: 'date_info', name: 'created_at' },
-                        { data: 'file', name: 'signed_document_path', className: 'text-center', orderable: false, searchable: false },
+                        { data: 'file', name: 'signed_document_path', className: 'text-center text-nowrap', orderable: false, searchable: false },
                         { data: 'status', name: 'status', className: 'text-center' },
                         { data: 'action', name: 'action', orderable: false, searchable: false, className: 'text-center' }
                     ]
