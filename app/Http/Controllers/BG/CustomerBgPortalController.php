@@ -88,6 +88,7 @@ class CustomerBgPortalController extends Controller
                     'bg_recommendation_id' => $rec->id,
                     'form_code'            => $formCode,
                     'custom_address'       => $request->custom_address,
+                    'bg_nominal'           => $newNominal,
                     'status'               => 'awaiting_upload',
                     'token'                => Str::random(60),
                     'created_at'           => $timestamp
@@ -136,10 +137,15 @@ class CustomerBgPortalController extends Controller
 
                 // 1 Single Submission for the entire batch of banks
                 $formCode = ($action === 'extension' ? 'EXT-' : 'NEW-') . date('Ymd') . '-' . strtoupper(Str::random(6));
+                $totalBatchNominal = collect($request->details)->sum(function($d) {
+                    return (float) ($d['nominal'] ?? 0);
+                });
+
                 $submission = BgSubmission::create([
                     'bg_recommendation_id' => $rec->id,
                     'form_code'            => $formCode,
                     'custom_address'       => $request->custom_address,
+                    'bg_nominal'           => $totalBatchNominal,
                     'status'               => 'awaiting_upload',
                     'token'                => Str::random(60),
                     'created_at'           => $timestamp,

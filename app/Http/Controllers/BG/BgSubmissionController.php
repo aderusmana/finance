@@ -702,7 +702,10 @@ class BgSubmissionController extends Controller
                 $requester = auth()->user();
                 $Logs = $this->generateApprovalLogs($requester, $submission->id, 'BG', 'Lampiran D');
 
-                $subUpdate = ['status' => 'waiting_approval'];
+                $subUpdate = [
+                    'status'     => 'waiting_approval',
+                    'bg_nominal' => $request->filled('nilai_bg_diserahkan') ? (float) $request->nilai_bg_diserahkan : ($submission->bg_nominal ?: 0),
+                ];
                 if (!empty($allBgNumbers)) {
                     $subUpdate['bg_number'] = implode(', ', array_unique($allBgNumbers));
                 } elseif ($request->filled('bg_number')) {
@@ -989,9 +992,10 @@ class BgSubmissionController extends Controller
                 ]);
                 $lampiranD->update(['version_latest' => $nextVersion, 'active_version_id' => $newVersion->id]);
 
-                // Update submission status to waiting_bank_issuance
+                // Update submission status to waiting_bank_issuance and sync bg_nominal
                 $submission->update([
                     'status'       => 'waiting_bank_issuance',
+                    'bg_nominal'   => $totalBgDiserahkan ?: ($rec->set_bg ?? 0),
                     'reviewed_at'  => now(),
                     'validated_by' => Auth::id(),
                 ]);

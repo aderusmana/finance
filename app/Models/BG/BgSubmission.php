@@ -49,4 +49,22 @@ class BgSubmission extends Model
     {
         return $this->belongsTo(\App\Models\User::class, 'validated_by');
     }
+
+    public function getNominalAttribute()
+    {
+        if (!empty($this->bg_nominal) && $this->bg_nominal > 0) {
+            return (float) $this->bg_nominal;
+        }
+
+        $snapshot = $this->lampiranD?->activeVersion?->data_snapshot ?? [];
+        if (!empty($snapshot['nilai_bg_diserahkan']) && $snapshot['nilai_bg_diserahkan'] > 0) {
+            return (float) $snapshot['nilai_bg_diserahkan'];
+        }
+
+        if (!empty($snapshot['nilai_bg_ditetapkan']) && $snapshot['nilai_bg_ditetapkan'] > 0) {
+            return (float) $snapshot['nilai_bg_ditetapkan'];
+        }
+
+        return (float) ($this->recommendation->set_bg ?? 0);
+    }
 }

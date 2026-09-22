@@ -93,7 +93,7 @@
                                 <tr>
                                     <td style="padding: 8px 0; border-bottom: 1px solid #f1f5f9; color: #64748b; width: 40%; font-family: 'Segoe UI', Arial, sans-serif;">Nominal BG</td>
                                     <td style="padding: 8px 0; border-bottom: 1px solid #f1f5f9; font-weight: 700; color: #16a34a; text-align: right; font-family: 'Segoe UI', Arial, sans-serif;">
-                                        Rp {{ number_format($submission->bg_nominal ?? 0, 0, ',', '.') }}
+                                        Rp {{ number_format($submission->nominal ?? ($submission->bg_nominal ?? 0), 0, ',', '.') }}
                                     </td>
                                 </tr>
                                 <tr>
