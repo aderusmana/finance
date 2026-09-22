@@ -27,12 +27,19 @@ class ApprovalProcessController extends Controller
 {
     public function process($token, $action)
     {
-        $log = ApprovalLog::where('token', $token)
-                          ->where('status', 'Pending')
-                          ->first();
+        $log = ApprovalLog::where('token', $token)->first();
 
         if (!$log) {
             return view('page.customer_portal.form-invalid');
+        }
+
+        // Cek jika log ini sudah pernah diproses sebelumnya
+        if ($log->status !== 'Pending') {
+            return view('page.customer_portal.form-success', [
+                'type'    => 'approval',
+                'title'   => 'Pengajuan Sudah Diproses',
+                'message' => "Pengajuan ini sudah diproses sebelumnya (Status: {$log->status}). " . ($log->notes ? "{$log->notes}." : "Tidak ada tindakan lebih lanjut yang diperlukan.")
+            ]);
         }
 
         if ($log->sub_category === 'Sales Recommendation') {
@@ -54,16 +61,55 @@ class ApprovalProcessController extends Controller
             abort(404);
         }
 
-        if ($action == 'approve') {
-            $log->update([
-                'status' => 'Approved',
-                'updated_at' => now(),
-                'token' => null
+        $sub = BgSubmission::find($log->related_id);
+        if ($sub && in_array($sub->status, ['completed', 'approved', 'rejected_by_finance'])) {
+            $statusText = in_array($sub->status, ['completed', 'approved']) ? 'disetujui' : 'ditolak';
+            return view('page.customer_portal.form-success', [
+                'type'    => 'approval',
+                'title'   => 'Pengajuan Sudah Diproses',
+                'message' => "Pengajuan ini sebelumnya telah {$statusText} oleh Tim Finance. Anda tidak perlu mengambil tindakan lagi."
             ]);
+        }
 
-            $this->finalizeSubmission($log->related_id);
+        if ($action == 'approve') {
+            DB::beginTransaction();
+            try {
+                $approverUser = User::where('nik', $log->approver_nik)->first();
+                $approverName = $approverUser->name ?? ($log->approver_name ?: 'Finance');
 
-            return view('page.customer_portal.form-success', ['type' => 'upload', 'title' => 'Approved Successfully']);
+                // 1. Update log approver ini
+                $log->update([
+                    'status'        => 'Approved',
+                    'approver_name' => $approverName,
+                    'notes'         => 'Disetujui via Quick Approve',
+                    'updated_at'    => now(),
+                ]);
+
+                // 2. Kunci semua approval log pending lain untuk submission ini agar approver lain tidak bisa action
+                ApprovalLog::where('category', 'BG')
+                    ->where('related_id', $log->related_id)
+                    ->where('id', '!=', $log->id)
+                    ->where('status', 'Pending')
+                    ->update([
+                        'status'     => 'Approved',
+                        'notes'      => 'Otomatis selesai karena telah disetujui oleh ' . $approverName,
+                        'updated_at' => now(),
+                    ]);
+
+                $this->finalizeSubmission($log->related_id, $approverUser->id ?? null);
+
+                DB::commit();
+
+                return view('page.customer_portal.form-success', [
+                    'type'    => 'upload',
+                    'title'   => 'Approved Successfully',
+                    'message' => "Terima kasih ({$approverName}), pengajuan Bank Garansi telah berhasil disetujui."
+                ]);
+            } catch (\Exception $e) {
+                DB::rollBack();
+                Log::error("Approval Process Error: " . $e->getMessage());
+                return abort(500, 'Terjadi kesalahan sistem saat memproses approval.');
+            }
         }
 
         abort(404);
@@ -71,12 +117,18 @@ class ApprovalProcessController extends Controller
 
     public function showForm($token, $action)
     {
-        $log = ApprovalLog::where('token', $token)
-                          ->where('status', 'Pending')
-                          ->first();
+        $log = ApprovalLog::where('token', $token)->first();
 
         if (!$log) {
             return view('page.customer_portal.form-invalid');
+        }
+
+        if ($log->status !== 'Pending') {
+            return view('page.customer_portal.form-success', [
+                'type'    => 'approval',
+                'title'   => 'Pengajuan Sudah Diproses',
+                'message' => "Pengajuan ini sudah diproses sebelumnya (Status: {$log->status}). " . ($log->notes ? "{$log->notes}." : "Tidak ada tindakan lebih lanjut yang diperlukan.")
+            ]);
         }
 
         if ($log->sub_category === 'Sales Recommendation') {
@@ -85,6 +137,16 @@ class ApprovalProcessController extends Controller
         }
 
         $submission = BgSubmission::with('recommendation.customer')->findOrFail($log->related_id);
+
+        // Jika submission sudah pernah disetujui atau ditolak
+        if (in_array($submission->status, ['completed', 'approved', 'rejected_by_finance'])) {
+            $statusText = in_array($submission->status, ['completed', 'approved']) ? 'disetujui' : 'ditolak';
+            return view('page.customer_portal.form-success', [
+                'type'    => 'approval',
+                'title'   => 'Pengajuan Sudah Diproses',
+                'message' => "Pengajuan ini sebelumnya telah {$statusText} oleh Tim Finance. Tidak ada tindakan lebih lanjut yang dapat dilakukan."
+            ]);
+        }
 
         $rec = $submission->recommendation;
         $metadata = json_decode($rec->notes, true) ?? [];
@@ -122,17 +184,38 @@ class ApprovalProcessController extends Controller
              return abort(404, 'Bank Guarantee data not found. Possible Timestamp mismatch or incorrect ID.');
         }
 
-        $bgs = collect([$bg]);
-        $totalBgDiserahkan = $bg->bg_nominal;
+        // Ambil SEMUA Bank Garansi dalam batch ini
+        $bgs = BankGaransi::where('customer_id', $submission->recommendation->customer_id)
+            ->whereBetween('created_at', [
+                Carbon::parse($submission->created_at)->subMinutes(5),
+                Carbon::parse($submission->created_at)->addMinutes(5)
+            ])
+            ->get();
+
+        if ($bgs->isEmpty() && $bg) {
+            $bgs = collect([$bg]);
+        }
+
+        $totalBgDiserahkan = $bgs->sum('amount');
 
         return view('page.approval.action_lampiran', compact('token', 'action', 'submission', 'bgs', 'totalBgDiserahkan'));
     }
 
     public function submit(Request $request, $token)
     {
-        $log = ApprovalLog::where('token', $token)
-                          ->where('status', 'Pending')
-                          ->firstOrFail();
+        $log = ApprovalLog::where('token', $token)->first();
+
+        if (!$log) {
+            return view('page.customer_portal.form-invalid');
+        }
+
+        if ($log->status !== 'Pending') {
+            return view('page.customer_portal.form-success', [
+                'type'    => 'approval',
+                'title'   => 'Pengajuan Sudah Diproses',
+                'message' => "Pengajuan ini sudah diproses sebelumnya (Status: {$log->status}). " . ($log->notes ? "{$log->notes}." : "Tidak ada tindakan lebih lanjut yang diperlukan.")
+            ]);
+        }
 
         if ($log->sub_category === 'Sales Recommendation') {
             $rec = BgRecommendation::with('customer')->findOrFail($log->related_id);
@@ -205,6 +288,15 @@ class ApprovalProcessController extends Controller
             return abort(404, 'Submission data not found');
         }
 
+        if (in_array($sub->status, ['completed', 'approved', 'rejected_by_finance'])) {
+            $statusText = in_array($sub->status, ['completed', 'approved']) ? 'disetujui' : 'ditolak';
+            return view('page.customer_portal.form-success', [
+                'type'    => 'approval',
+                'title'   => 'Pengajuan Sudah Diproses',
+                'message' => "Pengajuan ini sebelumnya telah {$statusText} oleh Tim Finance. Tidak ada tindakan lebih lanjut yang dapat dilakukan."
+            ]);
+        }
+
         $action = $request->action;
         $status = ($action == 'reject') ? 'Rejected' : 'Approved';
 
@@ -218,14 +310,32 @@ class ApprovalProcessController extends Controller
 
         DB::beginTransaction();
         try {
+            $approverUser = auth()->user() ?? User::where('nik', $log->approver_nik)->first();
+            $approverName = $approverUser->name ?? ($log->approver_name ?: 'Finance');
+
             $log->update([
-                'status'     => $status,
-                'notes'      => $request->notes,
-                'updated_at' => now(),
-                'token'      => null
+                'status'        => $status,
+                'approver_name' => $approverName,
+                'notes'         => $request->notes,
+                'updated_at'    => now(),
             ]);
 
-            $causer = auth()->user() ?? User::where('nik', $log->approver_nik)->first();
+            // Kunci & update approval log pending lainnya untuk submission ini
+            $siblingNote = ($status === 'Rejected')
+                ? 'Dibatalkan karena telah ditolak oleh ' . $approverName . ($request->notes ? " (Alasan: {$request->notes})" : "")
+                : 'Otomatis selesai karena telah disetujui oleh ' . $approverName;
+
+            ApprovalLog::where('category', 'BG')
+                ->where('related_id', $log->related_id)
+                ->where('id', '!=', $log->id)
+                ->where('status', 'Pending')
+                ->update([
+                    'status'     => $status,
+                    'notes'      => $siblingNote,
+                    'updated_at' => now(),
+                ]);
+
+            $causer = $approverUser;
             $actionText = ($status == 'Rejected') ? 'Rejected Approval' : 'Approved Document';
 
             activity()
@@ -233,8 +343,8 @@ class ApprovalProcessController extends Controller
                 ->performedOn($sub)
                 ->useLog('approval_process')
                 ->event($action)
-                ->withProperties(['notes' => $request->notes, 'approver' => $log->approver_name])
-                ->log("{$actionText} by Finance ({$log->approver_name})");
+                ->withProperties(['notes' => $request->notes, 'approver' => $approverName])
+                ->log("{$actionText} by Finance ({$approverName})");
 
             $custName = $sub->recommendation->customer->name ?? 'Unknown Customer';
 
@@ -245,18 +355,18 @@ class ApprovalProcessController extends Controller
                 $reasonText = $request->notes ? " Alasan: <i>\"{$request->notes}\"</i>. Silakan perbaiki dan submit kembali." : "";
                 Notification::send($recipients, new SystemNotification(
                     "Lampiran D Perlu Revisi",
-                    "Perubahan Lampiran D untuk <b>{$custName}</b> ditolak oleh Manager Finance.{$reasonText}",
+                    "Perubahan Lampiran D untuk <b>{$custName}</b> ditolak oleh Finance ({$approverName}).{$reasonText}",
                     route('lampiran-d.index'),
                     'ph-x-circle',
                     'danger'
                 ));
             } else {
-                $this->finalizeSubmission($log->related_id);
+                $this->finalizeSubmission($log->related_id, $approverUser->id ?? null);
 
                 $recipients = User::role(['admin-rtm', 'secretary-finance', 'super-admin'])->get();
                 Notification::send($recipients, new SystemNotification(
                     "Lampiran D Disetujui",
-                    "Perubahan Lampiran D pada <b>{$custName}</b> telah di-approved oleh Manager Finance dan siap di-download atau digunakan.",
+                    "Perubahan Lampiran D pada <b>{$custName}</b> telah di-approved oleh Finance ({$approverName}) dan siap di-download atau digunakan.",
                     route('lampiran-d.index'),
                     'ph-check-circle',
                     'success'
@@ -265,10 +375,14 @@ class ApprovalProcessController extends Controller
 
             DB::commit();
 
+            $msgSuccess = ($status === 'Rejected')
+                ? "Pengajuan Bank Garansi telah ditolak. Admin RTM telah diberitahu untuk melakukan perbaikan."
+                : "Terima kasih ({$approverName}), pengajuan Bank Garansi telah berhasil disetujui.";
+
             return view('page.customer_portal.form-success', [
-                'type' => 'approval',
-                'title' => 'Processed Successfully',
-                'message' => 'Thank you, your approval decision has been saved.'
+                'type'    => ($status === 'Rejected') ? 'approval' : 'upload',
+                'title'   => ($status === 'Rejected') ? 'Pengajuan Ditolak' : 'Approved Successfully',
+                'message' => $msgSuccess
             ]);
 
         } catch (\Exception $e) {

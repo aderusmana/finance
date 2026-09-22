@@ -168,16 +168,23 @@ class BgApprovalInboxController extends Controller
 
         $sub = BgSubmission::with('recommendation.customer')->findOrFail($request->id);
 
-        $log = ApprovalLog::where('related_id', $sub->id)
-                ->where('category', 'BG')
-                ->where('status', 'Pending')
-                ->latest()
-                ->first();
+        if (in_array($sub->status, ['completed', 'approved', 'rejected_by_finance'])) {
+            $statusText = in_array($sub->status, ['completed', 'approved']) ? 'disetujui' : 'ditolak';
+            return response()->json([
+                'success' => false,
+                'message' => "Pengajuan ini sudah diproses sebelumnya ({$statusText}) oleh Finance."
+            ], 422);
+        }
 
         DB::beginTransaction();
         try {
+            $approverUser = auth()->user();
+            $approverName = $approverUser->name ?? 'Finance';
+
             $status = ($request->action == 'reject') ? 'rejected_by_finance' : 'completed';
-            $notes  = $request->notes ?? 'Processed via Dashboard by Secretary Finance';
+            $defaultNotes = ($request->action == 'reject')
+                ? ($request->notes ?? 'Ditolak melalui Dashboard oleh ' . $approverName)
+                : 'Disetujui melalui Dashboard oleh ' . $approverName;
             $newToken = ($status == 'completed') ? Str::random(60) : null;
 
             $sub->update([
@@ -188,14 +195,45 @@ class BgApprovalInboxController extends Controller
                 'validated_at'  => now(),
             ]);
 
-            if ($log) {
-                $log->update([
-                    'status'     => ($request->action == 'reject') ? 'Rejected' : 'Approved',
-                    'notes'      => $notes,
-                    'updated_at' => now(),
-                    'token'      => null
+            // 1. Update log approver yang sedang login atau log pending pertama
+            $currentLog = ApprovalLog::where('related_id', $sub->id)
+                ->where('category', 'BG')
+                ->where('status', 'Pending')
+                ->where('approver_nik', $approverUser->nik ?? null)
+                ->first();
+
+            if (!$currentLog) {
+                $currentLog = ApprovalLog::where('related_id', $sub->id)
+                    ->where('category', 'BG')
+                    ->where('status', 'Pending')
+                    ->first();
+            }
+
+            if ($currentLog) {
+                $currentLog->update([
+                    'status'        => ($request->action == 'reject') ? 'Rejected' : 'Approved',
+                    'approver_name' => $approverName,
+                    'notes'         => $defaultNotes,
+                    'updated_at'    => now(),
                 ]);
             }
+
+            // 2. Kunci & update approval log pending lainnya untuk submission ini
+            $siblingNote = ($request->action == 'reject')
+                ? 'Dibatalkan karena telah ditolak melalui Dashboard oleh ' . $approverName . ($request->notes ? " (Alasan: {$request->notes})" : "")
+                : 'Otomatis selesai karena telah disetujui melalui Dashboard oleh ' . $approverName;
+
+            ApprovalLog::where('category', 'BG')
+                ->where('related_id', $sub->id)
+                ->when($currentLog, function ($q) use ($currentLog) {
+                    $q->where('id', '!=', $currentLog->id);
+                })
+                ->where('status', 'Pending')
+                ->update([
+                    'status'     => ($request->action == 'reject') ? 'Rejected' : 'Approved',
+                    'notes'      => $siblingNote,
+                    'updated_at' => now(),
+                ]);
 
             $cust = $sub->recommendation->customer ?? null;
             $custName = $cust ? $cust->name : 'Unknown Customer';
@@ -277,7 +315,7 @@ class BgApprovalInboxController extends Controller
                         ));
 
                         $itEmails = $itUsers->pluck('email')->filter(fn($e) => !empty($e) && filter_var($e, FILTER_VALIDATE_EMAIL))->toArray();
-                        $validatorName = auth()->user()->name ?? 'Secretary Finance (Bu Rita)';
+                        $validatorName = $approverName;
                         foreach ($itEmails as $itEmail) {
                             Mail::to($itEmail)->queue(new CreditLimitUpdatedItMail($sub, $validatorName));
                         }
@@ -292,7 +330,7 @@ class BgApprovalInboxController extends Controller
                 $recipients = User::role(['admin-rtm', 'secretary-finance', 'super-admin'])->get();
                 Notification::send($recipients, new SystemNotification(
                     "Lampiran D & BG Validated",
-                    "Bank Guarantee & Lampiran D untuk <b>{$custName}</b> telah divalidasi oleh Secretary Finance (Bu Rita) dan Credit Limit otomatis diperbarui.",
+                    "Bank Guarantee & Lampiran D untuk <b>{$custName}</b> telah divalidasi oleh Finance ({$approverName}) dan Credit Limit otomatis diperbarui.",
                     route('lampiran-d.index'),
                     'ph-check-circle',
                     'success'
