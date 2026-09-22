@@ -59,6 +59,37 @@
         .input-group:focus-within > .select2-container--bootstrap-5 .select2-selection {
             border-color: #86b7fe;
         }
+
+        /* Mobile Card Style: Tombol Aksi Dokumen berupa Icon Saja (Tanpa Teks) */
+        @media (max-width: 767.98px) {
+            .bg-action-buttons {
+                flex-direction: row !important;
+                justify-content: flex-end !important;
+                align-items: center !important;
+                gap: 8px !important;
+                width: auto !important;
+                min-width: 0 !important;
+                max-width: none !important;
+            }
+            .bg-action-buttons .btn {
+                width: 36px !important;
+                height: 36px !important;
+                min-width: 36px !important;
+                padding: 0 !important;
+                display: inline-flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                border-radius: 8px !important;
+                flex: 0 0 auto !important;
+            }
+            .bg-action-buttons .btn span {
+                display: none !important;
+            }
+            .bg-action-buttons .btn i {
+                font-size: 1.15rem !important;
+                margin: 0 !important;
+            }
+        }
     </style>
 
     {{-- HEADER --}}
@@ -349,6 +380,97 @@
         </div>
     </div>
 
+    {{-- 4. Modal Pilihan Berkas Bank --}}
+    <div class="modal fade" id="berkasBankModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
+                <div class="modal-header bg-danger text-white py-3 px-4">
+                    <div>
+                        <h5 class="modal-title fw-bold text-white d-flex align-items-center gap-2 mb-1">
+                            <i class="ph-bold ph-files fs-5"></i> <span>Pilihan Unduh Berkas Bank</span>
+                        </h5>
+                        <small class="text-white-50 d-block" style="font-size: 12px;">
+                            <span id="berkasModalCustomer" class="text-white fw-semibold"></span> &bull; <span id="berkasModalFormCode"></span>
+                        </small>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4 bg-light">
+                    {{-- Opsi 1: Paket Lengkap (ZIP) --}}
+                    <div class="mb-3">
+                        <label class="form-label text-uppercase text-muted fw-bold small mb-2" style="font-size: 11px;">
+                            <i class="ph-bold ph-package me-1"></i> Paket Lengkap Dokumen
+                        </label>
+                        <a href="#" id="btnDownloadZip" class="btn btn-danger w-100 p-3 rounded-3 shadow-sm d-flex align-items-center justify-content-between text-start text-decoration-none">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="bg-white bg-opacity-25 rounded-3 p-2 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
+                                    <i class="ph-bold ph-file-zip fs-3 text-white"></i>
+                                </div>
+                                <div>
+                                    <div class="fw-bold text-white fs-6">Download Semua Berkas (ZIP)</div>
+                                    <small class="text-white-50" style="font-size: 11px;">Semua surat & Lampiran D dalam 1 paket ZIP</small>
+                                </div>
+                            </div>
+                            <div class="bg-white bg-opacity-20 rounded-circle p-2 d-flex align-items-center justify-content-center">
+                                <i class="ph-bold ph-download-simple text-white fs-5"></i>
+                            </div>
+                        </a>
+                    </div>
+
+                    {{-- Opsi 2: Per Satuan PDF --}}
+                    <div>
+                        <label class="form-label text-uppercase text-muted fw-bold small mb-2" style="font-size: 11px;">
+                            <i class="ph-bold ph-files me-1"></i> Unduh / Lihat Per File (PDF)
+                        </label>
+                        <div class="list-group shadow-sm rounded-3 border-0 overflow-hidden">
+                            <a href="#" id="btnDownloadLampiran" target="_blank" class="list-group-item list-group-item-action p-3 d-flex align-items-center justify-content-between border-0 border-bottom">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="bg-danger bg-opacity-10 text-danger rounded-3 p-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                        <i class="ph-bold ph-file-pdf fs-5"></i>
+                                    </div>
+                                    <div>
+                                        <div class="fw-semibold text-dark">Lampiran D</div>
+                                        <small class="text-muted" style="font-size: 11px;">Formulir Lampiran D Pengajuan BG</small>
+                                    </div>
+                                </div>
+                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2.5 py-1 rounded-pill fw-bold" style="font-size: 11px;">PDF</span>
+                            </a>
+                            <a href="#" id="btnDownloadBank" target="_blank" class="list-group-item list-group-item-action p-3 d-flex align-items-center justify-content-between border-0 border-bottom">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="bg-success bg-opacity-10 text-success rounded-3 p-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                        <i class="ph-bold ph-bank fs-5"></i>
+                                    </div>
+                                    <div>
+                                        <div class="fw-semibold text-dark">Surat Bank</div>
+                                        <small class="text-muted" style="font-size: 11px;">Surat Pengantar Permohonan ke Bank</small>
+                                    </div>
+                                </div>
+                                <span class="badge bg-success-subtle text-success border border-success-subtle px-2.5 py-1 rounded-pill fw-bold" style="font-size: 11px;">PDF</span>
+                            </a>
+                            <a href="#" id="btnDownloadDistributor" target="_blank" class="list-group-item list-group-item-action p-3 d-flex align-items-center justify-content-between border-0">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="bg-info bg-opacity-10 text-info rounded-3 p-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                        <i class="ph-bold ph-buildings fs-5"></i>
+                                    </div>
+                                    <div>
+                                        <div class="fw-semibold text-dark">Surat Distributor</div>
+                                        <small class="text-muted" style="font-size: 11px;">Surat Pernyataan / Rekomendasi Distributor</small>
+                                    </div>
+                                </div>
+                                <span class="badge bg-info-subtle text-info border border-info-subtle px-2.5 py-1 rounded-pill fw-bold" style="font-size: 11px;">PDF</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-white border-top py-2.5 px-4 d-flex justify-content-end">
+                    <button type="button" class="btn btn-secondary fw-semibold rounded-2 px-3 py-1.5" data-bs-dismiss="modal">
+                        <i class="ph-bold ph-x me-1"></i> Tutup
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     @push('scripts')
         <script src="{{ asset('assets/vendor/select/select2.min.js') }}"></script>
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -470,6 +592,26 @@
                 $(document).on('click', '.btn-input-sales', function() {
                     currentSubmissionId = $(this).data('id');
                     $('#btn-trigger-edit').trigger('click');
+                });
+
+                // --- BERKAS BANK MODAL TRIGGER ---
+                $(document).on('click', '.btn-berkas-bank', function() {
+                    let customer = $(this).data('customer') || '-';
+                    let formCode = $(this).data('formcode') || '-';
+                    let urlZip = $(this).data('url-zip');
+                    let urlLampiran = $(this).data('url-lampiran');
+                    let urlBank = $(this).data('url-bank');
+                    let urlDistributor = $(this).data('url-distributor');
+
+                    $('#berkasModalCustomer').text(customer);
+                    $('#berkasModalFormCode').text(formCode);
+
+                    $('#btnDownloadZip').attr('href', urlZip);
+                    $('#btnDownloadLampiran').attr('href', urlLampiran);
+                    $('#btnDownloadBank').attr('href', urlBank);
+                    $('#btnDownloadDistributor').attr('href', urlDistributor);
+
+                    $('#berkasBankModal').modal('show');
                 });
 
                 // --- VERIFY & FORWARD TO SALES ---

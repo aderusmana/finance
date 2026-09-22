@@ -108,35 +108,35 @@ class BgSubmissionController extends Controller
                         }
 
                         if ($row->status === 'waiting_bank_issuance' || $row->status === 'waiting_sales_input') {
+                            $custName = htmlspecialchars($row->recommendation->customer->name ?? '-');
+                            $formCode = htmlspecialchars($row->form_code ?? '-');
+                            $urlZip = route('bg-reports.download-package', $row->id);
+                            $urlLampiran = route('bg-reports.download', ['id' => $row->id, 'doc_type' => 'lampiran_d']);
+                            $urlBank = route('bg-reports.download-package', ['id' => $row->id, 'only' => 'bank']);
+                            $urlDistributor = route('bg-reports.download-package', ['id' => $row->id, 'only' => 'distributor']);
+
                             return '
-                            <div class="d-inline-flex align-items-center gap-2 text-nowrap">
+                            <div class="bg-action-buttons d-flex flex-column gap-2 align-items-stretch mx-auto" style="min-width: 125px; max-width: 145px;">
                                 <button type="button"
-                                        class="btn btn-sm btn-primary text-white fw-semibold rounded-2 px-3 py-1.5 btn-input-sales shadow-sm text-nowrap d-inline-flex align-items-center gap-1.5"
+                                        class="btn btn-sm btn-primary text-white fw-semibold rounded-2 px-2.5 py-1.5 btn-input-sales shadow-sm text-nowrap d-flex align-items-center justify-content-center gap-1.5 w-100"
                                         data-id="'.$row->id.'"
                                         data-bs-toggle="tooltip"
                                         title="Input Sertifikat Bank Garansi & Tanggal Jatuh Tempo">
-                                    <i class="ph-bold ph-file-plus"></i> <span>Input Sertifikat BG</span>
+                                    <i class="ph-bold ph-file-plus fs-6"></i> <span class="d-none d-md-inline">Input BG</span>
                                 </button>
-                                <div class="btn-group shadow-sm">
-                                    <a href="'.route('bg-reports.download-package', $row->id).'"
-                                       class="btn btn-sm btn-danger text-white fw-semibold rounded-start-2 px-3 py-1.5 text-nowrap d-inline-flex align-items-center gap-1.5"
-                                       data-bs-toggle="tooltip"
-                                       title="Download Paket Semua Berkas (Lampiran D, Surat Bank, Surat Distributor) dalam ZIP">
-                                        <i class="ph-bold ph-file-zip"></i> <span>Berkas Bank</span>
-                                    </a>
-                                    <button type="button" class="btn btn-sm btn-danger text-white dropdown-toggle dropdown-toggle-split rounded-end-2 px-2 py-1.5" data-bs-toggle="dropdown" aria-expanded="false" data-bs-boundary="viewport">
-                                        <span class="visually-hidden">Toggle Dropdown</span>
-                                    </button>
-                                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 py-2" style="font-size: 13px; z-index: 1060;">
-                                        <li><h6 class="dropdown-header text-uppercase text-muted fw-bold" style="font-size: 11px;">Paket Dokumen</h6></li>
-                                        <li><a class="dropdown-item py-1.5 d-flex align-items-center gap-2 fw-semibold text-primary" href="'.route('bg-reports.download-package', $row->id).'"><i class="ph-bold ph-file-zip text-danger fs-6"></i> Download Semua (ZIP)</a></li>
-                                        <li><hr class="dropdown-divider my-1"></li>
-                                        <li><h6 class="dropdown-header text-uppercase text-muted fw-bold" style="font-size: 11px;">Per File (PDF)</h6></li>
-                                        <li><a class="dropdown-item py-1.5 d-flex align-items-center gap-2" href="'.route('bg-reports.download', ['id' => $row->id, 'doc_type' => 'lampiran_d']).'" target="_blank"><i class="ph-bold ph-file-pdf text-danger fs-6"></i> Lampiran D</a></li>
-                                        <li><a class="dropdown-item py-1.5 d-flex align-items-center gap-2" href="'.route('bg-reports.download-package', ['id' => $row->id, 'only' => 'bank']).'" target="_blank"><i class="ph-bold ph-bank text-success fs-6"></i> Surat Bank</a></li>
-                                        <li><a class="dropdown-item py-1.5 d-flex align-items-center gap-2" href="'.route('bg-reports.download-package', ['id' => $row->id, 'only' => 'distributor']).'" target="_blank"><i class="ph-bold ph-buildings text-info fs-6"></i> Surat Distributor</a></li>
-                                    </ul>
-                                </div>
+                                <button type="button"
+                                        class="btn btn-sm btn-danger text-white fw-semibold rounded-2 px-2.5 py-1.5 btn-berkas-bank shadow-sm text-nowrap d-flex align-items-center justify-content-center gap-1.5 w-100"
+                                        data-id="'.$row->id.'"
+                                        data-customer="'.$custName.'"
+                                        data-formcode="'.$formCode.'"
+                                        data-url-zip="'.$urlZip.'"
+                                        data-url-lampiran="'.$urlLampiran.'"
+                                        data-url-bank="'.$urlBank.'"
+                                        data-url-distributor="'.$urlDistributor.'"
+                                        data-bs-toggle="tooltip"
+                                        title="Buka Pilihan Unduh Berkas Bank">
+                                    <i class="ph-bold ph-file-zip fs-6"></i> <span class="d-none d-md-inline">Berkas Bank</span>
+                                </button>
                             </div>';
                         }
 
