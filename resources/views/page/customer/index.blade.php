@@ -5,6 +5,29 @@
 
     @include('components.sample-table-styles')
 
+    <style>
+        .customer-file-zone {
+            transition: all 0.2s ease-in-out;
+        }
+        .customer-file-zone .file-card {
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+        .customer-file-zone .file-card:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+        }
+        .customer-file-zone .btn-remove-file {
+            transition: all 0.15s ease;
+        }
+        .customer-file-zone .btn-remove-file:hover {
+            background: rgba(239, 68, 68, 0.2) !important;
+            transform: scale(1.1);
+        }
+        #customerDocPreviewModal iframe {
+            box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+        }
+    </style>
+
     <div class="row m-1">
         <div class="col-12">
             <h4 class="main-title">Customers Management</h4>
@@ -289,52 +312,232 @@
                                         </div>
 
                                         {{-- 1. NPWP (REQUIRED) --}}
-                                        <div class="col-md">
-                                            <label class="form-label">Upload NPWP <span
-                                                    class="text-danger">*</span></label>
-                                            <input type="file" class="form-control" name="file_npwp"
-                                                accept=".jpeg,.jpg,.png" required>
-                                            <small class="text-muted f-s-11">Format: JPEG, JPG, PNG. Upload for
-                                                auto-fill name & address.</small>
-                                            <div id="preview_npwp" class="mt-2" style="display: none;"></div>
+                                        <div class="col-xl col-md-6 col-12">
+                                            <label class="form-label fw-semibold small text-dark mb-1">
+                                                Upload NPWP <span class="text-danger">*</span>
+                                            </label>
+                                            <div class="customer-file-zone" data-title="NPWP">
+                                                <!-- Browse state -->
+                                                <div class="file-browse-box">
+                                                    <input type="file" class="form-control form-control-sm customer-file-input"
+                                                        name="file_npwp" id="file_npwp"
+                                                        accept=".jpeg,.jpg,.png,.pdf" required>
+                                                    <small class="text-muted f-s-11 d-block mt-1">Format: PDF, JPG, PNG. (Auto-fill name & address)</small>
+                                                </div>
+
+                                                <!-- Uploaded state -->
+                                                <div class="file-uploaded-box d-none">
+                                                    <div class="card border mb-0 file-card shadow-sm" style="background: #f8fafc; border-color: #cbd5e1 !important; border-left: 3.5px solid #0284c7 !important; border-radius: 0.5rem;">
+                                                        <div class="card-body p-2">
+                                                            <div class="d-flex align-items-center justify-content-between mb-1">
+                                                                <div class="d-flex align-items-center gap-2 overflow-hidden me-1">
+                                                                    <span class="file-icon-badge rounded d-flex align-items-center justify-content-center p-1" style="width: 26px; height: 26px; background: #e0f2fe; color: #0284c7; flex-shrink: 0;">
+                                                                        <i class="ph-bold ph-file-text file-type-icon f-s-14"></i>
+                                                                    </span>
+                                                                    <div class="overflow-hidden" style="line-height: 1.2;">
+                                                                        <div class="fw-bold text-dark text-truncate file-name-display f-s-11" title="">-</div>
+                                                                        <div class="text-muted file-size-display" style="font-size: 10px;">-</div>
+                                                                    </div>
+                                                                </div>
+                                                                <button type="button" class="btn btn-sm btn-icon p-0 text-danger btn-remove-file" title="Hapus dan pilih file lain" style="width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; background: rgba(239, 68, 68, 0.1); border-radius: 50%; border: none;">
+                                                                    <i class="ph-bold ph-x f-s-12"></i>
+                                                                </button>
+                                                            </div>
+                                                            <div class="d-flex align-items-center justify-content-between pt-1 border-top" style="border-color: #e2e8f0 !important;">
+                                                                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill" style="font-size: 9px; padding: 2px 6px;">
+                                                                    <i class="ph-bold ph-check me-0.5"></i> Terpilih
+                                                                </span>
+                                                                <button type="button" class="btn btn-xs btn-outline-primary rounded-pill px-2 py-0.5 btn-preview-file d-flex align-items-center gap-1" style="font-size: 10px; font-weight: 600;">
+                                                                    <i class="ph-bold ph-eye"></i> Preview
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
 
                                         {{-- 2. NIB/SIUP (REQUIRED) --}}
-                                        <div class="col-md">
-                                            <label class="form-label">Upload NIB/SIUP <span
-                                                    class="text-danger">*</span></label>
-                                            <input type="file" class="form-control" name="file_nib"
-                                                accept=".jpeg,.jpg,.png" required>
-                                            <small class="text-muted f-s-11">Format: JPEG, JPG, PNG</small>
-                                            <div id="preview_nib" class="mt-2" style="display: none;"></div>
+                                        <div class="col-xl col-md-6 col-12">
+                                            <label class="form-label fw-semibold small text-dark mb-1">
+                                                Upload NIB/SIUP <span class="text-danger">*</span>
+                                            </label>
+                                            <div class="customer-file-zone" data-title="NIB/SIUP">
+                                                <!-- Browse state -->
+                                                <div class="file-browse-box">
+                                                    <input type="file" class="form-control form-control-sm customer-file-input"
+                                                        name="file_nib" id="file_nib"
+                                                        accept=".jpeg,.jpg,.png,.pdf" required>
+                                                    <small class="text-muted f-s-11 d-block mt-1">Format: PDF, JPG, PNG</small>
+                                                </div>
+
+                                                <!-- Uploaded state -->
+                                                <div class="file-uploaded-box d-none">
+                                                    <div class="card border mb-0 file-card shadow-sm" style="background: #f8fafc; border-color: #cbd5e1 !important; border-left: 3.5px solid #0284c7 !important; border-radius: 0.5rem;">
+                                                        <div class="card-body p-2">
+                                                            <div class="d-flex align-items-center justify-content-between mb-1">
+                                                                <div class="d-flex align-items-center gap-2 overflow-hidden me-1">
+                                                                    <span class="file-icon-badge rounded d-flex align-items-center justify-content-center p-1" style="width: 26px; height: 26px; background: #e0f2fe; color: #0284c7; flex-shrink: 0;">
+                                                                        <i class="ph-bold ph-file-text file-type-icon f-s-14"></i>
+                                                                    </span>
+                                                                    <div class="overflow-hidden" style="line-height: 1.2;">
+                                                                        <div class="fw-bold text-dark text-truncate file-name-display f-s-11" title="">-</div>
+                                                                        <div class="text-muted file-size-display" style="font-size: 10px;">-</div>
+                                                                    </div>
+                                                                </div>
+                                                                <button type="button" class="btn btn-sm btn-icon p-0 text-danger btn-remove-file" title="Hapus dan pilih file lain" style="width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; background: rgba(239, 68, 68, 0.1); border-radius: 50%; border: none;">
+                                                                    <i class="ph-bold ph-x f-s-12"></i>
+                                                                </button>
+                                                            </div>
+                                                            <div class="d-flex align-items-center justify-content-between pt-1 border-top" style="border-color: #e2e8f0 !important;">
+                                                                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill" style="font-size: 9px; padding: 2px 6px;">
+                                                                    <i class="ph-bold ph-check me-0.5"></i> Terpilih
+                                                                </span>
+                                                                <button type="button" class="btn btn-xs btn-outline-primary rounded-pill px-2 py-0.5 btn-preview-file d-flex align-items-center gap-1" style="font-size: 10px; font-weight: 600;">
+                                                                    <i class="ph-bold ph-eye"></i> Preview
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
 
                                         {{-- 3. KTP (REQUIRED) --}}
-                                        <div class="col-md">
-                                            <label class="form-label">Upload KTP <span
-                                                    class="text-danger">*</span></label>
-                                            <input type="file" class="form-control" name="file_ktp"
-                                                accept=".jpeg,.jpg,.png" required>
-                                            <small class="text-muted f-s-11">Format: JPEG, JPG, PNG</small>
-                                            <div id="preview_ktp" class="mt-2" style="display: none;"></div>
+                                        <div class="col-xl col-md-6 col-12">
+                                            <label class="form-label fw-semibold small text-dark mb-1">
+                                                Upload KTP <span class="text-danger">*</span>
+                                            </label>
+                                            <div class="customer-file-zone" data-title="KTP Penanggung Jawab">
+                                                <!-- Browse state -->
+                                                <div class="file-browse-box">
+                                                    <input type="file" class="form-control form-control-sm customer-file-input"
+                                                        name="file_ktp" id="file_ktp"
+                                                        accept=".jpeg,.jpg,.png,.pdf" required>
+                                                    <small class="text-muted f-s-11 d-block mt-1">Format: PDF, JPG, PNG</small>
+                                                </div>
+
+                                                <!-- Uploaded state -->
+                                                <div class="file-uploaded-box d-none">
+                                                    <div class="card border mb-0 file-card shadow-sm" style="background: #f8fafc; border-color: #cbd5e1 !important; border-left: 3.5px solid #0284c7 !important; border-radius: 0.5rem;">
+                                                        <div class="card-body p-2">
+                                                            <div class="d-flex align-items-center justify-content-between mb-1">
+                                                                <div class="d-flex align-items-center gap-2 overflow-hidden me-1">
+                                                                    <span class="file-icon-badge rounded d-flex align-items-center justify-content-center p-1" style="width: 26px; height: 26px; background: #e0f2fe; color: #0284c7; flex-shrink: 0;">
+                                                                        <i class="ph-bold ph-file-text file-type-icon f-s-14"></i>
+                                                                    </span>
+                                                                    <div class="overflow-hidden" style="line-height: 1.2;">
+                                                                        <div class="fw-bold text-dark text-truncate file-name-display f-s-11" title="">-</div>
+                                                                        <div class="text-muted file-size-display" style="font-size: 10px;">-</div>
+                                                                    </div>
+                                                                </div>
+                                                                <button type="button" class="btn btn-sm btn-icon p-0 text-danger btn-remove-file" title="Hapus dan pilih file lain" style="width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; background: rgba(239, 68, 68, 0.1); border-radius: 50%; border: none;">
+                                                                    <i class="ph-bold ph-x f-s-12"></i>
+                                                                </button>
+                                                            </div>
+                                                            <div class="d-flex align-items-center justify-content-between pt-1 border-top" style="border-color: #e2e8f0 !important;">
+                                                                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill" style="font-size: 9px; padding: 2px 6px;">
+                                                                    <i class="ph-bold ph-check me-0.5"></i> Terpilih
+                                                                </span>
+                                                                <button type="button" class="btn btn-xs btn-outline-primary rounded-pill px-2 py-0.5 btn-preview-file d-flex align-items-center gap-1" style="font-size: 10px; font-weight: 600;">
+                                                                    <i class="ph-bold ph-eye"></i> Preview
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
 
                                         {{-- 4. AKTE (OPTIONAL - PDF ONLY) --}}
-                                        <div class="col-md">
-                                            <label class="form-label">Upload Akte Pendirian <span class="text-danger akte-asterisk" style="display:none;">*</span></label>
-                                            <input type="file" class="form-control" name="file_akte" id="file_akte" accept=".pdf">
-                                            <small class="text-muted f-s-11">Format: PDF only</small>
-                                            <div id="preview_akte" class="mt-4" style="display: none; position:relative; z-index:2;"></div>
+                                        <div class="col-xl col-md-6 col-12">
+                                            <label class="form-label fw-semibold small text-dark mb-1">
+                                                Upload Akte Pendirian <span class="text-danger akte-asterisk" style="display:none;">*</span>
+                                            </label>
+                                            <div class="customer-file-zone" data-title="Akte Pendirian">
+                                                <!-- Browse state -->
+                                                <div class="file-browse-box">
+                                                    <input type="file" class="form-control form-control-sm customer-file-input"
+                                                        name="file_akte" id="file_akte" accept=".pdf">
+                                                    <small class="text-muted f-s-11 d-block mt-1">Format: PDF only (Wajib jika PT/CV)</small>
+                                                </div>
+
+                                                <!-- Uploaded state -->
+                                                <div class="file-uploaded-box d-none">
+                                                    <div class="card border mb-0 file-card shadow-sm" style="background: #f8fafc; border-color: #cbd5e1 !important; border-left: 3.5px solid #0284c7 !important; border-radius: 0.5rem;">
+                                                        <div class="card-body p-2">
+                                                            <div class="d-flex align-items-center justify-content-between mb-1">
+                                                                <div class="d-flex align-items-center gap-2 overflow-hidden me-1">
+                                                                    <span class="file-icon-badge rounded d-flex align-items-center justify-content-center p-1" style="width: 26px; height: 26px; background: #e0f2fe; color: #0284c7; flex-shrink: 0;">
+                                                                        <i class="ph-bold ph-file-text file-type-icon f-s-14"></i>
+                                                                    </span>
+                                                                    <div class="overflow-hidden" style="line-height: 1.2;">
+                                                                        <div class="fw-bold text-dark text-truncate file-name-display f-s-11" title="">-</div>
+                                                                        <div class="text-muted file-size-display" style="font-size: 10px;">-</div>
+                                                                    </div>
+                                                                </div>
+                                                                <button type="button" class="btn btn-sm btn-icon p-0 text-danger btn-remove-file" title="Hapus dan pilih file lain" style="width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; background: rgba(239, 68, 68, 0.1); border-radius: 50%; border: none;">
+                                                                    <i class="ph-bold ph-x f-s-12"></i>
+                                                                </button>
+                                                            </div>
+                                                            <div class="d-flex align-items-center justify-content-between pt-1 border-top" style="border-color: #e2e8f0 !important;">
+                                                                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill" style="font-size: 9px; padding: 2px 6px;">
+                                                                    <i class="ph-bold ph-check me-0.5"></i> Terpilih
+                                                                </span>
+                                                                <button type="button" class="btn btn-xs btn-outline-primary rounded-pill px-2 py-0.5 btn-preview-file d-flex align-items-center gap-1" style="font-size: 10px; font-weight: 600;">
+                                                                    <i class="ph-bold ph-eye"></i> Preview
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
 
                                         {{-- 5. COMPANY PROFILE (OPTIONAL - PDF ONLY) --}}
-                                        <div class="col-md">
-                                            <label class="form-label">Upload Company Profile</label>
-                                            <input type="file" class="form-control" name="file_company_profile"
-                                                accept=".pdf">
-                                            <small class="text-muted f-s-11">Format: PDF only</small>
-                                            <div id="preview_company_profile" class="mt-2"
-                                                style="display: none; position:relative; z-index:2;"></div>
+                                        <div class="col-xl col-md-6 col-12">
+                                            <label class="form-label fw-semibold small text-dark mb-1">
+                                                Upload Company Profile
+                                            </label>
+                                            <div class="customer-file-zone" data-title="Company Profile">
+                                                <!-- Browse state -->
+                                                <div class="file-browse-box">
+                                                    <input type="file" class="form-control form-control-sm customer-file-input"
+                                                        name="file_company_profile" id="file_company_profile"
+                                                        accept=".pdf">
+                                                    <small class="text-muted f-s-11 d-block mt-1">Format: PDF only (Opsional)</small>
+                                                </div>
+
+                                                <!-- Uploaded state -->
+                                                <div class="file-uploaded-box d-none">
+                                                    <div class="card border mb-0 file-card shadow-sm" style="background: #f8fafc; border-color: #cbd5e1 !important; border-left: 3.5px solid #0284c7 !important; border-radius: 0.5rem;">
+                                                        <div class="card-body p-2">
+                                                            <div class="d-flex align-items-center justify-content-between mb-1">
+                                                                <div class="d-flex align-items-center gap-2 overflow-hidden me-1">
+                                                                    <span class="file-icon-badge rounded d-flex align-items-center justify-content-center p-1" style="width: 26px; height: 26px; background: #e0f2fe; color: #0284c7; flex-shrink: 0;">
+                                                                        <i class="ph-bold ph-file-text file-type-icon f-s-14"></i>
+                                                                    </span>
+                                                                    <div class="overflow-hidden" style="line-height: 1.2;">
+                                                                        <div class="fw-bold text-dark text-truncate file-name-display f-s-11" title="">-</div>
+                                                                        <div class="text-muted file-size-display" style="font-size: 10px;">-</div>
+                                                                    </div>
+                                                                </div>
+                                                                <button type="button" class="btn btn-sm btn-icon p-0 text-danger btn-remove-file" title="Hapus dan pilih file lain" style="width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; background: rgba(239, 68, 68, 0.1); border-radius: 50%; border: none;">
+                                                                    <i class="ph-bold ph-x f-s-12"></i>
+                                                                </button>
+                                                            </div>
+                                                            <div class="d-flex align-items-center justify-content-between pt-1 border-top" style="border-color: #e2e8f0 !important;">
+                                                                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill" style="font-size: 9px; padding: 2px 6px;">
+                                                                    <i class="ph-bold ph-check me-0.5"></i> Terpilih
+                                                                </span>
+                                                                <button type="button" class="btn btn-xs btn-outline-primary rounded-pill px-2 py-0.5 btn-preview-file d-flex align-items-center gap-1" style="font-size: 10px; font-weight: 600;">
+                                                                    <i class="ph-bold ph-eye"></i> Preview
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -1218,6 +1421,50 @@
                     <div id="fileContentArea" class="w-100 h-100 d-flex align-items-center justify-content-center"
                         style="margin-top:80px;">
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Modal Preview File Upload Dokumen Customer (Create / Edit) --}}
+    <div class="modal fade" id="customerDocPreviewModal" tabindex="-1" aria-labelledby="customerDocPreviewModalLabel" aria-hidden="true" style="z-index: 1070;">
+        <div class="modal-dialog modal-dialog-centered modal-xl">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 1rem; overflow: hidden; background: #0f172a;">
+                <div class="modal-header border-0 py-3 px-4 d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border-bottom: 1px solid rgba(255,255,255,0.1) !important;">
+                    <div class="d-flex align-items-center gap-2 overflow-hidden">
+                        <span id="customerDocPreviewBadge" class="rounded-circle p-2 d-flex align-items-center justify-content-center" style="background: rgba(255,255,255,0.1); width: 36px; height: 36px; flex-shrink: 0;">
+                            <i id="customerDocPreviewIcon" class="ph-bold ph-file-text text-white f-s-18"></i>
+                        </span>
+                        <div class="overflow-hidden">
+                            <h6 class="modal-title fw-bold text-white mb-0" id="customerDocPreviewTitle">Preview Dokumen</h6>
+                            <small class="text-white-50 text-truncate d-block" id="customerDocPreviewSubtitle">-</small>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <a id="customerDocPreviewNewTab" href="#" target="_blank" class="btn btn-sm btn-outline-light rounded-pill px-3 py-1" style="font-size: 12px;">
+                            <i class="ph-bold ph-arrow-square-out me-1"></i> Buka di Tab Baru
+                        </a>
+                        <button type="button" class="btn-close btn-close-white shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                </div>
+
+                <div class="modal-body p-0" style="min-height: 520px; background-color: #0b1120;">
+                    <!-- Preview PDF (iframe full width) -->
+                    <div id="customerDocPreviewPdfContainer" style="display: none; width: 100%; height: 80vh;">
+                        <iframe id="customerDocPreviewIframe" src="" style="width: 100%; height: 100%; border: none; background: #ffffff; display: block;" allowfullscreen></iframe>
+                    </div>
+
+                    <!-- Preview Gambar (img centered) -->
+                    <div id="customerDocPreviewImgContainer" style="display: none; width: 100%; min-height: 70vh; align-items: center; justify-content: center; padding: 1.5rem;">
+                        <img id="customerDocPreviewImg" src="" class="img-fluid rounded shadow-lg" style="max-height: 75vh; max-width: 95%; object-fit: contain; border: 1px solid rgba(255,255,255,0.15);" alt="Preview Dokumen">
+                    </div>
+                </div>
+
+                <div class="modal-footer py-2 px-4 border-0 d-flex justify-content-between align-items-center" style="background: #1e293b; border-top: 1px solid rgba(255,255,255,0.08) !important;">
+                    <div class="text-white-50 f-s-12">
+                        <i class="ph-bold ph-info me-1 text-info"></i> Pastikan dokumen terbaca dengan jelas sebelum menyimpan data.
+                    </div>
+                    <button type="button" class="btn btn-sm btn-light rounded-pill px-4" data-bs-dismiss="modal">Tutup</button>
                 </div>
             </div>
         </div>
@@ -2133,7 +2380,16 @@
 
                 $(document).on('change', 'input[name="file_npwp"]', function(e) {
                     const file = this.files && this.files[0];
-                    if (!file) return;
+                    if (!file) {
+                        $('#ocr-status').remove();
+                        return;
+                    }
+
+                    const ext = file.name.split('.').pop().toLowerCase();
+                    if (file.type === 'application/pdf' || ext === 'pdf') {
+                        // Format PDF: lewati OCR berbasis canvas image
+                        return;
+                    }
 
                     // 1. Kosongkan Form Sebelum Memulai
                     $('#npwp, #name, #address1, #address2, #address3, #tanggal_npwp').val('');
@@ -2925,6 +3181,9 @@
 
                 $('#btn-create-customer').on('click', function() {
                     $('#customerForm')[0].reset();
+                    if (typeof resetCustomerFileZones === 'function') {
+                        resetCustomerFileZones();
+                    }
                     $('#customerForm').find('.hidden-item-input, #top_calc_hidden').remove();
                     $('.select2-styled').val(null).trigger('change');
 
@@ -3462,6 +3721,190 @@
                             $('body').addClass('modal-open');
                         }
                     });
+                });
+
+                // --- CUSTOMER DOCUMENT UPLOAD & PREVIEW MANAGEMENT ---
+                function formatDocBytes(bytes, decimals = 1) {
+                    if (!bytes || bytes === 0) return '0 Bytes';
+                    const k = 1024;
+                    const dm = decimals < 0 ? 0 : decimals;
+                    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                    const i = Math.floor(Math.log(bytes) / Math.log(k));
+                    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+                }
+
+                function resetCustomerFileZones() {
+                    $('.customer-file-zone').each(function() {
+                        $(this).find('.customer-file-input').val('');
+                        $(this).find('.file-uploaded-box').addClass('d-none');
+                        $(this).find('.file-browse-box').removeClass('d-none');
+                    });
+                }
+
+                // Handle file selection in Customer Create/Edit modal
+                $(document).on('change', '.customer-file-input', function(e) {
+                    const input = this;
+                    const zone = $(this).closest('.customer-file-zone');
+                    const browseBox = zone.find('.file-browse-box');
+                    const uploadedBox = zone.find('.file-uploaded-box');
+
+                    if (input.files && input.files.length > 0) {
+                        const file = input.files[0];
+                        const ext = file.name.split('.').pop().toLowerCase();
+                        const isPdf = file.type === 'application/pdf' || ext === 'pdf';
+                        const isImage = file.type.startsWith('image/') || ['jpg', 'jpeg', 'png', 'webp', 'gif'].includes(ext);
+
+                        // Client-side file size limit check (PDF max 5MB, Image max 1MB)
+                        const maxSizeBytes = isPdf ? (5 * 1024 * 1024) : (1 * 1024 * 1024);
+                        if (file.size > maxSizeBytes) {
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Ukuran File Terlalu Besar',
+                                html: `File <b>${file.name}</b> berukuran <b>${formatDocBytes(file.size)}</b>.<br>Maksimal ukuran untuk ${isPdf ? 'PDF adalah <b>5MB</b>' : 'Gambar adalah <b>1MB</b>'}.`,
+                                confirmButtonColor: '#3085d6'
+                            });
+                            input.value = '';
+                            uploadedBox.addClass('d-none');
+                            browseBox.removeClass('d-none');
+                            return;
+                        }
+
+                        // Populate file info
+                        uploadedBox.find('.file-name-display').text(file.name).attr('title', file.name);
+                        uploadedBox.find('.file-size-display').text(formatDocBytes(file.size));
+
+                        const iconContainer = uploadedBox.find('.file-icon-badge');
+                        const iconElem = uploadedBox.find('.file-type-icon');
+                        const cardElem = uploadedBox.find('.file-card');
+
+                        if (isPdf) {
+                            iconContainer.css({'background': '#fee2e2', 'color': '#ef4444'});
+                            iconElem.attr('class', 'ph-bold ph-file-pdf file-type-icon f-s-14 text-danger');
+                            cardElem.css('border-left-color', '#ef4444');
+                        } else if (isImage) {
+                            iconContainer.css({'background': '#dcfce7', 'color': '#16a34a'});
+                            iconElem.attr('class', 'ph-bold ph-file-image file-type-icon f-s-14 text-success');
+                            cardElem.css('border-left-color', '#10b981');
+                        } else {
+                            iconContainer.css({'background': '#e0f2fe', 'color': '#0284c7'});
+                            iconElem.attr('class', 'ph-bold ph-file-text file-type-icon f-s-14 text-primary');
+                            cardElem.css('border-left-color', '#0284c7');
+                        }
+
+                        browseBox.addClass('d-none');
+                        uploadedBox.removeClass('d-none');
+                    } else {
+                        uploadedBox.addClass('d-none');
+                        browseBox.removeClass('d-none');
+                    }
+                });
+
+                // Handle remove file ("x" button)
+                $(document).on('click', '.btn-remove-file', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const zone = $(this).closest('.customer-file-zone');
+                    const input = zone.find('.customer-file-input');
+
+                    input.val('');
+                    zone.find('.file-uploaded-box').addClass('d-none');
+                    zone.find('.file-browse-box').removeClass('d-none');
+
+                    // If NPWP, remove OCR status note if any
+                    if (input.attr('name') === 'file_npwp') {
+                        zone.closest('.card-body').find('#ocr-status').remove();
+                    }
+
+                    input.trigger('change');
+                });
+
+                // Handle preview file modal
+                let customerDocBlobUrl = null;
+                $(document).on('click', '.btn-preview-file', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const zone = $(this).closest('.customer-file-zone');
+                    const input = zone.find('.customer-file-input')[0];
+                    const file = input && input.files && input.files[0];
+
+                    if (!file) {
+                        Swal.fire({
+                            icon: 'info',
+                            title: 'Tidak Ada File',
+                            text: 'Pilih file terlebih dahulu sebelum melakukan preview.',
+                            confirmButtonColor: '#3085d6'
+                        });
+                        return;
+                    }
+
+                    if (customerDocBlobUrl) {
+                        URL.revokeObjectURL(customerDocBlobUrl);
+                        customerDocBlobUrl = null;
+                    }
+
+                    customerDocBlobUrl = URL.createObjectURL(file);
+                    const title = zone.data('title') || 'Dokumen';
+                    const ext = file.name.split('.').pop().toLowerCase();
+                    const isPdf = file.type === 'application/pdf' || ext === 'pdf';
+
+                    $('#customerDocPreviewTitle').text(`Preview ${title}`);
+                    $('#customerDocPreviewSubtitle').text(`${file.name} • ${formatDocBytes(file.size)}`);
+                    $('#customerDocPreviewNewTab').attr('href', customerDocBlobUrl);
+
+                    const badge = $('#customerDocPreviewBadge');
+                    const icon = $('#customerDocPreviewIcon');
+
+                    if (isPdf) {
+                        badge.css('background', 'rgba(239, 68, 68, 0.2)');
+                        icon.attr('class', 'ph-bold ph-file-pdf text-danger f-s-18');
+
+                        $('#customerDocPreviewImgContainer').css('display', 'none');
+                        $('#customerDocPreviewImg').removeAttr('src');
+
+                        $('#customerDocPreviewIframe').attr('src', customerDocBlobUrl);
+                        $('#customerDocPreviewPdfContainer').css('display', 'block');
+                    } else {
+                        badge.css('background', 'rgba(16, 185, 129, 0.2)');
+                        icon.attr('class', 'ph-bold ph-file-image text-success f-s-18');
+
+                        $('#customerDocPreviewPdfContainer').css('display', 'none');
+                        $('#customerDocPreviewIframe').attr('src', '');
+
+                        $('#customerDocPreviewImg').attr('src', customerDocBlobUrl);
+                        $('#customerDocPreviewImgContainer').css('display', 'flex');
+                    }
+
+                    $('#customerDocPreviewModal').modal('show');
+                });
+
+                $('#customerDocPreviewModal').on('show.bs.modal', function() {
+                    $(this).css('z-index', '1070');
+                    setTimeout(function() {
+                        $('.modal-backdrop').last().css('z-index', '1065');
+                    }, 10);
+                });
+
+                $('#customerDocPreviewModal').on('hidden.bs.modal', function() {
+                    $('#customerDocPreviewIframe').attr('src', '');
+                    $('#customerDocPreviewPdfContainer').css('display', 'none');
+
+                    $('#customerDocPreviewImg').removeAttr('src');
+                    $('#customerDocPreviewImgContainer').css('display', 'none');
+
+                    if (customerDocBlobUrl) {
+                        URL.revokeObjectURL(customerDocBlobUrl);
+                        customerDocBlobUrl = null;
+                    }
+
+                    // Keep body scroll active if customerModal is still open
+                    if ($('#customerModal').hasClass('show') || $('.modal.show').length > 0) {
+                        $('body').addClass('modal-open');
+                    }
+                });
+
+                // Also reset zones when customerModal is hidden
+                $('#customerModal').on('hidden.bs.modal', function() {
+                    resetCustomerFileZones();
                 });
 
                 $(document).on('click', '.btn-schedule', function() {
