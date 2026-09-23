@@ -67,17 +67,43 @@ class UserController extends Controller
                 return $badges;
             })
             ->addColumn('department', function ($user) {
-                // Menggunakan e() agar karakter seperti & tetap aman tapi di-render benar oleh browser
                 return $user->department ? e($user->department->name) : '-';
             })
             ->addColumn('position', function ($user) {
                 return $user->position ? e($user->position->position_name) : '-';
             })
+            ->addColumn('status', function ($user) {
+                if ($user->isLocked() || $user->status === 'locked') {
+                    $remaining = ($user->locked_until && $user->locked_until->isFuture())
+                        ? ' (' . ceil(now()->diffInSeconds($user->locked_until) / 60) . 'm)'
+                        : '';
+                    return '<span class="badge bg-danger"><i class="fa fa-lock me-1"></i>Locked' . $remaining . '</span>';
+                }
+                if ($user->status === 'active') {
+                    return '<span class="badge bg-success">Active</span>';
+                }
+                return '<span class="badge bg-secondary">Inactive</span>';
+            })
             ->addColumn('action', function ($user) {
                 $roles = $user->roles->pluck('name')->toArray();
+                $unlockBtn = '';
+
+                if ($user->isLocked() || $user->status === 'locked') {
+                    $unlockBtn = '
+                    <button type="button" class="btn btn-info btn-unlock-user"
+                        data-id="' . $user->id . '"
+                        data-nik="' . $user->nik . '"
+                        data-name="' . e($user->name) . '"
+                        title="Buka Kunci Akun"
+                    >
+                        <i class="fa-solid fa-lock-open text-white"></i>
+                    </button>
+                    ';
+                }
 
                 return '
                 <div class="d-flex gap-2">
+                    ' . $unlockBtn . '
                     <button type="button" class="btn btn-warning btn-edit-user"
                         data-id="' . $user->id . '"
                         data-nik="' . $user->nik . '"
@@ -103,8 +129,7 @@ class UserController extends Controller
                 </div>
             ';
             })
-            // PERBAIKAN: Tambahkan 'department' dan 'position' ke dalam rawColumns
-            ->rawColumns(['name', 'roles', 'department', 'position', 'action'])
+            ->rawColumns(['name', 'roles', 'department', 'position', 'status', 'action'])
             ->make(true);
     }
 
@@ -230,6 +255,11 @@ class UserController extends Controller
             $user->avatar = 'storage/' . $avatarPath;
         }
 
+        if (isset($data['status']) && $data['status'] === 'active') {
+            $data['failed_login_attempts'] = 0;
+            $data['locked_until'] = null;
+        }
+
         // Update user
         $user->update($data);
 
@@ -252,6 +282,27 @@ class UserController extends Controller
         ]);
     }
 
+
+    public function unlock($userId)
+    {
+        $user = User::findOrFail($userId);
+        $user->unlockAccount();
+
+        activity()
+            ->causedBy(Auth::user())
+            ->performedOn($user)
+            ->event('users')
+            ->withProperties([
+                'unlocked_user_nik' => $user->nik,
+                'unlocked_user_name' => $user->name,
+            ])
+            ->log('Admin unlocked user account');
+
+        return response()->json([
+            'success' => true,
+            'message' => "Akun {$user->name} ({$user->nik}) berhasil dibuka kembali."
+        ]);
+    }
 
     public function destroy($userId)
     {

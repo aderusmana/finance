@@ -150,6 +150,7 @@
                                 <select class="form-select" id="status" name="status" required>
                                     <option value="active">Active</option>
                                     <option value="inactive">Inactive</option>
+                                    <option value="locked">Locked</option>
                                 </select>
                             </div>
 
@@ -263,10 +264,15 @@
                             data: 'status',
                             name: 'status',
                             render: function(data, type, row) {
+                                if (data && typeof data === 'string' && data.indexOf('<span') !== -1) {
+                                    return data;
+                                }
                                 if (data === 'active') {
                                     return '<span class="badge bg-success">Active</span>';
+                                } else if (data === 'locked') {
+                                    return '<span class="badge bg-danger"><i class="fa fa-lock me-1"></i>Locked</span>';
                                 } else {
-                                    return '<span class="badge bg-danger">Non Active</span>';
+                                    return '<span class="badge bg-secondary">Inactive</span>';
                                 }
                             }
                         },
@@ -435,6 +441,42 @@
                             });
                         } else {
                             warningMessage('User deletion canceled');
+                        }
+                    });
+                });
+
+                // === SweetAlert Unlock User ===
+                $(document).on('click', '.btn-unlock-user', function(e) {
+                    e.preventDefault();
+                    const userId = $(this).data('id');
+                    const userName = $(this).data('name');
+                    const userNik = $(this).data('nik');
+
+                    confirmDialog({
+                        title: 'Buka Kunci Akun?',
+                        text: `Buka kunci akun untuk ${userName} (${userNik}) agar dapat login kembali?`,
+                        confirmButtonText: '<i class="fa-solid fa-lock-open me-1"></i> Ya, Buka Kunci!',
+                        cancelButtonText: 'Batal',
+                        confirmButtonColor: '#0dcaf0',
+                        cancelButtonColor: '#6c757d',
+                        icon: 'question',
+                        reverseButtons: true
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            $.ajax({
+                                url: `/users/${userId}/unlock`,
+                                method: 'POST',
+                                data: {
+                                    _token: '{{ csrf_token() }}'
+                                },
+                                success: function(res) {
+                                    $('#sampleTable').DataTable().ajax.reload(null, false);
+                                    successMessage(res.message || 'Akun berhasil dibuka kembali!');
+                                },
+                                error: function(xhr) {
+                                    errorMessage(xhr.responseJSON?.message || 'Gagal membuka kunci akun');
+                                }
+                            });
                         }
                     });
                 });
