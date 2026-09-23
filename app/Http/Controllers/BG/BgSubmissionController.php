@@ -554,6 +554,117 @@ class BgSubmissionController extends Controller
     {
         $submission = BgSubmission::with(['recommendation.customer'])->findOrFail($id);
 
+        if ($request->action_type == 'save_single_bank') {
+            $detailId = $request->detail_id;
+            $detailObj = BgDetail::findOrFail($detailId);
+            $parentBg = BankGaransi::findOrFail($detailObj->bank_garansi_id);
+
+            DB::beginTransaction();
+            try {
+                $detailObj->update([
+                    'bank_name'   => $request->bank_name ?? $detailObj->bank_name,
+                    'branch_name' => $request->branch_name ?? $detailObj->branch_name,
+                    'nominal'     => $request->filled('nominal') ? (float)$request->nominal : $detailObj->nominal,
+                ]);
+
+                $parentBgUpdate = [
+                    'bg_nominal' => $request->filled('nominal') ? (float)$request->nominal : $parentBg->bg_nominal,
+                ];
+
+                if ($request->filled('bg_number')) {
+                    $parentBgUpdate['bg_number'] = trim($request->bg_number);
+                }
+                if ($request->filled('exp_date')) {
+                    $parentBgUpdate['exp_date'] = $request->exp_date;
+                }
+
+                // Upload warkat files
+                $existingWarkatFiles = is_array($parentBg->warkat_files) ? $parentBg->warkat_files : ($parentBg->warkat_file_path ? [$parentBg->warkat_file_path] : []);
+                if ($request->hasFile('warkat_files')) {
+                    $uploadedWarkats = $request->file('warkat_files');
+                    if (!is_array($uploadedWarkats)) $uploadedWarkats = [$uploadedWarkats];
+                    foreach ($uploadedWarkats as $wFile) {
+                        if ($wFile && $wFile->isValid()) {
+                            $wFilename = 'Warkat_' . $submission->form_code . '_bg' . $parentBg->id . '_' . time() . '_' . uniqid() . '.' . $wFile->getClientOriginalExtension();
+                            $wPath = $wFile->storeAs('bg_documents/warkat', $wFilename, 'public');
+                            $existingWarkatFiles[] = 'storage/' . $wPath;
+                        }
+                    }
+                    $existingWarkatFiles = array_values(array_unique($existingWarkatFiles));
+                    $parentBgUpdate['warkat_files'] = $existingWarkatFiles;
+                    if (!empty($existingWarkatFiles)) {
+                        $parentBgUpdate['warkat_file_path'] = $existingWarkatFiles[0];
+                    }
+                }
+
+                // Upload lampiran d files
+                $existingLampiranDFiles = is_array($parentBg->lampiran_d_files) ? $parentBg->lampiran_d_files : ($parentBg->lampiran_d_file_path ? [$parentBg->lampiran_d_file_path] : []);
+                if ($request->hasFile('lampiran_d_files')) {
+                    $uploadedLampirans = $request->file('lampiran_d_files');
+                    if (!is_array($uploadedLampirans)) $uploadedLampirans = [$uploadedLampirans];
+                    foreach ($uploadedLampirans as $ldFile) {
+                        if ($ldFile && $ldFile->isValid()) {
+                            $ldFilename = 'LampiranD_' . $submission->form_code . '_bg' . $parentBg->id . '_' . time() . '_' . uniqid() . '.' . $ldFile->getClientOriginalExtension();
+                            $ldPath = $ldFile->storeAs('bg_documents/lampiran_d', $ldFilename, 'public');
+                            $existingLampiranDFiles[] = 'storage/' . $ldPath;
+                        }
+                    }
+                    $existingLampiranDFiles = array_values(array_unique($existingLampiranDFiles));
+                    $parentBgUpdate['lampiran_d_files'] = $existingLampiranDFiles;
+                    if (!empty($existingLampiranDFiles)) {
+                        $parentBgUpdate['lampiran_d_file_path'] = $existingLampiranDFiles[0];
+                    }
+                }
+
+                $parentBg->update($parentBgUpdate);
+
+                if ($request->filled('bg_number') && (empty($submission->bg_number) || str_contains($submission->bg_number, 'Draft') || str_contains($submission->bg_number, 'PENDING'))) {
+                    $submission->update(['bg_number' => trim($request->bg_number)]);
+                }
+
+                activity()
+                    ->causedBy(auth()->user())
+                    ->performedOn($parentBg)
+                    ->log("Admin RTM saved BG verification details for Bank: {$detailObj->bank_name} (No: {$parentBg->bg_number})");
+
+                DB::commit();
+
+                $formattedWarkats = [];
+                if (!empty($existingWarkatFiles)) {
+                    foreach ($existingWarkatFiles as $wf) {
+                        $formattedWarkats[] = [
+                            'url' => asset($wf),
+                            'name' => basename($wf)
+                        ];
+                    }
+                }
+
+                $formattedLampirans = [];
+                if (!empty($existingLampiranDFiles)) {
+                    foreach ($existingLampiranDFiles as $ldf) {
+                        $formattedLampirans[] = [
+                            'url' => asset($ldf),
+                            'name' => basename($ldf)
+                        ];
+                    }
+                }
+
+                return response()->json([
+                    'success' => true,
+                    'message' => "Data Bank {$detailObj->bank_name} berhasil disimpan!",
+                    'detail_id' => $detailId,
+                    'bg_number' => $parentBg->bg_number,
+                    'exp_date' => $parentBg->exp_date ? \Carbon\Carbon::parse($parentBg->exp_date)->format('Y-m-d') : null,
+                    'parent_warkat_files' => $formattedWarkats,
+                    'parent_lampiran_d_files' => $formattedLampirans
+                ]);
+
+            } catch (\Exception $e) {
+                DB::rollBack();
+                return response()->json(['success' => false, 'message' => 'Gagal menyimpan data bank: ' . $e->getMessage()], 500);
+            }
+        }
+
         if ($request->action_type == 'edit_submit') {
 
             $approvalPathExists = ApprovalPath::where('category', 'BG')->where('sub_category', 'Lampiran D')->exists();
@@ -581,7 +692,15 @@ class BgSubmissionController extends Controller
                 if ($request->filled('syarat_pembayaran')) $recUpdate['top'] = $request->syarat_pembayaran;
                 if ($request->filled('lead_time')) $recUpdate['lead_time'] = $request->lead_time;
                 if ($request->filled('faktor_fluktuasi')) $recUpdate['inflation'] = $request->faktor_fluktuasi;
-                if ($request->filled('limit_kredit')) $recUpdate['credit_limit_updated'] = $request->limit_kredit;
+                $activeRule = $this->getLimitRulePercent($customer) ?: 100;
+                if ($request->filled('limit_kredit')) {
+                    $recUpdate['credit_limit_updated'] = (float)$request->limit_kredit;
+                } elseif ($request->filled('nilai_bg_diserahkan') && (float)$request->nilai_bg_diserahkan > 0) {
+                    $recUpdate['credit_limit_updated'] = (float)$request->nilai_bg_diserahkan / ($activeRule / 100);
+                } elseif ($request->filled('nilai_bg_ditetapkan') && (float)$request->nilai_bg_ditetapkan > 0) {
+                    $recUpdate['credit_limit_updated'] = (float)$request->nilai_bg_ditetapkan / ($activeRule / 100);
+                }
+
                 if ($request->filled('nilai_bg_ditetapkan')) $recUpdate['set_bg'] = $request->nilai_bg_ditetapkan;
                 if (!empty($recUpdate)) {
                     $rec->update($recUpdate);
@@ -1140,5 +1259,23 @@ class BgSubmissionController extends Controller
         } catch (\Exception $e) {
             Log::error("Gagal kirim email completion: " . $e->getMessage());
         }
+    }
+
+    private function getLimitRulePercent($customer)
+    {
+        if (!$customer || !$customer->join_date) {
+            return 0;
+        }
+
+        $joinDate = \Carbon\Carbon::parse($customer->join_date);
+        $years    = (int) abs($joinDate->diffInYears(\Carbon\Carbon::now()));
+
+        $rule = DB::table('bg_limit_rules')
+            ->where('min_year', '<=', $years)
+            ->where('max_year', '>=', $years)
+            ->orderBy('min_year', 'desc')
+            ->first();
+
+        return $rule ? (float)$rule->percentage : 0;
     }
 }

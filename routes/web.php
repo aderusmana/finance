@@ -166,6 +166,8 @@ Route::middleware('auth')->group(function () {
     Route::delete('/notifications/{id}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
 
     Route::group(['prefix' => 'bg'], function () {
+        Route::get('bg-template/download', [BankGaransiController::class, 'downloadTemplate'])->name('bg.template');
+        Route::post('bg-list/import', [BankGaransiController::class, 'import'])->name('bg.import');
         Route::resource('bg-list', BankGaransiController::class);
         Route::get('generate-number', [BankGaransiController::class, 'generateNumber'])->name('bg.generate-number');
         Route::resource('bg-recommendations', BgRecommendationController::class);

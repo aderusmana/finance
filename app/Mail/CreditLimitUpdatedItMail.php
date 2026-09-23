@@ -21,12 +21,14 @@ class CreditLimitUpdatedItMail extends Mailable implements ShouldQueue
     /**
      * Create a new message instance.
      */
-    public function __construct(BgSubmission $submission, $validatorName = 'Secretary Finance')
+    public function __construct(BgSubmission $submission, $validatorName = 'Secretary Finance', $customCreditLimit = null)
     {
         $this->submission = $submission;
         $this->recommendation = $submission->recommendation;
         $this->customer = $this->recommendation ? $this->recommendation->customer : null;
-        $this->approvedCreditLimit = $this->recommendation ? $this->recommendation->credit_limit_updated : 0;
+        $this->approvedCreditLimit = ($customCreditLimit !== null && $customCreditLimit > 0)
+            ? (float) $customCreditLimit
+            : ($this->recommendation ? (float) $this->recommendation->credit_limit_updated : 0);
         $this->validatorName = $validatorName;
     }
 

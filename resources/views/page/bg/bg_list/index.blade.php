@@ -59,6 +59,9 @@
                 </div>
                 {{-- Create & Action Buttons --}}
                 <div class="ms-auto d-flex gap-2 page-action-buttons">
+                    <button class="btn btn-outline-success shadow-sm" type="button" id="btn-import-bg" data-bs-toggle="modal" data-bs-target="#importBgModal">
+                        <i class="ph-bold ph-upload-simple me-1"></i> <span>Import Master BG</span>
+                    </button>
                     <a href="{{ route('sales-submissions.index') }}?action=create" class="btn btn-outline-primary shadow-sm" title="Pengajuan Sales (Adendum & Tambah BG)">
                         <i class="ph-bold ph-paper-plane-tilt me-1"></i> <span>Pengajuan Sales</span>
                     </a>
@@ -93,7 +96,6 @@
                                 <th>Issued Date</th>
                                 <th>Exp Date</th>
                                 <th class="text-center">Status</th>
-                                <th class="text-center">Menu</th>
                                 <th class="text-center">Action</th>
                             </tr>
                         </thead>
@@ -260,6 +262,46 @@
         </div>
     </div>
 
+    {{-- MODAL IMPORT MASTER BG --}}
+    <div class="modal fade" id="importBgModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 12px; overflow: hidden;">
+                <div class="modal-header bg-success text-white py-3 px-4">
+                    <h5 class="modal-title fw-bold text-white d-flex align-items-center gap-2 mb-0">
+                        <i class="ph-bold ph-upload-simple fs-5"></i> <span>Import Master Bank Garansi</span>
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="importBgForm" enctype="multipart/form-data">
+                    @csrf
+                    <div class="modal-body p-4 bg-light bg-opacity-50">
+                        <div class="alert alert-info border-0 shadow-sm f-s-13 mb-3">
+                            <i class="ph-fill ph-info me-1"></i> Unggah file <strong>Excel (.xlsx, .xls)</strong> atau <strong>CSV</strong> untuk mengimpor data Master Bank Garansi secara massal. Tipe BG otomatis diset sebagai <strong>New</strong>.
+                        </div>
+
+                        <div class="text-center mb-3">
+                            <a href="{{ route('bg.template') }}" class="btn btn-outline-primary btn-sm rounded-pill px-3 py-1 shadow-xs fw-semibold">
+                                <i class="ph-bold ph-download-simple me-1"></i> Download Template File (.CSV)
+                            </a>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold text-dark">Pilih File (.xlsx, .xls, .csv) <span class="text-danger">*</span></label>
+                            <input type="file" class="form-control rounded-2" name="file" accept=".xlsx,.xls,.csv,.txt" required>
+                            <div class="form-text text-muted" style="font-size: 11px;">Maksimal ukuran file: 10MB.</div>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-white border-top py-2 px-4 d-flex justify-content-between">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-success fw-bold px-4" id="btn-submit-import-bg">
+                            <i class="ph-bold ph-check me-1"></i> Mulai Import
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     @push('scripts')
     <script src="{{ asset('assets/vendor/select/select2.min.js') }}"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -312,7 +354,6 @@
                         let color = d === 'approved' ? 'success' : (d === 'submitted' ? 'primary' : (d === 'expired' ? 'danger' : 'secondary'));
                         return `<span class="badge bg-${color} status-badge-lg">${d.replace('_', ' ')}</span>`;
                     }},
-                    { data: 'menu', orderable: false, searchable: false, className: 'text-center' },
                     { data: 'action', orderable: false, searchable: false, className: 'text-center' }
                 ],
                 order: [[1, 'asc']]
@@ -734,6 +775,48 @@
                     },
                     error: function(xhr) {
                         let msg = xhr.responseJSON?.message || 'Error occurred';
+                        Swal.fire('Error', msg, 'error');
+                    }
+                });
+            });
+
+            // --- IMPORT MASTER BG HANDLER ---
+            $('#importBgForm').on('submit', function(e) {
+                e.preventDefault();
+                let formData = new FormData(this);
+
+                Swal.fire({
+                    title: 'Sedang Mengimpor Data...',
+                    html: 'Mohon tunggu, proses validasi dan penyimpanan Master Bank Garansi sedang berjalan.',
+                    allowOutsideClick: false,
+                    didOpen: () => { Swal.showLoading(); }
+                });
+
+                $.ajax({
+                    url: "{{ route('bg.import') }}",
+                    type: "POST",
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(res) {
+                        if (res.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Import Selesai!',
+                                text: res.message,
+                                timer: 3000,
+                                showConfirmButton: true
+                            }).then(() => {
+                                $('#importBgModal').modal('hide');
+                                $('#importBgForm')[0].reset();
+                                table.ajax.reload(null, false);
+                            });
+                        } else {
+                            Swal.fire('Gagal', res.message, 'error');
+                        }
+                    },
+                    error: function(xhr) {
+                        let msg = xhr.responseJSON?.message || 'Terjadi kesalahan saat memproses file import.';
                         Swal.fire('Error', msg, 'error');
                     }
                 });

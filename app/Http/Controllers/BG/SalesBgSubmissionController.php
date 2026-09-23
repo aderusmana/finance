@@ -17,6 +17,8 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use App\Models\Master\ApprovalLog;
 use App\Jobs\ProcessFinanceApprovalEmail;
+use App\Models\BG\LampiranD;
+use App\Models\BG\LampiranDVersion;
 use Yajra\DataTables\Facades\DataTables;
 
 class SalesBgSubmissionController extends Controller
@@ -159,6 +161,11 @@ class SalesBgSubmissionController extends Controller
             $customer = Customer::findOrFail($request->customer_id);
             $nominal = (float) str_replace(['.', ','], ['', '.'], $request->bg_nominal);
 
+            // Perhitungan Credit Limit dinamis berdasarkan nominal inputan sales & aturan limit customer
+            $rulePercent = $this->getLimitRulePercent($customer);
+            $activeRule = $rulePercent > 0 ? $rulePercent : 100;
+            $calculatedCreditLimit = $nominal / ($activeRule / 100);
+
             // Handle file uploads
             $warkatPath = $request->file('warkat_file')->store('bg_documents/warkat', 'public');
             $signedPath = $request->hasFile('signed_document') 
@@ -169,23 +176,27 @@ class SalesBgSubmissionController extends Controller
             $prefix = ($request->submission_type === 'adendum') ? 'AD' : 'TB';
             $formCode = $prefix . '-' . date('Ymd') . '-' . strtoupper(Str::random(4));
 
-            // Link or create Recommendation placeholder for customer
-            $rec = BgRecommendation::where('customer_id', $customer->id)->latest()->first();
-            if (!$rec) {
-                $rec = BgRecommendation::create([
-                    'customer_id'          => $customer->id,
-                    'average'              => 0,
-                    'top'                  => 0,
-                    'lead_time'            => 0,
-                    'inflation'            => 0,
-                    'credit_limit_updated' => $nominal,
-                    'set_bg'               => $nominal,
-                    'status'               => 'waiting_approval',
-                    'token'                => Str::uuid(),
-                    'notes'                => json_encode(['type' => 'sales_direct', 'submission_type' => $request->submission_type, 'sales_notes' => $request->notes]),
-                    'created_by'           => Auth::id(),
-                ]);
-            }
+            // Buat dedicated Recommendation baru untuk pengajuan sales ini
+            $rec = BgRecommendation::create([
+                'customer_id'          => $customer->id,
+                'average'              => 0,
+                'top'                  => 0,
+                'lead_time'            => 0,
+                'inflation'            => 0,
+                'credit_limit_updated' => $calculatedCreditLimit,
+                'set_bg'               => $nominal,
+                'status'               => 'waiting_approval',
+                'token'                => Str::uuid(),
+                'notes'                => json_encode([
+                    'type'            => 'sales_direct',
+                    'submission_type' => $request->submission_type,
+                    'target_bg_id'    => ($request->submission_type === 'adendum') ? $request->existing_bg_id : null,
+                    'bank_name'       => $request->bank_name,
+                    'branch_name'     => $request->branch_name ?? '',
+                    'sales_notes'     => $request->notes,
+                ]),
+                'created_by'           => Auth::id(),
+            ]);
 
             // Create BgSubmission
             $submission = BgSubmission::create([
@@ -196,6 +207,9 @@ class SalesBgSubmissionController extends Controller
                 'bg_nominal'           => $nominal,
                 'exp_date'             => $request->exp_date,
                 'warkat_file_path'     => 'storage/' . $warkatPath,
+                'warkat_files'         => ['storage/' . $warkatPath],
+                'lampiran_d_file_path' => $signedPath ? 'storage/' . $signedPath : null,
+                'lampiran_d_files'     => $signedPath ? ['storage/' . $signedPath] : null,
                 'signed_document_path' => $signedPath ? 'storage/' . $signedPath : null,
                 'status'               => 'waiting_approval',
                 'submitted_at'         => now(),
@@ -203,20 +217,62 @@ class SalesBgSubmissionController extends Controller
                 'token'                => Str::random(60),
             ]);
 
-            // Create BankGaransi record in status 'draft' (wajib validasi Bu Rita baru masuk active list)
-            $newBg = BankGaransi::create([
-                'customer_id'      => $customer->id,
-                'bg_number'        => $request->bg_number,
-                'bg_type'          => ($request->submission_type === 'adendum') ? 'existing' : 'new',
-                'is_adendum'       => ($request->submission_type === 'adendum') ? 1 : 0,
-                'base_bg_id'       => ($request->submission_type === 'adendum') ? $request->existing_bg_id : null,
-                'bg_nominal'       => $nominal,
-                'issued_date'      => $request->issued_date ?? now(),
-                'exp_date'         => $request->exp_date,
-                'status'           => 'draft', // stays draft until Bu Rita validates
-                'warkat_file_path' => 'storage/' . $warkatPath,
+            $typeName = ($request->submission_type === 'adendum') ? 'Adendum BG' : 'Tambah BG';
+
+            // Create Lampiran D & LampiranDVersion snapshot awal
+            $lampiranD = LampiranD::create([
+                'bg_submission_id' => $submission->id,
+                'version_latest'   => 1,
                 'created_by'       => Auth::id(),
             ]);
+
+            $newVersion = LampiranDVersion::create([
+                'lampiran_d_id' => $lampiranD->id,
+                'version_no'    => 1,
+                'data_snapshot' => [
+                    'nama_distributor'    => $customer->name,
+                    'kota'                => $customer->city ?? '',
+                    'wilayah_kerja'       => $customer->region->name ?? '',
+                    'limit_kredit'        => $calculatedCreditLimit,
+                    'nilai_bg_ditetapkan' => $nominal,
+                    'nilai_bg_diserahkan' => $nominal,
+                    'details'             => [
+                        [
+                            'bank_name'   => $request->bank_name,
+                            'branch_name' => $request->branch_name ?? '',
+                            'nominal'     => $nominal,
+                        ]
+                    ]
+                ],
+                'file_path'     => $submission->signed_document_path,
+                'generated_by'  => Auth::id(),
+                'generated_at'  => now(),
+                'remarks'       => "Pengajuan {$typeName} dari Sales ({$formCode})"
+            ]);
+
+            $lampiranD->update(['active_version_id' => $newVersion->id]);
+
+            // Create BankGaransi record in status 'draft' (bg_type selalu 'new' sesuai ketentuan)
+            $newBg = BankGaransi::create([
+                'customer_id'          => $customer->id,
+                'bg_number'            => $request->bg_number,
+                'bg_type'              => 'new', // Selalu 'new'
+                'is_adendum'           => ($request->submission_type === 'adendum') ? 1 : 0,
+                'base_bg_id'           => ($request->submission_type === 'adendum') ? $request->existing_bg_id : null,
+                'bg_nominal'           => $nominal,
+                'issued_date'          => $request->issued_date ?? now(),
+                'exp_date'             => $request->exp_date,
+                'status'               => 'draft', // stays draft until Bu Rita validates
+                'warkat_file_path'     => 'storage/' . $warkatPath,
+                'warkat_files'         => ['storage/' . $warkatPath],
+                'lampiran_d_file_path' => $signedPath ? 'storage/' . $signedPath : null,
+                'lampiran_d_files'     => $signedPath ? ['storage/' . $signedPath] : null,
+                'created_by'           => Auth::id(),
+            ]);
+
+            if ($request->submission_type !== 'adendum') {
+                $newBg->update(['base_bg_id' => $newBg->id]);
+            }
 
             $newBg->details()->create([
                 'bank_name'   => $request->bank_name,
@@ -224,7 +280,6 @@ class SalesBgSubmissionController extends Controller
                 'nominal'     => $nominal,
             ]);
 
-            $typeName = ($request->submission_type === 'adendum') ? 'Adendum BG' : 'Tambah BG';
             $salesName = Auth::user()->name ?? 'Sales';
 
             // Notify Bu Rita (secretary-finance) & dispatch email approval
@@ -273,5 +328,26 @@ class SalesBgSubmissionController extends Controller
             DB::rollBack();
             return back()->withInput()->with('error', 'Gagal menyimpan pengajuan: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Hitung persentase batas limit garansi bank customer dari tabel bg_limit_rules berdasarkan join_date
+     */
+    private function getLimitRulePercent($customer)
+    {
+        if (!$customer || !$customer->join_date) {
+            return 0;
+        }
+
+        $joinDate = \Carbon\Carbon::parse($customer->join_date);
+        $years    = (int) abs($joinDate->diffInYears(\Carbon\Carbon::now()));
+
+        $rule = DB::table('bg_limit_rules')
+            ->where('min_year', '<=', $years)
+            ->where('max_year', '>=', $years)
+            ->orderBy('min_year', 'desc')
+            ->first();
+
+        return $rule ? (float)$rule->percentage : 0;
     }
 }

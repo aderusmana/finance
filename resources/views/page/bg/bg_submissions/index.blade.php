@@ -757,27 +757,30 @@
                                     </div>
                                     <span class="text-muted small">Input Nomor BG Resmi & Unggah Berkas Asli</span>
                                 </div>
-                            `;
-
-                            if(d.details && d.details.length > 0) {
+                                                        if(d.details && d.details.length > 0) {
                                 d.details.forEach((item, index) => {
                                     html += `
-                                        <div class="card mb-3 border rounded-3 shadow-xs bg-white overflow-hidden">
-                                            <div class="card-header bg-white py-2.5 px-3 d-flex justify-content-between align-items-center border-bottom">
+                                        <div class="card mb-3 border rounded-3 shadow-xs bg-white overflow-hidden" id="card-bank-${item.id}">
+                                            <div class="card-header bg-white py-2.5 px-3 d-flex justify-content-between align-items-center border-bottom flex-wrap gap-2">
                                                 <div class="d-flex align-items-center gap-2">
                                                     <span class="badge bg-primary rounded-pill px-2.5 py-1.5 text-white fw-bold"><i class="ph-bold ph-bank me-1"></i>Bank ${index+1}: ${item.bank_name || 'Bank'}</span>
                                                     <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2.5 py-1.5 rounded-pill fw-bold">Nominal: Rp ${formatRupiah(item.nominal)}</span>
                                                 </div>
-                                                <div class="d-flex align-items-center gap-1.5">
-                                                    ${item.is_temporary ? `
-                                                        <span class="badge bg-warning bg-opacity-15 text-warning-emphasis border border-warning-subtle px-2.5 py-1 rounded-pill" title="Nomor referensi sementara yang akan ditimpa dengan nomor resmi dari bank">
-                                                            <i class="ph-bold ph-clock-countdown me-1"></i>Ref Draft: ${item.parent_bg_number || 'Belum Diisi'}
-                                                        </span>
-                                                    ` : `
-                                                        <span class="badge bg-success bg-opacity-15 text-success border border-success-subtle px-2.5 py-1 rounded-pill fw-semibold">
-                                                            <i class="ph-bold ph-shield-check me-1"></i>No. BG: ${item.parent_bg_number}
-                                                        </span>
-                                                    `}
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <button type="button" class="btn btn-sm btn-outline-primary btn-save-single-bank rounded-pill px-3 py-1 shadow-xs fw-semibold" data-detail-id="${item.id}" title="Simpan data Bank Garansi untuk bank ini saja">
+                                                        <i class="ph-bold ph-floppy-disk me-1"></i> Simpan Data Bank Ini
+                                                    </button>
+                                                    <div id="status-badge-bank-${item.id}">
+                                                        ${item.parent_bg_number && !item.is_temporary ? `
+                                                            <span class="badge bg-success bg-opacity-15 text-success border border-success-subtle px-2.5 py-1 rounded-pill fw-semibold">
+                                                                <i class="ph-bold ph-shield-check me-1"></i>No. BG: ${item.parent_bg_number}
+                                                            </span>
+                                                        ` : `
+                                                            <span class="badge bg-warning bg-opacity-15 text-warning-emphasis border border-warning-subtle px-2.5 py-1 rounded-pill" title="Belum disimpan nomor resmi bank">
+                                                                <i class="ph-bold ph-clock-countdown me-1"></i>Belum Lengkap
+                                                            </span>
+                                                        `}
+                                                    </div>
                                                 </div>
                                             </div>
                                             <div class="card-body p-3">
@@ -846,24 +849,26 @@
                                                             <input type="file" class="form-control form-control-sm bg-white rounded-2 file-multi-input" name="details[${item.id}][warkat_files][]" multiple accept=".pdf,.jpg,.jpeg,.png">
                                                             <div class="text-muted mt-1" style="font-size: 11px;"><i class="ph-bold ph-files me-0.5"></i> PDF, JPG, PNG (Maks 10MB/file)</div>
                                                             <div class="new-files-preview"></div>
-                                                            ${item.parent_warkat_files && item.parent_warkat_files.length > 0 ? `
-                                                                <div class="mt-2 p-2 bg-white rounded-2 border">
-                                                                    <div class="small fw-semibold text-primary mb-1" style="font-size: 11px;"><i class="ph-bold ph-file-text me-1"></i>File BG Terupload Sebelumnya:</div>
-                                                                    <div class="d-flex flex-wrap gap-1">
-                                                                        ${item.parent_warkat_files.map((wf, wIdx) => `
-                                                                            <a href="${wf.url}" target="_blank" class="badge bg-light text-primary border text-decoration-none py-1 px-2 d-inline-flex align-items-center gap-1 shadow-xs" title="${wf.name}">
-                                                                                <i class="ph-bold ph-file-pdf"></i> Sertifikat BG ${wIdx+1}
-                                                                            </a>
-                                                                        `).join('')}
+                                                            <div id="prev-warkat-container-${item.id}">
+                                                                ${item.parent_warkat_files && item.parent_warkat_files.length > 0 ? `
+                                                                    <div class="mt-2 p-2 bg-white rounded-2 border">
+                                                                        <div class="small fw-semibold text-primary mb-1" style="font-size: 11px;"><i class="ph-bold ph-file-text me-1"></i>File BG Terupload:</div>
+                                                                        <div class="d-flex flex-wrap gap-1">
+                                                                            ${item.parent_warkat_files.map((wf, wIdx) => `
+                                                                                <a href="${wf.url}" target="_blank" class="badge bg-light text-primary border text-decoration-none py-1 px-2 d-inline-flex align-items-center gap-1 shadow-xs" title="${wf.name}">
+                                                                                    <i class="ph-bold ph-file-pdf"></i> Sertifikat BG ${wIdx+1}
+                                                                                </a>
+                                                                            `).join('')}
+                                                                        </div>
                                                                     </div>
-                                                                </div>
-                                                            ` : (item.parent_warkat ? `
-                                                                <div class="mt-2">
-                                                                    <a href="${item.parent_warkat}" target="_blank" class="badge bg-light text-primary border text-decoration-none py-1 px-2 d-inline-flex align-items-center gap-1">
-                                                                        <i class="ph-bold ph-file-pdf"></i> Buka Sertifikat BG
-                                                                    </a>
-                                                                </div>
-                                                            ` : '')}
+                                                                ` : (item.parent_warkat ? `
+                                                                    <div class="mt-2">
+                                                                        <a href="${item.parent_warkat}" target="_blank" class="badge bg-light text-primary border text-decoration-none py-1 px-2 d-inline-flex align-items-center gap-1">
+                                                                            <i class="ph-bold ph-file-pdf"></i> Buka Sertifikat BG
+                                                                        </a>
+                                                                    </div>
+                                                                ` : '')}
+                                                            </div>
                                                         </div>
                                                     </div>
                                                     <div class="col-md-6">
@@ -875,24 +880,26 @@
                                                             <input type="file" class="form-control form-control-sm bg-white rounded-2 file-multi-input" name="details[${item.id}][lampiran_d_files][]" multiple accept=".pdf,.jpg,.jpeg,.png">
                                                             <div class="text-muted mt-1" style="font-size: 11px;"><i class="ph-bold ph-files me-0.5"></i> PDF, JPG, PNG (Maks 10MB/file)</div>
                                                             <div class="new-files-preview"></div>
-                                                            ${item.parent_lampiran_d_files && item.parent_lampiran_d_files.length > 0 ? `
-                                                                <div class="mt-2 p-2 bg-white rounded-2 border">
-                                                                    <div class="small fw-semibold text-success mb-1" style="font-size: 11px;"><i class="ph-bold ph-file-check me-1"></i>File Lampiran D Terupload Sebelumnya:</div>
-                                                                    <div class="d-flex flex-wrap gap-1">
-                                                                        ${item.parent_lampiran_d_files.map((ldf, ldIdx) => `
-                                                                            <a href="${ldf.url}" target="_blank" class="badge bg-light text-success border text-decoration-none py-1 px-2 d-inline-flex align-items-center gap-1 shadow-xs" title="${ldf.name}">
-                                                                                <i class="ph-bold ph-file-check"></i> Lampiran D ${ldIdx+1}
-                                                                            </a>
-                                                                        `).join('')}
+                                                            <div id="prev-lampiran-container-${item.id}">
+                                                                ${item.parent_lampiran_d_files && item.parent_lampiran_d_files.length > 0 ? `
+                                                                    <div class="mt-2 p-2 bg-white rounded-2 border">
+                                                                        <div class="small fw-semibold text-success mb-1" style="font-size: 11px;"><i class="ph-bold ph-file-check me-1"></i>File Lampiran D Terupload:</div>
+                                                                        <div class="d-flex flex-wrap gap-1">
+                                                                            ${item.parent_lampiran_d_files.map((ldf, ldIdx) => `
+                                                                                <a href="${ldf.url}" target="_blank" class="badge bg-light text-success border text-decoration-none py-1 px-2 d-inline-flex align-items-center gap-1 shadow-xs" title="${ldf.name}">
+                                                                                    <i class="ph-bold ph-file-check"></i> Lampiran D ${ldIdx+1}
+                                                                                </a>
+                                                                            `).join('')}
+                                                                        </div>
                                                                     </div>
-                                                                </div>
-                                                            ` : (item.parent_lampiran_d ? `
-                                                                <div class="mt-2">
-                                                                    <a href="${item.parent_lampiran_d}" target="_blank" class="badge bg-light text-success border text-decoration-none py-1 px-2 d-inline-flex align-items-center gap-1">
-                                                                        <i class="ph-bold ph-file-check"></i> Buka File Lampiran D
-                                                                    </a>
-                                                                </div>
-                                                            ` : '')}
+                                                                ` : (item.parent_lampiran_d ? `
+                                                                    <div class="mt-2">
+                                                                        <a href="${item.parent_lampiran_d}" target="_blank" class="badge bg-light text-success border text-decoration-none py-1 px-2 d-inline-flex align-items-center gap-1">
+                                                                            <i class="ph-bold ph-file-check"></i> Buka File Lampiran D
+                                                                        </a>
+                                                                    </div>
+                                                                ` : '')}
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -962,6 +969,129 @@
                     } else {
                         previewContainer.empty();
                     }
+                });
+
+                // --- SAVE SINGLE BANK HANDLER ---
+                $(document).on('click', '.btn-save-single-bank', function() {
+                    let detailId = $(this).data('detail-id');
+                    let card = $(`#card-bank-${detailId}`);
+
+                    let bankName = card.find(`input[name="details[${detailId}][bank_name]"]`).val();
+                    let branchName = card.find(`input[name="details[${detailId}][branch_name]"]`).val();
+                    let rawNominal = card.find(`input[name="details[${detailId}][nominal]"]`).val();
+                    let bgNumber = card.find(`input[name="details[${detailId}][bg_number]"]`).val();
+                    let expDate = card.find(`input[name="details[${detailId}][exp_date]"]`).val();
+
+                    if (!bgNumber || bgNumber.trim() === '') {
+                        Swal.fire('Validasi', 'Nomor BG Resmi Bank wajib diisi sebelum menyimpan data bank ini.', 'warning');
+                        return;
+                    }
+                    if (!expDate) {
+                        Swal.fire('Validasi', 'Tanggal Jatuh Tempo wajib diisi sebelum menyimpan data bank ini.', 'warning');
+                        return;
+                    }
+
+                    let cleanNominal = rawNominal ? rawNominal.replace(/\./g, '').replace(/,/g, '.') : 0;
+
+                    let formData = new FormData();
+                    formData.append('_token', "{{ csrf_token() }}");
+                    formData.append('submission_id', $('#edit_submission_id').val());
+                    formData.append('action_type', 'save_single_bank');
+                    formData.append('detail_id', detailId);
+                    formData.append('bank_name', bankName);
+                    formData.append('branch_name', branchName || '');
+                    formData.append('nominal', cleanNominal);
+                    formData.append('bg_number', bgNumber.trim());
+                    formData.append('exp_date', expDate);
+
+                    let warkatInput = card.find(`input[name="details[${detailId}][warkat_files][]"]`)[0];
+                    if (warkatInput && warkatInput.files.length > 0) {
+                        for (let i = 0; i < warkatInput.files.length; i++) {
+                            formData.append('warkat_files[]', warkatInput.files[i]);
+                        }
+                    }
+
+                    let lampiranInput = card.find(`input[name="details[${detailId}][lampiran_d_files][]"]`)[0];
+                    if (lampiranInput && lampiranInput.files.length > 0) {
+                        for (let i = 0; i < lampiranInput.files.length; i++) {
+                            formData.append('lampiran_d_files[]', lampiranInput.files[i]);
+                        }
+                    }
+
+                    let url = "{{ route('bg-submissions.process-review', ':id') }}".replace(':id', $('#edit_submission_id').val());
+
+                    let btn = $(this);
+                    btn.prop('disabled', true).html('<i class="ph-bold ph-spinner-gap ph-spin me-1"></i> Menyimpan...');
+
+                    $.ajax({
+                        url: url,
+                        type: 'POST',
+                        data: formData,
+                        processData: false,
+                        contentType: false,
+                        success: function(res) {
+                            btn.prop('disabled', false).html('<i class="ph-bold ph-floppy-disk me-1"></i> Simpan Data Bank Ini');
+                            if(res.success) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Berhasil!',
+                                    text: res.message,
+                                    timer: 2000,
+                                    showConfirmButton: false
+                                });
+
+                                $(`#status-badge-bank-${detailId}`).html(`
+                                    <span class="badge bg-success bg-opacity-15 text-success border border-success-subtle px-2.5 py-1 rounded-pill fw-semibold">
+                                        <i class="ph-bold ph-shield-check me-1"></i>No. BG: ${res.bg_number}
+                                    </span>
+                                `);
+
+                                if (res.parent_warkat_files && res.parent_warkat_files.length > 0) {
+                                    let warkatHtml = `
+                                        <div class="mt-2 p-2 bg-white rounded-2 border">
+                                            <div class="small fw-semibold text-primary mb-1" style="font-size: 11px;"><i class="ph-bold ph-file-text me-1"></i>File BG Terupload:</div>
+                                            <div class="d-flex flex-wrap gap-1">
+                                                ${res.parent_warkat_files.map((wf, wIdx) => `
+                                                    <a href="${wf.url}" target="_blank" class="badge bg-light text-primary border text-decoration-none py-1 px-2 d-inline-flex align-items-center gap-1 shadow-xs" title="${wf.name}">
+                                                        <i class="ph-bold ph-file-pdf"></i> Sertifikat BG ${wIdx+1}
+                                                    </a>
+                                                `).join('')}
+                                            </div>
+                                        </div>
+                                    `;
+                                    $(`#prev-warkat-container-${detailId}`).html(warkatHtml);
+                                }
+
+                                if (res.parent_lampiran_d_files && res.parent_lampiran_d_files.length > 0) {
+                                    let lampiranHtml = `
+                                        <div class="mt-2 p-2 bg-white rounded-2 border">
+                                            <div class="small fw-semibold text-success mb-1" style="font-size: 11px;"><i class="ph-bold ph-file-check me-1"></i>File Lampiran D Terupload:</div>
+                                            <div class="d-flex flex-wrap gap-1">
+                                                ${res.parent_lampiran_d_files.map((ldf, ldIdx) => `
+                                                    <a href="${ldf.url}" target="_blank" class="badge bg-light text-success border text-decoration-none py-1 px-2 d-inline-flex align-items-center gap-1 shadow-xs" title="${ldf.name}">
+                                                        <i class="ph-bold ph-file-check"></i> Lampiran D ${ldIdx+1}
+                                                    </a>
+                                                `).join('')}
+                                            </div>
+                                        </div>
+                                    `;
+                                    $(`#prev-lampiran-container-${detailId}`).html(lampiranHtml);
+                                }
+
+                                card.find('.new-files-preview').empty();
+                                if (typeof sampleTable !== 'undefined') {
+                                    sampleTable.ajax.reload(null, false);
+                                }
+                            } else {
+                                Swal.fire('Error', res.message, 'error');
+                            }
+                        },
+                        error: function(xhr) {
+                            btn.prop('disabled', false).html('<i class="ph-bold ph-floppy-disk me-1"></i> Simpan Data Bank Ini');
+                            let msg = xhr.responseJSON?.message || 'Gagal menyimpan data bank.';
+                            Swal.fire('Error', msg, 'error');
+                        }
+                    });
                 });
 
                 // --- SAVE EDIT FORM (WITH FILE SUPPORT & CLEANING) ---

@@ -114,6 +114,19 @@ class BgApprovalInboxController extends Controller
             ];
         }
 
+        $metadata = json_decode($rec->notes ?? '[]', true) ?? [];
+        if ($sub->submission_type === 'adendum' || empty($rincianBank)) {
+            if (!empty($metadata['bank_name'])) {
+                $rincianBank = [
+                    [
+                        'bank_name' => $metadata['bank_name'] . (!empty($metadata['branch_name']) ? ' (' . $metadata['branch_name'] . ')' : ''),
+                        'nominal'   => number_format($sub->bg_nominal, 0, ',', '.')
+                    ]
+                ];
+                $totalNominal = $sub->bg_nominal;
+            }
+        }
+
         $periodeStr = '-';
         if ($rec->periods && $rec->periods->count() > 0) {
             $start = $rec->periods->min('period_date');
@@ -128,6 +141,13 @@ class BgApprovalInboxController extends Controller
         $warkatUrl = $sub->warkat_file_path ? asset($sub->warkat_file_path) : ($firstBg && $firstBg->warkat_file_path ? asset($firstBg->warkat_file_path) : null);
         $signedDocUrl = $sub->signed_document_path ? asset($sub->signed_document_path) : null;
 
+        $displayCreditLimit = $rec->credit_limit_updated;
+        if ($displayCreditLimit <= 0 && $sub->bg_nominal > 0) {
+            $rulePercent = $this->getLimitRulePercent($cust);
+            $activeRule = $rulePercent > 0 ? $rulePercent : 100;
+            $displayCreditLimit = $sub->bg_nominal / ($activeRule / 100);
+        }
+
         return response()->json([
             'success' => true,
             'data' => [
@@ -140,8 +160,8 @@ class BgApprovalInboxController extends Controller
                 'top' => $rec->top,
                 'lead_time' => $rec->lead_time,
                 'inflasi' => $rec->inflation,
-                'limit_kredit' => number_format($rec->credit_limit_updated, 0, ',', '.'),
-                'bg_ditetapkan' => number_format($rec->set_bg, 0, ',', '.'),
+                'limit_kredit' => number_format($displayCreditLimit, 0, ',', '.'),
+                'bg_ditetapkan' => number_format($rec->set_bg ?: $sub->bg_nominal, 0, ',', '.'),
                 'bg_diserahkan_total' => number_format($totalNominal, 0, ',', '.'),
                 'rincian_bank' => $rincianBank,
                 'form_code' => $sub->form_code,
@@ -249,6 +269,15 @@ class BgApprovalInboxController extends Controller
                     'ph-x-circle',
                     'danger'
                 ));
+
+                // Bersihkan draft BG yang dibuat untuk pengajuan ini jika ditolak
+                BankGaransi::where('customer_id', $sub->recommendation->customer_id ?? 0)
+                    ->where('status', 'draft')
+                    ->whereBetween('created_at', [
+                        $sub->created_at->copy()->subMinutes(5),
+                        $sub->created_at->copy()->addMinutes(5)
+                    ])
+                    ->delete();
             }
 
             if ($status == 'completed') {
@@ -256,46 +285,146 @@ class BgApprovalInboxController extends Controller
                     $rec->update(['status' => 'approved']);
                 }
 
-                // Update Status SEMUA BG dalam batch ini
-                $bgs = BankGaransi::where('customer_id', $rec->customer_id)
-                        ->whereBetween('created_at', [
-                            $sub->created_at->copy()->subMinutes(5),
-                            $sub->created_at->copy()->addMinutes(5)
-                        ])
-                        ->get();
+                $isAdendum = ($sub->submission_type === 'adendum');
+                $metadata = json_decode($rec->notes ?? '[]', true) ?? [];
+                $targetBgId = $metadata['target_bg_id'] ?? null;
 
-                if ($bgs->isEmpty()) {
-                    $bgs = BankGaransi::where('customer_id', $rec->customer_id)->latest()->take(3)->get();
+                // Fallback pencarian target BG adendum
+                if (!$targetBgId && $isAdendum) {
+                    $draftBg = BankGaransi::where('customer_id', $rec->customer_id)
+                        ->where('is_adendum', 1)
+                        ->whereNotNull('base_bg_id')
+                        ->latest()
+                        ->first();
+                    if ($draftBg) {
+                        $targetBgId = $draftBg->base_bg_id;
+                    }
                 }
 
-                foreach($bgs as $bg) {
-                    $bgUpdateData = [
-                        'status'           => 'approved',
-                        'issued_date'      => now(),
-                        'exp_date'         => $sub->exp_date ?? $bg->exp_date ?? now()->addYear(),
-                        'warkat_file_path' => $sub->warkat_file_path ?? $bg->warkat_file_path,
-                    ];
-                    if ($bgs->count() === 1 && $sub->bg_number) {
-                        $bgUpdateData['bg_number'] = $sub->bg_number;
+                $targetBg = $targetBgId ? BankGaransi::find($targetBgId) : null;
+
+                if ($isAdendum && $targetBg) {
+                    // Meniban data Bank Garansi existing yang di-adendum
+                    $oldNominal = $targetBg->bg_nominal;
+                    $oldExpDate = $targetBg->exp_date;
+
+                    $targetBg->update([
+                        'bg_number'            => $sub->bg_number ?: $targetBg->bg_number,
+                        'bg_nominal'           => $sub->bg_nominal ?: $targetBg->bg_nominal,
+                        'exp_date'             => $sub->exp_date ?: $targetBg->exp_date,
+                        'issued_date'          => now(),
+                        'warkat_file_path'     => $sub->warkat_file_path ?: $targetBg->warkat_file_path,
+                        'warkat_files'         => $sub->warkat_files ?: ($sub->warkat_file_path ? [$sub->warkat_file_path] : $targetBg->warkat_files),
+                        'lampiran_d_file_path' => $sub->signed_document_path ?: $targetBg->lampiran_d_file_path,
+                        'lampiran_d_files'     => $sub->signed_document_path ? [$sub->signed_document_path] : $targetBg->lampiran_d_files,
+                        'is_adendum'           => 1,
+                        'bg_type'              => 'new', // Selalu 'new'
+                        'status'               => 'approved',
+                    ]);
+
+                    // Update detail bank
+                    $bankName = $metadata['bank_name'] ?? null;
+                    $branchName = $metadata['branch_name'] ?? '';
+                    if ($bankName) {
+                        $targetBg->details()->delete();
+                        $targetBg->details()->create([
+                            'bank_name'   => $bankName,
+                            'branch_name' => $branchName,
+                            'nominal'     => $targetBg->bg_nominal,
+                        ]);
+                    } else {
+                        $targetBg->details()->update(['nominal' => $targetBg->bg_nominal]);
                     }
-                    $bg->update($bgUpdateData);
-                    $this->addToHistoryLogic($sub, $bg);
+
+                    // Log history adendum
+                    BgHistory::create([
+                        'bank_garansi_id'   => $targetBg->id,
+                        'previous_nominal'  => $oldNominal,
+                        'new_nominal'       => $targetBg->bg_nominal,
+                        'previous_exp_date' => $oldExpDate,
+                        'new_exp_date'      => $targetBg->exp_date,
+                        'remarks'           => "Adendum disetujui melalui Dashboard oleh {$approverName} (Form: {$sub->form_code})",
+                        'created_by'        => auth()->id() ?? $sub->validated_by
+                    ]);
+
+                    // Hapus draft duplicate BG yang sempat dibuat saat sales submit adendum
+                    BankGaransi::where('customer_id', $rec->customer_id)
+                        ->where('id', '!=', $targetBg->id)
+                        ->where(function($q) use ($targetBg, $sub) {
+                            $q->where('base_bg_id', $targetBg->id)
+                              ->orWhere('bg_number', $sub->bg_number);
+                        })
+                        ->where('status', 'draft')
+                        ->delete();
+
+                    $bgs = collect([$targetBg]);
+                } else {
+                    // Update Status SEMUA BG dalam batch ini (Tambah BG / Normal flow)
+                    $bgs = BankGaransi::where('customer_id', $rec->customer_id)
+                            ->whereBetween('created_at', [
+                                $sub->created_at->copy()->subMinutes(5),
+                                $sub->created_at->copy()->addMinutes(5)
+                            ])
+                            ->get();
+
+                    if ($bgs->isEmpty()) {
+                        $bgs = BankGaransi::where('customer_id', $rec->customer_id)->latest()->take(3)->get();
+                    }
+
+                    foreach($bgs as $bg) {
+                        $bgUpdateData = [
+                            'status'           => 'approved',
+                            'bg_type'          => 'new', // Selalu 'new'
+                            'issued_date'      => now(),
+                            'exp_date'         => $sub->exp_date ?? $bg->exp_date ?? now()->addYear(),
+                            'warkat_file_path' => $sub->warkat_file_path ?? $bg->warkat_file_path,
+                        ];
+                        if ($bgs->count() === 1 && $sub->bg_number) {
+                            $bgUpdateData['bg_number'] = $sub->bg_number;
+                        }
+                        $bg->update($bgUpdateData);
+                        $this->addToHistoryLogic($sub, $bg);
+                    }
+                }
+
+                // Kalkulasi Credit Limit yang akurat berdasarkan inputan BG dan aturan limit
+                $lampiranD = LampiranD::where('bg_submission_id', $sub->id)->with('activeVersion')->first();
+                $creditLimitToApply = 0;
+
+                if ($lampiranD && $lampiranD->activeVersion && !empty($lampiranD->activeVersion->data_snapshot['limit_kredit'])) {
+                    $creditLimitToApply = (float) $lampiranD->activeVersion->data_snapshot['limit_kredit'];
+                }
+
+                if ($creditLimitToApply <= 0 && $sub->bg_nominal > 0) {
+                    $rulePercent = $this->getLimitRulePercent($cust);
+                    $activeRule = $rulePercent > 0 ? $rulePercent : 100;
+                    $creditLimitToApply = (float) ($sub->bg_nominal / ($activeRule / 100));
+                }
+
+                if ($creditLimitToApply <= 0 && $rec && $rec->credit_limit_updated > 0) {
+                    $creditLimitToApply = (float) $rec->credit_limit_updated;
                 }
 
                 // Background calculation & sync of Credit Limit to Customer
-                if ($cust && $rec) {
+                if ($cust && $creditLimitToApply > 0) {
+                    if ($rec) {
+                        $rec->update([
+                            'credit_limit_updated' => $creditLimitToApply,
+                            'set_bg'               => $sub->bg_nominal ?: $rec->set_bg,
+                        ]);
+                    }
+
                     $cust->update([
-                        'credit_limit'          => $rec->credit_limit_updated,
-                        'approved_credit_limit' => $rec->credit_limit_updated,
+                        'credit_limit'          => $creditLimitToApply,
+                        'approved_credit_limit' => $creditLimitToApply,
                     ]);
 
-                    $lampiranD = LampiranD::where('bg_submission_id', $sub->id)->first();
                     CreditLimit::create([
                         'customer_id'           => $cust->id,
-                        'bank_garansi_id'       => $bgs->first()->id ?? null,
-                        'recommendation_id'     => $rec->id,
-                        'requested_limit'       => $rec->credit_limit_updated,
-                        'approved_limit'        => $rec->credit_limit_updated,
+                        'bank_garansi_id'       => ($isAdendum && $targetBg) ? $targetBg->id : ($bgs->first()->id ?? null),
+                        'recommendation_id'     => $rec ? $rec->id : null,
+                        'requested_limit'       => $creditLimitToApply,
+                        'approved_limit'        => $creditLimitToApply,
                         'lampiran_d_version_id' => $lampiranD ? $lampiranD->active_version_id : null,
                         'approved_by'           => auth()->id(),
                         'approved_at'           => now(),
@@ -308,7 +437,7 @@ class BgApprovalInboxController extends Controller
                     if ($itUsers->isNotEmpty()) {
                         Notification::send($itUsers, new SystemNotification(
                             "Info IT: Background Credit Limit Sync Selesai",
-                            "Pembaruan Credit Limit untuk <b>{$custName}</b> sebesar <b>Rp " . number_format($rec->credit_limit_updated, 0, ',', '.') . "</b> telah selesai diproses di background setelah validasi Bu Rita. Tidak perlu verifikasi/pengecekan lagi.",
+                            "Pembaruan Credit Limit untuk <b>{$custName}</b> sebesar <b>Rp " . number_format($creditLimitToApply, 0, ',', '.') . "</b> telah selesai diproses di background setelah validasi Bu Rita. Tidak perlu verifikasi/pengecekan lagi.",
                             route('customers.index'),
                             'ph-check-circle',
                             'info'
@@ -317,7 +446,7 @@ class BgApprovalInboxController extends Controller
                         $itEmails = $itUsers->pluck('email')->filter(fn($e) => !empty($e) && filter_var($e, FILTER_VALIDATE_EMAIL))->toArray();
                         $validatorName = $approverName;
                         foreach ($itEmails as $itEmail) {
-                            Mail::to($itEmail)->queue(new CreditLimitUpdatedItMail($sub, $validatorName));
+                            Mail::to($itEmail)->queue(new CreditLimitUpdatedItMail($sub, $validatorName, $creditLimitToApply));
                         }
                     }
                 } catch (\Exception $e) {
@@ -430,5 +559,26 @@ class BgApprovalInboxController extends Controller
         foreach($targetEmails as $email) {
             Mail::to($email)->queue(new CustomerBgReadyMail($submission));
         }
+    }
+
+    /**
+     * Hitung persentase batas limit garansi bank customer dari tabel bg_limit_rules berdasarkan join_date
+     */
+    private function getLimitRulePercent($customer)
+    {
+        if (!$customer || !$customer->join_date) {
+            return 0;
+        }
+
+        $joinDate = \Carbon\Carbon::parse($customer->join_date);
+        $years    = (int) abs($joinDate->diffInYears(\Carbon\Carbon::now()));
+
+        $rule = DB::table('bg_limit_rules')
+            ->where('min_year', '<=', $years)
+            ->where('max_year', '>=', $years)
+            ->orderBy('min_year', 'desc')
+            ->first();
+
+        return $rule ? (float)$rule->percentage : 0;
     }
 }
