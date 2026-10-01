@@ -29,9 +29,27 @@ class SendLogisticOrderEmailJob implements ShouldQueue
     public function handle()
     {
         try {
-            Mail::to($this->email)->send(new LogisticOrderDistributorMail($this->order, $this->type));
+            $recipients = is_array($this->email)
+                ? $this->email
+                : array_filter(array_map('trim', preg_split('/[;,]+/', (string)$this->email)));
+
+            $validRecipients = [];
+            foreach ($recipients as $item) {
+                $cleaned = trim((string)$item);
+                if (filter_var($cleaned, FILTER_VALIDATE_EMAIL) && !in_array($cleaned, $validRecipients)) {
+                    $validRecipients[] = $cleaned;
+                }
+            }
+
+            if (!empty($validRecipients)) {
+                Mail::to($validRecipients)->send(new LogisticOrderDistributorMail($this->order, $this->type));
+            } else {
+                $orig = is_array($this->email) ? implode(', ', $this->email) : $this->email;
+                Log::warning("SendLogisticOrderEmailJob: Tidak ada alamat email yang valid untuk Logistic Order #{$this->order->id}. Input: '{$orig}'");
+            }
         } catch (\Exception $e) {
-            Log::error("Failed to send logistic order email to {$this->email}: " . $e->getMessage());
+            $dest = is_array($this->email) ? implode(', ', $this->email) : $this->email;
+            Log::error("Failed to send logistic order email to {$dest}: " . $e->getMessage());
         }
     }
 }

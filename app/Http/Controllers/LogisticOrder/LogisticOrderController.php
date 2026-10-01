@@ -399,9 +399,9 @@ class LogisticOrderController extends Controller
                 'download_count'    => 0,
             ]);
 
-            if ($distributor && $distributor->email) {
+            if ($distributor && !empty($distributor->email)) {
                 $orderEmail = LogisticOrder::with(['distributor', 'customer', 'customerShipTo', 'note', 'items'])->find($order->id);
-                dispatch(new SendLogisticOrderEmailJob($orderEmail, $distributor->email, 'distributor'));
+                dispatch(new SendLogisticOrderEmailJob($orderEmail, $distributor->email_list, 'distributor'));
             }
 
             DB::commit();
@@ -517,8 +517,8 @@ class LogisticOrderController extends Controller
                 $order->note->update(['status' => 'Canceled']);
             }
 
-            $distributorMail = $order->distributor->email ?? null;
-            if ($distributorMail) {
+            $distributorMail = $order->distributor ? $order->distributor->email_list : null;
+            if (!empty($distributorMail)) {
                 dispatch(new SendLogisticOrderEmailJob($order, $distributorMail, 'cancel'));
             }
 
@@ -569,9 +569,9 @@ class LogisticOrderController extends Controller
             }
 
             $distributor = Distributor::find($request->distributor_id);
-            if ($distributor && $distributor->email) {
+            if ($distributor && !empty($distributor->email)) {
                 $orderEmail = LogisticOrder::with(['distributor', 'customer', 'customerShipTo', 'note', 'items'])->find($order->id);
-                dispatch(new SendLogisticOrderEmailJob($orderEmail, $distributor->email, 'distributor'));
+                dispatch(new SendLogisticOrderEmailJob($orderEmail, $distributor->email_list, 'distributor'));
             }
 
             return response()->json(['success' => true, 'message' => "Order data successfully revised! Email sent to Distributor."]);
