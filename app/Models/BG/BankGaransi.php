@@ -15,6 +15,7 @@ class BankGaransi extends Model
 
     protected $fillable = [
         'customer_id', 'bg_number', 'bg_type', 'base_bg_id', 'bg_nominal',
+        'warkat_file_path', 'lampiran_d_file_path', 'warkat_files', 'lampiran_d_files', 'is_adendum',
         'issued_date', 'exp_date', 'status', 'created_by',
     ];
 
@@ -22,6 +23,9 @@ class BankGaransi extends Model
         'issued_date' => 'date',
         'exp_date' => 'date',
         'bg_nominal' => 'decimal:2',
+        'is_adendum' => 'boolean',
+        'warkat_files' => 'array',
+        'lampiran_d_files' => 'array',
     ];
 
     public function customer()

@@ -36,6 +36,8 @@
                                 <tr>
                                     <th>No</th>
                                     <th>Customer Code</th>
+                                    <th>Customer Name</th>
+                                    <th>Customer Sort Name</th>
                                     <th>Kode Ship To</th>
                                     <th>Nama Ship To</th>
                                     <th>Kota</th>
@@ -69,7 +71,7 @@
                                 <select name="customer_id" id="customer_id" class="form-select select2-custom" required>
                                     <option value="">-- Pilih Customer --</option>
                                     @foreach($customers as $customer)
-                                        <option value="{{ $customer->id }}">{{ $customer->customer_code ?? $customer->code ?? '-' }} - {{ $customer->name }}</option>
+                                        <option value="{{ $customer->id }}">{{ $customer->customer_code ?? $customer->code ?? '-' }} - {{ $customer->name }}{{ !empty($customer->sort_name) ? ' ['.$customer->sort_name.']' : '' }}</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -207,6 +209,8 @@
                 columns: [
                     { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
                     { data: 'customer_code', name: 'customer.code' },
+                    { data: 'customer_name', name: 'customer.name' },
+                    { data: 'customer_sort_name', name: 'customer.sort_name' },
                     { data: 'ship_to_code', name: 'ship_to_code' },
                     { data: 'ship_to_name', name: 'ship_to_name' },
                     { data: 'ship_to_city', name: 'ship_to_city' },
@@ -215,13 +219,15 @@
                 ],
                 // MENGATUR LEBAR KOLOM DI SINI
                 columnDefs: [
-                    { targets: 0, width: "5%" },   // No
-                    { targets: 1, width: "12%" },  // Customer Code (Dikecilkan)
-                    { targets: 2, width: "12%" },  // Kode Ship To (Dikecilkan)
-                    { targets: 3, width: "26%" },  // Nama Ship To (Dibuat Paling Panjang)
-                    { targets: 4, width: "12%" },  // Kota
-                    { targets: 5, width: "15%" },  // Sales Name
-                    { targets: 6, width: "18%", className: "text-center" }   // Action
+                    { targets: 0, width: "4%", className: "text-center" },   // No
+                    { targets: 1, width: "8%" },  // Customer Code
+                    { targets: 2, width: "16%" },  // Customer Name
+                    { targets: 3, width: "12%" },  // Customer Sort Name
+                    { targets: 4, width: "10%" },  // Kode Ship To
+                    { targets: 5, width: "18%" },  // Nama Ship To
+                    { targets: 6, width: "8%" },   // Kota
+                    { targets: 7, width: "10%" },  // Sales Name
+                    { targets: 8, width: "12%", className: "text-center text-nowrap" }   // Action
                 ],
                 order: [[1, 'asc']] // Urutkan berdasarkan Customer secara default
             });
@@ -322,7 +328,8 @@
                     // Gabungkan Format Data Relasi
                     let custCode = data.customer && data.customer.code ? data.customer.code : '-';
                     let custName = data.customer && data.customer.name ? data.customer.name : '-';
-                    $('#detail_customer').text(custCode + ' - ' + custName);
+                    let custSort = data.customer && data.customer.sort_name ? ' [' + data.customer.sort_name + ']' : '';
+                    $('#detail_customer').text(custCode + ' - ' + custName + custSort);
 
                     let salesNik = data.user && data.user.nik ? data.user.nik : '-';
                     let salesName = data.user && data.user.name ? data.user.name : '-';

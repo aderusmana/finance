@@ -103,15 +103,15 @@
                             {{-- FORM FIELDS SAMA SEPERTI SEBELUMNYA --}}
                             <div class="col-12 border-bottom pb-2 fw-bold text-primary">Data Customer</div>
                             <div class="col-md-6">
-                                <label class="form-label small">Nama Customer</label>
+                                <label class="form-label small">Customer Name</label>
                                 <input type="text" class="form-control" name="customer_name" id="customer_name">
                             </div>
                             <div class="col-md-3">
-                                <label class="form-label small">Kota</label>
+                                <label class="form-label small">City</label>
                                 <input type="text" class="form-control" name="customer_city" id="customer_city">
                             </div>
                             <div class="col-md-3">
-                                <label class="form-label small">Wilayah</label>
+                                <label class="form-label small">Area</label>
                                 <input type="text" class="form-control" name="customer_area" id="customer_area">
                             </div>
 
@@ -138,17 +138,17 @@
                                 <input type="number" class="form-control" name="credit_limit" id="credit_limit">
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label small">Set BG (Ditetapkan)</label>
+                                <label class="form-label small">Set BG (Determined)</label>
                                 <input type="number" class="form-control" name="set_bg" id="set_bg">
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label small">BG Nominal (Diserahkan)</label>
+                                <label class="form-label small">BG Nominal (Submitted)</label>
                                 <input type="number" class="form-control" name="bg_nominal" id="bg_nominal">
                             </div>
 
                             <div class="col-12 mt-3">
-                                <label class="form-label fw-bold">Revision Remarks (Alasan Revisi)</label>
-                                <textarea class="form-control" name="remarks" rows="2" placeholder="Contoh: Koreksi nilai sales bulan lalu..." required></textarea>
+                                <label class="form-label fw-bold">Revision Remarks</label>
+                                <textarea class="form-control" name="remarks" rows="2" placeholder="Example: Corrected last month's sales value..." required></textarea>
                             </div>
                         </div>
                     </div>
@@ -164,13 +164,14 @@
     {{-- MODAL SNAPSHOT VIEWER --}}
     <div class="modal fade" id="snapshotModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content">
-                <div class="modal-header bg-light">
-                    <h6 class="modal-title fw-bold">Detail Data Snapshot</h6>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-primary text-white">
+                    <h6 class="modal-title fw-bold"><i class="ph-bold ph-file-text me-2"></i> Detail Data Snapshot</h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body">
-                    <pre id="jsonViewer" class="bg-dark text-white p-3 rounded small" style="max-height: 400px; overflow: auto; font-family: monospace;"></pre>
+                {{-- Hapus pre jsonViewer, ganti dengan snapshotContent --}}
+                <div class="modal-body p-4 bg-light" id="snapshotContent">
+                    <!-- Data akan di-render menggunakan jQuery disini -->
                 </div>
             </div>
         </div>
@@ -275,15 +276,101 @@
                 });
             });
 
-            // --- VIEW SNAPSHOT ---
             $(document).on('click', '.btn-view-snapshot', function() {
                 var vId = $(this).data('id');
+                
                 $.get("{{ url('bg/lampiran-d/version') }}/" + vId, function(data) {
-                    var json = JSON.stringify(data.data_snapshot, null, 4);
-                    $('#jsonViewer').text(json);
+                    let snap = data.data_snapshot;
+                    
+                    // Helper format rupiah
+                    const fmt = (num) => {
+                        if (!num) return '-';
+                        return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(num);
+                    };
+                    
+                    // Mapping key (Mendukung format key Inggris di update baru, atau key Indo jika ada data legacy)
+                    let cName = snap.customer_name || snap.nama_distributor || '-';
+                    let cCity = snap.customer_city || snap.kota || '-';
+                    let cArea = snap.customer_area || snap.wilayah_kerja || '-';
+                    
+                    let avg = snap.average || snap.rata_rata_penjualan;
+                    let top = snap.top || snap.syarat_pembayaran || '-';
+                    let lead = snap.lead_time || '-';
+                    let infl = snap.inflation || snap.faktor_fluktuasi || '-';
+                    
+                    let limit = snap.credit_limit || snap.limit_kredit;
+                    let setBg = snap.set_bg || snap.nilai_bg_ditetapkan;
+                    let bgNom = snap.bg_nominal || snap.nilai_bg_diserahkan;
+
+                    // Desain HTML Card 
+                    let html = `
+                        <div class="card border-0 shadow-sm mb-3" style="border-radius: 12px;">
+                            <div class="card-header bg-white fw-bold text-primary border-bottom-0 pt-3 pb-0">
+                                <i class="ph-bold ph-user-circle me-1"></i> Customer Information
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <small class="text-muted d-block mb-1" style="font-size: 11px;">CUSTOMER NAME</small>
+                                        <span class="fw-semibold text-dark">${cName}</span>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <small class="text-muted d-block mb-1" style="font-size: 11px;">CITY</small>
+                                        <span class="fw-semibold text-dark">${cCity}</span>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <small class="text-muted d-block mb-1" style="font-size: 11px;">AREA</small>
+                                        <span class="fw-semibold text-dark">${cArea}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card border-0 shadow-sm" style="border-radius: 12px;">
+                            <div class="card-header bg-white fw-bold text-primary border-bottom-0 pt-3 pb-0">
+                                <i class="ph-bold ph-chart-line-up me-1"></i> Financial Data
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <small class="text-muted d-block mb-1" style="font-size: 11px;">Average Sales</small>
+                                        <span class="fw-semibold text-dark">${fmt(avg)}</span>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <small class="text-muted d-block mb-1" style="font-size: 11px;">TOP / Lead Time</small>
+                                        <span class="fw-semibold text-dark">${top} Days / ${lead} Days</span>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <small class="text-muted d-block mb-1" style="font-size: 11px;">Fluctuation Factor</small>
+                                        <span class="fw-semibold text-dark">${infl}%</span>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <div class="p-3 bg-light rounded border mt-2">
+                                            <div class="row text-center">
+                                                <div class="col-md-4 border-end">
+                                                    <small class="text-muted d-block mb-1" style="font-size: 11px;">Credit Limit</small>
+                                                    <span class="fw-bold text-danger fs-6">${fmt(limit)}</span>
+                                                </div>
+                                                <div class="col-md-4 border-end">
+                                                    <small class="text-muted d-block mb-1" style="font-size: 11px;">Determined BG Amount</small>
+                                                    <span class="fw-bold text-success fs-6">${fmt(setBg)}</span>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <small class="text-muted d-block mb-1" style="font-size: 11px;">Submitted BG Amount</small>
+                                                    <span class="fw-bold text-primary fs-6">${fmt(bgNom)}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+
+                    $('#snapshotContent').html(html);
                     $('#snapshotModal').modal('show');
                 });
-            });
+                });
         });
     </script>
     @endpush

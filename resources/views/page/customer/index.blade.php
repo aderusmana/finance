@@ -5,6 +5,29 @@
 
     @include('components.sample-table-styles')
 
+    <style>
+        .customer-file-zone {
+            transition: all 0.2s ease-in-out;
+        }
+        .customer-file-zone .file-card {
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+        .customer-file-zone .file-card:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+        }
+        .customer-file-zone .btn-remove-file {
+            transition: all 0.15s ease;
+        }
+        .customer-file-zone .btn-remove-file:hover {
+            background: rgba(239, 68, 68, 0.2) !important;
+            transform: scale(1.1);
+        }
+        #customerDocPreviewModal iframe {
+            box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+        }
+    </style>
+
     <div class="row m-1">
         <div class="col-12">
             <h4 class="main-title">Customers Management</h4>
@@ -23,8 +46,8 @@
 
     <div class="row">
         <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <div class="d-none d-md-flex align-items-center gap-2 mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-4 table-controls-header flex-wrap">
+                <div class="d-flex align-items-center gap-2 mb-3 filter-container-responsive flex-wrap customer-filter-bar">
                     <span class="text-muted fw-bold me-1"><i class="ph-bold ph-funnel"></i> Filter:</span>
 
                     <select id="statusFilter" class="form-select select2" style="width: 9.375rem;">
@@ -45,7 +68,7 @@
                     </button>
                 </div>
 
-                <div class="ms-auto d-flex gap-2">
+                <div class="ms-auto d-flex gap-2 page-action-buttons">
                     @can('import customer')
                         <button class="btn btn-success" type="button" data-bs-toggle="modal" data-bs-target="#importModal">
                             <i class="ph-bold ph-file-csv"></i>
@@ -236,14 +259,12 @@
                                     <h6 class="mb-2 fw-bold text-white">Customer Detail</h6>
                                 </div>
 
-                                {{-- Account Group & Class --}}
+                                {{-- Account Group, Type & Class --}}
                                 <div class="card-body">
                                     <div class="row g-3 mb-3">
-                                        <div class="col-md-6">
-                                            <label for="account_group" class="form-label">Account Group <span
-                                                    class="text-danger">*</span></label>
-                                            <select class="form-select select2-styled" id="account_group"
-                                                name="account_group" style="width: 100%;" required>
+                                        <div class="col-md-4">
+                                            <label for="account_group" class="form-label">Account Group <span class="text-danger">*</span></label>
+                                            <select class="form-select select2-styled" id="account_group" name="account_group" style="width: 100%;" required>
                                                 <option></option>
                                                 @foreach ($accountgroup as $ag)
                                                     <option value="{{ $ag->id }}"
@@ -254,11 +275,19 @@
                                                 @endforeach
                                             </select>
                                         </div>
-                                        <div class="col-md-6">
-                                            <label for="customer_class" class="form-label">Customer Class <span
-                                                    class="text-danger">*</span></label>
-                                            <select class="form-select select2-styled" id="customer_class"
-                                                name="customer_class" style="width: 100%;" required>
+                                        
+                                        <div class="col-md-4">
+                                            <label class="form-label">Customer Type <span class="text-danger">*</span></label>
+                                            <select class="form-select select2-styled type-dropdown" name="customer_type" id="customer_type" style="width: 100%;" required>
+                                                <option></option>
+                                                <option value="Individual/Perorangan">Individual/Perorangan</option>
+                                                <option value="Company/Badan Usaha">Company/Badan Usaha</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="col-md-4">
+                                            <label for="customer_class" class="form-label">Customer Class <span class="text-danger">*</span></label>
+                                            <select class="form-select select2-styled" id="customer_class" name="customer_class" style="width: 100%;" required>
                                                 <option></option>
                                                 @foreach ($customerClass as $cc)
                                                     <option value="{{ $cc->id }}">
@@ -283,54 +312,232 @@
                                         </div>
 
                                         {{-- 1. NPWP (REQUIRED) --}}
-                                        <div class="col-md">
-                                            <label class="form-label">Upload NPWP <span
-                                                    class="text-danger">*</span></label>
-                                            <input type="file" class="form-control" name="file_npwp"
-                                                accept=".jpeg,.jpg,.png" required>
-                                            <small class="text-muted f-s-11">Format: JPEG, JPG, PNG. Upload for
-                                                auto-fill name & address.</small>
-                                            <div id="preview_npwp" class="mt-2" style="display: none;"></div>
+                                        <div class="col-xl col-md-6 col-12">
+                                            <label class="form-label fw-semibold small text-dark mb-1">
+                                                Upload NPWP <span class="text-danger">*</span>
+                                            </label>
+                                            <div class="customer-file-zone" data-title="NPWP">
+                                                <!-- Browse state -->
+                                                <div class="file-browse-box">
+                                                    <input type="file" class="form-control form-control-sm customer-file-input"
+                                                        name="file_npwp" id="file_npwp"
+                                                        accept=".jpeg,.jpg,.png,.pdf" required>
+                                                    <small class="text-muted f-s-11 d-block mt-1">Format: PDF, JPG, PNG. (Auto-fill name & address)</small>
+                                                </div>
+
+                                                <!-- Uploaded state -->
+                                                <div class="file-uploaded-box d-none">
+                                                    <div class="card border mb-0 file-card shadow-sm" style="background: #f8fafc; border-color: #cbd5e1 !important; border-left: 3.5px solid #0284c7 !important; border-radius: 0.5rem;">
+                                                        <div class="card-body p-2">
+                                                            <div class="d-flex align-items-center justify-content-between mb-1">
+                                                                <div class="d-flex align-items-center gap-2 overflow-hidden me-1">
+                                                                    <span class="file-icon-badge rounded d-flex align-items-center justify-content-center p-1" style="width: 26px; height: 26px; background: #e0f2fe; color: #0284c7; flex-shrink: 0;">
+                                                                        <i class="ph-bold ph-file-text file-type-icon f-s-14"></i>
+                                                                    </span>
+                                                                    <div class="overflow-hidden" style="line-height: 1.2;">
+                                                                        <div class="fw-bold text-dark text-truncate file-name-display f-s-11" title="">-</div>
+                                                                        <div class="text-muted file-size-display" style="font-size: 10px;">-</div>
+                                                                    </div>
+                                                                </div>
+                                                                <button type="button" class="btn btn-sm btn-icon p-0 text-danger btn-remove-file" title="Hapus dan pilih file lain" style="width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; background: rgba(239, 68, 68, 0.1); border-radius: 50%; border: none;">
+                                                                    <i class="ph-bold ph-x f-s-12"></i>
+                                                                </button>
+                                                            </div>
+                                                            <div class="d-flex align-items-center justify-content-between pt-1 border-top" style="border-color: #e2e8f0 !important;">
+                                                                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill" style="font-size: 9px; padding: 2px 6px;">
+                                                                    <i class="ph-bold ph-check me-0.5"></i> Terpilih
+                                                                </span>
+                                                                <button type="button" class="btn btn-xs btn-outline-primary rounded-pill px-2 py-0.5 btn-preview-file d-flex align-items-center gap-1" style="font-size: 10px; font-weight: 600;">
+                                                                    <i class="ph-bold ph-eye"></i> Preview
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
 
                                         {{-- 2. NIB/SIUP (REQUIRED) --}}
-                                        <div class="col-md">
-                                            <label class="form-label">Upload NIB/SIUP <span
-                                                    class="text-danger">*</span></label>
-                                            <input type="file" class="form-control" name="file_nib"
-                                                accept=".jpeg,.jpg,.png" required>
-                                            <small class="text-muted f-s-11">Format: JPEG, JPG, PNG</small>
-                                            <div id="preview_nib" class="mt-2" style="display: none;"></div>
+                                        <div class="col-xl col-md-6 col-12">
+                                            <label class="form-label fw-semibold small text-dark mb-1">
+                                                Upload NIB/SIUP <span class="text-danger">*</span>
+                                            </label>
+                                            <div class="customer-file-zone" data-title="NIB/SIUP">
+                                                <!-- Browse state -->
+                                                <div class="file-browse-box">
+                                                    <input type="file" class="form-control form-control-sm customer-file-input"
+                                                        name="file_nib" id="file_nib"
+                                                        accept=".jpeg,.jpg,.png,.pdf" required>
+                                                    <small class="text-muted f-s-11 d-block mt-1">Format: PDF, JPG, PNG</small>
+                                                </div>
+
+                                                <!-- Uploaded state -->
+                                                <div class="file-uploaded-box d-none">
+                                                    <div class="card border mb-0 file-card shadow-sm" style="background: #f8fafc; border-color: #cbd5e1 !important; border-left: 3.5px solid #0284c7 !important; border-radius: 0.5rem;">
+                                                        <div class="card-body p-2">
+                                                            <div class="d-flex align-items-center justify-content-between mb-1">
+                                                                <div class="d-flex align-items-center gap-2 overflow-hidden me-1">
+                                                                    <span class="file-icon-badge rounded d-flex align-items-center justify-content-center p-1" style="width: 26px; height: 26px; background: #e0f2fe; color: #0284c7; flex-shrink: 0;">
+                                                                        <i class="ph-bold ph-file-text file-type-icon f-s-14"></i>
+                                                                    </span>
+                                                                    <div class="overflow-hidden" style="line-height: 1.2;">
+                                                                        <div class="fw-bold text-dark text-truncate file-name-display f-s-11" title="">-</div>
+                                                                        <div class="text-muted file-size-display" style="font-size: 10px;">-</div>
+                                                                    </div>
+                                                                </div>
+                                                                <button type="button" class="btn btn-sm btn-icon p-0 text-danger btn-remove-file" title="Hapus dan pilih file lain" style="width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; background: rgba(239, 68, 68, 0.1); border-radius: 50%; border: none;">
+                                                                    <i class="ph-bold ph-x f-s-12"></i>
+                                                                </button>
+                                                            </div>
+                                                            <div class="d-flex align-items-center justify-content-between pt-1 border-top" style="border-color: #e2e8f0 !important;">
+                                                                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill" style="font-size: 9px; padding: 2px 6px;">
+                                                                    <i class="ph-bold ph-check me-0.5"></i> Terpilih
+                                                                </span>
+                                                                <button type="button" class="btn btn-xs btn-outline-primary rounded-pill px-2 py-0.5 btn-preview-file d-flex align-items-center gap-1" style="font-size: 10px; font-weight: 600;">
+                                                                    <i class="ph-bold ph-eye"></i> Preview
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
 
                                         {{-- 3. KTP (REQUIRED) --}}
-                                        <div class="col-md">
-                                            <label class="form-label">Upload KTP <span
-                                                    class="text-danger">*</span></label>
-                                            <input type="file" class="form-control" name="file_ktp"
-                                                accept=".jpeg,.jpg,.png" required>
-                                            <small class="text-muted f-s-11">Format: JPEG, JPG, PNG</small>
-                                            <div id="preview_ktp" class="mt-2" style="display: none;"></div>
+                                        <div class="col-xl col-md-6 col-12">
+                                            <label class="form-label fw-semibold small text-dark mb-1">
+                                                Upload KTP <span class="text-danger">*</span>
+                                            </label>
+                                            <div class="customer-file-zone" data-title="KTP Penanggung Jawab">
+                                                <!-- Browse state -->
+                                                <div class="file-browse-box">
+                                                    <input type="file" class="form-control form-control-sm customer-file-input"
+                                                        name="file_ktp" id="file_ktp"
+                                                        accept=".jpeg,.jpg,.png,.pdf" required>
+                                                    <small class="text-muted f-s-11 d-block mt-1">Format: PDF, JPG, PNG</small>
+                                                </div>
+
+                                                <!-- Uploaded state -->
+                                                <div class="file-uploaded-box d-none">
+                                                    <div class="card border mb-0 file-card shadow-sm" style="background: #f8fafc; border-color: #cbd5e1 !important; border-left: 3.5px solid #0284c7 !important; border-radius: 0.5rem;">
+                                                        <div class="card-body p-2">
+                                                            <div class="d-flex align-items-center justify-content-between mb-1">
+                                                                <div class="d-flex align-items-center gap-2 overflow-hidden me-1">
+                                                                    <span class="file-icon-badge rounded d-flex align-items-center justify-content-center p-1" style="width: 26px; height: 26px; background: #e0f2fe; color: #0284c7; flex-shrink: 0;">
+                                                                        <i class="ph-bold ph-file-text file-type-icon f-s-14"></i>
+                                                                    </span>
+                                                                    <div class="overflow-hidden" style="line-height: 1.2;">
+                                                                        <div class="fw-bold text-dark text-truncate file-name-display f-s-11" title="">-</div>
+                                                                        <div class="text-muted file-size-display" style="font-size: 10px;">-</div>
+                                                                    </div>
+                                                                </div>
+                                                                <button type="button" class="btn btn-sm btn-icon p-0 text-danger btn-remove-file" title="Hapus dan pilih file lain" style="width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; background: rgba(239, 68, 68, 0.1); border-radius: 50%; border: none;">
+                                                                    <i class="ph-bold ph-x f-s-12"></i>
+                                                                </button>
+                                                            </div>
+                                                            <div class="d-flex align-items-center justify-content-between pt-1 border-top" style="border-color: #e2e8f0 !important;">
+                                                                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill" style="font-size: 9px; padding: 2px 6px;">
+                                                                    <i class="ph-bold ph-check me-0.5"></i> Terpilih
+                                                                </span>
+                                                                <button type="button" class="btn btn-xs btn-outline-primary rounded-pill px-2 py-0.5 btn-preview-file d-flex align-items-center gap-1" style="font-size: 10px; font-weight: 600;">
+                                                                    <i class="ph-bold ph-eye"></i> Preview
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
 
                                         {{-- 4. AKTE (OPTIONAL - PDF ONLY) --}}
-                                        <div class="col-md">
-                                            <label class="form-label">Upload Akte Pendirian</label>
-                                            <input type="file" class="form-control" name="file_akte"
-                                                accept=".pdf">
-                                            <small class="text-muted f-s-11">Format: PDF only</small>
-                                            <div id="preview_akte" class="mt-4"
-                                                style="display: none; position:relative; z-index:2;"></div>
+                                        <div class="col-xl col-md-6 col-12">
+                                            <label class="form-label fw-semibold small text-dark mb-1">
+                                                Upload Akte Pendirian <span class="text-danger akte-asterisk" style="display:none;">*</span>
+                                            </label>
+                                            <div class="customer-file-zone" data-title="Akte Pendirian">
+                                                <!-- Browse state -->
+                                                <div class="file-browse-box">
+                                                    <input type="file" class="form-control form-control-sm customer-file-input"
+                                                        name="file_akte" id="file_akte" accept=".pdf">
+                                                    <small class="text-muted f-s-11 d-block mt-1">Format: PDF only (Wajib jika PT/CV)</small>
+                                                </div>
+
+                                                <!-- Uploaded state -->
+                                                <div class="file-uploaded-box d-none">
+                                                    <div class="card border mb-0 file-card shadow-sm" style="background: #f8fafc; border-color: #cbd5e1 !important; border-left: 3.5px solid #0284c7 !important; border-radius: 0.5rem;">
+                                                        <div class="card-body p-2">
+                                                            <div class="d-flex align-items-center justify-content-between mb-1">
+                                                                <div class="d-flex align-items-center gap-2 overflow-hidden me-1">
+                                                                    <span class="file-icon-badge rounded d-flex align-items-center justify-content-center p-1" style="width: 26px; height: 26px; background: #e0f2fe; color: #0284c7; flex-shrink: 0;">
+                                                                        <i class="ph-bold ph-file-text file-type-icon f-s-14"></i>
+                                                                    </span>
+                                                                    <div class="overflow-hidden" style="line-height: 1.2;">
+                                                                        <div class="fw-bold text-dark text-truncate file-name-display f-s-11" title="">-</div>
+                                                                        <div class="text-muted file-size-display" style="font-size: 10px;">-</div>
+                                                                    </div>
+                                                                </div>
+                                                                <button type="button" class="btn btn-sm btn-icon p-0 text-danger btn-remove-file" title="Hapus dan pilih file lain" style="width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; background: rgba(239, 68, 68, 0.1); border-radius: 50%; border: none;">
+                                                                    <i class="ph-bold ph-x f-s-12"></i>
+                                                                </button>
+                                                            </div>
+                                                            <div class="d-flex align-items-center justify-content-between pt-1 border-top" style="border-color: #e2e8f0 !important;">
+                                                                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill" style="font-size: 9px; padding: 2px 6px;">
+                                                                    <i class="ph-bold ph-check me-0.5"></i> Terpilih
+                                                                </span>
+                                                                <button type="button" class="btn btn-xs btn-outline-primary rounded-pill px-2 py-0.5 btn-preview-file d-flex align-items-center gap-1" style="font-size: 10px; font-weight: 600;">
+                                                                    <i class="ph-bold ph-eye"></i> Preview
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
 
                                         {{-- 5. COMPANY PROFILE (OPTIONAL - PDF ONLY) --}}
-                                        <div class="col-md">
-                                            <label class="form-label">Upload Company Profile</label>
-                                            <input type="file" class="form-control" name="file_company_profile"
-                                                accept=".pdf">
-                                            <small class="text-muted f-s-11">Format: PDF only</small>
-                                            <div id="preview_company_profile" class="mt-2"
-                                                style="display: none; position:relative; z-index:2;"></div>
+                                        <div class="col-xl col-md-6 col-12">
+                                            <label class="form-label fw-semibold small text-dark mb-1">
+                                                Upload Company Profile
+                                            </label>
+                                            <div class="customer-file-zone" data-title="Company Profile">
+                                                <!-- Browse state -->
+                                                <div class="file-browse-box">
+                                                    <input type="file" class="form-control form-control-sm customer-file-input"
+                                                        name="file_company_profile" id="file_company_profile"
+                                                        accept=".pdf">
+                                                    <small class="text-muted f-s-11 d-block mt-1">Format: PDF only (Opsional)</small>
+                                                </div>
+
+                                                <!-- Uploaded state -->
+                                                <div class="file-uploaded-box d-none">
+                                                    <div class="card border mb-0 file-card shadow-sm" style="background: #f8fafc; border-color: #cbd5e1 !important; border-left: 3.5px solid #0284c7 !important; border-radius: 0.5rem;">
+                                                        <div class="card-body p-2">
+                                                            <div class="d-flex align-items-center justify-content-between mb-1">
+                                                                <div class="d-flex align-items-center gap-2 overflow-hidden me-1">
+                                                                    <span class="file-icon-badge rounded d-flex align-items-center justify-content-center p-1" style="width: 26px; height: 26px; background: #e0f2fe; color: #0284c7; flex-shrink: 0;">
+                                                                        <i class="ph-bold ph-file-text file-type-icon f-s-14"></i>
+                                                                    </span>
+                                                                    <div class="overflow-hidden" style="line-height: 1.2;">
+                                                                        <div class="fw-bold text-dark text-truncate file-name-display f-s-11" title="">-</div>
+                                                                        <div class="text-muted file-size-display" style="font-size: 10px;">-</div>
+                                                                    </div>
+                                                                </div>
+                                                                <button type="button" class="btn btn-sm btn-icon p-0 text-danger btn-remove-file" title="Hapus dan pilih file lain" style="width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; background: rgba(239, 68, 68, 0.1); border-radius: 50%; border: none;">
+                                                                    <i class="ph-bold ph-x f-s-12"></i>
+                                                                </button>
+                                                            </div>
+                                                            <div class="d-flex align-items-center justify-content-between pt-1 border-top" style="border-color: #e2e8f0 !important;">
+                                                                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill" style="font-size: 9px; padding: 2px 6px;">
+                                                                    <i class="ph-bold ph-check me-0.5"></i> Terpilih
+                                                                </span>
+                                                                <button type="button" class="btn btn-xs btn-outline-primary rounded-pill px-2 py-0.5 btn-preview-file d-flex align-items-center gap-1" style="font-size: 10px; font-weight: 600;">
+                                                                    <i class="ph-bold ph-eye"></i> Preview
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -386,7 +593,7 @@
                                                     class="text-danger">*</span></label>
                                             <input type="text" class="form-control bg-light" name="no_pkd"
                                                 id="no_pkd" placeholder="PKD No. will be auto-generated by system"
-                                                readonly>
+                                                readonly required>
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label">Person in Charge (PIC) <span
@@ -442,11 +649,12 @@
                                         </div>
                                         <div class="col-md-4">
                                             <label class="form-label">Purchasing Mgr Phone <span
-                                                class="text-danger">*</span></label>
+                                                    class="text-danger">*</span></label>
                                             <input type="text" class="form-control"
-                                            name="purchasing_manager_telepon" id="purchasing_manager_telepon"
-                                            placeholder="Phone Number (digits only)" inputmode="numeric" pattern="[0-9]+" maxlength="50"
-                                            oninput="this.value=this.value.replace(/[^0-9]/g,'');" required>
+                                                name="purchasing_manager_telepon" id="purchasing_manager_telepon"
+                                                placeholder="Phone Number (digits only)" inputmode="numeric"
+                                                pattern="[0-9]+" maxlength="50"
+                                                oninput="this.value=this.value.replace(/[^0-9]/g,'');" required>
                                         </div>
                                         <div class="col-md-4">
                                             <label class="form-label">Finance Mgr Name <span
@@ -462,10 +670,11 @@
                                         </div>
                                         <div class="col-md-4">
                                             <label class="form-label">Finance Mgr Phone <span
-                                                class="text-danger">*</span></label>
+                                                    class="text-danger">*</span></label>
                                             <input type="text" class="form-control" name="finance_manager_telepon"
-                                            id="finance_manager_telepon"  placeholder="Phone Number (digits only)" inputmode="numeric" pattern="[0-9]+" maxlength="50"
-                                            oninput="this.value=this.value.replace(/[^0-9]/g,'');" required>
+                                                id="finance_manager_telepon" placeholder="Phone Number (digits only)"
+                                                inputmode="numeric" pattern="[0-9]+" maxlength="50"
+                                                oninput="this.value=this.value.replace(/[^0-9]/g,'');" required>
                                         </div>
                                     </div>
                                 </div>
@@ -486,41 +695,41 @@
                                             <label class="form-label">Billing Phone <span
                                                     class="text-danger">*</span></label>
                                             <input type="text" class="form-control" name="penagihan_telepon"
-                                                id="penagihan_telepon" placeholder="Phone Number (digits only)" inputmode="numeric" pattern="[0-9]+" maxlength="50"
-                                            oninput="this.value=this.value.replace(/[^0-9]/g,'');">
+                                                id="penagihan_telepon" placeholder="Phone Number (digits only)"
+                                                inputmode="numeric" pattern="[0-9]+" maxlength="50"
+                                                oninput="this.value=this.value.replace(/[^0-9]/g,'');" required>
                                         </div>
                                         <div class="col-md-4">
                                             <label class="form-label">Billing Address <span
                                                     class="text-danger">*</span></label>
                                             <textarea class="form-control" name="penagihan_address" id="penagihan_address" rows="1"
-                                                placeholder="Billing Address"></textarea>
+                                                placeholder="Billing Address" required></textarea>
                                         </div>
 
                                         <div class="col-md-12 mt-2">
                                             <label class="form-label">Billing Email <span
-                                                class="text-danger">*</span></label>
-                                            <input type="email" class="form-control" name="surat_menyurat_address" id="surat_menyurat_address"
-                                            placeholder="email@example.com" inputmode="email" maxlength="191" required>
+                                                    class="text-danger">*</span></label>
+                                            <input type="email" class="form-control" name="surat_menyurat_address"
+                                                id="surat_menyurat_address" placeholder="email@example.com"
+                                                inputmode="email" maxlength="191" required>
                                         </div>
 
                                         <div class="col-md-4">
-                                            <label class="form-label">Tax Contact Name <span
-                                                    class="text-danger">*</span></label>
+                                            <label class="form-label">Tax Contact Name</label>
                                             <input type="text" class="form-control" name="tax_contact_name"
-                                                id="tax_contact_name" placeholder="Tax Person Name" required>
+                                                id="tax_contact_name" placeholder="Tax Person Name">
                                         </div>
                                         <div class="col-md-4">
-                                            <label class="form-label">Tax Contact Email <span
-                                                    class="text-danger">*</span></label>
+                                            <label class="form-label">Tax Contact Email</label>
                                             <input type="email" class="form-control" name="tax_contact_email"
-                                                id="tax_contact_email" placeholder="tax@example.com" required>
+                                                id="tax_contact_email" placeholder="tax@example.com">
                                         </div>
                                         <div class="col-md-4">
-                                            <label class="form-label">Tax Contact Phone <span
-                                                    class="text-danger">*</span></label>
+                                            <label class="form-label">Tax Contact Phone</label>
                                             <input type="text" class="form-control" name="tax_contact_phone"
-                                                id="tax_contact_phone" placeholder="Phone Number (digits only)" inputmode="numeric" pattern="[0-9]+" maxlength="50"
-                                                oninput="this.value=this.value.replace(/[^0-9]/g,'');" required>
+                                                id="tax_contact_phone" placeholder="Phone Number (digits only)"
+                                                inputmode="numeric" pattern="[0-9]+" maxlength="50"
+                                                oninput="this.value=this.value.replace(/[^0-9]/g,'');">
                                         </div>
 
                                         <div class="col-md-3">
@@ -545,10 +754,9 @@
                                             <input type="date" class="form-control" name="tanggal_nppkp"
                                                 id="tanggal_nppkp">
                                         </div>
-                                        <div class="col-md-3">
+                                        <div class="col-md-3 d-none">
                                             <label class="form-label">No Pengukuhan Kaber</label>
-                                            <input type="text" class="form-control" name="no_pengukuhan_kaber"
-                                                id="no_pengukuhan_kaber" placeholder="Optional">
+                                            <input type="text" class="form-control" name="no_pengukuhan_kaber" id="no_pengukuhan_kaber">
                                         </div>
                                     </div>
                                 </div>
@@ -594,7 +802,7 @@
                                         </div>
 
                                         <div class="col-md-4">
-                                            <label class="form-label">CCAR <span class="text-danger">*</span></label>
+                                            <label class="form-label">Currency <span class="text-danger">*</span></label>
                                             <select class="form-select select2-styled" name="ccar" id="ccar"
                                                 style="width:100%" required>
                                                 <option></option>
@@ -612,6 +820,16 @@
                                                 <option value="YA">Yes</option>
                                                 <option value="TIDAK">No</option>
                                             </select>
+                                        </div>
+
+                                        <div class="col-md-4" id="div_approved_credit_limit" style="display: none;">
+                                            <label class="form-label text-success"><i
+                                                    class="ph-bold ph-check-circle me-1"></i>Approved BG</label>
+                                            <input type="text" class="form-control border-success calc-price"
+                                                name="approved_credit_limit" id="approved_credit_limit"
+                                                placeholder="Masukkan Nominal">
+                                            <small class="text-muted f-s-11">Opsional: Nominal aktual jika BG
+                                                Yes.</small>
                                         </div>
                                     </div>
                                 </div>
@@ -782,12 +1000,15 @@
                             <div class="d-flex align-items-center justify-content-between">
                                 <div class="d-flex align-items-center gap-4">
                                     <div>
-                                        <label class="fw-bold text-dark text-uppercase f-s-12 mb-1">Account Status</label>
-                                        <div><span id="view_status_badge" class="badge bg-secondary f-s-12 px-3 py-2">STATUS</span></div>
+                                        <label class="fw-bold text-dark text-uppercase f-s-12 mb-1">Account
+                                            Status</label>
+                                        <div><span id="view_status_badge"
+                                                class="badge bg-secondary f-s-12 px-3 py-2">STATUS</span></div>
                                     </div>
                                     <div class="vr" style="height: 2.5rem; opacity: 0.1;"></div>
                                     <div>
-                                        <label class="fw-bold text-dark text-uppercase f-s-12 mb-1">Approval Progress</label>
+                                        <label class="fw-bold text-dark text-uppercase f-s-12 mb-1">Approval
+                                            Progress</label>
                                         <div id="view_approval_badge" class="fw-bold text-dark f-s-16">Pending</div>
                                     </div>
                                 </div>
@@ -795,15 +1016,18 @@
                                 <div class="text-start ms-auto" style="min-width: 190px;">
                                     <div class="text-muted mb-1" style="font-size: 12px;">
                                         <span class="fw-semibold me-1">No Rev:</span>
-                                        <span id="view_revision_number" class="fw-bold text-primary" style="font-size: 13px;">{{ $latestRevision->revision_number ?? '-' }}</span>
+                                        <span id="view_revision_number" class="fw-bold text-primary"
+                                            style="font-size: 13px;">{{ $latestRevision->revision_number ?? '-' }}</span>
                                     </div>
                                     <div class="text-muted mb-1" style="font-size: 12px;">
                                         <span class="fw-semibold me-1">Revision:</span>
-                                        <span id="view_revision_count" class="fw-bold text-dark" style="font-size: 13px;">{{ $latestRevision->revision_count ?? '0' }}</span>
+                                        <span id="view_revision_count" class="fw-bold text-dark"
+                                            style="font-size: 13px;">{{ $latestRevision->revision_count ?? '0' }}</span>
                                     </div>
                                     <div class="text-muted" style="font-size: 12px;">
                                         <span class="fw-semibold me-1">Date:</span>
-                                        <span id="view_revision_date" class="fw-bold text-dark" style="font-size: 13px;">{{ $latestRevision && $latestRevision->revision_date ? \Carbon\Carbon::parse($latestRevision->revision_date)->format('d-M-y') : '-' }}</span>
+                                        <span id="view_revision_date" class="fw-bold text-dark"
+                                            style="font-size: 13px;">{{ $latestRevision && $latestRevision->revision_date ? \Carbon\Carbon::parse($latestRevision->revision_date)->format('d-M-y') : '-' }}</span>
                                     </div>
                                 </div>
                             </div>
@@ -842,6 +1066,32 @@
                                             <label class="fw-bold text-secondary text-uppercase f-s-12 mb-1">PIC
                                                 (Penanggung Jawab)</label>
                                             <div class="fw-bold text-dark f-s-14" id="view_pic">-</div>
+                                        </div>
+                                        <div class="col-md-12">
+                                            <div
+                                                class="p-3 bg-primary bg-opacity-10 border border-primary border-opacity-25 rounded d-flex align-items-center">
+                                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center shadow-sm me-3"
+                                                    style="width: 40px; height: 40px;">
+                                                    <i class="ph-fill ph-user-circle f-s-24"></i>
+                                                </div>
+                                                <div>
+                                                    <label class="fw-bold text-primary text-uppercase f-s-11 mb-1"
+                                                        style="letter-spacing: 0.5px;">Sales Representative</label>
+                                                    <div class="fw-bolder text-dark f-s-15" id="view_sales">-</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="fw-bold text-secondary text-uppercase f-s-12 mb-1">Account Group</label>
+                                            <div class="fw-bold text-dark f-s-14" id="view_account_group">-</div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="fw-bold text-secondary text-uppercase f-s-12 mb-1">Customer Type</label>
+                                            <div class="fw-bold text-dark f-s-14" id="view_customer_type">-</div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="fw-bold text-secondary text-uppercase f-s-12 mb-1">Customer Class</label>
+                                            <div class="fw-bold text-dark f-s-14" id="view_customer_class">-</div>
                                         </div>
                                     </div>
                                 </div>
@@ -887,14 +1137,32 @@
                                                 class="text-white text-opacity-75 text-uppercase f-s-12 fw-bold">Credit
                                                 Limit</label>
                                             <h3 class="mb-0 fw-bold mt-1" id="view_credit_limit">IDR 0</h3>
+
+                                            <div id="view_approved_credit_limit_wrapper" class="mt-1"
+                                                style="display: none;">
+                                                <span class="badge bg-white text-success fw-bold"
+                                                    style="font-size: 11px;">
+                                                    <i class="ph-bold ph-check-circle me-1"></i>Apprv: <span
+                                                        id="view_approved_credit_limit">0</span>
+                                                </span>
+                                            </div>
                                         </div>
                                         <i class="ph-duotone ph-wallet f-s-40 text-white text-opacity-50"></i>
                                     </div>
-                                    <div
-                                        class="mt-4 pt-3 border-top border-white border-opacity-25 d-flex justify-content-between align-items-center">
-                                        <span class="f-s-13 opacity-75">Term of Payment</span>
-                                        <span class="fw-bold f-s-16 bg-warning bg-opacity-20 px-2 py-1 rounded"><span
-                                                id="view_top">-</span> Days</span>
+                                    <div class="mt-4 pt-3 border-top border-white border-opacity-25 row g-2">
+                                        <div class="col-6 d-flex flex-column">
+                                            <span class="f-s-12 opacity-75 mb-1">Term of Payment</span>
+                                            <span
+                                                class="fw-bold f-s-15 bg-warning bg-opacity-20 px-2 py-1 rounded text-center"><span
+                                                    id="view_top">-</span> Days</span>
+                                        </div>
+                                        <div
+                                            class="col-6 d-flex flex-column border-start border-white border-opacity-25 ps-2">
+                                            <span class="f-s-12 opacity-75 mb-1">Lead Time</span>
+                                            <span
+                                                class="fw-bold f-s-15 bg-success bg-opacity-20 px-2 py-1 rounded text-center"><span
+                                                    id="view_lead_time">-</span> Days</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -919,6 +1187,10 @@
                                     <div class="d-flex justify-content-between">
                                         <span class="fw-bold text-secondary f-s-13">Output Tax</span>
                                         <span class="fw-bold text-dark" id="view_output_tax">-</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mt-3 pt-3 border-top">
+                                        <span class="fw-bold text-secondary f-s-13">Currency</span>
+                                        <span class="fw-bold text-dark text-uppercase" id="view_ccar">-</span>
                                     </div>
                                 </div>
                             </div>
@@ -1154,6 +1426,50 @@
         </div>
     </div>
 
+    {{-- Modal Preview File Upload Dokumen Customer (Create / Edit) --}}
+    <div class="modal fade" id="customerDocPreviewModal" tabindex="-1" aria-labelledby="customerDocPreviewModalLabel" aria-hidden="true" style="z-index: 1070;">
+        <div class="modal-dialog modal-dialog-centered modal-xl">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 1rem; overflow: hidden; background: #0f172a;">
+                <div class="modal-header border-0 py-3 px-4 d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border-bottom: 1px solid rgba(255,255,255,0.1) !important;">
+                    <div class="d-flex align-items-center gap-2 overflow-hidden">
+                        <span id="customerDocPreviewBadge" class="rounded-circle p-2 d-flex align-items-center justify-content-center" style="background: rgba(255,255,255,0.1); width: 36px; height: 36px; flex-shrink: 0;">
+                            <i id="customerDocPreviewIcon" class="ph-bold ph-file-text text-white f-s-18"></i>
+                        </span>
+                        <div class="overflow-hidden">
+                            <h6 class="modal-title fw-bold text-white mb-0" id="customerDocPreviewTitle">Preview Dokumen</h6>
+                            <small class="text-white-50 text-truncate d-block" id="customerDocPreviewSubtitle">-</small>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <a id="customerDocPreviewNewTab" href="#" target="_blank" class="btn btn-sm btn-outline-light rounded-pill px-3 py-1" style="font-size: 12px;">
+                            <i class="ph-bold ph-arrow-square-out me-1"></i> Buka di Tab Baru
+                        </a>
+                        <button type="button" class="btn-close btn-close-white shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                </div>
+
+                <div class="modal-body p-0" style="min-height: 520px; background-color: #0b1120;">
+                    <!-- Preview PDF (iframe full width) -->
+                    <div id="customerDocPreviewPdfContainer" style="display: none; width: 100%; height: 80vh;">
+                        <iframe id="customerDocPreviewIframe" src="" style="width: 100%; height: 100%; border: none; background: #ffffff; display: block;" allowfullscreen></iframe>
+                    </div>
+
+                    <!-- Preview Gambar (img centered) -->
+                    <div id="customerDocPreviewImgContainer" style="display: none; width: 100%; min-height: 70vh; align-items: center; justify-content: center; padding: 1.5rem;">
+                        <img id="customerDocPreviewImg" src="" class="img-fluid rounded shadow-lg" style="max-height: 75vh; max-width: 95%; object-fit: contain; border: 1px solid rgba(255,255,255,0.15);" alt="Preview Dokumen">
+                    </div>
+                </div>
+
+                <div class="modal-footer py-2 px-4 border-0 d-flex justify-content-between align-items-center" style="background: #1e293b; border-top: 1px solid rgba(255,255,255,0.08) !important;">
+                    <div class="text-white-50 f-s-12">
+                        <i class="ph-bold ph-info me-1 text-info"></i> Pastikan dokumen terbaca dengan jelas sebelum menyimpan data.
+                    </div>
+                    <button type="button" class="btn btn-sm btn-light rounded-pill px-4" data-bs-dismiss="modal">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="modal fade" id="recallCustomerModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
         <div class="modal-dialog modal-dialog-centered modal-xl">
             <div class="modal-content border-0 shadow-lg">
@@ -1241,24 +1557,26 @@
                                                 id="recall_name" required>
                                         </div>
                                         <div class="col-md-6">
-                                            <label class="form-label small fw-bold text-dark">Sort Name / Alias</label>
+                                            <label class="form-label small fw-bold text-dark">Sort Name /
+                                                Alias</label>
                                             <input type="text" class="form-control" name="sort_name"
                                                 id="recall_sort_name">
                                         </div>
                                         <div class="col-md-6">
-                                            <label class="form-label small fw-bold text-dark">Email</label>
+                                            <label class="form-label small fw-bold text-dark">Email <span
+                                                    class="text-danger">*</span></label>
                                             <input type="email" class="form-control" name="email"
                                                 id="recall_email" required>
                                         </div>
                                         <div class="col-md-6">
-                                            <label class="form-label small fw-bold text-dark">No PKD
-                                                (Readonly)</label>
+                                            <label class="form-label small fw-bold text-dark">No PKD (Readonly) <span
+                                                    class="text-danger">*</span></label>
                                             <input type="text" class="form-control bg-light" name="no_pkd"
-                                                id="recall_no_pkd" readonly>
+                                                id="recall_no_pkd" readonly required>
                                         </div>
                                         <div class="col-md-6">
-                                            <label class="form-label small fw-bold text-dark">PIC (Penanggung
-                                                Jawab)</label>
+                                            <label class="form-label small fw-bold text-dark">PIC (Penanggung Jawab)
+                                                <span class="text-danger">*</span></label>
                                             <input type="text" class="form-control" name="pic"
                                                 id="recall_pic" required>
                                         </div>
@@ -1274,17 +1592,20 @@
                                             </div>
                                         </div>
                                         <div class="col-md-4">
-                                            <label class="form-label small fw-bold text-dark">City</label>
+                                            <label class="form-label small fw-bold text-dark">City <span
+                                                    class="text-danger">*</span></label>
                                             <input type="text" class="form-control" name="city"
                                                 id="recall_city" required>
                                         </div>
                                         <div class="col-md-4">
-                                            <label class="form-label small fw-bold text-dark">Area</label>
+                                            <label class="form-label small fw-bold text-dark">Area <span
+                                                    class="text-danger">*</span></label>
                                             <input type="text" class="form-control" name="area"
                                                 id="recall_area" required>
                                         </div>
                                         <div class="col-md-4">
-                                            <label class="form-label small fw-bold text-dark">Postal Code</label>
+                                            <label class="form-label small fw-bold text-dark">Postal Code <span
+                                                    class="text-danger">*</span></label>
                                             <input type="text" class="form-control" name="postal_code"
                                                 id="recall_postal_code" required>
                                         </div>
@@ -1323,10 +1644,11 @@
                                 <div class="tab-pane fade" id="tab-recall-finance" role="tabpanel">
                                     <h6 class="fw-bold text-primary border-bottom pb-2 mb-3">Financial Settings</h6>
                                     <div class="row g-3">
-                                        <div class="col-md-6">
-                                            <label class="form-label small fw-bold text-dark">Account Group</label>
+                                        <div class="col-md-4">
+                                            <label class="form-label small fw-bold text-dark">Account Group <span class="text-danger">*</span></label>
                                             <select class="form-select select2-recall" id="recall_account_group"
                                                 name="account_group" style="width: 100%;" required>
+                                                <option></option>
                                                 @foreach ($accountgroup as $ag)
                                                     <option value="{{ $ag->id }}"
                                                         data-bank_garansi="{{ $ag->bank_garansi }}">
@@ -1334,10 +1656,21 @@
                                                 @endforeach
                                             </select>
                                         </div>
-                                        <div class="col-md-6">
-                                            <label class="form-label small fw-bold text-dark">Customer Class</label>
+
+                                        <div class="col-md-4">
+                                            <label class="form-label small fw-bold text-dark">Customer Type <span class="text-danger">*</span></label>
+                                            <select class="form-select select2-recall type-dropdown" name="customer_type" id="recall_customer_type" style="width: 100%;" required>
+                                                <option></option>
+                                                <option value="Individual/Perorangan">Individual/Perorangan</option>
+                                                <option value="Company/Badan Usaha">Company/Badan Usaha</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="col-md-4">
+                                            <label class="form-label small fw-bold text-dark">Customer Class <span class="text-danger">*</span></label>
                                             <select class="form-select select2-recall" id="recall_customer_class"
                                                 name="customer_class" style="width: 100%;" required>
+                                                <option></option>
                                                 @foreach ($customerClass as $cc)
                                                     <option value="{{ $cc->id }}">{{ $cc->name_class }}
                                                     </option>
@@ -1366,6 +1699,14 @@
                                                 <option value="TIDAK">No</option>
                                             </select>
                                         </div>
+                                        <div class="col-md-4" id="div_recall_approved_credit_limit"
+                                            style="display: none;">
+                                            <label class="form-label small fw-bold text-success">Approved Credit
+                                                Limit</label>
+                                            <input type="text" class="form-control border-success calc-price"
+                                                name="approved_credit_limit" id="recall_approved_credit_limit"
+                                                placeholder="Input Limit Opsional">
+                                        </div>
                                         <div class="col-md-4">
                                             <label class="form-label small fw-bold text-dark">Output Tax</label>
                                             <select class="form-select select2-recall" name="output_tax"
@@ -1376,7 +1717,8 @@
                                             </select>
                                         </div>
                                         <div class="col-md-4">
-                                            <label class="form-label small fw-bold text-dark">CCAR</label>
+                                            <label class="form-label small fw-bold text-dark">CCAR <span
+                                                    class="text-danger">*</span></label>
                                             <select class="form-select select2-recall" name="ccar"
                                                 id="recall_ccar" style="width:100%" required>
                                                 <option value="smd_idr">SMD (IDR)</option>
@@ -1390,26 +1732,29 @@
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label fw-bold small text-dark text-uppercase">Billing
-                                                Contact Name</label>
+                                                Contact Name <span class="text-danger">*</span></label>
                                             <input type="text" class="form-control"
-                                                name="penagihan_nama_kontak" id="recall_penagihan_nama_kontak">
+                                                name="penagihan_nama_kontak" id="recall_penagihan_nama_kontak"
+                                                required>
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label fw-bold small text-dark text-uppercase">Billing
-                                                Phone</label>
+                                                Phone <span class="text-danger">*</span></label>
                                             <input type="text" class="form-control" name="penagihan_telepon"
-                                                id="recall_penagihan_telepon">
+                                                id="recall_penagihan_telepon" required>
                                         </div>
                                         <div class="col-12">
                                             <label class="form-label fw-bold small text-dark text-uppercase">Billing
-                                                Address</label>
-                                            <textarea class="form-control" name="penagihan_address" id="recall_penagihan_address" rows="2"></textarea>
+                                                Address <span class="text-danger">*</span></label>
+                                            <textarea class="form-control" name="penagihan_address" id="recall_penagihan_address" rows="2" required></textarea>
                                         </div>
                                         <div class="col-12">
-                                            <label
-                                                class="form-label fw-bold small text-dark text-uppercase">Correspondence
-                                                Address</label>
-                                            <textarea class="form-control" name="surat_menyurat_address" id="recall_surat_menyurat_address" rows="2"></textarea>
+                                            <label class="form-label fw-bold small text-dark text-uppercase">Billing
+                                                Email <span class="text-danger">*</span></label>
+                                            <input type="email" class="form-control"
+                                                name="surat_menyurat_address" id="recall_surat_menyurat_address"
+                                                placeholder="email@example.com" inputmode="email" maxlength="191"
+                                                required>
                                         </div>
 
 
@@ -1420,15 +1765,15 @@
 
                                         <div class="col-md-3">
                                             <label class="form-label fw-bold small text-dark text-uppercase">NPWP
-                                                Number</label>
+                                                Number <span class="text-danger">*</span></label>
                                             <input type="text" class="form-control" name="npwp"
-                                                id="recall_npwp" placeholder="00.000.000.0-000.000">
+                                                id="recall_npwp" placeholder="00.000.000.0-000.000" required>
                                         </div>
                                         <div class="col-md-3">
-                                            <label class="form-label fw-bold small text-dark text-uppercase">NPWP
-                                                Date</label>
+                                            <label class="form-label fw-bold small text-dark text-uppercase">NPWP Date
+                                                <span class="text-danger">*</span></label>
                                             <input type="date" class="form-control" name="tanggal_npwp"
-                                                id="recall_tanggal_npwp">
+                                                id="recall_tanggal_npwp" required>
                                         </div>
                                         <div class="col-md-3">
                                             <label class="form-label fw-bold small text-dark text-uppercase">NPPKP
@@ -1468,60 +1813,65 @@
                                     <h6 class="fw-bold text-primary border-bottom pb-2 mb-3">Management Personnel</h6>
                                     <div class="row g-3">
                                         <div class="col-md-6">
-                                            <label class="form-label small fw-bold text-dark">Purchasing Manager
-                                                Name</label>
+                                            <label class="form-label small fw-bold text-dark">Purchasing Manager Name
+                                                <span class="text-danger">*</span></label>
                                             <input type="text" class="form-control"
-                                                name="purchasing_manager_name" id="recall_purchasing_manager_name">
+                                                name="purchasing_manager_name" id="recall_purchasing_manager_name"
+                                                required>
                                         </div>
                                         <div class="col-md-6">
-                                            <label class="form-label small fw-bold text-dark">Purchasing Manager
-                                                Email</label>
+                                            <label class="form-label small fw-bold text-dark">Purchasing Manager Email
+                                                <span class="text-danger">*</span></label>
                                             <input type="email" class="form-control"
-                                                name="purchasing_manager_email"
-                                                id="recall_purchasing_manager_email">
+                                                name="purchasing_manager_email" id="recall_purchasing_manager_email"
+                                                required>
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label small fw-bold text-dark">Purchasing Manager
-                                                Telpon</label>
+                                                Telpon <span class="text-danger">*</span></label>
                                             <input type="text" class="form-control"
                                                 name="purchasing_manager_telepon"
-                                                id="recall_purchasing_manager_telepon" inputmode="numeric" pattern="[0-9]+" maxlength="50"
-                                                oninput="this.value=this.value.replace(/[^0-9]/g,'');">
+                                                id="recall_purchasing_manager_telepon" inputmode="numeric"
+                                                pattern="[0-9]+" maxlength="50"
+                                                oninput="this.value=this.value.replace(/[^0-9]/g,'');" required>
                                         </div>
 
                                         <div class="col-md-6">
-                                            <label class="form-label small fw-bold text-dark">Finance Manager
-                                                Name</label>
+                                            <label class="form-label small fw-bold text-dark">Finance Manager Name
+                                                <span class="text-danger">*</span></label>
                                             <input type="text" class="form-control" name="finance_manager_name"
-                                                id="recall_finance_manager_name">
+                                                id="recall_finance_manager_name" required>
                                         </div>
                                         <div class="col-md-6">
-                                            <label class="form-label small fw-bold text-dark">Finance Manager
-                                                Email</label>
+                                            <label class="form-label small fw-bold text-dark">Finance Manager Email
+                                                <span class="text-danger">*</span></label>
                                             <input type="email" class="form-control"
-                                                name="finance_manager_email" id="recall_finance_manager_email">
+                                                name="finance_manager_email" id="recall_finance_manager_email"
+                                                required>
                                         </div>
                                         <div class="col-md-6">
-                                            <label class="form-label small fw-bold text-dark">Finance Manager
-                                                Telpon</label>
+                                            <label class="form-label small fw-bold text-dark">Finance Manager Telpon
+                                                <span class="text-danger">*</span></label>
                                             <input type="text" class="form-control"
-                                                name="finance_manager_telepon"
-                                                id="recall_finance_manager_telepon" inputmode="numeric" pattern="[0-9]+" maxlength="50"
-                                                oninput="this.value=this.value.replace(/[^0-9]/g,'');">
+                                                name="finance_manager_telepon" id="recall_finance_manager_telepon"
+                                                inputmode="numeric" pattern="[0-9]+" maxlength="50"
+                                                oninput="this.value=this.value.replace(/[^0-9]/g,'');" required>
                                         </div>
 
                                         <div class="col-12 mt-3">
                                             <h6 class="fw-bold text-secondary border-bottom pb-1">Shipping Info</h6>
                                         </div>
                                         <div class="col-md-6">
-                                            <label class="form-label small fw-bold text-dark">Shipping Recipient
-                                                Name</label>
+                                            <label class="form-label small fw-bold text-dark">Shipping Recipient Name
+                                                <span class="text-danger">*</span></label>
                                             <input type="text" class="form-control" name="shipping_to_name"
-                                                id="recall_shipping_to_name">
+                                                id="recall_shipping_to_name" required>
                                         </div>
                                         <div class="col-md-6">
-                                            <label class="form-label small fw-bold text-dark">Shipping Address</label>
-                                            <textarea class="form-control" name="shipping_to_address" id="recall_shipping_to_address" rows="2"></textarea>
+                                            <label class="form-label small fw-bold text-dark">Shipping Address <span
+                                                    class="text-danger">*</span></label>
+                                            <textarea class="form-control" name="shipping_to_address" id="recall_shipping_to_address" rows="2"
+                                                required></textarea>
                                         </div>
                                     </div>
                                 </div>
@@ -1563,6 +1913,16 @@
                                         <input type="file" class="form-control form-control-sm"
                                             name="file_company_profile" accept=".pdf">
                                         <small class="text-muted f-s-11">Format: PDF saja</small>
+                                    </div>
+
+                                    <div class="mb-3 border rounded p-2 bg-white mt-3">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <label class="fw-bold small mb-0 text-dark">Akte Pendirian <span class="text-danger akte-asterisk" style="display:none;">*</span></label>
+                                            <div id="recall_preview_akte"></div>
+                                        </div>
+                                        <input type="file" class="form-control form-control-sm"
+                                            name="file_akte" accept=".pdf">
+                                        <small class="text-muted f-s-11">Wajib jika tipe Company/Badan Usaha. Format: PDF saja</small>
                                     </div>
                                 </div>
 
@@ -1770,6 +2130,7 @@
                     $('#recall_area').val(data.area);
                     $('#recall_postal_code').val(data.postal_code);
                     $('#recall_credit_limit').val(data.credit_limit);
+                    $('#recall_approved_credit_limit').val(data.approved_credit_limit);
 
                     // Management & Shipping (Previously Hidden/Missing)
                     $('#recall_shipping_to_name').val(data.shipping_to_name);
@@ -1795,6 +2156,7 @@
                     $('#recall_tax_contact_name').val(data.tax_contact_name);
                     $('#recall_tax_contact_email').val(data.tax_contact_email);
                     $('#recall_tax_contact_phone').val(data.tax_contact_phone);
+                    toggleRecallApprovedCreditLimit();
 
                     // --- 3. POPULATE ITEMS ---
                     if (data.items && data.items.length > 0) {
@@ -1852,19 +2214,19 @@
                     const currentApprovalFilter = $('#approvalStatusFilter').val();
 
                     Swal.fire({
-                        title: 'Konfirmasi Recall',
-                        text: "Data akan diajukan ulang (Resubmit) dan status kembali Pending. Pastikan revisi sudah benar.",
+                        title: 'Recall Confirmation',
+                        text: "The data will be resubmitted and the status will return to Pending. Make sure the revisions are correct.",
                         icon: 'question',
                         showCancelButton: true,
                         confirmButtonColor: '#ffc107',
                         cancelButtonColor: '#d33',
-                        confirmButtonText: 'Ya, Submit!',
-                        cancelButtonText: 'Batal'
+                        confirmButtonText: 'Yes, Submit!',
+                        cancelButtonText: 'Cancel'
                     }).then((result) => {
                         if (result.isConfirmed) {
                             Swal.fire({
                                 title: 'Processing...',
-                                html: 'Sedang menyimpan perubahan...',
+                                html: 'Saving changes...',
                                 allowOutsideClick: false,
                                 didOpen: () => {
                                     Swal.showLoading();
@@ -1883,7 +2245,7 @@
                                     if (response.success) {
                                         Swal.fire({
                                             icon: 'success',
-                                            title: 'Recall Berhasil!',
+                                            title: 'Recall Successful!',
                                             text: response.message,
                                             timer: 2000,
                                             showConfirmButton: false
@@ -1945,18 +2307,18 @@
                     const currentApprovalFilter = $('#approvalStatusFilter').val();
 
                     Swal.fire({
-                        title: 'Konfirmasi Penyimpanan',
-                        text: "Pastikan seluruh data yang diinput sudah benar.",
+                        title: 'Save Confirmation',
+                        text: "Please ensure all entered data is correct.",
                         icon: 'question',
                         showCancelButton: true,
                         confirmButtonColor: '#3085d6',
                         cancelButtonColor: '#d33',
-                        confirmButtonText: 'Ya, Simpan!'
+                        confirmButtonText: 'Yes, Save!'
                     }).then((result) => {
                         if (result.isConfirmed) {
                             Swal.fire({
-                                title: 'Menyimpan Data...',
-                                html: 'Mohon tunggu sebentar.',
+                                title: 'Saving Data...',
+                                html: 'Please wait a moment.',
                                 allowOutsideClick: false,
                                 didOpen: () => {
                                     Swal.showLoading();
@@ -1975,7 +2337,7 @@
                                     if (response.success) {
                                         Swal.fire({
                                             icon: 'success',
-                                            title: 'Berhasil!',
+                                            title: 'Success!',
                                             text: response.message,
                                             timer: 2000,
                                             showConfirmButton: false
@@ -2018,7 +2380,16 @@
 
                 $(document).on('change', 'input[name="file_npwp"]', function(e) {
                     const file = this.files && this.files[0];
-                    if (!file) return;
+                    if (!file) {
+                        $('#ocr-status').remove();
+                        return;
+                    }
+
+                    const ext = file.name.split('.').pop().toLowerCase();
+                    if (file.type === 'application/pdf' || ext === 'pdf') {
+                        // Format PDF: lewati OCR berbasis canvas image
+                        return;
+                    }
 
                     // 1. Kosongkan Form Sebelum Memulai
                     $('#npwp, #name, #address1, #address2, #address3, #tanggal_npwp').val('');
@@ -2027,7 +2398,7 @@
                     originalBtn.prop('disabled', true);
 
                     const notice = $(
-                        '<div class="mt-2 text-info" id="ocr-status"><i class="ph-bold ph-spinner ph-spin me-1"></i> Membaca QR Code & Memproses Kartu...</div>'
+                        '<div class="mt-2 text-info" id="ocr-status"><i class="ph-bold ph-spinner ph-spin me-1"></i> Reading QR Code & Processing Card...</div>'
                     );
                     $(this).closest('.card-body').find('#ocr-status').remove(); // Hapus notif lama jika ada
                     $(this).closest('.card-body').append(notice);
@@ -2065,7 +2436,7 @@
                             });
 
                             if (code && code.data) {
-                                console.log("[QR SCAN] Data ditemukan:", code.data);
+                                // console.log("[QR SCAN] Data ditemukan:", code.data);
                                 const match = code.data.match(/\b\d{15,16}\b/);
 
                                 if (match) {
@@ -2083,12 +2454,12 @@
                                     $('#npwp').val(formattedNpwp);
                                     qrNpwpFound = true;
                                     $('#ocr-status').html(
-                                        '<i class="ph-bold ph-check text-success me-1"></i> QR Code terbaca! Mengekstrak Nama & Alamat...'
+                                        '<i class="ph-bold ph-check text-success me-1"></i> QR Code scanned! Extracting Name & Address...'
                                     );
                                 }
                             }
                         } catch (err) {
-                            console.warn("[QR SCAN] Gagal mengeksekusi jsQR:", err);
+                            console.warn("[QR SCAN] Failed to execute jsQR:", err);
                         }
 
                         // ============================================================
@@ -2100,8 +2471,8 @@
                                     if (m.status === 'recognizing text' && $('#ocr-status')
                                         .length) {
                                         $('#ocr-status').html(
-                                            `<i class="ph-bold ph-spinner ph-spin me-1"></i> Menyaring Data Kartu... ${Math.round(m.progress * 100)}%`
-                                            );
+                                            `<i class="ph-bold ph-spinner ph-spin me-1"></i> Filtering Card Data... ${Math.round(m.progress * 100)}%`
+                                        );
                                     }
                                 }
                             });
@@ -2147,7 +2518,8 @@
                                     // 4. SAPU BERSIH: Buang kata sampah 1-2 huruf tanpa membuang kata valid
                                     let cleanW = w.replace(/[^A-Z0-9]/g, '');
                                     // Pengecualian untuk singkatan awalan nama/jalan yang umum (CV, PT, JL, H, M, dll)
-                                    if (cleanW.length <= 2 && !/^(PT|CV|UD|PD|JL|JLN|RT|RW|NO|DI|GG|M|H|TB|KAV)$/.test(
+                                    if (cleanW.length <= 2 && !
+                                        /^(PT|CV|UD|PD|JL|JLN|RT|RW|NO|DI|GG|M|H|TB|KAV)$/.test(
                                             cleanW) && !/\d/.test(cleanW)) continue;
 
                                     goodWords.push(w);
@@ -2159,7 +2531,7 @@
                                 if (cleanedLine.length > 3) cleanLines.push(cleanedLine);
                             }
 
-                            console.log("[DEBUG] Baris Setelah Disaring:", cleanLines);
+                            // console.log("[DEBUG] Baris Setelah Disaring:", cleanLines);
 
                             // --- 2. AMBIL TANGGAL DAN NPWP ---
                             let tgl = '';
@@ -2180,19 +2552,21 @@
                                 let npwpLama = textForNpwp.match(
                                     /(?:^|\D)(\d{2})[\.\s]*(\d{3})[\.\s]*(\d{3})[\.\s]*(\d{1})[\-\.\s]*(\d{3})[\.\s]*(\d{3})(?:\D|$)/
                                 );
-                                
+
                                 // Cari NPWP Baru (16 digit) dengan menghapus spasi/titik/strip terlebih dahulu
                                 let cleanFor16 = textForNpwp.replace(/[\s\.\-]/g, '');
                                 let npwpBaru = cleanFor16.match(/(?:^|\D)(\d{16})(?:\D|$)/);
 
                                 if (npwpLama) {
-                                    npwp15 = `${npwpLama[1]}.${npwpLama[2]}.${npwpLama[3]}.${npwpLama[4]}-${npwpLama[5]}.${npwpLama[6]}`;
+                                    npwp15 =
+                                        `${npwpLama[1]}.${npwpLama[2]}.${npwpLama[3]}.${npwpLama[4]}-${npwpLama[5]}.${npwpLama[6]}`;
                                 }
                                 if (npwpBaru) {
-                                    npwp16 = `${npwpBaru[1].slice(0,4)}.${npwpBaru[1].slice(4,8)}.${npwpBaru[1].slice(8,12)}.${npwpBaru[1].slice(12,16)}`;
+                                    npwp16 =
+                                        `${npwpBaru[1].slice(0,4)}.${npwpBaru[1].slice(4,8)}.${npwpBaru[1].slice(8,12)}.${npwpBaru[1].slice(12,16)}`;
                                 }
                             }
-                            
+
                             // Prioritaskan NPWP 16 digit jika ditemukan, jika tidak gunakan 15 digit
                             if (npwp16) {
                                 npwpTesseract = npwp16;
@@ -2215,25 +2589,30 @@
                             // Buang semua baris yang berisi Header Instansi, Tanggal, dan Nomor NPWP
                             for (let l of cleanLines) {
                                 if (stopWords.test(l)) continue;
-                                
+
                                 // Jangan buang seluruh baris jika ada pola tanggal! (Antisipasi Tesseract menggabung Alamat dan Tanggal).
                                 // Ekstrak hapus bagian teks tanggalnya saja agar sisa alamatnya selamat.
-                                let isDateLine = /(\d{2})\s*[\/\-\.]\s*(\d{2})\s*[\/\-\.]\s*(\d{4})/.test(l.replace(/[Oo]/g, '0'));
+                                let isDateLine = /(\d{2})\s*[\/\-\.]\s*(\d{2})\s*[\/\-\.]\s*(\d{4})/
+                                    .test(l.replace(/[Oo]/g, '0'));
                                 if (isDateLine) {
                                     l = l.replace(/TANGGAL\s*TERDAFTAR\s*/i, '')
-                                         .replace(/\b\d{2}\s*[\/\-\.]\s*\d{2}\s*[\/\-\.]\s*\d{4}\b/g, '')
-                                         .trim();
+                                        .replace(/\b\d{2}\s*[\/\-\.]\s*\d{2}\s*[\/\-\.]\s*\d{4}\b/g, '')
+                                        .trim();
                                     if (l.length < 3) continue; // Jika sisa baris kosong, baru buang
                                 }
 
                                 // Jangan hapus seluruh baris jika baris tersebut mengandung NPWP (untuk antisipasi OCR menggabung baris).
                                 // Cukup hapus teks NPWP-nya saja agar sisa namanya (jika ada) bisa diselamatkan.
-                                l = l.replace(/\b\d{4}\s*\d{4}\s*\d{4}\s*\d{4}\b/g, '') // Hapus format NPWP baru 16 digit (berspasi)
-                                     .replace(/\b\d{2}[\.\s]*\d{3}[\.\s]*\d{3}[\.\s]*\d{1}[\-\.\s]*\d{3}[\.\s]*\d{3}\b/g, '') // Hapus NPWP lama
-                                     .replace(/\b\d{15,16}\b/g, '') // Hapus deretan angka nempel
-                                     .trim();
+                                l = l.replace(/\b\d{4}\s*\d{4}\s*\d{4}\s*\d{4}\b/g,
+                                    '') // Hapus format NPWP baru 16 digit (berspasi)
+                                    .replace(
+                                        /\b\d{2}[\.\s]*\d{3}[\.\s]*\d{3}[\.\s]*\d{1}[\-\.\s]*\d{3}[\.\s]*\d{3}\b/g,
+                                        '') // Hapus NPWP lama
+                                    .replace(/\b\d{15,16}\b/g, '') // Hapus deretan angka nempel
+                                    .trim();
 
-                                if (l.length < 3) continue; // Jika setelah NPWP dihapus baris jadi kosong, buang
+                                if (l.length < 3)
+                            continue; // Jika setelah NPWP dihapus baris jadi kosong, buang
 
                                 dataSisa.push(l);
                             }
@@ -2247,12 +2626,12 @@
                                 }
                             }
 
-                            console.log("[DEBUG] Sisa Teks (Murni Nama & Alamat):", dataSisa);
+                            // console.log("[DEBUG] Sisa Teks (Murni Nama & Alamat):", dataSisa);
 
                             if (dataSisa.length > 0) {
                                 // A. Ekstrak NAMA (Sudah pasti berada di baris pertama sisa data)
                                 let safeName = dataSisa[0].replace(/[^a-zA-Z\s\.\,\(\)\-\&]/g, '')
-                                .trim();
+                                    .trim();
 
                                 // Jika kebetulan nama menyatu dengan alamat dalam 1 baris karena format foto
                                 const addrStarter =
@@ -2266,7 +2645,7 @@
 
                                 $('#name').val(safeName);
                                 if (typeof generatePkdNumber === 'function' && ($('#bank_garansi')
-                                    .val() === 'YA' || $('#bank_garansi').val() === '1')) {
+                                        .val() === 'YA' || $('#bank_garansi').val() === '1')) {
                                     generatePkdNumber(safeName);
                                 }
 
@@ -2306,21 +2685,21 @@
                             $('#ocr-status').remove();
                             originalBtn.prop('disabled', false);
 
-                            console.log("=== HASIL AKHIR OCR ===");
-                            console.log({
-                                NPWP: $('#npwp').val(),
-                                Nama: $('#name').val(),
-                                Alamat_1: $('#address1').val(),
-                                Alamat_2: $('#address2').val(),
-                                Alamat_3: $('#address3').val(),
-                                Tanggal: $('#tanggal_npwp').val()
-                            });
+                            // console.log("=== HASIL AKHIR OCR ===");
+                            // console.log({
+                            //     NPWP: $('#npwp').val(),
+                            //     Nama: $('#name').val(),
+                            //     Alamat_1: $('#address1').val(),
+                            //     Alamat_2: $('#address2').val(),
+                            //     Alamat_3: $('#address3').val(),
+                            //     Tanggal: $('#tanggal_npwp').val()
+                            // });
 
                         } catch (e) {
                             console.error('[NPWP OCR] Error:', e);
                             $('#ocr-status').html(
-                                '<span class="text-danger mt-1">Gagal memproses gambar. Silakan input manual.</span>'
-                                );
+                                '<span class="text-danger mt-1">Failed to process image. Please enter manually.</span>'
+                            );
                             originalBtn.prop('disabled', false);
                         }
                     };
@@ -2665,8 +3044,35 @@
                     }
                 }
 
+                // --- HELPER UNTUK FORM CREATE ---
+                function toggleApprovedCreditLimit() {
+                    let bgVal = $('#bank_garansi').val();
+                    let topVal = $('#term_of_payment').val();
+
+                    if (bgVal === 'YA' || String(topVal).toUpperCase() === 'CBD') {
+                        $('#div_approved_credit_limit').slideDown();
+                    } else {
+                        $('#div_approved_credit_limit').slideUp();
+                        $('#approved_credit_limit').val('');
+                    }
+                }
+
+                // --- HELPER UNTUK FORM RECALL ---
+                function toggleRecallApprovedCreditLimit() {
+                    let bgVal = $('#recall_bank_garansi').val();
+                    let topVal = $('#recall_term_of_payment').val();
+
+                    if (bgVal === 'YA' || String(topVal).toUpperCase() === 'CBD') {
+                        $('#div_recall_approved_credit_limit').slideDown();
+                    } else {
+                        $('#div_recall_approved_credit_limit').slideUp();
+                        $('#recall_approved_credit_limit').val('');
+                    }
+                }
+
                 $('#term_of_payment').on('change', function() {
                     checkCreditLimitAccess();
+                    toggleApprovedCreditLimit();
                     const v = $(this).val();
 
                     if ($('#calc_top').length && $('#calc_top').val() !== v) {
@@ -2683,29 +3089,24 @@
 
                 $('#recall_term_of_payment, #recall_bank_garansi').on('change', function() {
                     checkRecallCreditLimitAccess();
+                    toggleRecallApprovedCreditLimit();
                 });
 
                 $('#bank_garansi').on('change', function() {
                     const val = $(this).val();
                     const pkdInput = $('#no_pkd');
-                    const customerName = $('#name').val();
 
-                    pkdInput.parent().find('.pkd-status-note').remove();
+                    toggleApprovedCreditLimit();
 
-                    if (val === 'TIDAK') {
-                        pkdInput.val('').prop('readonly', true).removeClass('fw-bold');
-                        pkdInput.after(
-                            '<small class="pkd-status-note text-danger fw-bold mt-1 d-block"><i class="ph-bold ph-info me-1"></i> This Customer does not use Bank Guarantee.</small>'
-                        );
+                    if (val === 'YA') {
+                        $('#div_approved_credit_limit').slideDown();
                     } else {
-                        pkdInput.prop('readonly', true).addClass('fw-bold');
-                        if (customerName && customerName.length > 3) {
-                            generatePkdNumber(customerName);
-                        } else {
-                            pkdInput.val('').attr('placeholder', 'Enter Customer Name to Generate PKD...');
-                        }
+                        $('#div_approved_credit_limit').slideUp();
+                        $('#approved_credit_limit').val('');
                     }
 
+                    // No PKD selalu statis '-'
+                    pkdInput.val('-').prop('readonly', true).addClass('text-muted');
                     checkCreditLimitAccess();
                 });
 
@@ -2780,6 +3181,10 @@
 
                 $('#btn-create-customer').on('click', function() {
                     $('#customerForm')[0].reset();
+                    if (typeof resetCustomerFileZones === 'function') {
+                        resetCustomerFileZones();
+                    }
+                    $('#customerForm').find('.hidden-item-input, #top_calc_hidden').remove();
                     $('.select2-styled').val(null).trigger('change');
 
                     $('#customerForm').find('input, textarea, select').prop('disabled', false);
@@ -2892,7 +3297,7 @@
                     });
                 }
 
-                const REV_MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                const REV_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
                 function pad2(n) {
                     const num = Number(n);
@@ -2960,6 +3365,10 @@
                     $('#view_email').text(btn.data('email'));
                     $('#view_no_pkd').text(btn.data('no_pkd') || '-');
                     $('#view_pic').text(btn.data('pic') || '-');
+                    $('#view_sales').text(btn.data('sales_name') || '-');
+                    $('#view_account_group').text(btn.data('account_group_name') || '-');
+                    $('#view_customer_type').text(btn.data('customer_type') || '-');
+                    $('#view_customer_class').text(btn.data('customer_class_name') || '-');
 
                     const addr1 = btn.data('address1') || '';
                     const addr2 = btn.data('address2') ? ', ' + btn.data('address2') : '';
@@ -2973,12 +3382,27 @@
                     // 3. FINANCIAL
                     const cl = parseFloat(btn.data('credit_limit')) || 0;
                     $('#view_credit_limit').text('IDR ' + cl.toLocaleString('id-ID'));
+
+                    // --- TAMBAHAN LOGIC APPROVED CREDIT LIMIT ---
+                    const apprvCl = parseFloat(btn.data('approved_credit_limit'));
+                    const bgStatusDetail = btn.data('bank_garansi');
+                    const topStatusDetail = btn.data('term_of_payment');
+
+                    if ((bgStatusDetail === 'YA' || String(topStatusDetail).toUpperCase() === 'CBD') && !isNaN(
+                            apprvCl)) {
+                        $('#view_approved_credit_limit').text('IDR ' + apprvCl.toLocaleString('id-ID'));
+                        $('#view_approved_credit_limit_wrapper').fadeIn();
+                    } else {
+                        $('#view_approved_credit_limit_wrapper').hide();
+                    }
                     $('#view_top').text(btn.data('term_of_payment'));
+                    $('#view_lead_time').text(btn.data('lead_time'));
 
                     $('#view_npwp').text(btn.data('npwp'));
                     $('#view_tanggal_npwp').text(btn.data('tanggal_npwp') || '-');
                     $('#view_nppkp').text(btn.data('nppkp'));
                     $('#view_output_tax').text(btn.data('output_tax'));
+                    $('#view_ccar').text(btn.data('ccar') || '-');
 
                     $('#view_penagihan_nama').text(btn.data('penagihan_nama_kontak'));
                     $('#view_penagihan_telp').text(btn.data('penagihan_telepon'));
@@ -3219,7 +3643,7 @@
                         let filePath = $(this).data('path');
                         const title = $(this).data('title');
 
-                        console.log('Mencoba buka file:', filePath);
+                        // console.log('Mencoba buka file:', filePath);
 
                         if (!filePath || filePath.trim() === '' || filePath.endsWith('/storage/')) {
                             Swal.fire({
@@ -3297,6 +3721,190 @@
                             $('body').addClass('modal-open');
                         }
                     });
+                });
+
+                // --- CUSTOMER DOCUMENT UPLOAD & PREVIEW MANAGEMENT ---
+                function formatDocBytes(bytes, decimals = 1) {
+                    if (!bytes || bytes === 0) return '0 Bytes';
+                    const k = 1024;
+                    const dm = decimals < 0 ? 0 : decimals;
+                    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                    const i = Math.floor(Math.log(bytes) / Math.log(k));
+                    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+                }
+
+                function resetCustomerFileZones() {
+                    $('.customer-file-zone').each(function() {
+                        $(this).find('.customer-file-input').val('');
+                        $(this).find('.file-uploaded-box').addClass('d-none');
+                        $(this).find('.file-browse-box').removeClass('d-none');
+                    });
+                }
+
+                // Handle file selection in Customer Create/Edit modal
+                $(document).on('change', '.customer-file-input', function(e) {
+                    const input = this;
+                    const zone = $(this).closest('.customer-file-zone');
+                    const browseBox = zone.find('.file-browse-box');
+                    const uploadedBox = zone.find('.file-uploaded-box');
+
+                    if (input.files && input.files.length > 0) {
+                        const file = input.files[0];
+                        const ext = file.name.split('.').pop().toLowerCase();
+                        const isPdf = file.type === 'application/pdf' || ext === 'pdf';
+                        const isImage = file.type.startsWith('image/') || ['jpg', 'jpeg', 'png', 'webp', 'gif'].includes(ext);
+
+                        // Client-side file size limit check (PDF max 5MB, Image max 1MB)
+                        const maxSizeBytes = isPdf ? (5 * 1024 * 1024) : (1 * 1024 * 1024);
+                        if (file.size > maxSizeBytes) {
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Ukuran File Terlalu Besar',
+                                html: `File <b>${file.name}</b> berukuran <b>${formatDocBytes(file.size)}</b>.<br>Maksimal ukuran untuk ${isPdf ? 'PDF adalah <b>5MB</b>' : 'Gambar adalah <b>1MB</b>'}.`,
+                                confirmButtonColor: '#3085d6'
+                            });
+                            input.value = '';
+                            uploadedBox.addClass('d-none');
+                            browseBox.removeClass('d-none');
+                            return;
+                        }
+
+                        // Populate file info
+                        uploadedBox.find('.file-name-display').text(file.name).attr('title', file.name);
+                        uploadedBox.find('.file-size-display').text(formatDocBytes(file.size));
+
+                        const iconContainer = uploadedBox.find('.file-icon-badge');
+                        const iconElem = uploadedBox.find('.file-type-icon');
+                        const cardElem = uploadedBox.find('.file-card');
+
+                        if (isPdf) {
+                            iconContainer.css({'background': '#fee2e2', 'color': '#ef4444'});
+                            iconElem.attr('class', 'ph-bold ph-file-pdf file-type-icon f-s-14 text-danger');
+                            cardElem.css('border-left-color', '#ef4444');
+                        } else if (isImage) {
+                            iconContainer.css({'background': '#dcfce7', 'color': '#16a34a'});
+                            iconElem.attr('class', 'ph-bold ph-file-image file-type-icon f-s-14 text-success');
+                            cardElem.css('border-left-color', '#10b981');
+                        } else {
+                            iconContainer.css({'background': '#e0f2fe', 'color': '#0284c7'});
+                            iconElem.attr('class', 'ph-bold ph-file-text file-type-icon f-s-14 text-primary');
+                            cardElem.css('border-left-color', '#0284c7');
+                        }
+
+                        browseBox.addClass('d-none');
+                        uploadedBox.removeClass('d-none');
+                    } else {
+                        uploadedBox.addClass('d-none');
+                        browseBox.removeClass('d-none');
+                    }
+                });
+
+                // Handle remove file ("x" button)
+                $(document).on('click', '.btn-remove-file', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const zone = $(this).closest('.customer-file-zone');
+                    const input = zone.find('.customer-file-input');
+
+                    input.val('');
+                    zone.find('.file-uploaded-box').addClass('d-none');
+                    zone.find('.file-browse-box').removeClass('d-none');
+
+                    // If NPWP, remove OCR status note if any
+                    if (input.attr('name') === 'file_npwp') {
+                        zone.closest('.card-body').find('#ocr-status').remove();
+                    }
+
+                    input.trigger('change');
+                });
+
+                // Handle preview file modal
+                let customerDocBlobUrl = null;
+                $(document).on('click', '.btn-preview-file', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const zone = $(this).closest('.customer-file-zone');
+                    const input = zone.find('.customer-file-input')[0];
+                    const file = input && input.files && input.files[0];
+
+                    if (!file) {
+                        Swal.fire({
+                            icon: 'info',
+                            title: 'Tidak Ada File',
+                            text: 'Pilih file terlebih dahulu sebelum melakukan preview.',
+                            confirmButtonColor: '#3085d6'
+                        });
+                        return;
+                    }
+
+                    if (customerDocBlobUrl) {
+                        URL.revokeObjectURL(customerDocBlobUrl);
+                        customerDocBlobUrl = null;
+                    }
+
+                    customerDocBlobUrl = URL.createObjectURL(file);
+                    const title = zone.data('title') || 'Dokumen';
+                    const ext = file.name.split('.').pop().toLowerCase();
+                    const isPdf = file.type === 'application/pdf' || ext === 'pdf';
+
+                    $('#customerDocPreviewTitle').text(`Preview ${title}`);
+                    $('#customerDocPreviewSubtitle').text(`${file.name} • ${formatDocBytes(file.size)}`);
+                    $('#customerDocPreviewNewTab').attr('href', customerDocBlobUrl);
+
+                    const badge = $('#customerDocPreviewBadge');
+                    const icon = $('#customerDocPreviewIcon');
+
+                    if (isPdf) {
+                        badge.css('background', 'rgba(239, 68, 68, 0.2)');
+                        icon.attr('class', 'ph-bold ph-file-pdf text-danger f-s-18');
+
+                        $('#customerDocPreviewImgContainer').css('display', 'none');
+                        $('#customerDocPreviewImg').removeAttr('src');
+
+                        $('#customerDocPreviewIframe').attr('src', customerDocBlobUrl);
+                        $('#customerDocPreviewPdfContainer').css('display', 'block');
+                    } else {
+                        badge.css('background', 'rgba(16, 185, 129, 0.2)');
+                        icon.attr('class', 'ph-bold ph-file-image text-success f-s-18');
+
+                        $('#customerDocPreviewPdfContainer').css('display', 'none');
+                        $('#customerDocPreviewIframe').attr('src', '');
+
+                        $('#customerDocPreviewImg').attr('src', customerDocBlobUrl);
+                        $('#customerDocPreviewImgContainer').css('display', 'flex');
+                    }
+
+                    $('#customerDocPreviewModal').modal('show');
+                });
+
+                $('#customerDocPreviewModal').on('show.bs.modal', function() {
+                    $(this).css('z-index', '1070');
+                    setTimeout(function() {
+                        $('.modal-backdrop').last().css('z-index', '1065');
+                    }, 10);
+                });
+
+                $('#customerDocPreviewModal').on('hidden.bs.modal', function() {
+                    $('#customerDocPreviewIframe').attr('src', '');
+                    $('#customerDocPreviewPdfContainer').css('display', 'none');
+
+                    $('#customerDocPreviewImg').removeAttr('src');
+                    $('#customerDocPreviewImgContainer').css('display', 'none');
+
+                    if (customerDocBlobUrl) {
+                        URL.revokeObjectURL(customerDocBlobUrl);
+                        customerDocBlobUrl = null;
+                    }
+
+                    // Keep body scroll active if customerModal is still open
+                    if ($('#customerModal').hasClass('show') || $('.modal.show').length > 0) {
+                        $('body').addClass('modal-open');
+                    }
+                });
+
+                // Also reset zones when customerModal is hidden
+                $('#customerModal').on('hidden.bs.modal', function() {
+                    resetCustomerFileZones();
                 });
 
                 $(document).on('click', '.btn-schedule', function() {
@@ -3507,6 +4115,66 @@
                         }
                     });
                 });
+
+                // Client-side real-time email format validation
+                $('input[type="email"]').on('input change', function() {
+                    let email = $(this).val().trim();
+
+                    // Find or create error feedback element
+                    let errorSpan = $(this).siblings('.email-error');
+                    if (errorSpan.length === 0) {
+                        $(this).after(
+                            '<small class="text-danger email-error d-block fw-bold mt-1" style="display:none;"></small>'
+                            );
+                        errorSpan = $(this).siblings('.email-error');
+                    }
+
+                    // If empty, clear custom invalid styling
+                    if (email === '') {
+                        errorSpan.hide().text('');
+                        $(this).removeClass('is-invalid');
+                        this.setCustomValidity('');
+                        return;
+                    }
+
+                    // Simple standard email regex
+                    let regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+                    if (!regex.test(email)) {
+                        errorSpan.text('Format email tidak valid (contoh: nama@domain.com)').show();
+                        $(this).addClass('is-invalid');
+                        this.setCustomValidity('Format email tidak valid.');
+                    } else {
+                        errorSpan.hide().text('');
+                        $(this).removeClass('is-invalid');
+                        this.setCustomValidity('');
+                    }
+                });
+
+                $('.type-dropdown').on('change', function() {
+                    let val = $(this).val();
+                    let modal = $(this).closest('.modal');
+                    let akteInput = modal.find('input[name="file_akte"]');
+                    let asterisk = modal.find('.akte-asterisk');
+
+                    if (val === 'Company/Badan Usaha') {
+                        asterisk.show();
+                        if(modal.attr('id') === 'customerModal') {
+                            akteInput.prop('required', true); // Hanya wajib pas Create
+                        }
+                    } else {
+                        asterisk.hide();
+                        akteInput.prop('required', false);
+                    }
+                });
+
+                // Mapping Customer Type ke Modal
+                $('#customer_type, #recall_customer_type').select2({ theme: 'bootstrap-5', placeholder: 'Select Type' });
+
+                // (Tambahkan dalam event klik .btn-show-customer)
+                $('#view_customer_type').text(btn.data('customer_type') || '-');
+
+                // (Tambahkan dalam event klik .btn-resubmit-customer)
+                $('#recall_customer_type').val(data.customer_type).trigger('change');
             });
         </script>
     @endpush

@@ -23,7 +23,10 @@ class FinanceApprovalMail extends Mailable
 
     public function build()
     {
-        return $this->subject('Approval Required: Bank Garansi - Lampiran D')
+        $customerName = $this->submission->recommendation->customer->name ?? 'Distributor';
+        $formCode = $this->submission->form_code;
+
+        return $this->subject("Approval Required: Verifikasi Sertifikat Bank Garansi - {$customerName} ({$formCode})")
                     ->view('mail.finance_approval');
     }
 }

@@ -13,9 +13,10 @@ class BgRecommendation extends Model
     protected $table = 'bg_recommendations';
 
     protected $fillable = [
-        'customer_id', 'tax_id', 'average', 'top', 'lead_time',
+        'customer_id', 'parent_recommendation_id', 'tax_id', 'average', 'top', 'lead_time',
         'inflation', 'recommended_credit_limit', 'rounded_credit_limit',
-        'fk_with_limit','current_bg','set_bg','credit_limit_updated','status','notes', 'token'
+        'fk_with_limit','current_bg','set_bg','credit_limit_updated','status','notes', 'rejection_reason',
+        'sales_approved_by', 'sales_approved_at', 'token'
     ];
 
     protected $casts = [
@@ -28,11 +29,27 @@ class BgRecommendation extends Model
         'current_bg' => 'decimal:2',
         'set_bg' => 'decimal:2',
         'credit_limit_updated' => 'decimal:2',
+        'sales_approved_at' => 'datetime',
     ];
 
     public function customer()
     {
         return $this->belongsTo(Customer::class, 'customer_id');
+    }
+
+    public function parentRecommendation()
+    {
+        return $this->belongsTo(self::class, 'parent_recommendation_id');
+    }
+
+    public function childRecommendations()
+    {
+        return $this->hasMany(self::class, 'parent_recommendation_id');
+    }
+
+    public function salesApprover()
+    {
+        return $this->belongsTo(\App\Models\User::class, 'sales_approved_by');
     }
 
     public function tax()

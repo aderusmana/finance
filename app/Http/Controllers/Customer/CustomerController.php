@@ -67,47 +67,52 @@ class CustomerController extends Controller
 
     public function generatePkdPreview(Request $request)
     {
-        $name = $request->name;
+        // $name = $request->name;
 
-        if (empty($name)) {
-            return response()->json(['success' => false, 'number' => '']);
-        }
+        // if (empty($name)) {
+        //     return response()->json(['success' => false, 'number' => '']);
+        // }
 
-        $year = date('Y');
-        $monthRoman = $this->getRomanMonth(date('n'));
-        $initials = $this->generateInitials($name);
+        // $year = date('Y');
+        // $monthRoman = $this->getRomanMonth(date('n'));
+        // $initials = $this->generateInitials($name);
 
-        $maxSequence = 0;
-        $existingNumbers = Customer::where('no_pkd', 'LIKE', "%/{$year}")
-            ->pluck('no_pkd')
-            ->toArray();
+        // $maxSequence = 0;
+        // $existingNumbers = Customer::where('no_pkd', 'LIKE', "%/{$year}")
+        //     ->pluck('no_pkd')
+        //     ->toArray();
 
-        foreach ($existingNumbers as $no) {
-            $parts = explode('/', $no);
-            if (isset($parts[0]) && is_numeric($parts[0])) {
-                $seq = intval($parts[0]);
-                if ($seq > $maxSequence) {
-                    $maxSequence = $seq;
-                }
-            }
-        }
+        // foreach ($existingNumbers as $no) {
+        //     $parts = explode('/', $no);
+        //     if (isset($parts[0]) && is_numeric($parts[0])) {
+        //         $seq = intval($parts[0]);
+        //         if ($seq > $maxSequence) {
+        //             $maxSequence = $seq;
+        //         }
+        //     }
+        // }
 
-        $nextSequence = $maxSequence + 1;
-        $pkdNumber = '';
+        // $nextSequence = $maxSequence + 1;
+        // $pkdNumber = '';
 
-        do {
-            $sequenceStr = str_pad($nextSequence, 3, '0', STR_PAD_LEFT);
-            $pkdNumber = sprintf("%s/PKD-%s/%s/%s", $sequenceStr, $initials, $monthRoman, $year);
+        // do {
+        //     $sequenceStr = str_pad($nextSequence, 3, '0', STR_PAD_LEFT);
+        //     $pkdNumber = sprintf("%s/PKD-%s/%s/%s", $sequenceStr, $initials, $monthRoman, $year);
 
-            $exists = Customer::where('no_pkd', $pkdNumber)->exists();
-            if ($exists) {
-                $nextSequence++;
-            }
-        } while ($exists);
+        //     $exists = Customer::where('no_pkd', $pkdNumber)->exists();
+        //     if ($exists) {
+        //         $nextSequence++;
+        //     }
+        // } while ($exists);
+
+        // return response()->json([
+        //     'success' => true,
+        //     'number' => $pkdNumber
+        // ]);
 
         return response()->json([
             'success' => true,
-            'number' => $pkdNumber
+            'number' => '-'
         ]);
     }
 
@@ -117,7 +122,8 @@ class CustomerController extends Controller
         $latestRevision = Revision::orderBy('created_at', 'desc')->first();
 
         if ($request->ajax()) {
-            $query = Customer::leftJoin('customer_files', 'customers.id', '=', 'customer_files.customer_id')
+            $query = Customer::with(['accountGroup', 'customerClass', 'user'])
+                ->leftJoin('customer_files', 'customers.id', '=', 'customer_files.customer_id')
                 ->select(
                     'customers.*',
                     'customer_files.npwp_file as file_npwp',
@@ -125,7 +131,8 @@ class CustomerController extends Controller
                     'customer_files.ktp_file as file_ktp',
                     'customer_files.akte_file as file_akte',
                     'customer_files.company_profile_file as file_company_profile'
-                );
+                )
+                ->allowedForUser($user);
 
             if ($request->has('status') && $request->status !== 'all') {
                 if ($request->status === 'Active') {
@@ -196,8 +203,12 @@ class CustomerController extends Controller
                     $dataAttrs .= ' data-pic="' . e($row->pic) . '"';
                     $dataAttrs .= ' data-name="' . e($row->name) . '"';
                     $dataAttrs .= ' data-sort_name="' . e($row->sort_name) . '"';
+                    $dataAttrs .= ' data-customer_type="' . e($row->customer_type) . '"';
                     $dataAttrs .= ' data-customer_class="' . e($row->customer_class) . '"';
+                    $dataAttrs .= ' data-customer_class_name="' . e($row->customerClass->name_class ?? '-') . '"';
                     $dataAttrs .= ' data-account_group="' . e($row->account_group) . '"';
+                    $dataAttrs .= ' data-account_group_name="' . e($row->accountGroup->name_account_group ?? '-') . '"';
+                    $dataAttrs .= ' data-sales_name="' . e($row->user->name ?? '-') . '"';
                     $dataAttrs .= ' data-address1="' . e($row->address1) . '"';
                     $dataAttrs .= ' data-address2="' . e($row->address2) . '"';
                     $dataAttrs .= ' data-address3="' . e($row->address3) . '"';
@@ -229,6 +240,7 @@ class CustomerController extends Controller
                     $dataAttrs .= ' data-term_of_payment="' . e($row->term_of_payment) . '"';
                     $dataAttrs .= ' data-lead_time="' . e($row->lead_time) . '"';
                     $dataAttrs .= ' data-credit_limit="' . e($row->credit_limit) . '"';
+                    $dataAttrs .= ' data-approved_credit_limit="' . e($row->approved_credit_limit) . '"';
                     $dataAttrs .= ' data-ccar="' . e($row->ccar) . '"';
                     $dataAttrs .= ' data-bank_garansi="' . e($row->bank_garansi) . '"';
                     $dataAttrs .= ' data-area="' . e($row->area) . '"';
@@ -319,11 +331,23 @@ class CustomerController extends Controller
                             </div>';
                 })
                 ->editColumn('credit_limit', function ($row) {
-                    $amount = number_format($row->credit_limit, 0, ',', '.');
+                    $isBgActive = $row->bank_garansi === 'YA';
+                    $isCbd = strtoupper($row->term_of_payment ?? '') === 'CBD';
+                    $amountToShow = (float) $row->credit_limit;
+                    $badgeHtml = '';
+
+                    if (($isBgActive || $isCbd) && !empty($row->approved_credit_limit)) {
+                        $amountToShow = (float) $row->approved_credit_limit;
+                        $badgeHtml = '<div class="mt-1"><span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25" style="font-size: 9px;"><i class="ph-bold ph-check-circle me-1"></i>Approved Limit</span></div>';
+                    }
+
+                    $formattedAmount = number_format($amountToShow, 0, ',', '.');
+
                     return '<div class="d-flex flex-column text-start">
                                 <span class="fw-bold text-success" style="font-size: 14px;">
-                                    <span class="text-muted fw-normal me-1" style="font-size: 10px;">IDR</span>' . $amount . '
+                                    <span class="text-muted fw-normal me-1" style="font-size: 10px;">IDR</span>' . $formattedAmount . '
                                 </span>
+                                ' . $badgeHtml . '
                             </div>';
                 })
                 ->editColumn('financial_info', function ($row) {
@@ -379,11 +403,11 @@ class CustomerController extends Controller
         $accountgroup = AccountGroup::all();
         $customerClass = CustomerClass::all();
 
-        $pendingCount = Customer::whereIn('status_approval', ['Pending', 'Processing'])->count();
-        $processingCount = Customer::where('status_approval', 'Processing')->count();
-        $approvedCount = Customer::whereIn('status_approval', ['Approved', 'Completed'])->count();
-        $activeCount = Customer::where('bank_garansi', 'YA')->count();
-        $inactiveCount = Customer::where(function ($q) {
+        $pendingCount = Customer::allowedForUser($user)->whereIn('status_approval', ['Pending', 'Processing'])->count();
+        $processingCount = Customer::allowedForUser($user)->where('status_approval', 'Processing')->count();
+        $approvedCount = Customer::allowedForUser($user)->whereIn('status_approval', ['Approved', 'Completed'])->count();
+        $activeCount = Customer::allowedForUser($user)->where('bank_garansi', 'YA')->count();
+        $inactiveCount = Customer::allowedForUser($user)->where(function ($q) {
             $q->where('bank_garansi', '!=', 'YA')
                 ->orWhereNull('bank_garansi');
         })->count();
@@ -443,9 +467,6 @@ class CustomerController extends Controller
             $user = Auth::user();
             $customerData = $request->except(['file_npwp', 'file_nib', 'file_ktp', 'items', '_token']);
 
-            if (is_string($request->bank_garansi) && strtoupper($request->bank_garansi) === 'TIDAK') {
-                $customerData['credit_limit'] = 0;
-            }
 
             $grandTotal = 0;
             if ($request->has('items') && is_array($request->items)) {
@@ -747,8 +768,13 @@ class CustomerController extends Controller
             return view('page.customer.links.approval-invalid');
         }
 
-        $customer = Customer::with(['user', 'accountGroup', 'customerClass', 'files'])
+        $customer = Customer::with(['user', 'accountGroup', 'customerClass', 'files', 'items'])
             ->findOrFail($log->related_id);
+
+        $totalAmount = 0;
+        foreach ($customer->items as $item) {
+            $totalAmount += ($item->quantity * $item->price);
+        }
 
         $preSelectedAction = $request->query('pre_action', 'approve');
 
@@ -760,7 +786,8 @@ class CustomerController extends Controller
             'customer' => $customer,
             'token' => $token,
             'log' => $log,
-            'preSelectedAction' => $preSelectedAction
+            'preSelectedAction' => $preSelectedAction,
+            'totalAmount' => $totalAmount
         ]);
     }
 
@@ -806,20 +833,23 @@ class CustomerController extends Controller
 
             if ($isTopChanged) {
                 if (empty($cleanNotes)) {
-                    return back()->withInput()->withErrors(['notes' => 'Notes are required when changing Term of Payment.']);
+                    throw \Illuminate\Validation\ValidationException::withMessages(['notes' => 'Notes are required when changing Term of Payment.']);
                 }
             }
         } else {
-            if ($action === 'review' || $action === 'reject') {
-
-                if (!$isIT) {
-                    if (empty($cleanNotes)) {
-                        return back()->withInput()->withErrors(['notes' => 'Notes are required for review or reject actions.']);
-                    }
-
-                    if (!preg_match('/[a-zA-Z]{2,}/', $cleanNotes)) {
-                        return back()->withInput()->withErrors(['notes' => 'Notes must contain clear sentences.']);
-                    }
+            // Reject: notes WAJIB diisi
+            if ($action === 'reject' && !$isIT) {
+                if (empty($cleanNotes)) {
+                    throw \Illuminate\Validation\ValidationException::withMessages(['notes' => 'Reason for rejection is required.']);
+                }
+                if (!preg_match('/[a-zA-Z]{2,}/', $cleanNotes)) {
+                    throw \Illuminate\Validation\ValidationException::withMessages(['notes' => 'Rejection reason must contain clear sentences.']);
+                }
+            }
+            // Review (Approved with Notes): notes OPSIONAL, tapi jika diisi harus valid
+            if ($action === 'review' && !$isIT && !empty($cleanNotes)) {
+                if (!preg_match('/[a-zA-Z]{2,}/', $cleanNotes)) {
+                    throw \Illuminate\Validation\ValidationException::withMessages(['notes' => 'Notes must contain clear sentences.']);
                 }
             }
         }
@@ -828,55 +858,42 @@ class CustomerController extends Controller
         try {
             if (($action === 'review' || $action === 'approve') && $isFinanceAdjuster) {
                 $updateData = [];
-                $changesLog = [];
 
+                if (request()->has('update_top')) $updateData['term_of_payment'] = request('update_top');
 
-                if (request()->has('update_top') && request('update_top') != $customer->term_of_payment) {
-                    $updateData['term_of_payment'] = request('update_top');
-                    $changesLog[] = "TOP changed to " . request('update_top');
+                if (request()->has('update_lead_time')) {
+                    $updateData['lead_time'] = request('update_lead_time') === '' ? 0 : request('update_lead_time');
                 }
 
-                if (request()->has('update_lead_time') && request('update_lead_time') != $customer->lead_time) {
-                    $updateData['lead_time'] = request('update_lead_time');
-                    $changesLog[] = "Lead Time changed to " . request('update_lead_time');
-                }
+                if (request()->has('update_credit_limit_value')) $updateData['credit_limit'] = request('update_credit_limit_value');
+                if (request()->filled('update_npwp')) $updateData['npwp'] = request('update_npwp');
+                if (request()->has('update_va')) $updateData['virtual_account'] = request('update_va');
+                if (request()->has('update_payment_days')) $updateData['payment_days'] = request('update_payment_days');
+                if (request()->has('update_payment_date')) $updateData['payment_date'] = request('update_payment_date');
+                if (request()->has('update_faktur_days')) $updateData['faktur_days'] = request('update_faktur_days');
+                if (request()->has('update_faktur_date')) $updateData['faktur_date'] = request('update_faktur_date');
 
-                if (request()->has('update_credit_limit_value') && request('update_credit_limit_value') != $customer->credit_limit) {
-                    $updateData['credit_limit'] = request('update_credit_limit_value');
-                }
+                $customer->fill($updateData);
 
-                if (request()->filled('update_npwp') && request('update_npwp') != $customer->npwp) {
-                    $updateData['npwp'] = request('update_npwp');
-                    $changesLog[] = "NPWP corrected by Finance";
-                }
+                if ($customer->isDirty()) {
+                    $changesLog = [];
+                    if ($customer->isDirty('term_of_payment')) $changesLog[] = "TOP changed to " . $customer->term_of_payment;
+                    if ($customer->isDirty('lead_time')) $changesLog[] = "Lead Time changed to " . $customer->lead_time;
+                    if ($customer->isDirty('credit_limit')) $changesLog[] = "Credit Limit changed";
+                    if ($customer->isDirty('npwp')) $changesLog[] = "NPWP corrected by Finance";
+                    if ($customer->isDirty('virtual_account')) $changesLog[] = "VA Updated";
 
-                if (request()->has('update_va')) {
-                    $updateData['virtual_account'] = request('update_va');
-                }
+                    if ($customer->isDirty('payment_days') || $customer->isDirty('payment_date')) {
+                        $changesLog[] = "Payment Schedule Updated";
+                    }
+                    if ($customer->isDirty('faktur_days') || $customer->isDirty('faktur_date')) {
+                        $changesLog[] = "Faktur Schedule Updated";
+                    }
 
-                if (request()->has('update_payment_days')) {
-                    $updateData['payment_days'] = request('update_payment_days');
-                }
-
-                if (request()->has('update_payment_date')) {
-                    $updateData['payment_date'] = request('update_payment_date');
-                }
-
-                if (request()->has('update_faktur_days')) {
-                    $updateData['faktur_days'] = request('update_faktur_days');
-                }
-
-                if (request()->has('update_faktur_date')) {
-                    $updateData['faktur_date'] = request('update_faktur_date');
-                }
-
-                if (!empty($updateData)) {
-                    $customer->update($updateData);
-                    if (isset($updateData['virtual_account'])) $changesLog[] = "VA Updated";
-                    if (isset($updateData['payment_days'])) $changesLog[] = "Payment Days Updated";
+                    $customer->save();
 
                     if (!empty($changesLog)) {
-                        $prefix = !empty($notes) ? "\n" : "";
+                        $prefix = !empty(trim($notes)) ? "\n" : "";
                         $notes .= $prefix . "[Finance Adjustments]: " . implode('; ', $changesLog);
                     }
                 }
@@ -901,15 +918,20 @@ class CustomerController extends Controller
             $dbStatus = '';
             $dbNotes = '';
 
+            $finalNotes = trim($notes);
+            if (empty($finalNotes)) {
+                $finalNotes = "No additional notes were provided for this approval.";
+            }
+
             if ($action === 'approve') {
                 $dbStatus = 'Approved';
-                $dbNotes = empty($notes) ? 'Approve tanpa notes' : $notes;
+                $dbNotes = $finalNotes;
             } elseif ($action === 'review') {
                 $dbStatus = 'Approved';
-                $dbNotes = $notes;
+                $dbNotes = $finalNotes;
             } elseif ($action === 'reject') {
                 $dbStatus = 'Rejected';
-                $dbNotes = $notes;
+                $dbNotes = $finalNotes;
             }
 
             $logMessage = '';
@@ -933,7 +955,7 @@ class CustomerController extends Controller
                 ->withProperties([
                     'level' => $currentLog->level,
                     'status' => $dbStatus,
-                    'notes' => $notes,
+                    'notes' => $dbNotes,
                     'approver_name' => $actor->name ?? 'System'
                 ])
                 ->log($logMessage);
@@ -949,12 +971,12 @@ class CustomerController extends Controller
 
             if ($action === 'approve' || $action === 'review') {
                 $adminTitle = "Approval Customer";
-                $adminMessage = "Customer <b>{$customer->name}</b> approved oleh <b>{$actor->name}</b>." . ($action === 'review' ? " Notes: {$notes}" : "");
+                $adminMessage = "Customer <b>{$customer->name}</b> approved oleh <b>{$actor->name}</b>." . ($action === 'review' ? " Notes: {$dbNotes}" : "");
                 $adminIcon = "ph-check-circle";
                 $adminColor = "success";
             } elseif ($action === 'reject') {
                 $adminTitle = "Rejection Customer";
-                $adminMessage = "Customer <b>{$customer->name}</b> rejected oleh <b>{$actor->name}</b>. Reason: {$notes}";
+                $adminMessage = "Customer <b>{$customer->name}</b> rejected oleh <b>{$actor->name}</b>. Reason: {$dbNotes}";
                 $adminIcon = "ph-x-circle";
                 $adminColor = "danger";
             }
@@ -975,6 +997,17 @@ class CustomerController extends Controller
                 'updated_at' => now(),
                 'token' => null,
             ]);
+
+            $requester = $customer->user;
+            if ($requester) {
+                Notification::send($requester, new SystemNotification(
+                    "Approval Update: {$customer->name}",
+                    "Customer Status <b>{$customer->name}</b> has been <b>{$dbStatus}</b> by <b>{$actor->name}</b>.",
+                    route('customers.index'),
+                    $dbStatus === 'Approved' ? 'ph-check-circle' : 'ph-x-circle',
+                    $dbStatus === 'Approved' ? 'success' : 'danger'
+                ));
+            }
 
             if ($dbStatus === 'Approved') {
                 $nextLevel = $currentLog->level + 1;
@@ -1046,7 +1079,6 @@ class CustomerController extends Controller
                         }
                     }
 
-                    $requester = $customer->user;
                     if ($requester && $requester->email) {
                         $recipients = [[
                             'email' => $requester->email,
@@ -1114,14 +1146,24 @@ class CustomerController extends Controller
             $logQuery->where('approver_nik', $user->nik);
         }
 
-        $pendingCount = (clone $logQuery)->where('status', 'Pending')->count();
+        $pendingCount = (clone $logQuery)->where('status', 'Pending')
+            ->whereHas('customer', function ($q) {
+                $q->where('status_approval', 'Pending');
+            })->count();
+
+        $processingCount = (clone $logQuery)->where('status', 'Pending')
+            ->whereHas('customer', function ($q) {
+                $q->where('status_approval', 'Processing');
+            })->count();
+
         $approvedCount = (clone $logQuery)->where('status', 'Approved')->count();
 
         $activeCount = Customer::where('status', 'Active')->count();
         $inactiveCount = Customer::where('status', 'Inactive')->count();
 
-        $approvalStatuses = ApprovalLog::where('category', 'Customer')->distinct()->pluck('status');
+        $approvalStatuses = Customer::whereNotNull('status_approval')->distinct()->pluck('status_approval');
         $accountStatuses = Customer::whereNotNull('status')->distinct()->pluck('status');
+        $levels = ApprovalLog::where('category', 'Customer')->whereNotNull('level')->distinct()->pluck('level')->sort();
 
         $sales = Sales::with(['user.position', 'branch', 'region'])->get();
         $top = TOP::all();
@@ -1134,11 +1176,13 @@ class CustomerController extends Controller
             'accountgroup',
             'customerClass',
             'pendingCount',
+            'processingCount',
             'approvedCount',
             'activeCount',
             'inactiveCount',
             'approvalStatuses',
-            'accountStatuses'
+            'accountStatuses',
+            'levels'
         ));
     }
 
@@ -1150,8 +1194,8 @@ class CustomerController extends Controller
         $revNumber = $latestRevision ? $latestRevision->revision_number : '-';
         $revCount  = $latestRevision ? $latestRevision->revision_count : '0';
         $revDate   = $latestRevision && $latestRevision->revision_date
-                        ? Carbon::parse($latestRevision->revision_date)->format('d M Y')
-                        : '-';
+            ? Carbon::parse($latestRevision->revision_date)->format('d M Y')
+            : '-';
 
         $query = ApprovalLog::with('approver')
             ->select(
@@ -1166,15 +1210,8 @@ class CustomerController extends Controller
             ->join('customers', 'approval_logs.related_id', '=', 'customers.id')
             ->where('approval_logs.category', 'Customer');
 
-        if ($request->has('status') && $request->status !== 'all') {
-            if ($request->status === 'Active') {
-                $query->where('customers.bank_garansi', 'YA');
-            } elseif ($request->status === 'Inactive') {
-                $query->where(function ($q) {
-                    $q->where('customers.bank_garansi', '!=', 'YA')
-                        ->orWhereNull('customers.bank_garansi');
-                });
-            }
+        if ($request->has('level') && $request->level !== 'all') {
+            $query->where('approval_logs.level', $request->level);
         }
 
         if ($request->has('approval_status') && $request->approval_status !== 'all') {
@@ -1395,17 +1432,31 @@ class CustomerController extends Controller
 
     public function getLogData()
     {
+        $user = Auth::user();
+
         $query = Activity::with('causer')
             ->where(function ($q) {
                 $q->where('log_name', 'like', '%customer%')
                     ->orWhere('log_name', 'like', 'sample%')
                     ->orWhere('log_name', 'path%');
-            })
-            ->orderBy('created_at', 'desc');
+            });
+
+        if (!$user->hasRole(['super-admin', 'admin'])) {
+            $allowedCustomerIds = Customer::allowedForUser($user)->pluck('id')->toArray();
+            $query->where(function ($q) use ($allowedCustomerIds) {
+                $q->where(function ($sub) use ($allowedCustomerIds) {
+                    $sub->where('subject_type', Customer::class)
+                        ->whereIn('subject_id', $allowedCustomerIds);
+                })
+                    ->orWhere('subject_type', '!=', Customer::class)
+                    ->orWhereNull('subject_type');
+            });
+        }
+
+        $query->orderBy('created_at', 'desc');
 
         return DataTables::of($query)
             ->addIndexColumn()
-
             ->editColumn('log_name', function ($log) {
                 $logName = $log->log_name;
 
@@ -1432,7 +1483,6 @@ class CustomerController extends Controller
                     </div>
                 ';
             })
-
             ->addColumn('properties', function ($log) {
                 $props = $log->properties ?? [];
 
@@ -1447,14 +1497,10 @@ class CustomerController extends Controller
                     $label = ucfirst(str_replace(['_', '-'], ' ', $key));
 
                     if ($key === 'attributes') {
-                        $json = json_encode($value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-                        $escaped = e($json);
                         $output .= '
                             <div style="margin-bottom: 8px;">
                                 <div style="color: #64748b; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">' . e($label) . '</div>
-                                <button class="btn btn-view-json d-inline-flex align-items-center" style="background: #e2e8f0; color: #475569; border: none; padding: 4px 10px; font-size: 0.7rem; border-radius: 6px; font-weight: 700; transition: all 0.2s;" data-json="' . $escaped . '">
-                                    <i class="ph-bold ph-braces me-1 text-primary"></i> View JSON Data
-                                </button>
+                                <div style="color: #1e293b; font-weight: 600; font-size: 0.8rem; line-height: 1.4; font-style: italic;">(View Action details)</div>
                             </div>';
                         continue;
                     }
@@ -1475,10 +1521,11 @@ class CustomerController extends Controller
                             return is_array($i) ? json_encode($i, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : (string) $i;
                         }, (array) $value));
 
+                        $shortText = Str::limit($preview, 80);
                         $output .= '
                             <div style="margin-bottom: 8px;">
                                 <div style="color: #64748b; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">' . e($label) . '</div>
-                                <div style="color: #1e293b; font-weight: 600; font-size: 0.8rem; line-height: 1.4; word-break: break-word;">' . e(Str::limit($preview, 80)) . '</div>
+                                <div style="color: #1e293b; font-weight: 600; font-size: 0.8rem; line-height: 1.4; word-break: break-word;">' . e($shortText) . '</div>
                             </div>';
                         continue;
                     }
@@ -1501,27 +1548,28 @@ class CustomerController extends Controller
                                 return is_array($i) ? json_encode($i) : (string) $i;
                             }, $decoded)) : json_encode($decoded, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
+                            $shortText = Str::limit($preview, 80);
                             $output .= '
                                 <div style="margin-bottom: 8px;">
                                     <div style="color: #64748b; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">' . e($label) . '</div>
-                                    <div style="color: #1e293b; font-weight: 600; font-size: 0.8rem; line-height: 1.4; word-break: break-word;">' . e(Str::limit($preview, 80)) . '</div>
+                                    <div style="color: #1e293b; font-weight: 600; font-size: 0.8rem; line-height: 1.4; word-break: break-word;">' . e($shortText) . '</div>
                                 </div>';
                             continue;
                         }
                     }
 
                     $display = is_null($value) ? '-' : (string) $value;
+                    $shortText = Str::limit($display, 80);
                     $output .= '
                         <div style="margin-bottom: 8px;">
                             <div style="color: #64748b; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">' . e($label) . '</div>
-                            <div style="color: #1e293b; font-weight: 600; font-size: 0.8rem; line-height: 1.4; word-break: break-word;">' . e(Str::limit($display, 80)) . '</div>
+                            <div style="color: #1e293b; font-weight: 600; font-size: 0.8rem; line-height: 1.4; word-break: break-word;">' . e($shortText) . '</div>
                         </div>';
                 }
 
                 $output .= '</div>';
                 return $output;
             })
-
             ->addColumn('subject_info', function ($log) {
                 if ($log->subject_type === Customer::class) {
                     $code = $log->subject ? $log->subject->code : ($log->properties['code'] ?? '-');
@@ -1553,7 +1601,6 @@ class CustomerController extends Controller
 
                 return '<span class="fw-bold text-muted" style="font-size: 0.8rem; font-style: italic;">N/A</span>';
             })
-
             ->addColumn('subject_id', function ($log) {
                 $id = $log->subject_id;
                 if (!$id) return '<span style="color: #cbd5e1; font-weight: 700;">-</span>';
@@ -1565,7 +1612,6 @@ class CustomerController extends Controller
                     </div>
                 ';
             })
-
             ->addColumn('causer_info', function ($log) {
                 $causerName = optional($log->causer)->name ?? 'System';
                 $isSystem = $causerName === 'System';
@@ -1581,7 +1627,6 @@ class CustomerController extends Controller
                         <span class="fw-bolder" style="color: #1e293b; font-size: 0.85rem;">' . e($causerName) . '</span>
                     </div>';
             })
-
             ->editColumn('event', function ($log) {
                 $event = strtolower($log->event ?? 'N/A');
 
@@ -1650,13 +1695,44 @@ class CustomerController extends Controller
                     </div>
                 ';
             })
-
             ->editColumn('created_at', function ($log) {
                 $date = Carbon::parse($log->created_at)->format('d M Y, H:i');
                 return '<div class="d-flex align-items-center gap-2"><i class="ph-fill ph-clock-counter-clockwise" style="color: #94a3b8; font-size: 1.1rem;"></i><span style="color: #475569; font-weight: 600; font-size: 0.85rem;">' . $date . '</span></div>';
             })
+            // MEMBUAT KOLOM ACTION BARU DI SINI
+            ->addColumn('action', function ($log) {
+                $props = $log->properties ?? [];
+                
+                // 1. Ekstrak Causer (Aktor)
+                $causerName = optional($log->causer)->name ?? 'System';
 
-            ->rawColumns(['log_name', 'event', 'subject_info', 'causer_info', 'subject_id', 'properties', 'created_at'])
+                // 2. Ekstrak Target Data Info (Plain Text)
+                $targetData = '-';
+                if ($log->subject_type === Customer::class) {
+                    $code = $log->subject ? $log->subject->code : ($props['code'] ?? '-');
+                    $name = $log->subject ? $log->subject->name : ($props['name'] ?? '-');
+                    $targetData = $code . ' - ' . $name;
+                } elseif ($log->subject_type === ApprovalPath::class) {
+                    $category = $log->subject ? $log->subject->category : ($props['category'] ?? 'General');
+                    $sub = $log->subject ? $log->subject->sub_category : ($props['sub_category'] ?? null);
+                    $targetData = $category . ($sub ? ' - ' . $sub : '');
+                }
+
+                $fullData = [
+                    'Tanggal_Update' => Carbon::parse($log->created_at)->format('d M Y, H:i:s'),
+                    'Modul_Type'     => ucwords(str_replace('-', ' ', $log->log_name)),
+                    'Action_Event'   => strtoupper($log->event),
+                    'Causer'         => $causerName,
+                    'Target_Data'    => $targetData,
+                    'Tag_ID'         => $log->subject_id ?? '-',
+                    'Properties'     => $props
+                ];
+
+                $json = json_encode($fullData, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+                
+                return '<button type="button" class="btn btn-primary btn-xs rounded fw-bold btn-view-full shadow-sm" style="font-size: 12px; padding: 5px 12px;" data-json="' . e($json) . '"><i class="ph-bold ph-eye me-1"></i> View Full</button>';
+            })
+            ->rawColumns(['log_name', 'event', 'subject_info', 'causer_info', 'subject_id', 'properties', 'created_at', 'action'])
             ->make(true);
     }
 
@@ -1671,15 +1747,55 @@ class CustomerController extends Controller
         ];
 
         $columns = [
-            'user_id', 'code', 'no_pkd', 'pic', 'name', 'sort_name', 'customer_class', 'account_group',
-            'address1', 'address2', 'address3', 'city', 'postal_code', 'country',
-            'shipping_to_name', 'shipping_to_address', 'purchasing_manager_name', 'purchasing_manager_email',
-            'finance_manager_name', 'finance_manager_email', 'penagihan_nama_kontak', 'penagihan_telepon',
-            'penagihan_address', 'surat_menyurat_address', 'email', 'tax_contact_name', 'tax_contact_email',
-            'tax_contact_phone', 'npwp', 'tanggal_npwp', 'nppkp', 'tanggal_nppkp', 'no_pengukuhan_kaber',
-            'output_tax', 'term_of_payment', 'lead_time', 'credit_limit', 'ccar', 'bank_garansi', 'area',
-            'status', 'pembagian', 'customer_total', 'virtual_account', 'payment_days', 'payment_date',
-            'faktur_days', 'faktur_date', 'join_date'
+            'user_id',
+            'code',
+            'no_pkd',
+            'pic',
+            'name',
+            'sort_name',
+            'customer_class',
+            'account_group',
+            'address1',
+            'address2',
+            'address3',
+            'city',
+            'postal_code',
+            'country',
+            'shipping_to_name',
+            'shipping_to_address',
+            'purchasing_manager_name',
+            'purchasing_manager_email',
+            'finance_manager_name',
+            'finance_manager_email',
+            'penagihan_nama_kontak',
+            'penagihan_telepon',
+            'penagihan_address',
+            'surat_menyurat_address',
+            'email',
+            'tax_contact_name',
+            'tax_contact_email',
+            'tax_contact_phone',
+            'npwp',
+            'tanggal_npwp',
+            'nppkp',
+            'tanggal_nppkp',
+            'no_pengukuhan_kaber',
+            'output_tax',
+            'term_of_payment',
+            'lead_time',
+            'credit_limit',
+            'ccar',
+            'bank_garansi',
+            'area',
+            'status',
+            'pembagian',
+            'customer_total',
+            'virtual_account',
+            'payment_days',
+            'payment_date',
+            'faktur_days',
+            'faktur_date',
+            'join_date'
         ];
 
         $callback = function () use ($columns) {
@@ -1687,15 +1803,55 @@ class CustomerController extends Controller
             fputcsv($file, $columns, ';');
 
             fputcsv($file, [
-                '1', 'CUST-001', 'NULL', 'Bapak Budi', 'PT Maju Jaya', 'MJY', '1', '1',
-                'Jl. Sudirman No 1', 'NULL', 'NULL', 'Jakarta', '12345', 'Indonesia',
-                'Bapak Andi', 'Jl. Gudang Baru No 2', 'Bapak Coki', 'coki@majujaya.com',
-                'Ibu Dini', 'dini@majujaya.com', 'Ibu Eka', '08123456789',
-                'Jl. Sudirman No 1', 'Jl. Sudirman No 1', 'info@majujaya.com', 'Ibu Fani', 'tax@majujaya.com',
-                '08123456780', '12.345.678.9-123.000', '2020-01-01', 'NULL', 'NULL', 'NULL',
-                'PPN', '30', '0', '10000000', 'smd_idr', 'TIDAK', 'Jabodetabek',
-                'Active', 'NULL', '0', '1234567890', 'Senin,Selasa', '15,30',
-                'Rabu,Kamis', '10,20', '2026-03-11'
+                '1',
+                'CUST-001',
+                'NULL',
+                'Bapak Budi',
+                'PT Maju Jaya',
+                'MJY',
+                '1',
+                '1',
+                'Jl. Sudirman No 1',
+                'NULL',
+                'NULL',
+                'Jakarta',
+                '12345',
+                'Indonesia',
+                'Bapak Andi',
+                'Jl. Gudang Baru No 2',
+                'Bapak Coki',
+                'coki@majujaya.com',
+                'Ibu Dini',
+                'dini@majujaya.com',
+                'Ibu Eka',
+                '08123456789',
+                'Jl. Sudirman No 1',
+                'Jl. Sudirman No 1',
+                'info@majujaya.com',
+                'Ibu Fani',
+                'tax@majujaya.com',
+                '08123456780',
+                '12.345.678.9-123.000',
+                '2020-01-01',
+                'NULL',
+                'NULL',
+                'NULL',
+                'PPN',
+                '30',
+                '0',
+                '10000000',
+                'smd_idr',
+                'TIDAK',
+                'Jabodetabek',
+                'Active',
+                'NULL',
+                '0',
+                '1234567890',
+                'Senin,Selasa',
+                '15,30',
+                'Rabu,Kamis',
+                '10,20',
+                '2026-03-11'
             ], ';');
             fclose($file);
         };
@@ -1730,7 +1886,7 @@ class CustomerController extends Controller
                     }
 
                     $data = array_combine($header, $row);
-                    $clean = function($key, $default = null) use ($data) {
+                    $clean = function ($key, $default = null) use ($data) {
                         $val = isset($data[$key]) ? trim($data[$key]) : null;
                         if ($val === '' || strtoupper($val) === 'NULL') {
                             return $default;
@@ -1833,6 +1989,7 @@ class CustomerController extends Controller
         $customers = Customer::with(['user', 'items', 'customerClass', 'accountGroup'])
             ->whereIn('id', $request->selected_ids)
             ->whereIn('status_approval', ['Approved', 'Completed'])
+            ->allowedForUser(Auth::user())
             ->get();
 
         if ($customers->isEmpty()) {
@@ -1882,9 +2039,7 @@ class CustomerController extends Controller
             }
         }
 
-        if (!Auth::user()->hasRole('super-admin')) {
-            $query->where('customers.created_by', Auth::id());
-        }
+        $query->allowedForUser(Auth::user());
 
         return DataTables::of($query)
             ->addIndexColumn()
@@ -1917,10 +2072,10 @@ class CustomerController extends Controller
                         <span class="fw-bold" style="color: #15803d; font-size: 0.8rem;">' . e($status) . '</span>
                     </div>';
             })
-            ->filterColumn('requester_name', function($query, $keyword) {
+            ->filterColumn('requester_name', function ($query, $keyword) {
                 $query->where('users.name', 'like', "%{$keyword}%");
             })
-            ->orderColumn('requester_name', function($query, $order) {
+            ->orderColumn('requester_name', function ($query, $order) {
                 $query->orderBy('users.name', $order);
             })
             ->rawColumns(['no_pkd', 'code', 'name', 'status_approval'])

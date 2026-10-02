@@ -65,6 +65,11 @@
                 <td>{{ strtoupper($data['customer']->name) }}</td>
             </tr>
             <tr>
+                <td style="font-weight: bold;">Alamat Operasional</td>
+                <td>:</td>
+                <td>{{ strtoupper($data['submission']->custom_address ?? $data['customer']->penagihan_address ?? $data['customer']->address1 ?? '-') }}</td>
+            </tr>
+            <tr>
                 <td style="font-weight: bold;">Kota / Wilayah</td>
                 <td>:</td>
                 <td>{{ strtoupper($data['customer']->city) }} / {{ strtoupper($data['customer']->area ?? '-') }}</td>
@@ -96,8 +101,8 @@
         <table class="table-border" style="margin-bottom: 15px;">
             <thead>
                 <tr style="background-color: #f0f0f0;">
-                    <th style="width: 20%;">Nama Bank</th>
-                    <th style="width: 25%;">Keterangan</th>
+                    <th style="width: 22%;">Nama Bank</th>
+                    <th style="width: 23%;">Keterangan</th>
                     <th style="width: 25%;">Alamat / Kontak</th>
                     <th style="width: 30%; text-align: right;">Nominal (IDR)</th>
                 </tr>
@@ -105,17 +110,17 @@
             <tbody>
                 @php
                     $grandTotal = 0;
-                    $bgItem = $data['bg'];
+                    $bgsList = isset($data['bgs']) ? $data['bgs'] : (isset($data['bg']) && $data['bg'] ? [$data['bg']] : []);
                     $isExisting = isset($data['is_existing']) && $data['is_existing'];
                 @endphp
 
-                @if($bgItem)
+                @forelse($bgsList as $bgItem)
                     @foreach($bgItem->details as $detail)
                         @php $grandTotal += $detail->nominal; @endphp
                         <tr>
                             <td>
                                 <strong>{{ $detail->bank_name }}</strong><br>
-                                {{ $detail->branch_name ?? '-' }}
+                                <small>{{ $detail->branch_name ?? '-' }}</small>
                             </td>
 
                             {{-- KOLOM TENGAH (Dinamis Existing/New) --}}
@@ -126,6 +131,9 @@
                                 @else
                                     <span style="display:block; font-size:10px; color:#555;">Status:</span>
                                     <strong>PENGAJUAN BARU</strong>
+                                @endif
+                                @if(!empty($bgItem->bg_number))
+                                    <br><small style="font-family: monospace;">Ref: {{ $bgItem->bg_number }}</small>
                                 @endif
                             </td>
 
@@ -138,20 +146,20 @@
                             <td style="text-align: right;">
                                 @if($isExisting)
                                     <div style="margin-bottom: 5px; color: #777; font-size: 10px; text-decoration: line-through;">
-                                        Lama: Rp {{ number_format($data['old_nominal'], 0, ',', '.') }}
+                                        Lama: Rp {{ number_format($data['old_nominal'] ?? 0, 0, ',', '.') }}
                                     </div>
                                     <div style="font-weight: bold; color: #000;">
                                         Baru: Rp {{ number_format($detail->nominal, 0, ',', '.') }}
                                     </div>
                                 @else
-                                    {{ number_format($detail->nominal, 0, ',', '.') }}
+                                    <strong>Rp {{ number_format($detail->nominal, 0, ',', '.') }}</strong>
                                 @endif
                             </td>
                         </tr>
                     @endforeach
-                @else
+                @empty
                     <tr><td colspan="4" style="text-align:center;">Data BG tidak tersedia</td></tr>
-                @endif
+                @endforelse
 
                 <tr>
                     <td colspan="3" style="text-align: right; font-weight: bold; background-color: #f9f9f9;">

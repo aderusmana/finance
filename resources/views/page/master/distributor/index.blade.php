@@ -2,6 +2,45 @@
     @section('title', 'Master Distributor')
     @include('components.sample-table-styles')
 
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+
+    <style>
+        .select2-container--bootstrap-5 .select2-selection--multiple {
+            min-height: 42px;
+            padding: 4px 6px;
+        }
+        .select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__rendered {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            align-items: center;
+        }
+        .select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__choice {
+            background-color: #eff6ff !important;
+            border: 1px solid #bfdbfe !important;
+            color: #1d4ed8 !important;
+            font-size: 0.82rem;
+            font-weight: 500;
+            padding: 3px 8px;
+            border-radius: 6px;
+            margin: 0;
+            display: inline-flex;
+            align-items: center;
+        }
+        .select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__choice__remove {
+            color: #1d4ed8 !important;
+            margin-right: 5px;
+            font-weight: bold;
+        }
+        .select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__choice__remove:hover {
+            color: #b91c1c !important;
+        }
+        .select2-container--bootstrap-5 .select2-search--inline .select2-search__field {
+            margin-top: 3px;
+        }
+    </style>
+
     <div class="row m-1">
         <div class="col-12">
             <h4 class="main-title">Master Distributor</h4>
@@ -47,22 +86,55 @@
                     @csrf
                     <input type="hidden" name="id" id="dataId">
                     <div class="modal-body">
+                        {{-- OPSI LINK CUSTOMER --}}
                         <div class="mb-3">
-                            <label class="form-label">Kode Distributor <span class="text-danger">*</span></label>
+                            <label class="form-label fw-semibold">Pilih dari Master Customer <span class="text-muted fw-normal">(Opsional)</span></label>
+                            <select name="customer_id" id="customer_id" class="form-select select2-customer" style="width: 100%;">
+                                <option value="">-- Input Manual / Non-Customer --</option>
+                                @if(isset($customers))
+                                    @foreach ($customers as $c)
+                                        @php
+                                            $custEmails = array_values(array_unique(array_filter([
+                                                $c->email,
+                                                $c->purchasing_manager_email,
+                                                $c->finance_manager_email
+                                            ])));
+                                        @endphp
+                                        <option value="{{ $c->id }}" 
+                                                data-code="{{ $c->code }}" 
+                                                data-name="{{ $c->name }}" 
+                                                data-email="{{ implode(', ', $custEmails) }}"
+                                                data-emails='@json($custEmails)'>
+                                            {{ $c->code }} - {{ $c->name }}
+                                        </option>
+                                    @endforeach
+                                @endif
+                            </select>
+                            <div class="form-text" style="font-size: 0.78rem;">
+                                <i class="ph-bold ph-info"></i> Pilih customer jika ingin data Kode, Nama, dan Email terisi otomatis. Kosongkan jika ingin input manual.
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Kode Distributor <span class="text-danger">*</span></label>
                             <input type="text" name="code" id="code" class="form-control" placeholder="Contoh: ID3455" required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Nama Distributor <span class="text-danger">*</span></label>
+                            <label class="form-label fw-semibold">Nama Distributor <span class="text-danger">*</span></label>
                             <input type="text" name="name" id="name" class="form-control" placeholder="Contoh: PT. CITRA BHOGA JAYA" required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Email <span class="text-danger">*</span></label>
-                            <input type="email" name="email" id="email" class="form-control" placeholder="Contoh: email@yahoo.com" required>
+                            <label class="form-label fw-semibold">Email Distributor <span class="text-danger">*</span></label>
+                            <select name="email[]" id="email" class="form-select select2-email" multiple="multiple" style="width: 100%;">
+                            </select>
+                            <div class="form-text text-muted" style="font-size: 0.78rem;">
+                                <i class="ph-bold ph-info"></i> Ketik email lalu tekan <kbd class="bg-light text-dark border">Enter</kbd> atau <kbd class="bg-light text-dark border">,</kbd> (koma). Bisa memasukkan lebih dari 1 email.
+                            </div>
                         </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                        <button type="submit" class="btn btn-primary">Simpan</button>
+                        <button type="submit" class="btn btn-primary"><i class="ph-bold ph-floppy-disk me-1"></i> Simpan</button>
                     </div>
                 </form>
             </div>
@@ -70,9 +142,65 @@
     </div>
 
     @push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
         let table;
         $(document).ready(function() {
+            $('#customer_id').select2({
+                theme: 'bootstrap-5',
+                dropdownParent: $('#modalForm'),
+                placeholder: '-- Input Manual / Non-Customer --',
+                allowClear: true
+            });
+
+            $('#email').select2({
+                theme: 'bootstrap-5',
+                dropdownParent: $('#modalForm'),
+                tags: true,
+                tokenSeparators: [',', ';', ' '],
+                placeholder: 'Ketik email lalu tekan Enter...',
+                createTag: function (params) {
+                    let term = $.trim(params.term);
+                    if (term === '') {
+                        return null;
+                    }
+                    return {
+                        id: term,
+                        text: term,
+                        newTag: true
+                    };
+                }
+            });
+
+            $('#customer_id').on('change', function() {
+                let selected = $(this).find('option:selected');
+                let code = selected.data('code');
+                let name = selected.data('name');
+                let emails = selected.data('emails');
+
+                if (code) {
+                    $('#code').val(code);
+                    $('#name').val(name);
+
+                    $('#email').empty();
+                    if (Array.isArray(emails) && emails.length > 0) {
+                        emails.forEach(function(em) {
+                            if (em) {
+                                let newOption = new Option(em, em, true, true);
+                                $('#email').append(newOption);
+                            }
+                        });
+                    } else if (selected.data('email')) {
+                        let splitEmails = String(selected.data('email')).split(/[,;]+/).map(s => s.trim()).filter(s => s.length > 0);
+                        splitEmails.forEach(function(em) {
+                            let newOption = new Option(em, em, true, true);
+                            $('#email').append(newOption);
+                        });
+                    }
+                    $('#email').trigger('change');
+                }
+            });
+
             table = $('#sampleTable').DataTable({
                 processing: true,
                 serverSide: true,
@@ -88,6 +216,17 @@
 
             $('#mainForm').on('submit', function(e){
                 e.preventDefault();
+
+                let emails = $('#email').val();
+                if (!emails || emails.length === 0) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Email Wajib Diisi',
+                        text: 'Silakan masukkan minimal 1 alamat email untuk distributor.'
+                    });
+                    return false;
+                }
+
                 let id = $('#dataId').val();
                 let url = "{{ route('distributors.store') }}";
                 let method = "POST";
@@ -107,8 +246,16 @@
                         Swal.fire('Success', res.message, 'success');
                     },
                     error: function(err) {
-                        let msg = err.responseJSON.message || 'Gagal menyimpan data';
-                        Swal.fire('Error', msg, 'error');
+                        let msg = err.responseJSON && err.responseJSON.message ? err.responseJSON.message : 'Gagal menyimpan data';
+                        if (err.responseJSON && err.responseJSON.errors) {
+                            let errs = Object.values(err.responseJSON.errors).flat();
+                            msg = errs.join('<br>');
+                        }
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            html: msg
+                        });
                     }
                 });
             });
@@ -117,9 +264,25 @@
                 let id = $(this).data('id');
                 $.get("{{ url('/distributors') }}/" + id, function(data) {
                     $('#dataId').val(data.id);
+                    $('#customer_id').val(data.customer_id || '').trigger('change.select2');
                     $('#code').val(data.code);
                     $('#name').val(data.name);
-                    $('#email').val(data.email);
+
+                    $('#email').empty();
+                    let emailList = data.email_list;
+                    if (!emailList && data.email) {
+                        emailList = data.email.split(/[,;]+/).map(s => s.trim()).filter(s => s.length > 0);
+                    }
+                    if (Array.isArray(emailList)) {
+                        emailList.forEach(function(em) {
+                            if (em) {
+                                let newOption = new Option(em, em, true, true);
+                                $('#email').append(newOption);
+                            }
+                        });
+                    }
+                    $('#email').trigger('change');
+
                     $('#modalTitle').text('Edit Distributor');
                     $('#modalForm').modal('show');
                 });
@@ -144,6 +307,10 @@
                             success: function(res) {
                                 table.ajax.reload();
                                 Swal.fire('Terhapus!', res.message, 'success');
+                            },
+                            error: function(err) {
+                                let msg = err.responseJSON && err.responseJSON.message ? err.responseJSON.message : 'Gagal menghapus data';
+                                Swal.fire('Error', msg, 'error');
                             }
                         });
                     }
@@ -154,6 +321,8 @@
         function openModal() {
             $('#mainForm')[0].reset();
             $('#dataId').val('');
+            $('#customer_id').val('').trigger('change.select2');
+            $('#email').empty().trigger('change');
             $('#modalTitle').text('Tambah Distributor');
             $('#modalForm').modal('show');
         }

@@ -15,11 +15,31 @@
         </div>
     </div>
 
+    {{-- Nav Pills for Active vs Expired --}}
+    <div class="row mb-3">
+        <div class="col-12">
+            <ul class="nav nav-pills" id="bgListTabs" role="tablist">
+                <li class="nav-item me-2" role="presentation">
+                    <button class="nav-link active rounded-pill px-4 fw-semibold tab-bg-filter" data-tab="active" type="button">
+                        <i class="ph-bold ph-shield-check me-1"></i> Active Bank Garansi 
+                        <span class="badge bg-success ms-1 rounded-pill">{{ $stats['active'] ?? 0 }}</span>
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link rounded-pill px-4 fw-semibold tab-bg-filter" data-tab="expired" type="button">
+                        <i class="ph-bold ph-clock-counter-clockwise me-1"></i> History BG Expired 
+                        <span class="badge bg-danger ms-1 rounded-pill">{{ $stats['expired'] ?? 0 }}</span>
+                    </button>
+                </li>
+            </ul>
+        </div>
+    </div>
+
     <div class="row">
         <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-4 table-controls-header flex-wrap">
                 {{-- Filters --}}
-                <div class="d-none d-md-flex align-items-center gap-2 mb-3">
+                <div class="d-flex align-items-center gap-2 mb-3 filter-container-responsive flex-wrap customer-filter-bar">
                     <span class="text-muted fw-bold me-1"><i class="ph-bold ph-funnel"></i> Filter:</span>
                     <select id="statusFilter" class="form-select select2" style="width: 150px;">
                         <option value="all">All Status</option>
@@ -37,8 +57,14 @@
                     </select>
                     <button id="resetFilters" class="btn btn-sm btn-secondary border" title="Reset Filters"><i class="ph-bold ph-arrow-counter-clockwise"></i></button>
                 </div>
-                {{-- Create Button --}}
-                <div class="ms-auto d-flex">
+                {{-- Create & Action Buttons --}}
+                <div class="ms-auto d-flex gap-2 page-action-buttons">
+                    <button class="btn btn-outline-success shadow-sm" type="button" id="btn-import-bg" data-bs-toggle="modal" data-bs-target="#importBgModal">
+                        <i class="ph-bold ph-upload-simple me-1"></i> <span>Import Master BG</span>
+                    </button>
+                    <a href="{{ route('sales-submissions.index') }}?action=create" class="btn btn-outline-primary shadow-sm" title="Pengajuan Sales (Adendum & Tambah BG)">
+                        <i class="ph-bold ph-paper-plane-tilt me-1"></i> <span>Pengajuan Sales</span>
+                    </a>
                     <button class="btn btn-primary" type="button" id="btn-create-bg">
                         <i class="ph-bold ph-plus"></i> <span>New Bank Garansi</span>
                     </button>
@@ -70,7 +96,6 @@
                                 <th>Issued Date</th>
                                 <th>Exp Date</th>
                                 <th class="text-center">Status</th>
-                                <th class="text-center">Menu</th>
                                 <th class="text-center">Action</th>
                             </tr>
                         </thead>
@@ -237,6 +262,46 @@
         </div>
     </div>
 
+    {{-- MODAL IMPORT MASTER BG --}}
+    <div class="modal fade" id="importBgModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 12px; overflow: hidden;">
+                <div class="modal-header bg-success text-white py-3 px-4">
+                    <h5 class="modal-title fw-bold text-white d-flex align-items-center gap-2 mb-0">
+                        <i class="ph-bold ph-upload-simple fs-5"></i> <span>Import Master Bank Garansi</span>
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="importBgForm" enctype="multipart/form-data">
+                    @csrf
+                    <div class="modal-body p-4 bg-light bg-opacity-50">
+                        <div class="alert alert-info border-0 shadow-sm f-s-13 mb-3">
+                            <i class="ph-fill ph-info me-1"></i> Unggah file <strong>Excel (.xlsx, .xls)</strong> atau <strong>CSV</strong> untuk mengimpor data Master Bank Garansi secara massal. Tipe BG otomatis diset sebagai <strong>New</strong>.
+                        </div>
+
+                        <div class="text-center mb-3">
+                            <a href="{{ route('bg.template') }}" class="btn btn-outline-primary btn-sm rounded-pill px-3 py-1 shadow-xs fw-semibold">
+                                <i class="ph-bold ph-download-simple me-1"></i> Download Template File (.CSV)
+                            </a>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold text-dark">Pilih File (.xlsx, .xls, .csv) <span class="text-danger">*</span></label>
+                            <input type="file" class="form-control rounded-2" name="file" accept=".xlsx,.xls,.csv,.txt" required>
+                            <div class="form-text text-muted" style="font-size: 11px;">Maksimal ukuran file: 10MB.</div>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-white border-top py-2 px-4 d-flex justify-content-between">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-success fw-bold px-4" id="btn-submit-import-bg">
+                            <i class="ph-bold ph-check me-1"></i> Mulai Import
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     @push('scripts')
     <script src="{{ asset('assets/vendor/select/select2.min.js') }}"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -262,11 +327,14 @@
             $('.select2').select2({ theme: 'bootstrap-5' });
             $('.select2-modal').select2({ dropdownParent: $('#bgModal'), theme: 'bootstrap-5', placeholder: 'Select Option' });
 
+            let activeBgTab = 'active';
+
             const table = $('#sampleTable').DataTable({
                 processing: true, serverSide: true,
                 ajax: {
                     url: "{{ route('bg-list.index') }}",
                     data: function(d) {
+                        d.tab = activeBgTab;
                         d.status = $('#statusFilter').val();
                         d.bg_type = $('#typeFilter').val();
                     }
@@ -286,7 +354,6 @@
                         let color = d === 'approved' ? 'success' : (d === 'submitted' ? 'primary' : (d === 'expired' ? 'danger' : 'secondary'));
                         return `<span class="badge bg-${color} status-badge-lg">${d.replace('_', ' ')}</span>`;
                     }},
-                    { data: 'menu', orderable: false, searchable: false, className: 'text-center' },
                     { data: 'action', orderable: false, searchable: false, className: 'text-center' }
                 ],
                 order: [[1, 'asc']]
@@ -294,6 +361,18 @@
 
             $('#statusFilter, #typeFilter').on('change', function() { table.ajax.reload(); });
             $('#resetFilters').on('click', function() { $('#statusFilter, #typeFilter').val('all').trigger('change'); });
+
+            $('.tab-bg-filter').on('click', function() {
+                $('.tab-bg-filter').removeClass('active');
+                $(this).addClass('active');
+                activeBgTab = $(this).data('tab');
+                if (activeBgTab === 'expired') {
+                    $('#statusFilter').val('all').prop('disabled', true);
+                } else {
+                    $('#statusFilter').prop('disabled', false);
+                }
+                table.ajax.reload();
+            });
 
             let isPopulating = false;
             let currentSequence = 0;
@@ -495,17 +574,17 @@
 
                 Swal.fire({
                     title: 'Request Extension?',
-                    text: "Sistem akan mengirimkan email formulir kosong ke Customer untuk pengajuan BG Baru (Extension).",
+                    text: "The system will send an empty form email to the Customer for a New BG submission (Extension).",
                     icon: 'question',
                     showCancelButton: true,
                     confirmButtonColor: '#10b981',
                     cancelButtonColor: '#d33',
-                    confirmButtonText: 'Ya, Kirim Form!',
-                    cancelButtonText: 'Batal'
+                    confirmButtonText: 'Yes, Send Form!',
+                    cancelButtonText: 'Cancel'
                 }).then((result) => {
                     if (result.isConfirmed) {
                         Swal.fire({
-                            title: 'Mengirim Email...',
+                            title: 'Sending Email...',
                             didOpen: () => Swal.showLoading()
                         });
 
@@ -517,7 +596,7 @@
                                 bg_id: id
                             },
                             success: function(res) {
-                                Swal.fire('Terkirim!', res.message, 'success');
+                                Swal.fire('Sent!', res.message, 'success');
                                 table.ajax.reload();
                             },
                             error: function(xhr) {
@@ -534,18 +613,18 @@
 
                 Swal.fire({
                     title: 'Request Existing Update?',
-                    text: "Sistem akan mengirimkan email ke Customer untuk memperbarui Nominal BG ini.",
+                    text: "The system will send an email to the Customer to update the Nominal of this BG.",
                     icon: 'question',
                     showCancelButton: true,
                     confirmButtonColor: '#6366f1',
                     cancelButtonColor: '#d33',
-                    confirmButtonText: 'Ya, Kirim Email!',
-                    cancelButtonText: 'Batal'
+                    confirmButtonText: 'Yes, Send Email!',
+                    cancelButtonText: 'Cancel'
                 }).then((result) => {
                     if (result.isConfirmed) {
                         Swal.fire({
-                            title: 'Mengirim Email...',
-                            text: 'Mohon tunggu sebentar',
+                            title: 'Sending Email...',
+                            text: 'Please wait a moment',
                             allowOutsideClick: false,
                             didOpen: () => Swal.showLoading()
                         });
@@ -555,7 +634,7 @@
                             type: "POST",
                             data: { _token: "{{ csrf_token() }}" },
                             success: function(res) {
-                                Swal.fire('Terkirim!', res.message, 'success');
+                                Swal.fire('Sent!', res.message, 'success');
                                 table.ajax.reload();
                             },
                             error: function(xhr) {
@@ -696,6 +775,48 @@
                     },
                     error: function(xhr) {
                         let msg = xhr.responseJSON?.message || 'Error occurred';
+                        Swal.fire('Error', msg, 'error');
+                    }
+                });
+            });
+
+            // --- IMPORT MASTER BG HANDLER ---
+            $('#importBgForm').on('submit', function(e) {
+                e.preventDefault();
+                let formData = new FormData(this);
+
+                Swal.fire({
+                    title: 'Sedang Mengimpor Data...',
+                    html: 'Mohon tunggu, proses validasi dan penyimpanan Master Bank Garansi sedang berjalan.',
+                    allowOutsideClick: false,
+                    didOpen: () => { Swal.showLoading(); }
+                });
+
+                $.ajax({
+                    url: "{{ route('bg.import') }}",
+                    type: "POST",
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(res) {
+                        if (res.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Import Selesai!',
+                                text: res.message,
+                                timer: 3000,
+                                showConfirmButton: true
+                            }).then(() => {
+                                $('#importBgModal').modal('hide');
+                                $('#importBgForm')[0].reset();
+                                table.ajax.reload(null, false);
+                            });
+                        } else {
+                            Swal.fire('Gagal', res.message, 'error');
+                        }
+                    },
+                    error: function(xhr) {
+                        let msg = xhr.responseJSON?.message || 'Terjadi kesalahan saat memproses file import.';
                         Swal.fire('Error', msg, 'error');
                     }
                 });

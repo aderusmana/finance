@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Akses Tidak Valid | Corporate System</title>
+    <title>Invalid Access | Corporate System</title>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.0/font/bootstrap-icons.min.css">
@@ -43,7 +43,7 @@
                 </div>
                 <div>
                     <h6 style="text-transform: uppercase; letter-spacing: 1px; color: #64748b; font-size: 0.75rem; font-weight: 700; margin-bottom: 5px;">System Notification</h6>
-                    <h2 style="margin: 0; font-weight: 800; color: #0f172a; font-size: 1.5rem;">Tautan Tidak Valid</h2>
+                    <h2 style="margin: 0; font-weight: 800; color: #0f172a; font-size: 1.5rem;">Invalid Link</h2>
                 </div>
             </div>
 
@@ -51,22 +51,22 @@
 
             {{-- Message Body --}}
             <p style="color: #475569; font-size: 1rem; line-height: 1.7; margin-bottom: 30px;">
-                Mohon maaf, sistem tidak dapat memproses permintaan Anda. Hal ini biasanya terjadi karena alasan keamanan perbankan berikut:
+                We apologize, the system cannot process your request. This usually happens due to the following banking security reasons:
             </p>
 
             {{-- List Alasan (Style Corporate) --}}
             <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin-bottom: 35px;">
                 <ul style="margin: 0; padding-left: 20px; color: #334155; font-size: 0.9rem; font-weight: 500; line-height: 1.8;">
-                    <li>Dokumen Bank Garansi sudah <b>Selesai Diproses</b>.</li>
-                    <li>Token otorisasi telah <b>Kadaluarsa</b>.</li>
-                    <li>Terdeteksi perubahan data pada URL.</li>
+                    <li>The Bank Guarantee Document has been <b>Successfully Processed</b>.</li>
+                    <li>The authorization token has <b>Expired</b>.</li>
+                    <li>Data modification detected in the URL.</li>
                 </ul>
             </div>
 
             {{-- Action Button (Warna Bank: Navy Blue) --}}
             <button onclick="window.close()" 
                 style="width: 100%; background: #0f172a; color: white; border: none; padding: 16px; border-radius: 8px; font-weight: 700; font-size: 1rem; cursor: pointer; transition: background 0.2s, transform 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px;">
-                <i class="bi bi-shield-check"></i> Tutup Halaman Aman
+                <i class="bi bi-shield-check"></i> Close Secure Page
             </button>
 
             <div style="text-align: center; margin-top: 25px;">

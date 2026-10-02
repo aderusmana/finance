@@ -21,8 +21,58 @@ class CustomerShipToController extends Controller
                 ->addColumn('customer_code', function($row) {
                     return $row->customer->code ?? '-';
                 })
+                ->addColumn('customer_name', function($row) {
+                    return $row->customer->name ?? '-';
+                })
+                ->addColumn('customer_sort_name', function($row) {
+                    return $row->customer->sort_name ?? '-';
+                })
                 ->addColumn('user_name', function($row) {
                     return $row->user->name ?? '-';
+                })
+                ->filterColumn('customer_code', function($query, $keyword) {
+                    $query->whereHas('customer', function($q) use ($keyword) {
+                        $q->where('code', 'like', "%{$keyword}%");
+                    });
+                })
+                ->orderColumn('customer_code', function($query, $order) {
+                    $query->orderBy(
+                        Customer::select('code')->whereColumn('customers.id', 'customer_ship_toes.customer_id'),
+                        $order
+                    );
+                })
+                ->filterColumn('customer_name', function($query, $keyword) {
+                    $query->whereHas('customer', function($q) use ($keyword) {
+                        $q->where('name', 'like', "%{$keyword}%");
+                    });
+                })
+                ->orderColumn('customer_name', function($query, $order) {
+                    $query->orderBy(
+                        Customer::select('name')->whereColumn('customers.id', 'customer_ship_toes.customer_id'),
+                        $order
+                    );
+                })
+                ->filterColumn('customer_sort_name', function($query, $keyword) {
+                    $query->whereHas('customer', function($q) use ($keyword) {
+                        $q->where('sort_name', 'like', "%{$keyword}%");
+                    });
+                })
+                ->orderColumn('customer_sort_name', function($query, $order) {
+                    $query->orderBy(
+                        Customer::select('sort_name')->whereColumn('customers.id', 'customer_ship_toes.customer_id'),
+                        $order
+                    );
+                })
+                ->filterColumn('user_name', function($query, $keyword) {
+                    $query->whereHas('user', function($q) use ($keyword) {
+                        $q->where('name', 'like', "%{$keyword}%");
+                    });
+                })
+                ->orderColumn('user_name', function($query, $order) {
+                    $query->orderBy(
+                        User::select('name')->whereColumn('users.id', 'customer_ship_toes.user_id'),
+                        $order
+                    );
                 })
                 ->addColumn('action', function($row){
                     $btn = '<div class="d-flex flex-row gap-2 flex-wrap">';

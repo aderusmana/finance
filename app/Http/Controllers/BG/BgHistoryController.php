@@ -67,18 +67,7 @@ class BgHistoryController extends Controller
                 ->editColumn('created_at', function($row){
                     return $row->created_at->format('d M Y H:i');
                 })
-                ->addColumn('action', function ($row) {
-                    // Tombol Delete (Hanya untuk Super Admin jika perlu)
-                    return '
-                        <form action="' . route('bg-histories.destroy', $row->id) . '" method="POST" style="display:inline;" onsubmit="return confirm(\'Are you sure?\')">'
-                        . csrf_field() . method_field('DELETE') . '
-                            <button type="submit" class="btn btn-xs btn-danger" title="Delete Log">
-                                <i class="ph-bold ph-trash text-white"></i>
-                            </button>
-                        </form>
-                    ';
-                })
-                ->rawColumns(['nominal_change', 'date_change', 'remarks', 'action'])
+                ->rawColumns(['nominal_change', 'date_change', 'remarks'])
                 ->make(true);
         }
 

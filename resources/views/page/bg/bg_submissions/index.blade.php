@@ -2,6 +2,96 @@
     @section('title', 'Submission Center')
     @include('components.sample-table-styles')
 
+    <style>
+        /* Fix Select2 inside Bootstrap 5 Input Group agar sejajar dengan icon */
+        .input-group > .select2-container,
+        .input-group > .select2-container--bootstrap-5 {
+            position: relative;
+            flex: 1 1 auto;
+            width: 1% !important;
+            min-width: 0;
+        }
+
+        .input-group > .select2-container .select2-selection,
+        .input-group > .select2-container--bootstrap-5 .select2-selection {
+            height: 100% !important;
+            min-height: 38px;
+            border-top-left-radius: 0 !important;
+            border-bottom-left-radius: 0 !important;
+            border-top-right-radius: 0.375rem !important;
+            border-bottom-right-radius: 0.375rem !important;
+            display: flex;
+            align-items: center;
+            border-color: #dee2e6;
+            border-left: 0 !important;
+        }
+
+        .input-group > .select2-container .select2-selection--single,
+        .input-group > .select2-container--bootstrap-5 .select2-selection--single {
+            padding-top: 0;
+            padding-bottom: 0;
+        }
+
+        .input-group > .select2-container .select2-selection--single .select2-selection__rendered,
+        .input-group > .select2-container--bootstrap-5 .select2-selection--single .select2-selection__rendered {
+            padding-left: 0.75rem;
+            padding-right: 2rem;
+            line-height: normal;
+            color: #212529;
+        }
+
+        .input-group > .select2-container .select2-selection--single .select2-selection__arrow,
+        .input-group > .select2-container--bootstrap-5 .select2-selection--single .select2-selection__arrow {
+            height: 100%;
+            top: 0;
+            right: 8px;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-group:focus-within {
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+            border-radius: 0.375rem;
+        }
+
+        .input-group:focus-within > .input-group-text,
+        .input-group:focus-within > .select2-container .select2-selection,
+        .input-group:focus-within > .select2-container--bootstrap-5 .select2-selection {
+            border-color: #86b7fe;
+        }
+
+        /* Mobile Card Style: Tombol Aksi Dokumen berupa Icon Saja (Tanpa Teks) */
+        @media (max-width: 767.98px) {
+            .bg-action-buttons {
+                flex-direction: row !important;
+                justify-content: flex-end !important;
+                align-items: center !important;
+                gap: 8px !important;
+                width: auto !important;
+                min-width: 0 !important;
+                max-width: none !important;
+            }
+            .bg-action-buttons .btn {
+                width: 36px !important;
+                height: 36px !important;
+                min-width: 36px !important;
+                padding: 0 !important;
+                display: inline-flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                border-radius: 8px !important;
+                flex: 0 0 auto !important;
+            }
+            .bg-action-buttons .btn span {
+                display: none !important;
+            }
+            .bg-action-buttons .btn i {
+                font-size: 1.15rem !important;
+                margin: 0 !important;
+            }
+        }
+    </style>
+
     {{-- HEADER --}}
     <div class="row m-1 mb-4">
         <div class="col-12">
@@ -17,7 +107,7 @@
         <div class="col-12">
 
             {{-- NAVIGATION PILLS (TABS) --}}
-            <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-4 tab-header-container flex-wrap">
                 <ul class="nav nav-pills gap-2" id="pills-tab" role="tablist" style="background: #f1f5f9; padding: 5px; border-radius: 12px; display: inline-flex;">
                     <li class="nav-item" role="presentation">
                         <button class="nav-link active fw-bold px-4 rounded-pill" id="pills-active-tab" data-bs-toggle="pill" data-bs-target="#pills-active" type="button" role="tab">
@@ -46,13 +136,15 @@
 
                     {{-- Filter --}}
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <div class="d-flex align-items-center gap-2">
+                        <div class="d-flex align-items-center gap-2 filter-container-responsive flex-wrap">
                             <span class="text-muted fw-bold me-1"><i class="ph-bold ph-funnel"></i> Filter:</span>
-                            <select id="statusFilter" class="form-select select2" style="width: 180px;">
+                            <select id="statusFilter" class="form-select select2" style="width: 240px;">
                                 <option value="all">Show All Active</option>
                                 <option value="pending_print">Pending Print</option>
                                 <option value="awaiting_upload">Awaiting Upload</option>
-                                <option value="uploaded">Uploaded (Need Review)</option>
+                                <option value="uploaded">Uploaded (Need Verification)</option>
+                                <option value="waiting_bank_issuance">Menunggu Terbit Bank & TTD</option>
+                                <option value="waiting_approval">Menunggu Verifikasi Bu Rita</option>
                             </select>
                         </div>
                     </div>
@@ -65,10 +157,10 @@
                             </span>
                         </div>
                         <div>
-                            <h5 class="fw-bold mb-1" style="color: #052c65;">Panduan Proses Approval</h5>
+                            <h5 class="fw-bold mb-1" style="color: #052c65;">Approval Process Guide</h5>
                             <p class="mb-0 small" style="line-height: 2.5; color: #084298;">
-                                1. Klik tombol <span class="badge bg-primary text-light border border-warning shadow-sm"><i class="ph-bold ph-file-search me-1"></i> Review & Process</span> pada kolom <b>Signed Doc</b> untuk memeriksa dokumen, mengoreksi data, dan melanjutkan ke <b>Lampiran D</b>.<br>
-                                2. Tombol <span class="badge bg-warning text-light border"><i class="ph-bold ph-pencil-simple"></i></span> pada kolom <i>Action</i> hanya digunakan untuk <b>Upload Ulang / Edit Administrasi</b> (Tanpa Approval).
+                                1. Klik tombol <span class="badge bg-primary text-light border border-warning shadow-sm"><i class="ph-bold ph-file-search me-1"></i> Review & Process</span> in the <b>Signed Doc</b> column to inspect the document, correct the data, and proceed to <b>Attachment D</b>.<br>
+                                2. The <span class="badge bg-warning text-light border"><i class="ph-bold ph-pencil-simple"></i></span> button in the <i>Action</i> column is only used for <b>Re-upload / Administrative Edit</b> (Without Approval).
                             </p>
                         </div>
                     </div>
@@ -77,7 +169,7 @@
                     <div class="main-table-container">
                         <div class="table-header-enhanced bg-primary text-white">
                             <h4 class="table-title mb-1"><i class="ph-duotone ph-list-checks me-2"></i> Active To-Do List</h4>
-                            <small class="opacity-75 f-s-12">Daftar pengajuan yang memerlukan tindakan.</small>
+                            <small class="opacity-75 f-s-12">List of submissions requiring action.</small>
                         </div>
                         <div class="table-responsive">
                             <table class="w-100 display align-middle" id="sampleTable">
@@ -104,8 +196,8 @@
                     <div class="alert shadow-sm border-0 d-flex align-items-center mb-4 p-3 rounded-3" style="background-color: #f0fdf4; color: #166534; border-left: 5px solid #198754;">
                         <i class="ph-duotone ph-archive-box fs-3 me-3"></i>
                         <div>
-                            <h6 class="fw-bold mb-0">Arsip Dokumen Selesai</h6>
-                            <small>Data di bawah ini adalah pengajuan yang telah selesai (Completed/Approved). Bersifat Read-Only.</small>
+                            <h6 class="fw-bold mb-0">Completed Document Archives</h6>
+                            <small>The data below are completed/approved submissions. Read-Only.</small>
                         </div>
                     </div>
 
@@ -113,7 +205,7 @@
                     <div class="main-table-container">
                         <div class="table-header-enhanced bg-success text-white">
                             <h4 class="table-title mb-1"><i class="ph-bold ph-check-circle me-2"></i> Completed Archives</h4>
-                            <small class="opacity-75 f-s-12">Riwayat pengajuan Bank Garansi yang telah disetujui.</small>
+                            <small class="opacity-75 f-s-12">History of approved Bank Guarantee submissions.</small>
                         </div>
                         <div class="table-responsive">
                             <table class="w-100 display align-middle" id="historyTable">
@@ -150,7 +242,7 @@
                         <h5 class="modal-title fw-bold text-dark" id="modalLabel">
                             <i class="ph-bold ph-folder-plus me-2 text-primary"></i>Manage Submission
                         </h5>
-                        <small class="text-muted">Buat pengajuan baru atau edit data administrasi.</small>
+                        <small class="text-muted">Create a new submission or edit administrative data.</small>
                     </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
@@ -167,8 +259,8 @@
                             <div class="col-12">
                                 <label class="form-label fw-bold small text-uppercase text-muted">Customer / Recommendation <span class="text-danger">*</span></label>
                                 <div class="input-group">
-                                    <span class="input-group-text bg-light border-end-0"><i class="ph-bold ph-user"></i></span>
-                                    <select name="bg_recommendation_id" id="bg_recommendation_id" class="form-select select2-modal border-start-0 ps-0" required style="width: 100%;">
+                                    <span class="input-group-text bg-light"><i class="ph-bold ph-user"></i></span>
+                                    <select name="bg_recommendation_id" id="bg_recommendation_id" class="form-select select2-modal" required>
                                         <option></option>
                                         @foreach($recommendations as $r)
                                             <option value="{{ $r->id }}">
@@ -185,9 +277,9 @@
                                 <div class="input-group">
                                     <span class="input-group-text bg-light"><i class="ph-bold ph-qr-code"></i></span>
                                     <input type="text" class="form-control" name="form_code" id="form_code" required
-                                           placeholder="Contoh: NEW-20250112-ABCD-1">
+                                           placeholder="Example: NEW-20250112-ABCD-1">
                                 </div>
-                                <div class="form-text small text-muted"><i class="ph-bold ph-info me-1"></i> Gunakan format yang sesuai dengan standar perusahaan.</div>
+                                <div class="form-text small text-muted"><i class="ph-bold ph-info me-1"></i> Use a format that complies with company standards.</div>
                             </div>
 
                             {{-- File Upload --}}
@@ -200,14 +292,14 @@
 
                                     <div class="form-text mt-2 small text-muted">
                                         Format: PDF, JPG, PNG. Max 5MB.<br>
-                                        <span class="text-danger fst-italic" id="upload-note">* Wajib diupload untuk pengajuan baru.</span>
+                                        <span class="text-danger fst-italic" id="upload-note">* Must be uploaded for new submissions.</span>
                                     </div>
 
                                     {{-- Preview Link if Edit --}}
                                     <div id="current_file_preview" class="d-none mt-2 p-2 bg-white border rounded d-flex align-items-center gap-2">
-                                        <i class="ph-fill ph-check-circle text-success fs-5"></i>
-                                        <span class="small text-success fw-bold">File sudah ada. Upload ulang untuk mengganti.</span>
-                                        <a href="#" id="link_view_file_modal" target="_blank" class="btn btn-sm btn-outline-success ms-auto">Lihat File</a>
+                                        <i id="current_file_preview_icon" class="ph-fill ph-check-circle text-success fs-5"></i>
+                                        <span id="current_file_preview_text" class="small text-success fw-bold">File is available and can be viewed.</span>
+                                        <a href="#" id="link_view_file_modal" target="_blank" class="btn btn-sm btn-outline-success ms-auto">View File</a>
                                     </div>
                                 </div>
                             </div>
@@ -216,9 +308,9 @@
                     </div>
 
                     <div class="modal-footer bg-light p-3 border-top-0">
-                        <button type="button" class="btn btn-light fw-bold rounded-pill px-4" data-bs-dismiss="modal">Batal</button>
+                        <button type="button" class="btn btn-light fw-bold rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
                         <button type="submit" class="btn btn-primary fw-bold rounded-pill px-4 shadow-sm">
-                            <i class="ph-bold ph-paper-plane-right me-2"></i> Simpan & Upload
+                            <i class="ph-bold ph-paper-plane-right me-2"></i> Save & Upload
                         </button>
                     </div>
                 </form>
@@ -230,23 +322,23 @@
     <div class="modal fade" id="viewFileModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-xl">
             <div class="modal-content" style="height: 90vh;">
-                <div class="modal-header bg-dark text-white py-2">
-                    <h6 class="modal-title text-white"><i class="ph-bold ph-file-text me-2"></i> Document Preview & Action</h6>
+                <div class="modal-header bg-dark text-white py-2.5 px-3">
+                    <h6 class="modal-title text-white d-flex align-items-center gap-2 mb-0"><i class="ph-bold ph-file-text"></i> Document Preview & Action</h6>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-0 bg-light position-relative" id="fileContentArea" style="height: 100%;"></div>
 
-                {{-- Footer Action (Hanya muncul jika status process) --}}
-                <div class="modal-footer bg-white shadow-lg py-3" id="viewFileFooter" style="z-index: 1050;">
+                {{-- Footer Action --}}
+                <div class="modal-footer bg-white shadow-lg py-2.5 px-3" id="viewFileFooter" style="z-index: 1050;">
                     <div class="d-flex justify-content-between w-100 align-items-center">
                         <div>
-                            <button type="button" class="btn btn-warning text-white fw-bold" id="btn-trigger-edit">
-                                <i class="ph-bold ph-pencil-simple me-1"></i> Edit Data
+                            <button type="button" class="btn btn-sm btn-primary fw-semibold px-3 py-2 rounded-2 shadow-sm d-inline-flex align-items-center gap-1.5" id="btn-trigger-edit">
+                                <i class="ph-bold ph-pencil-simple"></i> <span>Lengkapi Data BG</span>
                             </button>
                         </div>
                         <div>
-                            <button type="button" class="btn btn-success fw-bold px-4" id="btn-trigger-approve">
-                                <i class="ph-bold ph-check-circle me-1"></i> Approve & Process
+                            <button type="button" class="btn btn-sm btn-success fw-semibold px-4 py-2 rounded-2 shadow-sm d-inline-flex align-items-center gap-1.5" id="btn-trigger-approve">
+                                <i class="ph-bold ph-check-circle"></i> <span>Verifikasi Dokumen</span>
                             </button>
                         </div>
                     </div>
@@ -255,26 +347,126 @@
         </div>
     </div>
 
-    {{-- 3. Modal Edit Data (Correction) --}}
+    {{-- 3. Modal Edit Data (Kelengkapan Bank Garansi) --}}
     <div class="modal fade" id="editBgDataModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
-        <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content">
-                <div class="modal-header bg-warning text-white">
-                    <h5 class="modal-title"><i class="ph-bold ph-pencil"></i> Koreksi Data</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        <div class="modal-dialog modal-dialog-centered modal-xl">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
+                <div class="modal-header bg-primary text-white py-3 px-4">
+                    <div>
+                        <h5 class="modal-title fw-bold text-white d-flex align-items-center gap-2 mb-0">
+                            <i class="ph-bold ph-shield-check fs-5"></i> <span>Input Sertifikat Bank Garansi & Masa Berlaku</span>
+                        </h5>
+                        <small class="text-white d-block mt-1" id="modalSubTitle" style="font-size: 11px; opacity: 0.85;">Input Nomor BG resmi dari bank, tanggal jatuh tempo, dan unggah scan sertifikat asli.</small>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <form id="editBgForm">
+                <form id="editBgForm" enctype="multipart/form-data">
                     @csrf
                     <input type="hidden" name="submission_id" id="edit_submission_id">
                     <input type="hidden" name="action_type" value="edit_submit">
-                    <div class="modal-body">
+                    <div class="modal-body p-4 bg-light bg-opacity-40" style="max-height: 78vh; overflow-y: auto;">
                         <div id="bankDetailsContainer"></div> {{-- Diisi AJAX --}}
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
-                        <button type="submit" class="btn btn-primary fw-bold">Simpan Perubahan</button>
+                    <div class="modal-footer bg-white border-top py-3 px-4 d-flex justify-content-between align-items-center">
+                        <button type="button" class="btn btn-outline-secondary fw-semibold rounded-2 px-3 py-2" data-bs-dismiss="modal">
+                            <i class="ph-bold ph-x me-1"></i> Batal
+                        </button>
+                        <button type="submit" class="btn btn-success fw-bold rounded-2 px-4 py-2 shadow-sm d-inline-flex align-items-center gap-2" id="btn-save-edit-bg">
+                            <i class="ph-bold ph-check-circle fs-5"></i> <span>Simpan & Ajukan ke Bu Rita (Verifikasi Akhir)</span>
+                        </button>
                     </div>
                 </form>
+            </div>
+        </div>
+    </div>
+
+    {{-- 4. Modal Pilihan Berkas Bank --}}
+    <div class="modal fade" id="berkasBankModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
+                <div class="modal-header bg-danger text-white py-3 px-4">
+                    <div>
+                        <h5 class="modal-title fw-bold text-white d-flex align-items-center gap-2 mb-1">
+                            <i class="ph-bold ph-files fs-5"></i> <span>Pilihan Unduh Berkas Bank</span>
+                        </h5>
+                        <small class="text-white-50 d-block" style="font-size: 12px;">
+                            <span id="berkasModalCustomer" class="text-white fw-semibold"></span> &bull; <span id="berkasModalFormCode"></span>
+                        </small>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4 bg-light">
+                    {{-- Opsi 1: Paket Lengkap (ZIP) --}}
+                    <div class="mb-3">
+                        <label class="form-label text-uppercase text-muted fw-bold small mb-2" style="font-size: 11px;">
+                            <i class="ph-bold ph-package me-1"></i> Paket Lengkap Dokumen
+                        </label>
+                        <a href="#" id="btnDownloadZip" class="btn btn-danger w-100 p-3 rounded-3 shadow-sm d-flex align-items-center justify-content-between text-start text-decoration-none">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="bg-white bg-opacity-25 rounded-3 p-2 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
+                                    <i class="ph-bold ph-file-zip fs-3 text-white"></i>
+                                </div>
+                                <div>
+                                    <div class="fw-bold text-white fs-6">Download Semua Berkas (ZIP)</div>
+                                    <small class="text-white-50" style="font-size: 11px;">Semua surat & Lampiran D dalam 1 paket ZIP</small>
+                                </div>
+                            </div>
+                            <div class="bg-white bg-opacity-20 rounded-circle p-2 d-flex align-items-center justify-content-center">
+                                <i class="ph-bold ph-download-simple text-white fs-5"></i>
+                            </div>
+                        </a>
+                    </div>
+
+                    {{-- Opsi 2: Per Satuan PDF --}}
+                    <div>
+                        <label class="form-label text-uppercase text-muted fw-bold small mb-2" style="font-size: 11px;">
+                            <i class="ph-bold ph-files me-1"></i> Unduh / Lihat Per File (PDF)
+                        </label>
+                        <div class="list-group shadow-sm rounded-3 border-0 overflow-hidden">
+                            <a href="#" id="btnDownloadLampiran" target="_blank" class="list-group-item list-group-item-action p-3 d-flex align-items-center justify-content-between border-0 border-bottom">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="bg-danger bg-opacity-10 text-danger rounded-3 p-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                        <i class="ph-bold ph-file-pdf fs-5"></i>
+                                    </div>
+                                    <div>
+                                        <div class="fw-semibold text-dark">Lampiran D</div>
+                                        <small class="text-muted" style="font-size: 11px;">Formulir Lampiran D Pengajuan BG</small>
+                                    </div>
+                                </div>
+                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2.5 py-1 rounded-pill fw-bold" style="font-size: 11px;">PDF</span>
+                            </a>
+                            <a href="#" id="btnDownloadBank" target="_blank" class="list-group-item list-group-item-action p-3 d-flex align-items-center justify-content-between border-0 border-bottom">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="bg-success bg-opacity-10 text-success rounded-3 p-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                        <i class="ph-bold ph-bank fs-5"></i>
+                                    </div>
+                                    <div>
+                                        <div class="fw-semibold text-dark">Surat Bank</div>
+                                        <small class="text-muted" style="font-size: 11px;">Surat Pengantar Permohonan ke Bank</small>
+                                    </div>
+                                </div>
+                                <span class="badge bg-success-subtle text-success border border-success-subtle px-2.5 py-1 rounded-pill fw-bold" style="font-size: 11px;">PDF</span>
+                            </a>
+                            <a href="#" id="btnDownloadDistributor" target="_blank" class="list-group-item list-group-item-action p-3 d-flex align-items-center justify-content-between border-0">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="bg-info bg-opacity-10 text-info rounded-3 p-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                        <i class="ph-bold ph-buildings fs-5"></i>
+                                    </div>
+                                    <div>
+                                        <div class="fw-semibold text-dark">Surat Distributor</div>
+                                        <small class="text-muted" style="font-size: 11px;">Surat Pernyataan / Rekomendasi Distributor</small>
+                                    </div>
+                                </div>
+                                <span class="badge bg-info-subtle text-info border border-info-subtle px-2.5 py-1 rounded-pill fw-bold" style="font-size: 11px;">PDF</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-white border-top py-2.5 px-4 d-flex justify-content-end">
+                    <button type="button" class="btn btn-secondary fw-semibold rounded-2 px-3 py-1.5" data-bs-dismiss="modal">
+                        <i class="ph-bold ph-x me-1"></i> Tutup
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -286,7 +478,7 @@
             $(document).ready(function() {
                 // Initialize Select2 in Modal
                 $('.select2').select2({ theme: 'bootstrap-5' });
-                $('.select2-modal').select2({ dropdownParent: $('#submissionModal'), theme: 'bootstrap-5', placeholder: 'Pilih Customer...' });
+                $('.select2-modal').select2({ dropdownParent: $('#submissionModal'), theme: 'bootstrap-5', placeholder: 'Select Customer...', width: '100%' });
 
                 let currentSubmissionId = null;
 
@@ -305,7 +497,7 @@
                         { data: 'customer_name', name: 'recommendation.customer.name' },
                         { data: 'form_code', name: 'form_code' },
                         { data: 'date_info', name: 'created_at' },
-                        { data: 'file', name: 'signed_document_path', className: 'text-center', orderable: false, searchable: false },
+                        { data: 'file', name: 'signed_document_path', className: 'text-center text-nowrap', orderable: false, searchable: false },
                         { data: 'status', name: 'status', className: 'text-center' },
                         { data: 'action', name: 'action', orderable: false, searchable: false, className: 'text-center' }
                     ]
@@ -368,6 +560,20 @@
                     } else {
                         $('#viewFileFooter').show();
                         $('#viewFileModal .modal-header').removeClass('bg-success').addClass('bg-dark');
+
+                        if (status === 'uploaded') {
+                            $('#btn-trigger-approve').show().html('<i class="ph-bold ph-check-circle me-1"></i> Verifikasi Dokumen');
+                            $('#btn-trigger-edit').hide();
+                        } else if (status === 'waiting_bank_issuance' || status === 'waiting_sales_input') {
+                            $('#btn-trigger-approve').hide();
+                            $('#btn-trigger-edit').show().html('<i class="ph-bold ph-file-plus me-1"></i> Input Sertifikat BG');
+                        } else if (status === 'waiting_approval') {
+                            $('#btn-trigger-approve').hide();
+                            $('#btn-trigger-edit').show().html('<i class="ph-bold ph-pencil-simple me-1"></i> Koreksi Sertifikat BG');
+                        } else {
+                            $('#btn-trigger-approve').show().html('<i class="ph-bold ph-check-circle me-1"></i> Verifikasi Dokumen');
+                            $('#btn-trigger-edit').show().html('<i class="ph-bold ph-pencil-simple me-1"></i> Edit Data BG');
+                        }
                     }
 
                     $('#viewFileModal').modal('show');
@@ -382,24 +588,51 @@
                     }, 500);
                 });
 
-                // --- DIRECT APPROVE ---
+                // --- DIRECT INPUT SALES BUTTON FROM TABLE ---
+                $(document).on('click', '.btn-input-sales', function() {
+                    currentSubmissionId = $(this).data('id');
+                    $('#btn-trigger-edit').trigger('click');
+                });
+
+                // --- BERKAS BANK MODAL TRIGGER ---
+                $(document).on('click', '.btn-berkas-bank', function() {
+                    let customer = $(this).data('customer') || '-';
+                    let formCode = $(this).data('formcode') || '-';
+                    let urlZip = $(this).data('url-zip');
+                    let urlLampiran = $(this).data('url-lampiran');
+                    let urlBank = $(this).data('url-bank');
+                    let urlDistributor = $(this).data('url-distributor');
+
+                    $('#berkasModalCustomer').text(customer);
+                    $('#berkasModalFormCode').text(formCode);
+
+                    $('#btnDownloadZip').attr('href', urlZip);
+                    $('#btnDownloadLampiran').attr('href', urlLampiran);
+                    $('#btnDownloadBank').attr('href', urlBank);
+                    $('#btnDownloadDistributor').attr('href', urlDistributor);
+
+                    $('#berkasBankModal').modal('show');
+                });
+
+                // --- VERIFY & FORWARD TO SALES ---
                 $('#btn-trigger-approve').click(function() {
                     Swal.fire({
-                        title: 'Konfirmasi Approve',
-                        text: "Pastikan dokumen sudah sesuai. Status akan berubah menjadi Completed.",
-                        icon: 'warning',
+                        title: 'Verifikasi Dokumen Upload?',
+                        text: "Dokumen hasil upload customer dinyatakan valid dan dapat dilengkapi data Bank Garansi oleh Admin-RTM.",
+                        icon: 'question',
                         showCancelButton: true,
-                        confirmButtonText: 'Ya, Approve',
-                        confirmButtonColor: '#198754'
+                        confirmButtonText: 'Ya, Verifikasi Dokumen',
+                        confirmButtonColor: '#198754',
+                        cancelButtonText: 'Batal'
                     }).then((result) => {
                         if (result.isConfirmed) {
                             let url = "{{ route('bg-submissions.process-review', ':id') }}".replace(':id', currentSubmissionId);
-                            Swal.fire({ title: 'Processing...', didOpen: () => Swal.showLoading() });
+                            Swal.fire({ title: 'Memproses...', didOpen: () => Swal.showLoading() });
 
-                            $.post(url, { _token: "{{ csrf_token() }}", action_type: 'direct_submit' }, function(res) {
+                            $.post(url, { _token: "{{ csrf_token() }}", action_type: 'verify_upload' }, function(res) {
                                 if(res.success) {
                                     $('#viewFileModal').modal('hide');
-                                    Swal.fire('Success', res.message, 'success');
+                                    Swal.fire('Berhasil', res.message, 'success');
                                     sampleTable.ajax.reload();
                                 } else {
                                     Swal.fire('Error', res.message, 'error');
@@ -417,7 +650,7 @@
 
                 $('#btn-trigger-edit').click(function() {
                     $('#viewFileModal').modal('hide');
-                    Swal.fire({ title: 'Opening Editor...', didOpen: () => Swal.showLoading() });
+                    Swal.fire({ title: 'Opening Modal...', didOpen: () => Swal.showLoading() });
 
                     let url = "{{ route('bg-submissions.get-edit-data', ':id') }}".replace(':id', currentSubmissionId);
 
@@ -427,59 +660,264 @@
                             let d = res.data;
                             $('#edit_submission_id').val(d.submission_id);
 
-                            let html = `
-                                <div class="row g-3">
-                                    <div class="col-12"><h6 class="fw-bold text-primary border-bottom pb-2">A. Informasi & Keuangan</h6></div>
-                                    <div class="col-md-12"><label class="small fw-bold">1. Nama</label><input type="text" class="form-control" name="nama_distributor" value="${d.nama_distributor}"></div>
-                                    <div class="col-md-6"><label class="small fw-bold">2. Kota</label><input type="text" class="form-control" name="kota" value="${d.kota}"></div>
-                                    <div class="col-md-6"><label class="small fw-bold">3. Wilayah</label><input type="text" class="form-control" name="wilayah_kerja" value="${d.wilayah_kerja}"></div>
+                            if (d.form_code) {
+                                $('#modalSubTitle').html(`<span class="fw-semibold text-white">${d.form_code}</span> • <span style="opacity: 0.85;">${d.nama_distributor || 'Bank Guarantee'}</span>`);
+                            }
 
-                                    <div class="col-md-6">
-                                        <label class="small fw-bold">4. Rata-rata Sales (Rp)</label>
-                                        <input type="text" class="form-control rupiah-input" name="rata_rata_penjualan" value="${formatRupiah(d.rata_rata_penjualan)}">
-                                    </div>
-                                    <div class="col-md-3"><label class="small fw-bold">5. TOP</label>
-                                        <input type="number" class="form-control" name="syarat_pembayaran" value="${d.syarat_pembayaran}">
-                                    </div>
-                                    <div class="col-md-3"><label class="small fw-bold">6. Lead Time</label>
-                                        <input type="number" class="form-control" name="lead_time" value="${d.lead_time}">
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="small fw-bold">7. Faktor Fluktuasi (%)</label>
-                                        <input type="number" step="0.01" class="form-control" name="faktor_fluktuasi" value="${d.faktor_fluktuasi}">
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="small fw-bold">8. Limit Kredit (Rp)</label>
-                                        <input type="text" class="form-control rupiah-input" name="limit_kredit" value="${formatRupiah(d.limit_kredit)}">
-                                    </div>
-                                    <div class="col-md-12">
-                                        <label class="small fw-bold">9. Nilai BG Ditetapkan (Rp)</label>
-                                        <input type="text" class="form-control rupiah-input" name="nilai_bg_ditetapkan" value="${formatRupiah(d.nilai_bg_ditetapkan)}">
+                            let html = `
+                                {{-- TOP INFO BANNER --}}
+                                <div class="card border-0 mb-3 rounded-3 shadow-xs" style="background: linear-gradient(135deg, #eff6ff, #dbeafe);">
+                                    <div class="card-body p-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
+                                        <div class="d-flex align-items-center gap-2.5">
+                                            <div class="bg-primary text-white p-2 rounded-circle d-flex align-items-center justify-content-center shadow-xs" style="width: 36px; height: 36px;">
+                                                <i class="ph-bold ph-identification-badge fs-5"></i>
+                                            </div>
+                                            <div>
+                                                <div class="small text-muted" style="font-size: 11px;">Nama Distributor:</div>
+                                                <strong class="text-dark fs-6">${d.nama_distributor || '-'}</strong>
+                                                <span class="badge bg-white text-primary border border-primary-subtle rounded-pill ms-1 px-2" style="font-size: 10px;">${d.form_code}</span>
+                                            </div>
+                                        </div>
+                                        <div class="d-flex align-items-center gap-2">
+                                            ${d.signed_document_url ? `
+                                                <a href="${d.signed_document_url}" target="_blank" class="btn btn-sm btn-light bg-white text-primary border border-primary-subtle rounded-2 shadow-xs fw-semibold px-3 py-1.5 d-inline-flex align-items-center gap-1.5" title="Buka berkas pengajuan bertanda tangan customer">
+                                                    <i class="ph-bold ph-file-text fs-6"></i> <span>Lihat Dokumen Pengajuan (TTD)</span>
+                                                </a>
+                                            ` : ''}
+                                            <div class="text-end ps-2 border-start">
+                                                <div class="small text-muted" style="font-size: 11px;">Total BG Diserahkan:</div>
+                                                <strong class="text-success fs-6">Rp ${formatRupiah(d.nilai_bg_diserahkan)}</strong>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                                <h6 class="fw-bold text-primary border-bottom pb-2 mt-4">B. Rincian Bank</h6>
-                            `;
 
-                            if(d.details) {
+                                {{-- SECTION A: COLLAPSIBLE DISTRIBUTOR & FINANCIAL DATA --}}
+                                <div class="card border rounded-3 mb-3 shadow-xs overflow-hidden">
+                                    <div class="card-header bg-white py-2.5 px-3 d-flex justify-content-between align-items-center cursor-pointer" 
+                                         data-bs-toggle="collapse" data-bs-target="#collapseDistributorInfo" style="cursor: pointer;">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="ph-bold ph-caret-right text-primary fs-6 transition-all" id="caretDistributorInfo"></i>
+                                            <span class="fw-bold text-dark small"><i class="ph-bold ph-sliders text-primary me-1"></i> A. Parameter Finansial & Data Tambahan</span>
+                                            <span class="badge bg-light text-muted border" style="font-size: 10px;">10 Field • Klik untuk Buka/Ubah</span>
+                                        </div>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span class="text-muted small">Periode: <strong>${d.periode || '-'}</strong></span>
+                                            <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle small px-2 py-0.5">Buka Form Finansial</span>
+                                        </div>
+                                    </div>
+                                    <div class="collapse" id="collapseDistributorInfo">
+                                        <div class="card-body p-3 bg-light bg-opacity-25 border-top">
+                                            <div class="row g-2">
+                                                <div class="col-md-12"><label class="small fw-semibold text-secondary">1. Nama Distributor</label><input type="text" class="form-control form-control-sm" name="nama_distributor" value="${d.nama_distributor || ''}"></div>
+                                                <div class="col-md-6"><label class="small fw-semibold text-secondary">2. Kota</label><input type="text" class="form-control form-control-sm" name="kota" value="${d.kota || ''}"></div>
+                                                <div class="col-md-6"><label class="small fw-semibold text-secondary">3. Wilayah Kerja</label><input type="text" class="form-control form-control-sm" name="wilayah_kerja" value="${d.wilayah_kerja || ''}"></div>
+
+                                                <div class="col-md-6">
+                                                    <label class="small fw-semibold text-secondary">4. Rata-rata Penjualan (Rp)</label>
+                                                    <input type="text" class="form-control form-control-sm rupiah-input" name="rata_rata_penjualan" value="${formatRupiah(d.rata_rata_penjualan)}">
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <label class="small fw-semibold text-secondary">5. TOP (Hari)</label>
+                                                    <input type="number" class="form-control form-control-sm" name="syarat_pembayaran" value="${d.syarat_pembayaran || ''}">
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <label class="small fw-semibold text-secondary">6. Lead Time (Hari)</label>
+                                                    <input type="number" class="form-control form-control-sm" name="lead_time" value="${d.lead_time || ''}">
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="small fw-semibold text-secondary">7. Faktor Fluktuasi (%)</label>
+                                                    <input type="number" step="0.01" class="form-control form-control-sm" name="faktor_fluktuasi" value="${d.faktor_fluktuasi || ''}">
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="small fw-semibold text-secondary">8. Credit Limit Disetujui (Rp)</label>
+                                                    <input type="text" class="form-control form-control-sm rupiah-input" name="limit_kredit" value="${formatRupiah(d.limit_kredit)}">
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="small fw-semibold text-secondary">9. Nilai BG Ditetapkan (Rp)</label>
+                                                    <input type="text" class="form-control form-control-sm rupiah-input" name="nilai_bg_ditetapkan" value="${formatRupiah(d.nilai_bg_ditetapkan)}">
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="small fw-semibold text-secondary">10. Nilai BG Diserahkan (Total Rp)</label>
+                                                    <input type="text" class="form-control form-control-sm rupiah-input bg-light fw-bold text-success" id="input_total_bg_diserahkan" name="nilai_bg_diserahkan" value="${formatRupiah(d.nilai_bg_diserahkan)}" readonly>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {{-- SECTION B: RINCIAN BANK GARANSI --}}
+                                <div class="d-flex align-items-center justify-content-between mb-3 mt-4">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-1.5">
+                                            <i class="ph-bold ph-bank text-primary fs-5"></i>
+                                            <span>B. Rincian & Kelengkapan Bank Garansi</span>
+                                        </h6>
+                                        ${d.is_multi_bank ? `<span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle rounded-pill px-2.5 py-1 small"><i class="ph-bold ph-stack me-1"></i>Multi-Bank (${d.details.length} Bank Penerbit)</span>` : '<span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary-subtle rounded-pill px-2.5 py-1 small">Single-Bank (1 Bank)</span>'}
+                                    </div>
+                                    <span class="text-muted small">Input Nomor BG Resmi & Unggah Berkas Asli</span>
+                                </div>
+                                                        if(d.details && d.details.length > 0) {
                                 d.details.forEach((item, index) => {
                                     html += `
-                                        <div class="card mb-2 border-start border-3 border-primary">
-                                            <div class="card-body p-2">
-                                                <input type="hidden" name="details[${item.id}][id]" value="${item.id}">
-                                                <div class="d-flex justify-content-between mb-1"><strong class="text-primary small">Bank ${index+1}</strong></div>
-                                                <div class="row g-2">
-                                                    <div class="col-md-4"><label class="small text-muted">Bank</label><input type="text" class="form-control form-control-sm" name="details[${item.id}][bank_name]" value="${item.bank_name}"></div>
-                                                    <div class="col-md-4"><label class="small text-muted">Cabang</label><input type="text" class="form-control form-control-sm" name="details[${item.id}][branch_name]" value="${item.branch_name}"></div>
-                                                    <div class="col-md-4">
-                                                        <label class="small text-muted">Nominal</label>
-                                                        <input type="text" class="form-control form-control-sm rupiah-input" name="details[${item.id}][nominal]" value="${formatRupiah(item.nominal)}">
+                                        <div class="card mb-3 border rounded-3 shadow-xs bg-white overflow-hidden" id="card-bank-${item.id}">
+                                            <div class="card-header bg-white py-2.5 px-3 d-flex justify-content-between align-items-center border-bottom flex-wrap gap-2">
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <span class="badge bg-primary rounded-pill px-2.5 py-1.5 text-white fw-bold"><i class="ph-bold ph-bank me-1"></i>Bank ${index+1}: ${item.bank_name || 'Bank'}</span>
+                                                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2.5 py-1.5 rounded-pill fw-bold">Nominal: Rp ${formatRupiah(item.nominal)}</span>
+                                                </div>
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <button type="button" class="btn btn-sm btn-outline-primary btn-save-single-bank rounded-pill px-3 py-1 shadow-xs fw-semibold" data-detail-id="${item.id}" title="Simpan data Bank Garansi untuk bank ini saja">
+                                                        <i class="ph-bold ph-floppy-disk me-1"></i> Simpan Data Bank Ini
+                                                    </button>
+                                                    <div id="status-badge-bank-${item.id}">
+                                                        ${item.parent_bg_number && !item.is_temporary ? `
+                                                            <span class="badge bg-success bg-opacity-15 text-success border border-success-subtle px-2.5 py-1 rounded-pill fw-semibold">
+                                                                <i class="ph-bold ph-shield-check me-1"></i>No. BG: ${item.parent_bg_number}
+                                                            </span>
+                                                        ` : `
+                                                            <span class="badge bg-warning bg-opacity-15 text-warning-emphasis border border-warning-subtle px-2.5 py-1 rounded-pill" title="Belum disimpan nomor resmi bank">
+                                                                <i class="ph-bold ph-clock-countdown me-1"></i>Belum Lengkap
+                                                            </span>
+                                                        `}
                                                     </div>
                                                 </div>
+                                            </div>
+                                            <div class="card-body p-3">
+                                                <input type="hidden" name="details[${item.id}][id]" value="${item.id}">
+                                                
+                                                {{-- BARIS 1: 3 KOLOM SEJAJAR (Bank, Cabang, Nominal) --}}
+                                                <div class="row g-3 mb-3">
+                                                    <div class="col-md-4">
+                                                        <label class="form-label small fw-semibold text-secondary mb-1">
+                                                            <i class="ph-bold ph-bank me-1 text-primary"></i>Nama Bank <span class="text-danger">*</span>
+                                                        </label>
+                                                        <input type="text" class="form-control rounded-2" name="details[${item.id}][bank_name]" value="${item.bank_name || ''}" placeholder="Nama Bank Penerbit" required>
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <label class="form-label small fw-semibold text-secondary mb-1">
+                                                            <i class="ph-bold ph-map-pin me-1 text-secondary"></i>Kantor Cabang
+                                                        </label>
+                                                        <input type="text" class="form-control rounded-2" name="details[${item.id}][branch_name]" value="${item.branch_name || ''}" placeholder="Contoh: KCU Sunter">
+                                                    </div>
+                                                    <div class="col-md-4">
+                                                        <label class="form-label small fw-semibold text-secondary mb-1">
+                                                            <i class="ph-bold ph-money me-1 text-success"></i>Nominal BG (Rp) <span class="text-danger">*</span>
+                                                        </label>
+                                                        <div class="input-group">
+                                                            <span class="input-group-text bg-light text-muted small fw-semibold">Rp</span>
+                                                            <input type="text" class="form-control rounded-end-2 rupiah-input detail-nominal-input fw-semibold" name="details[${item.id}][nominal]" value="${formatRupiah(item.nominal)}" required>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {{-- BARIS 2: 2 KOLOM SEJAJAR (No BG Resmi Bank & Tanggal Jatuh Tempo) --}}
+                                                <div class="row g-3 mb-3">
+                                                    <div class="col-md-6">
+                                                        <label class="form-label small fw-semibold text-dark mb-1">
+                                                            <i class="ph-bold ph-hash me-1 text-primary"></i>Nomor BG Resmi Bank <span class="text-danger">*</span>
+                                                        </label>
+                                                        <input type="text" class="form-control rounded-2 fw-semibold" 
+                                                               name="details[${item.id}][bg_number]" 
+                                                               value="${item.is_temporary ? '' : (item.parent_bg_number || '')}" 
+                                                               placeholder="Contoh: 0021/BG/BCA/2026 (Wajib diisi)" required>
+                                                        <div class="form-text text-muted mt-1" style="font-size: 11px;">
+                                                            <i class="ph-bold ph-info text-primary me-0.5"></i> Masukkan nomor resmi dari bank (akan menimpa ref draft: ${item.parent_bg_number || '-'}).
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label small fw-semibold text-dark mb-1">
+                                                            <i class="ph-bold ph-calendar me-1 text-primary"></i>Tanggal Jatuh Tempo <span class="text-danger">*</span>
+                                                        </label>
+                                                        <input type="date" class="form-control rounded-2" 
+                                                               name="details[${item.id}][exp_date]" 
+                                                               value="${item.parent_exp_date || d.exp_date || ''}" required>
+                                                        <div class="form-text text-muted mt-1" style="font-size: 11px;">
+                                                            <i class="ph-bold ph-calendar-check text-secondary me-0.5"></i> Tanggal berakhirnya masa berlaku Bank Garansi.
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {{-- BARIS 3: 2 KOLOM SEJAJAR (Scan File BG & Lampiran D) --}}
+                                                <div class="row g-3">
+                                                    <div class="col-md-6">
+                                                        <div class="p-3 rounded-3 border bg-light bg-opacity-50 h-100">
+                                                            <label class="form-label small fw-semibold text-dark mb-1 d-flex justify-content-between align-items-center">
+                                                                <span><i class="ph-bold ph-file-text text-primary me-1"></i>Scan Sertifikat Bank Garansi Asli</span>
+                                                                <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle" style="font-size: 10px;">Bisa > 1 file</span>
+                                                            </label>
+                                                            <input type="file" class="form-control form-control-sm bg-white rounded-2 file-multi-input" name="details[${item.id}][warkat_files][]" multiple accept=".pdf,.jpg,.jpeg,.png">
+                                                            <div class="text-muted mt-1" style="font-size: 11px;"><i class="ph-bold ph-files me-0.5"></i> PDF, JPG, PNG (Maks 10MB/file)</div>
+                                                            <div class="new-files-preview"></div>
+                                                            <div id="prev-warkat-container-${item.id}">
+                                                                ${item.parent_warkat_files && item.parent_warkat_files.length > 0 ? `
+                                                                    <div class="mt-2 p-2 bg-white rounded-2 border">
+                                                                        <div class="small fw-semibold text-primary mb-1" style="font-size: 11px;"><i class="ph-bold ph-file-text me-1"></i>File BG Terupload:</div>
+                                                                        <div class="d-flex flex-wrap gap-1">
+                                                                            ${item.parent_warkat_files.map((wf, wIdx) => `
+                                                                                <a href="${wf.url}" target="_blank" class="badge bg-light text-primary border text-decoration-none py-1 px-2 d-inline-flex align-items-center gap-1 shadow-xs" title="${wf.name}">
+                                                                                    <i class="ph-bold ph-file-pdf"></i> Sertifikat BG ${wIdx+1}
+                                                                                </a>
+                                                                            `).join('')}
+                                                                        </div>
+                                                                    </div>
+                                                                ` : (item.parent_warkat ? `
+                                                                    <div class="mt-2">
+                                                                        <a href="${item.parent_warkat}" target="_blank" class="badge bg-light text-primary border text-decoration-none py-1 px-2 d-inline-flex align-items-center gap-1">
+                                                                            <i class="ph-bold ph-file-pdf"></i> Buka Sertifikat BG
+                                                                        </a>
+                                                                    </div>
+                                                                ` : '')}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <div class="p-3 rounded-3 border bg-light bg-opacity-50 h-100">
+                                                            <label class="form-label small fw-semibold text-dark mb-1 d-flex justify-content-between align-items-center">
+                                                                <span><i class="ph-bold ph-file-check text-success me-1"></i>Scan Dokumen Lampiran D (TTD Basah)</span>
+                                                                <span class="badge bg-success bg-opacity-10 text-success border border-success-subtle" style="font-size: 10px;">Bisa > 1 file</span>
+                                                            </label>
+                                                            <input type="file" class="form-control form-control-sm bg-white rounded-2 file-multi-input" name="details[${item.id}][lampiran_d_files][]" multiple accept=".pdf,.jpg,.jpeg,.png">
+                                                            <div class="text-muted mt-1" style="font-size: 11px;"><i class="ph-bold ph-files me-0.5"></i> PDF, JPG, PNG (Maks 10MB/file)</div>
+                                                            <div class="new-files-preview"></div>
+                                                            <div id="prev-lampiran-container-${item.id}">
+                                                                ${item.parent_lampiran_d_files && item.parent_lampiran_d_files.length > 0 ? `
+                                                                    <div class="mt-2 p-2 bg-white rounded-2 border">
+                                                                        <div class="small fw-semibold text-success mb-1" style="font-size: 11px;"><i class="ph-bold ph-file-check me-1"></i>File Lampiran D Terupload:</div>
+                                                                        <div class="d-flex flex-wrap gap-1">
+                                                                            ${item.parent_lampiran_d_files.map((ldf, ldIdx) => `
+                                                                                <a href="${ldf.url}" target="_blank" class="badge bg-light text-success border text-decoration-none py-1 px-2 d-inline-flex align-items-center gap-1 shadow-xs" title="${ldf.name}">
+                                                                                    <i class="ph-bold ph-file-check"></i> Lampiran D ${ldIdx+1}
+                                                                                </a>
+                                                                            `).join('')}
+                                                                        </div>
+                                                                    </div>
+                                                                ` : (item.parent_lampiran_d ? `
+                                                                    <div class="mt-2">
+                                                                        <a href="${item.parent_lampiran_d}" target="_blank" class="badge bg-light text-success border text-decoration-none py-1 px-2 d-inline-flex align-items-center gap-1">
+                                                                            <i class="ph-bold ph-file-check"></i> Buka File Lampiran D
+                                                                        </a>
+                                                                    </div>
+                                                                ` : '')}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
                                             </div>
                                         </div>
                                     `;
                                 });
                             }
+
+                            html += `
+                                <div class="alert alert-primary bg-primary bg-opacity-10 border border-primary-subtle rounded-3 p-3 mt-3 d-flex align-items-center gap-3">
+                                    <div class="fs-4 text-primary flex-shrink-0"><i class="ph-duotone ph-info"></i></div>
+                                    <div class="small text-dark">
+                                        <strong>Pemberitahuan:</strong> Nomor BG resmi dan scan Sertifikat Bank Garansi asli yang Anda input akan disimpan ke sistem dan diajukan ke Bu Rita (Secretary Finance) untuk verifikasi akhir.
+                                    </div>
+                                </div>
+                            `;
 
                             $('#bankDetailsContainer').html(html);
                             $('#editBgDataModal').modal('show');
@@ -487,6 +925,16 @@
                             Swal.fire('Error', res.message, 'error');
                         }
                     });
+                });
+
+                // Auto-sum details nominal to total BG diserahkan
+                $(document).on('keyup', '.detail-nominal-input', function() {
+                    let total = 0;
+                    $('.detail-nominal-input').each(function() {
+                        let val = $(this).val().replace(/[^0-9]/g, '');
+                        if (val) total += parseInt(val, 10);
+                    });
+                    $('#input_total_bg_diserahkan').val(new Intl.NumberFormat('id-ID').format(total));
                 });
 
                 // --- LISTENER INPUT RUPIAH (AUTO FORMAT SAAT KETIK) ---
@@ -499,34 +947,195 @@
                     }
                 });
 
-                // --- SAVE EDIT FORM (CLEANING DATA SEBELUM KIRIM) ---
+                // --- LISTENER COLLAPSE CARET TOGGLE ---
+                $(document).on('show.bs.collapse', '#collapseDistributorInfo', function () {
+                    $('#caretDistributorInfo').removeClass('ph-caret-right').addClass('ph-caret-down');
+                });
+                $(document).on('hide.bs.collapse', '#collapseDistributorInfo', function () {
+                    $('#caretDistributorInfo').removeClass('ph-caret-down').addClass('ph-caret-right');
+                });
+
+                // --- LISTENER MULTI-FILE SELECTION PREVIEW ---
+                $(document).on('change', '.file-multi-input', function() {
+                    let files = this.files;
+                    let previewContainer = $(this).siblings('.new-files-preview');
+                    if (files && files.length > 0) {
+                        let listHtml = `<div class="mt-2 p-2 bg-white rounded-2 border shadow-xs"><div class="text-primary fw-semibold mb-1" style="font-size:11px;"><i class="ph-bold ph-paperclip me-1"></i>${files.length} file baru dipilih:</div><div class="d-flex flex-wrap gap-1">`;
+                        for (let i = 0; i < files.length; i++) {
+                            listHtml += `<span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle py-1 px-2" style="font-size: 10px;"><i class="ph-bold ph-file me-1"></i>${files[i].name}</span>`;
+                        }
+                        listHtml += `</div></div>`;
+                        previewContainer.html(listHtml);
+                    } else {
+                        previewContainer.empty();
+                    }
+                });
+
+                // --- SAVE SINGLE BANK HANDLER ---
+                $(document).on('click', '.btn-save-single-bank', function() {
+                    let detailId = $(this).data('detail-id');
+                    let card = $(`#card-bank-${detailId}`);
+
+                    let bankName = card.find(`input[name="details[${detailId}][bank_name]"]`).val();
+                    let branchName = card.find(`input[name="details[${detailId}][branch_name]"]`).val();
+                    let rawNominal = card.find(`input[name="details[${detailId}][nominal]"]`).val();
+                    let bgNumber = card.find(`input[name="details[${detailId}][bg_number]"]`).val();
+                    let expDate = card.find(`input[name="details[${detailId}][exp_date]"]`).val();
+
+                    if (!bgNumber || bgNumber.trim() === '') {
+                        Swal.fire('Validasi', 'Nomor BG Resmi Bank wajib diisi sebelum menyimpan data bank ini.', 'warning');
+                        return;
+                    }
+                    if (!expDate) {
+                        Swal.fire('Validasi', 'Tanggal Jatuh Tempo wajib diisi sebelum menyimpan data bank ini.', 'warning');
+                        return;
+                    }
+
+                    let cleanNominal = rawNominal ? rawNominal.replace(/\./g, '').replace(/,/g, '.') : 0;
+
+                    let formData = new FormData();
+                    formData.append('_token', "{{ csrf_token() }}");
+                    formData.append('submission_id', $('#edit_submission_id').val());
+                    formData.append('action_type', 'save_single_bank');
+                    formData.append('detail_id', detailId);
+                    formData.append('bank_name', bankName);
+                    formData.append('branch_name', branchName || '');
+                    formData.append('nominal', cleanNominal);
+                    formData.append('bg_number', bgNumber.trim());
+                    formData.append('exp_date', expDate);
+
+                    let warkatInput = card.find(`input[name="details[${detailId}][warkat_files][]"]`)[0];
+                    if (warkatInput && warkatInput.files.length > 0) {
+                        for (let i = 0; i < warkatInput.files.length; i++) {
+                            formData.append('warkat_files[]', warkatInput.files[i]);
+                        }
+                    }
+
+                    let lampiranInput = card.find(`input[name="details[${detailId}][lampiran_d_files][]"]`)[0];
+                    if (lampiranInput && lampiranInput.files.length > 0) {
+                        for (let i = 0; i < lampiranInput.files.length; i++) {
+                            formData.append('lampiran_d_files[]', lampiranInput.files[i]);
+                        }
+                    }
+
+                    let url = "{{ route('bg-submissions.process-review', ':id') }}".replace(':id', $('#edit_submission_id').val());
+
+                    let btn = $(this);
+                    btn.prop('disabled', true).html('<i class="ph-bold ph-spinner-gap ph-spin me-1"></i> Menyimpan...');
+
+                    $.ajax({
+                        url: url,
+                        type: 'POST',
+                        data: formData,
+                        processData: false,
+                        contentType: false,
+                        success: function(res) {
+                            btn.prop('disabled', false).html('<i class="ph-bold ph-floppy-disk me-1"></i> Simpan Data Bank Ini');
+                            if(res.success) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Berhasil!',
+                                    text: res.message,
+                                    timer: 2000,
+                                    showConfirmButton: false
+                                });
+
+                                $(`#status-badge-bank-${detailId}`).html(`
+                                    <span class="badge bg-success bg-opacity-15 text-success border border-success-subtle px-2.5 py-1 rounded-pill fw-semibold">
+                                        <i class="ph-bold ph-shield-check me-1"></i>No. BG: ${res.bg_number}
+                                    </span>
+                                `);
+
+                                if (res.parent_warkat_files && res.parent_warkat_files.length > 0) {
+                                    let warkatHtml = `
+                                        <div class="mt-2 p-2 bg-white rounded-2 border">
+                                            <div class="small fw-semibold text-primary mb-1" style="font-size: 11px;"><i class="ph-bold ph-file-text me-1"></i>File BG Terupload:</div>
+                                            <div class="d-flex flex-wrap gap-1">
+                                                ${res.parent_warkat_files.map((wf, wIdx) => `
+                                                    <a href="${wf.url}" target="_blank" class="badge bg-light text-primary border text-decoration-none py-1 px-2 d-inline-flex align-items-center gap-1 shadow-xs" title="${wf.name}">
+                                                        <i class="ph-bold ph-file-pdf"></i> Sertifikat BG ${wIdx+1}
+                                                    </a>
+                                                `).join('')}
+                                            </div>
+                                        </div>
+                                    `;
+                                    $(`#prev-warkat-container-${detailId}`).html(warkatHtml);
+                                }
+
+                                if (res.parent_lampiran_d_files && res.parent_lampiran_d_files.length > 0) {
+                                    let lampiranHtml = `
+                                        <div class="mt-2 p-2 bg-white rounded-2 border">
+                                            <div class="small fw-semibold text-success mb-1" style="font-size: 11px;"><i class="ph-bold ph-file-check me-1"></i>File Lampiran D Terupload:</div>
+                                            <div class="d-flex flex-wrap gap-1">
+                                                ${res.parent_lampiran_d_files.map((ldf, ldIdx) => `
+                                                    <a href="${ldf.url}" target="_blank" class="badge bg-light text-success border text-decoration-none py-1 px-2 d-inline-flex align-items-center gap-1 shadow-xs" title="${ldf.name}">
+                                                        <i class="ph-bold ph-file-check"></i> Lampiran D ${ldIdx+1}
+                                                    </a>
+                                                `).join('')}
+                                            </div>
+                                        </div>
+                                    `;
+                                    $(`#prev-lampiran-container-${detailId}`).html(lampiranHtml);
+                                }
+
+                                card.find('.new-files-preview').empty();
+                                if (typeof sampleTable !== 'undefined') {
+                                    sampleTable.ajax.reload(null, false);
+                                }
+                            } else {
+                                Swal.fire('Error', res.message, 'error');
+                            }
+                        },
+                        error: function(xhr) {
+                            btn.prop('disabled', false).html('<i class="ph-bold ph-floppy-disk me-1"></i> Simpan Data Bank Ini');
+                            let msg = xhr.responseJSON?.message || 'Gagal menyimpan data bank.';
+                            Swal.fire('Error', msg, 'error');
+                        }
+                    });
+                });
+
+                // --- SAVE EDIT FORM (WITH FILE SUPPORT & CLEANING) ---
                 $('#editBgForm').on('submit', function(e) {
                     e.preventDefault();
 
-                    // [UPDATE] Gunakan serializeArray agar bisa dimanipulasi
-                    let formDataArray = $(this).serializeArray();
+                    let formData = new FormData(this);
 
-                    // Loop untuk membersihkan titik (.) pada field rupiah sebelum dikirim ke Controller
-                    formDataArray.forEach(function(item) {
-                        // Cek jika field adalah field uang
-                        if (['rata_rata_penjualan', 'limit_kredit', 'nilai_bg_ditetapkan'].includes(item.name) || item.name.includes('[nominal]')) {
-                            // Hapus titik agar menjadi angka murni (contoh: 2.000.000 -> 2000000)
-                            item.value = item.value.replace(/\./g, '');
+                    // Bersihkan titik (.) pada field rupiah sebelum dikirim ke Controller
+                    ['rata_rata_penjualan', 'limit_kredit', 'nilai_bg_ditetapkan'].forEach(function(fieldName) {
+                        if (formData.has(fieldName)) {
+                            formData.set(fieldName, formData.get(fieldName).replace(/\./g, ''));
                         }
                     });
+
+                    // Loop untuk field nominal pada details
+                    for (let pair of formData.entries()) {
+                        if (pair[0].includes('[nominal]') && typeof pair[1] === 'string') {
+                            formData.set(pair[0], pair[1].replace(/\./g, ''));
+                        }
+                    }
 
                     let url = "{{ route('bg-submissions.process-review', ':id') }}".replace(':id', $('#edit_submission_id').val());
 
                     Swal.fire({ title: 'Saving...', didOpen: () => Swal.showLoading() });
 
-                    // Gunakan $.param untuk mengubah array kembali menjadi query string
-                    $.post(url, $.param(formDataArray), function(res) {
-                        if(res.success) {
-                            Swal.fire('Success', res.message, 'success');
-                            $('#editBgDataModal').modal('hide');
-                            sampleTable.ajax.reload();
-                        } else {
-                            Swal.fire('Error', res.message, 'error');
+                    $.ajax({
+                        url: url,
+                        type: 'POST',
+                        data: formData,
+                        processData: false,
+                        contentType: false,
+                        success: function(res) {
+                            if(res.success) {
+                                Swal.fire('Success', res.message, 'success');
+                                $('#editBgDataModal').modal('hide');
+                                sampleTable.ajax.reload();
+                            } else {
+                                Swal.fire('Error', res.message, 'error');
+                            }
+                        },
+                        error: function(xhr) {
+                            let msg = xhr.responseJSON?.message || 'Failed to process request';
+                            Swal.fire('Error', msg, 'error');
                         }
                     });
                 });
@@ -542,7 +1151,7 @@
                     $('#modalLabel').html('<i class="ph-bold ph-folder-plus me-2 text-primary"></i> Create New Submission');
                     $('#current_file_preview').addClass('d-none'); // Sembunyikan preview
                     $('#req-star').removeClass('d-none'); // Tampilkan bintang merah
-                    $('#upload-note').text('* Wajib diupload untuk pengajuan baru.');
+                    $('#upload-note').text('* Must be uploaded for new submissions.');
 
                     $('#submissionModal').modal('show');
                 });
@@ -569,11 +1178,20 @@
                         // Cek File
                         if(data.signed_document_path) {
                             $('#current_file_preview').removeClass('d-none');
-                            $('#link_view_file_modal').attr('href', "{{ asset('') }}" + data.signed_document_path);
+                            
+                            if (data.file_exists) {
+                                $('#current_file_preview_icon').removeClass('ph-warning-circle text-danger').addClass('ph-check-circle text-success');
+                                $('#current_file_preview_text').removeClass('text-danger').addClass('text-success').text('File is available and can be viewed.');
+                                $('#link_view_file_modal').removeClass('disabled btn-outline-danger').addClass('btn-outline-success').attr('target', '_blank').attr('href', "{{ asset('') }}" + data.signed_document_path).text('View File').css('pointer-events', 'auto');
+                            } else {
+                                $('#current_file_preview_icon').removeClass('ph-check-circle text-success').addClass('ph-warning-circle text-danger');
+                                $('#current_file_preview_text').removeClass('text-success').addClass('text-danger').text('File is missing or corrupted.');
+                                $('#link_view_file_modal').addClass('disabled btn-outline-danger').removeClass('btn-outline-success').removeAttr('target').attr('href', '#').text('Error / Missing').css('pointer-events', 'none');
+                            }
 
                             // File jadi opsional kalau edit dan file sudah ada
                             $('#req-star').addClass('d-none');
-                            $('#upload-note').text('Biarkan kosong jika tidak ingin mengubah file.');
+                            $('#upload-note').text('Leave empty if you don\'t want to change the file.');
                         } else {
                             $('#current_file_preview').addClass('d-none');
                             $('#req-star').removeClass('d-none');
@@ -596,8 +1214,8 @@
                     if (!id && fileInput.files.length === 0) {
                         Swal.fire({
                             icon: 'warning',
-                            title: 'Dokumen Wajib Diupload',
-                            text: 'Untuk pengajuan baru, Anda wajib mengupload dokumen yang telah ditandatangani.',
+                            title: 'Document Required',
+                            text: 'For new submissions, you must upload the signed document.',
                             confirmButtonColor: '#f59e0b'
                         });
                         return; // Stop process

@@ -1,91 +1,74 @@
-<section class="container">
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="text-primary-dark f-w-600">{{ __('Update Password') }}</h2>
-                    <p class="text-secondary">
-                        {{ __('Ensure your account is using a long, random password to stay secure.') }}</p>
+<div>
+    <p class="text-secondary small mb-4">
+        {{ __('Ensure your account is using a long, random password to stay secure.') }}
+    </p>
+
+    <form method="post" action="{{ route('password.update') }}" class="app-form rounded-control">
+        @csrf
+        @method('put')
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <x-input-label class="form-label fw-bold text-muted" for="update_password_current_password"
+                    :value="__('Current Password')" />
+                <div class="input-group">
+                    <x-text-input id="update_password_current_password" name="current_password"
+                        type="password" class="form-control" autocomplete="current-password"
+                        placeholder="Enter Current Password" />
+                    <span class="input-group-text bg-white" style="cursor: pointer;"
+                        onclick="togglePassword('current')">
+                        <i id="current-eye" class="fa fa-eye-slash text-muted"></i>
+                    </span>
                 </div>
+                <x-input-error class="invalid-feedback" :messages="$errors->updatePassword->get('current_password')" />
+            </div>
 
-                <div class="card-body">
-                    <form method="post" action="{{ route('password.update') }}" class="app-form rounded-control">
-                        @csrf
-                        @method('put')
-
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <x-input-label class="form-label" for="update_password_current_password"
-                                        :value="__('Current Password')" />
-                                    <div class="input-group">
-                                        <x-text-input id="update_password_current_password" name="current_password"
-                                            type="password" class="form-control" autocomplete="current-password"
-                                            placeholder="Enter Current Password" />
-                                        <span class="input-group-text" style="cursor: pointer;"
-                                            onclick="togglePassword('current')">
-                                            <i id="current-eye" class="fa fa-eye-slash"></i>
-                                        </span>
-                                    </div>
-                                    <x-input-error class="invalid-feedback" :messages="$errors->updatePassword->get('current_password')" />
-                                </div>
-                            </div>
-
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <x-input-label class="form-label" for="update_password_password"
-                                        :value="__('New Password')" />
-                                    <div class="input-group">
-                                        <x-text-input id="update_password_password" name="password" type="password"
-                                            class="form-control" autocomplete="new-password"
-                                            placeholder="Enter New Password" />
-                                        <span class="input-group-text" style="cursor: pointer;"
-                                            onclick="togglePassword('new')">
-                                            <i id="new-eye" class="fa fa-eye-slash"></i>
-                                        </span>
-                                    </div>
-                                    <x-input-error class="invalid-feedback" :messages="$errors->updatePassword->get('password')" />
-                                </div>
-                            </div>
-
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <x-input-label class="form-label" for="update_password_password_confirmation"
-                                        :value="__('Confirm Password')" />
-                                    <div class="input-group">
-                                        <x-text-input id="update_password_password_confirmation"
-                                            name="password_confirmation" type="password" class="form-control"
-                                            autocomplete="new-password" placeholder="Confirm New Password" />
-                                        <span class="input-group-text" style="cursor: pointer;"
-                                            onclick="togglePassword('confirm')">
-                                            <i id="confirm-eye" class="fa fa-eye-slash"></i>
-                                        </span>
-                                    </div>
-                                    <x-input-error class="invalid-feedback" :messages="$errors->updatePassword->get('password_confirmation')" />
-                                </div>
-                            </div>
-
-                            <div class="col-12">
-                                <div class="mt-3">
-                                    <button type="submit"
-                                        class="btn btn-light-primary">{{ __('Update Password') }}</button>
-
-                                    @if (session('status') === 'password-updated')
-                                        <div class="alert alert-success alert-dismissible fade show mt-3">
-                                            {{ __('Password updated successfully.') }}
-                                            <button type="button" class="btn-close" data-bs-dismiss="alert"
-                                                aria-label="Close"></button>
-                                        </div>
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
-                    </form>
+            <div class="col-md-6 mb-3">
+                <x-input-label class="form-label fw-bold text-muted" for="update_password_password"
+                    :value="__('New Password')" />
+                <div class="input-group">
+                    <x-text-input id="update_password_password" name="password" type="password"
+                        class="form-control" autocomplete="new-password"
+                        placeholder="Enter New Password" />
+                    <span class="input-group-text bg-white" style="cursor: pointer;"
+                        onclick="togglePassword('new')">
+                        <i id="new-eye" class="fa fa-eye-slash text-muted"></i>
+                    </span>
                 </div>
+                <x-input-error class="invalid-feedback" :messages="$errors->updatePassword->get('password')" />
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <x-input-label class="form-label fw-bold text-muted" for="update_password_password_confirmation"
+                    :value="__('Confirm Password')" />
+                <div class="input-group">
+                    <x-text-input id="update_password_password_confirmation"
+                        name="password_confirmation" type="password" class="form-control"
+                        autocomplete="new-password" placeholder="Confirm New Password" />
+                    <span class="input-group-text bg-white" style="cursor: pointer;"
+                        onclick="togglePassword('confirm')">
+                        <i id="confirm-eye" class="fa fa-eye-slash text-muted"></i>
+                    </span>
+                </div>
+                <small id="password-match-msg" class="form-text fw-bold mt-1 d-block"></small>
+                <x-input-error class="invalid-feedback" :messages="$errors->updatePassword->get('password_confirmation')" />
             </div>
         </div>
-    </div>
-</section>
+
+        <div class="d-flex justify-content-end mt-4">
+            <button type="submit" class="btn btn-primary text-white rounded-pill px-4 py-2 shadow-sm d-flex align-items-center gap-2">
+                <i class="ph-bold ph-key text-white"></i> {{ __('Update Password') }}
+            </button>
+        </div>
+        
+        @if (session('status') === 'password-updated')
+            <div class="alert alert-success alert-dismissible fade show mt-3 mb-0 shadow-sm border-0 d-flex align-items-center">
+                <i class="ph-bold ph-check-circle me-2 fs-5"></i> {{ __('Password updated successfully.') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+    </form>
+</div>
 
 <script>
     function togglePassword(field) {
@@ -103,4 +86,29 @@
             eyeIcon.classList.add('fa-eye-slash');
         }
     }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const newPass = document.getElementById('update_password_password');
+        const confirmPass = document.getElementById('update_password_password_confirmation');
+        const matchMsg = document.getElementById('password-match-msg');
+
+        function checkPasswordMatch() {
+            if (confirmPass.value === "") {
+                matchMsg.textContent = "";
+                return;
+            }
+            if (newPass.value === confirmPass.value) {
+                matchMsg.innerHTML = '<i class="ph-bold ph-check-circle me-1"></i> Password match';
+                matchMsg.className = "form-text fw-bold mt-1 d-block text-success";
+            } else {
+                matchMsg.innerHTML = '<i class="ph-bold ph-x-circle me-1"></i> Password does not match';
+                matchMsg.className = "form-text fw-bold mt-1 d-block text-danger";
+            }
+        }
+
+        if (newPass && confirmPass) {
+            newPass.addEventListener('input', checkPasswordMatch);
+            confirmPass.addEventListener('input', checkPasswordMatch);
+        }
+    });
 </script>

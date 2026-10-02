@@ -106,7 +106,7 @@
             <td class="col-no">1</td>
             <td class="col-label">NAMA DISTRIBUTOR</td>
             <td class="col-sep">:</td>
-            <td class="col-val">{{ strtoupper($customer->pic) }}</td>
+            <td class="col-val">{{ strtoupper($customer->sort_name) }}</td>
         </tr>
         <tr>
             <td class="col-no">2</td>
@@ -131,7 +131,7 @@
                     if($periods && $periods->count() > 0) {
                         $start = $periods->min('period_date');
                         $end   = $periods->max('period_date');
-                        $periodeTxt = \Carbon\Carbon::parse($start)->translatedFormat('F Y') . ' - ' . \Carbon\Carbon::parse($end)->translatedFormat('F Y');
+                        $periodeTxt = \Carbon\Carbon::parse($start)->locale('id')->translatedFormat('F Y') . ' - ' . \Carbon\Carbon::parse($end)->locale('id')->translatedFormat('F Y');
                     }
                 @endphp
                 {{ $periodeTxt }}
@@ -220,7 +220,7 @@
         <tr>
             <td class="sign-name">{{ isset($sales_name) ? strtoupper($sales_name) : '.........................' }}</td>
             <td class="sign-name">{{ isset($finance_name) ? strtoupper($finance_name) : '.........................' }}</td>
-            <td class="sign-name">{{ strtoupper($customer->name) }}</td>
+            <td class="sign-name">{{ strtoupper($customer->sort_name) }}</td>
         </tr>
     </table>
 

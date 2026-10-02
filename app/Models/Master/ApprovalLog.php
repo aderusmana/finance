@@ -25,4 +25,9 @@ class ApprovalLog extends Model
     {
         return $this->belongsTo(User::class, 'approver_nik', 'nik');
     }
+
+    public function customer()
+    {
+        return $this->belongsTo(\App\Models\Customer\Customer::class, 'related_id', 'id');
+    }
 }

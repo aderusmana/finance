@@ -43,6 +43,273 @@ class BankGaransiController extends Controller
         ]);
     }
 
+    public function downloadTemplate()
+    {
+        $headers = [
+            'Content-type'        => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename=template_import_master_bank_garansi.csv',
+            'Pragma'              => 'no-cache',
+            'Cache-Control'       => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires'             => '0',
+        ];
+
+        $columns = [
+            'customer_code',
+            'bg_number',
+            'bank_name',
+            'branch_name',
+            'bg_nominal',
+            'issued_date',
+            'exp_date',
+            'status',
+            'contact_person',
+            'bank_address'
+        ];
+
+        $callback = function () use ($columns) {
+            $file = fopen('php://output', 'w');
+            fputs($file, "\xEF\xBB\xBF");
+            fputcsv($file, $columns, ';');
+
+            fputcsv($file, [
+                'CUST-001',
+                '0021/BG/BCA/2026',
+                'Bank Central Asia',
+                'KCU Sudirman',
+                '500000000',
+                '2026-01-15',
+                '2027-01-15',
+                'approved',
+                'Bpk. Budi (08123456789)',
+                'Jl. Jend Sudirman No 1 Jakarta'
+            ], ';');
+
+            fputcsv($file, [
+                'PKD/002/2026',
+                'BG-2026-0002',
+                'Bank Mandiri',
+                'Cabang Thamrin',
+                '250000000',
+                '2026-02-01',
+                '2027-02-01',
+                'approved',
+                'Ibu Siti (08198765432)',
+                'Jl. MH Thamrin No 2 Jakarta'
+            ], ';');
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:csv,txt,xlsx,xls|max:10240',
+        ], [
+            'file.required' => 'File import wajib diunggah.',
+            'file.mimes'    => 'Format file harus berupa CSV atau Excel (.xlsx, .xls).',
+            'file.max'      => 'Ukuran file maksimal 10MB.',
+        ]);
+
+        $file = $request->file('file');
+        $ext = strtolower($file->getClientOriginalExtension());
+        $rows = [];
+
+        try {
+            if (in_array($ext, ['xlsx', 'xls'])) {
+                $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($file->getPathname());
+                $sheet = $spreadsheet->getActiveSheet();
+                $rows = $sheet->toArray(null, true, true, false);
+            } else {
+                $content = file_get_contents($file->getPathname());
+                $delimiter = strpos(substr($content, 0, 500), ';') !== false ? ';' : ',';
+                $handle = fopen($file->getPathname(), "r");
+                while (($row = fgetcsv($handle, 2000, $delimiter)) !== false) {
+                    $rows[] = $row;
+                }
+                fclose($handle);
+            }
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Gagal membaca file: ' . $e->getMessage()], 422);
+        }
+
+        if (empty($rows) || count($rows) < 2) {
+            return response()->json(['success' => false, 'message' => 'File kosong atau hanya berisi baris header.'], 422);
+        }
+
+        $rawHeader = array_shift($rows);
+        $header = [];
+        foreach ($rawHeader as $h) {
+            $hClean = preg_replace('/[\x00-\x1F\x80-\xFF]/', '', (string)$h);
+            $header[] = strtolower(trim($hClean));
+        }
+
+        $importedCount = 0;
+        $updatedCount = 0;
+        $skippedRows = [];
+
+        DB::beginTransaction();
+        try {
+            foreach ($rows as $idx => $row) {
+                $rowNumber = $idx + 2;
+                if (empty(array_filter($row, fn($v) => !is_null($v) && trim((string)$v) !== ''))) {
+                    continue;
+                }
+
+                if (count($row) < count($header)) {
+                    $row = array_pad($row, count($header), null);
+                }
+                $data = array_combine($header, array_slice($row, 0, count($header)));
+
+                $clean = function ($key, $default = null) use ($data) {
+                    $val = isset($data[$key]) ? trim((string)$data[$key]) : null;
+                    if ($val === '' || strtoupper($val) === 'NULL') {
+                        return $default;
+                    }
+                    return $val;
+                };
+
+                $custIdentifier = $clean('customer_code') ?? $clean('customer') ?? $clean('code');
+                $bgNumber = $clean('bg_number');
+                $bankName = $clean('bank_name');
+                $branchName = $clean('branch_name');
+                $rawNominal = $clean('bg_nominal') ?? $clean('nominal', 0);
+                $rawIssuedDate = $clean('issued_date');
+                $rawExpDate = $clean('exp_date');
+                $status = strtolower($clean('status', 'approved'));
+                $contactPerson = $clean('contact_person');
+                $bankAddress = $clean('bank_address');
+
+                if (!$custIdentifier || !$bgNumber || !$bankName) {
+                    $skippedRows[] = "Baris {$rowNumber}: Kolom customer_code, bg_number, atau bank_name kosong.";
+                    continue;
+                }
+
+                $customer = Customer::where('code', $custIdentifier)
+                    ->orWhere('no_pkd', $custIdentifier)
+                    ->orWhere('name', 'like', "%{$custIdentifier}%")
+                    ->first();
+
+                if (!$customer && is_numeric($custIdentifier)) {
+                    $customer = Customer::find((int)$custIdentifier);
+                }
+
+                if (!$customer) {
+                    $skippedRows[] = "Baris {$rowNumber}: Customer '{$custIdentifier}' tidak ditemukan di database.";
+                    continue;
+                }
+
+                $nominal = (float) preg_replace('/[^0-9]/', '', (string)$rawNominal);
+
+                $parseDate = function ($dateVal) {
+                    if (!$dateVal) return null;
+                    if (is_numeric($dateVal) && (float)$dateVal > 20000 && (float)$dateVal < 70000) {
+                        try {
+                            return \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($dateVal)->format('Y-m-d');
+                        } catch (\Exception $e) {}
+                    }
+                    try {
+                        return \Carbon\Carbon::parse($dateVal)->format('Y-m-d');
+                    } catch (\Exception $e) {
+                        return null;
+                    }
+                };
+
+                $issuedDate = $parseDate($rawIssuedDate) ?? now()->toDateString();
+                $expDate = $parseDate($rawExpDate);
+
+                $validStatus = in_array($status, ['approved', 'active', 'draft', 'expired']) 
+                    ? ($status === 'active' ? 'approved' : $status) 
+                    : 'approved';
+
+                $existingBg = BankGaransi::where('bg_number', $bgNumber)->first();
+
+                if ($existingBg) {
+                    $existingBg->update([
+                        'customer_id' => $customer->id,
+                        'bg_nominal'  => $nominal,
+                        'issued_date' => $issuedDate,
+                        'exp_date'    => $expDate ?? $existingBg->exp_date,
+                        'status'      => $validStatus,
+                        'bg_type'     => 'new',
+                    ]);
+
+                    $detail = $existingBg->details()->first();
+                    if ($detail) {
+                        $detail->update([
+                            'bank_name'      => $bankName,
+                            'branch_name'    => $branchName ?? $detail->branch_name,
+                            'nominal'        => $nominal,
+                            'contact_person' => $contactPerson ?? $detail->contact_person,
+                            'bank_address'   => $bankAddress ?? $detail->bank_address,
+                        ]);
+                    } else {
+                        $existingBg->details()->create([
+                            'bank_name'      => $bankName,
+                            'branch_name'    => $branchName,
+                            'nominal'        => $nominal,
+                            'contact_person' => $contactPerson,
+                            'bank_address'   => $bankAddress,
+                        ]);
+                    }
+                    $updatedCount++;
+                } else {
+                    $newBg = BankGaransi::create([
+                        'customer_id' => $customer->id,
+                        'bg_number'   => $bgNumber,
+                        'bg_type'     => 'new',
+                        'bg_nominal'  => $nominal,
+                        'base_bg_id'  => null,
+                        'issued_date' => $issuedDate,
+                        'exp_date'    => $expDate,
+                        'status'      => $validStatus,
+                        'created_by'  => auth()->id(),
+                    ]);
+                    $newBg->update(['base_bg_id' => $newBg->id]);
+
+                    $newBg->details()->create([
+                        'bank_name'      => $bankName,
+                        'branch_name'    => $branchName,
+                        'nominal'        => $nominal,
+                        'contact_person' => $contactPerson,
+                        'bank_address'   => $bankAddress,
+                    ]);
+                    $importedCount++;
+                }
+
+                if (strtoupper($customer->bank_garansi ?? '') !== 'YA') {
+                    $customer->update(['bank_garansi' => 'YA']);
+                }
+            }
+
+            activity()
+                ->causedBy(auth()->user())
+                ->log("Imported Master Bank Garansi: {$importedCount} created, {$updatedCount} updated.");
+
+            DB::commit();
+
+            $msg = "Import selesai! {$importedCount} BG baru berhasil ditambahkan";
+            if ($updatedCount > 0) $msg .= ", {$updatedCount} BG diperbarui";
+            if (!empty($skippedRows)) {
+                $msg .= ". Catatan (" . count($skippedRows) . " baris dilewati): " . implode(' | ', array_slice($skippedRows, 0, 3));
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => $msg,
+                'imported' => $importedCount,
+                'updated'  => $updatedCount,
+                'skipped'  => $skippedRows
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['success' => false, 'message' => 'Gagal memproses import: ' . $e->getMessage()], 500);
+        }
+    }
+
     public function index(Request $request)
     {
         if ($request->ajax()) {
@@ -52,6 +319,24 @@ class BankGaransiController extends Controller
                     'bank_garansi.*',
                     'customers.name as customer_name_real'
                 ]);
+
+            // Tab filter: active vs expired
+            if ($request->has('tab') && $request->tab === 'expired') {
+                $query->where(function($q) {
+                    $q->where('bank_garansi.status', 'expired')
+                      ->orWhere('bank_garansi.exp_date', '<', now()->toDateString());
+                });
+            } else if (!$request->has('tab') || $request->tab === 'active') {
+                if (!$request->has('status') || $request->status === 'all') {
+                    $query->where(function($q) {
+                        $q->where('bank_garansi.status', '!=', 'expired')
+                          ->where(function($sub) {
+                              $sub->whereNull('bank_garansi.exp_date')
+                                  ->orWhere('bank_garansi.exp_date', '>=', now()->toDateString());
+                          });
+                    });
+                }
+            }
 
             if ($request->has('status') && $request->status != 'all') {
                 $query->where('bank_garansi.status', $request->status);
@@ -80,35 +365,21 @@ class BankGaransiController extends Controller
                 ->orderColumn('customer_name', function ($query, $order) {
                     $query->orderBy('customers.name', $order);
                 })
-                ->addColumn('menu', function ($row) {
-                    $btn = '<div class="d-flex justify-content-center gap-1">';
-                    $btn .= '<button class="btn btn-outline-success btn-sm btn-extension" data-id="'.$row->id.'" title="Ajukan Extension (Tambah BG)">';
-                    $btn .= '<i class="ph-bold ph-plus-square me-1"></i> Ext';
-                    $btn .= '</button>';
-
-                    $btn .= '<button class="btn btn-outline-primary btn-sm btn-existing" data-id="'.$row->id.'" title="Update Existing (Ubah Nominal)">';
-                    $btn .= '<i class="ph-bold ph-arrows-clockwise me-1"></i> Exist';
-                    $btn .= '</button>';
-                    $btn .= '</div>';
-                    return $btn;
-                })
-
                 ->addColumn('action', function ($row) {
-                    $btn = '<div class="d-flex justify-content-center gap-2">';
-                    $btn .= '<button class="btn btn-sm btn-outline-info btn-show" data-id="'.$row->id.'" title="Lihat Detail">';
-                    $btn .= '<i class="ph-bold ph-eye"></i>';
+                    $btn = '<div class="action-btn-group">';
+                    $btn .= '<button class="btn btn-info action-btn-hover btn-show" data-id="'.$row->id.'" data-tooltip="View Details">';
+                    $btn .= '<i class="ph-bold ph-eye text-white"></i>';
                     $btn .= '</button>';
-                    $btn .= '<button class="btn btn-sm btn-outline-warning btn-edit" data-id="'.$row->id.'" title="Edit Data">';
-                    $btn .= '<i class="ph-bold ph-pencil-simple"></i>';
+                    $btn .= '<button class="btn btn-warning text-white action-btn-hover btn-edit" data-id="'.$row->id.'" data-tooltip="Edit Data">';
+                    $btn .= '<i class="ph-bold ph-pencil"></i>';
                     $btn .= '</button>';
-                    $btn .= '<button class="btn btn-sm btn-outline-danger btn-delete" data-id="'.$row->id.'" title="Hapus Data">';
+                    $btn .= '<button class="btn btn-danger action-btn-hover btn-delete" data-id="'.$row->id.'" data-tooltip="Delete Data">';
                     $btn .= '<i class="ph-bold ph-trash"></i>';
                     $btn .= '</button>';
-
                     $btn .= '</div>';
                     return $btn;
                 })
-                ->rawColumns(['action', 'menu', 'bg_type', 'status'])
+                ->rawColumns(['action', 'bg_type', 'status'])
                 ->make(true);
         }
 
@@ -118,9 +389,10 @@ class BankGaransiController extends Controller
                         ->get();
 
         $stats = [
-            'total' => BankGaransi::count(),
-            'active' => BankGaransi::where('status', 'approved')->count(),
-            'draft' => BankGaransi::where('status', 'draft')->count(),
+            'total'    => BankGaransi::count(),
+            'active'   => BankGaransi::where('status', '!=', 'expired')->where(function($q){ $q->whereNull('exp_date')->orWhere('exp_date', '>=', now()->toDateString()); })->count(),
+            'expired'  => BankGaransi::where('status', 'expired')->orWhere('exp_date', '<', now()->toDateString())->count(),
+            'draft'    => BankGaransi::where('status', 'draft')->count(),
             'expiring' => BankGaransi::where('exp_date', '<', now()->addMonth())->where('status', 'approved')->count(),
         ];
 
@@ -179,8 +451,9 @@ class BankGaransiController extends Controller
                 ]);
 
                 if (($item['bg_type'] ?? '') === 'extension') {
-                    if ($bg->customer && $bg->customer->email) {
-                        Mail::to($bg->customer->email)->queue(new BgExtensionMail($bg));
+                    $custEmail = $bg->customer->email ?? null;
+                    if ($custEmail && filter_var($custEmail, FILTER_VALIDATE_EMAIL)) {
+                        Mail::to($custEmail)->queue(new BgExtensionMail($bg));
                     }
                 }
 
@@ -236,8 +509,9 @@ class BankGaransiController extends Controller
             ]);
 
             if (($mainData['bg_type'] ?? '') === 'existing') {
-                if ($bg->customer && $bg->customer->email) {
-                    Mail::to($bg->customer->email)->queue(new BgExistingMail($bg));
+                $custEmail = $bg->customer->email ?? null;
+                if ($custEmail && filter_var($custEmail, FILTER_VALIDATE_EMAIL)) {
+                    Mail::to($custEmail)->queue(new BgExistingMail($bg));
                 }
             }
 
@@ -336,7 +610,10 @@ class BankGaransiController extends Controller
                 ]);
             }
 
-            Mail::to($bg->customer->email)->queue(new BgExistingMail($bg, $rec));
+            $custEmail = $bg->customer->email ?? null;
+            if ($custEmail && filter_var($custEmail, FILTER_VALIDATE_EMAIL)) {
+                Mail::to($custEmail)->queue(new BgExistingMail($bg, $rec));
+            }
 
             activity()
                 ->causedBy(Auth::user())
@@ -348,9 +625,9 @@ class BankGaransiController extends Controller
                     'current_nominal' => $currentNominal,
                     'customer' => $bg->customer->name
                 ])
-                ->log("Admin memulai proses EXISTING untuk BG {$bg->bg_number}");
+                ->log("Admin started EXISTING process for BG {$bg->bg_number}");
 
-            return response()->json(['success' => true, 'message' => 'Tipe BG diubah menjadi EXISTING & Link update dikirim!']);
+            return response()->json(['success' => true, 'message' => 'BG type changed to EXISTING & update link sent!']);
 
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
@@ -394,7 +671,10 @@ class BankGaransiController extends Controller
                 ]);
             }
 
-            Mail::to($customer->email)->queue(new BgExtensionMail($rec));
+            $custEmail = $customer->email ?? null;
+            if ($custEmail && filter_var($custEmail, FILTER_VALIDATE_EMAIL)) {
+                Mail::to($custEmail)->queue(new BgExtensionMail($rec));
+            }
 
             $parentBgNumber = '-';
             if($request->has('bg_id')) {
@@ -411,9 +691,9 @@ class BankGaransiController extends Controller
                     'customer' => $customer->name,
                     'parent_bg' => $parentBgNumber
                 ])
-                ->log("Admin memulai proses EXTENSION untuk Customer {$customer->name}");
+                ->log("Admin started EXTENSION process for Customer {$customer->name}");
 
-            return response()->json(['success' => true, 'message' => 'Request Extension diproses. Link pembuatan BG Baru dikirim!']);
+            return response()->json(['success' => true, 'message' => 'Extension request processed. New BG creation link sent!']);
 
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);

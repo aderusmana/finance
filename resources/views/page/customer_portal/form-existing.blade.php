@@ -21,7 +21,7 @@
         
         <div class="text-center mb-4">
             <h3 class="fw-bold text-primary">Update Bank Garansi (Existing)</h3>
-            <p class="text-muted">No. Referensi BG: <strong>{{ $existingBg->bg_number }}</strong></p>
+            <p class="text-muted">BG Reference No.: <strong>{{ $existingBg->bg_number }}</strong></p>
         </div>
 
         <div class="card shadow-sm border-0">
@@ -30,8 +30,8 @@
                 <div class="alert alert-info d-flex align-items-center mb-4" role="alert">
                     <i class="ph-bold ph-info fs-4 me-2"></i>
                     <div>
-                        Mode: <strong>Perpanjangan / Update Nominal</strong>. <br>
-                        Silakan masukkan nominal baru. Data Bank tidak dapat diubah.
+                        Mode: <strong>Extension / Nominal Update</strong>. <br>
+                        Please enter the new nominal. Bank data cannot be changed.
                     </div>
                 </div>
 
@@ -47,33 +47,33 @@
                     <div class="card mb-3 border border-secondary border-opacity-25 bg-light">
                         <div class="card-body">
                             <h6 class="fw-bold mb-3 text-secondary">
-                                <i class="ph-duotone ph-bank me-1"></i> Data Bank #{{ $index + 1 }}
+                                <i class="ph-duotone ph-bank me-1"></i> Bank Data #{{ $index + 1 }}
                             </h6>
                             
                             <div class="row g-3">
                                 <div class="col-md-6">
-                                    <label class="form-label small text-muted">Nama Bank</label>
+                                    <label class="form-label small text-muted">Bank Name</label>
                                     <input type="text" class="form-control readonly-input" 
                                            value="{{ $detail->bank_name }}" readonly>
                                     </div>
 
                                 <div class="col-md-6">
-                                    <label class="form-label small text-muted">Cabang</label>
+                                    <label class="form-label small text-muted">Branch</label>
                                     <input type="text" class="form-control readonly-input" 
                                            value="{{ $detail->branch_name }}" readonly>
                                 </div>
 
                                 <div class="col-12">
-                                    <label class="form-label fw-bold text-dark">Nominal Baru (IDR) <span class="text-danger">*</span></label>
+                                    <label class="form-label fw-bold text-dark">New Nominal (IDR) <span class="text-danger">*</span></label>
                                     <div class="input-group">
                                         <span class="input-group-text fw-bold">Rp</span>
                                         <input type="text" 
                                                name="bank_details[{{ $index }}][nominal]" 
                                                class="form-control fw-bold fs-5 currency-input" 
-                                               placeholder="Masukkan Nominal Baru" 
+                                               placeholder="Enter New Nominal" 
                                                required>
                                     </div>
-                                    <div class="form-text">Masukkan nominal baru yang akan diajukan.</div>
+                                    <div class="form-text">Enter the new nominal to be submitted.</div>
                                 </div>
                             </div>
                         </div>
@@ -82,7 +82,7 @@
 
                     <div class="mt-4">
                         <button type="submit" class="btn btn-primary w-100 py-3 fw-bold shadow-sm">
-                            <i class="ph-bold ph-paper-plane-right me-2"></i> Kirim Update Nominal
+                            <i class="ph-bold ph-paper-plane-right me-2"></i> Submit Nominal Update
                         </button>
                     </div>
 
@@ -116,12 +116,12 @@
 
             // Konfirmasi user dulu
             Swal.fire({
-                title: 'Kirim Data?',
-                text: "Pastikan nominal baru sudah sesuai.",
+                title: 'Submit Data?',
+                text: "Ensure the new nominal is correct.",
                 icon: 'question',
                 showCancelButton: true,
-                confirmButtonText: 'Ya, Kirim',
-                cancelButtonText: 'Batal',
+                confirmButtonText: 'Yes, Submit',
+                cancelButtonText: 'Cancel',
                 confirmButtonColor: '#0d6efd'
             }).then((result) => {
                 if (result.isConfirmed) {
@@ -135,8 +135,8 @@
             
             // Tampilkan Loading
             Swal.fire({
-                title: 'Memproses...',
-                text: 'Mohon tunggu sebentar',
+                title: 'Processing...',
+                text: 'Please wait a moment',
                 allowOutsideClick: false,
                 didOpen: () => { Swal.showLoading(); }
             });
@@ -152,19 +152,19 @@
                     if(response.success) {
                         Swal.fire({
                             icon: 'success',
-                            title: 'Berhasil!',
-                            text: 'Update nominal berhasil dikirim.',
+                            title: 'Success!',
+                            text: 'Nominal update submitted successfully.',
                             confirmButtonText: 'OK'
                         }).then(() => {
                             // Redirect atau reload (opsional)
                             window.location.reload(); 
                         });
                     } else {
-                        Swal.fire('Gagal', response.message, 'error');
+                        Swal.fire('Failed', response.message, 'error');
                     }
                 },
                 error: function(xhr) {
-                    let msg = xhr.responseJSON ? xhr.responseJSON.message : 'Terjadi kesalahan sistem';
+                    let msg = xhr.responseJSON ? xhr.responseJSON.message : 'System error occurred';
                     Swal.fire('Error', msg, 'error');
                 }
             });

@@ -103,11 +103,21 @@ class AllSeeder extends Seeder
         $headFinanceRole = Role::updateOrCreate(['name' => 'head-finance']);
         $headFinanceRole->syncPermissions($financePerms);
 
-        // Sales Role (Head SNM)
+        $secretaryFinanceRole = Role::updateOrCreate(['name' => 'secretary-finance']);
+        $secretaryFinanceRole->syncPermissions($financePerms);
+
+        // Sales Role (Head SNM & Admin RTM)
         $headSnmRole = Role::updateOrCreate(['name' => 'head-SNM']);
         $headSnmRole->syncPermissions([
             'view dashboard', 'view customers menu', 'view customer',
             'create customer', 'update customer', 'delete customer', 'view report', 'view approval'
+        ]);
+
+        $adminRtmRole = Role::updateOrCreate(['name' => 'admin-rtm']);
+        $adminRtmRole->syncPermissions([
+            'view dashboard', 'view customers menu', 'view customer',
+            'create customer', 'update customer', 'delete customer', 'view report', 'view approval',
+            'view bank garansi menu', 'view bg'
         ]);
 
         // IT Role

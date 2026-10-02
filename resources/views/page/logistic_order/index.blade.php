@@ -197,6 +197,11 @@
                     <table class="table table-hover w-100 align-middle" id="historyTable">
                         <thead>
                             <tr>
+                                <th width="5%" class="text-center">
+                                    <div class="form-check d-flex justify-content-center">
+                                        <input class="form-check-input" type="checkbox" id="checkAllHistory">
+                                    </div>
+                                </th>
                                 <th>No</th>
                                 <th width="15%">DN Info</th>
                                 <th width="20%">Customer</th>
@@ -266,7 +271,7 @@
                                             <option value="">-- Select Customer --</option>
                                             @foreach ($customers as $c)
                                                 <option value="{{ $c->id }}">
-                                                    {{ $c->customer_code ?? ($c->code ?? '-') }} - {{ $c->name }}
+                                                    {{ $c->customer_code ?? ($c->code ?? '-') }} - {{ $c->name }} - {{ $c->sort_name}}
                                                 </option>
                                             @endforeach
                                         </select>
@@ -292,7 +297,7 @@
                                     <div class="row mb-3">
                                         <div class="col-md-6">
                                             <label class="form-label fw-bold">Attention</label>
-                                            <input type="text" id="attention" name="attention" class="form-control" placeholder="e.g: Bapak Budi">
+                                            <input type="text" id="attention" name="attention" class="form-control" placeholder="">
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label fw-bold">Date of PO</label>
@@ -366,7 +371,7 @@
                                                 <tr>
                                                     <th width="12%">Item Code <span class="text-danger">*</span></th>
                                                     <th width="23%">Item Name <span class="text-danger">*</span></th>
-                                                    <th width="15%">Pack Size</th>
+                                                    <!-- <th width="15%">Pack Size</th> -->
                                                     <th width="15%">Price List <span class="text-danger">*</span></th>
                                                     <th width="10%">Qty <span class="text-danger">*</span></th>
                                                     <th width="15%">Amount</th>
@@ -524,15 +529,24 @@
                                     <table class="table table-hover align-middle mb-0">
                                         <thead class="table-light">
                                             <tr>
-                                                <th width="10%" class="text-center text-muted py-3">NO</th>
-                                                <th width="50%" class="text-muted py-3">ITEM NAME</th>
-                                                <th width="20%" class="text-center text-muted py-3">PACK SIZE</th>
-                                                <th width="20%" class="text-center text-muted py-3">QTY</th>
+                                                <th width="5%" class="text-center text-muted py-3">NO</th>
+                                                <th width="15%" class="text-muted py-3">ITEM CODE</th>
+                                                <th width="25%" class="text-muted py-3">ITEM NAME</th>
+                                                <!-- <th width="15%" class="text-muted py-3">PACK SIZE</th> -->
+                                                <th width="15%" class="text-muted py-3">PRICE LIST</th>
+                                                <th width="10%" class="text-center text-muted py-3">QTY</th>
+                                                <th width="15%" class="text-muted py-3">AMOUNT</th>
                                             </tr>
                                         </thead>
                                         <tbody id="detail_items_table">
                                             {{-- Data di-inject via JS --}}
                                         </tbody>
+                                        <tfoot id="detail_items_footer" style="display: none;">
+                                            <tr class="table-light">
+                                                <td colspan="6" class="text-end fw-bold align-middle">Total Amount Claim :</td>
+                                                <td class="fw-bold text-success" id="detail_grand_total">Rp 0</td>
+                                            </tr>
+                                        </tfoot>
                                     </table>
                                 </div>
                             </div>
@@ -599,6 +613,7 @@
             function handlePriceInput(input) {
                 let val = input.value.replace(/[^0-9]/g, '');
                 input.value = val ? formatRupiah(val) : '';
+                calculateRow(input);
             }
 
             function calculateGrandTotal() {
@@ -704,41 +719,17 @@
                             d.distributors = $('#filter_distributor').val();
                         }
                     },
-                    columns: [{
-                            data: 'DT_RowIndex',
-                            name: 'DT_RowIndex',
-                            orderable: false,
-                            searchable: false
-                        },
+                    columns: [
                         {
-                            data: 'do_no',
-                            name: 'note.delivery_order_no',
-                            className: 'fw-bold text-success'
+                            data: 'checkbox', name: 'checkbox', orderable: false, searchable: false, className: 'text-center align-middle'
                         },
-                        {
-                            data: 'customer_name',
-                            name: 'customer.name',
-                            className: 'fw-semibold'
-                        },
-                        {
-                            data: 'distributor_name',
-                            name: 'distributor.name'
-                        },
-                        {
-                            data: 'ship_to',
-                            name: 'customerShipTo.ship_to_name'
-                        },
-                        {
-                            data: 'status_badge',
-                            name: 'note.status'
-                        },
-                        {
-                            data: 'action',
-                            name: 'action',
-                            orderable: false,
-                            searchable: false,
-                            className: 'text-center'
-                        }
+                        { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
+                        { data: 'do_no', name: 'note.delivery_order_no', className: 'fw-bold text-success' },
+                        { data: 'customer_name', name: 'customer.name', className: 'fw-semibold' },
+                        { data: 'distributor_name', name: 'distributor.name' },
+                        { data: 'ship_to', name: 'customerShipTo.ship_to_name' },
+                        { data: 'status_badge', name: 'note.status' },
+                        { data: 'action', name: 'action', orderable: false, searchable: false, className: 'text-center' }
                     ]
                 });
 
@@ -769,6 +760,18 @@
                 // $('#historyTable').on('draw.dt', function() {
                 //     $('[data-bs-toggle="tooltip"]').tooltip();
                 // });
+
+                $('#checkAllHistory').on('click', function() {
+                    $('#historyTable .dt-checkbox').prop('checked', this.checked);
+                });
+
+                $('#historyTable').on('draw.dt', function() {
+                    $('#checkAllHistory').prop('checked', false); // Reset saat ganti halaman
+                });
+
+                $('#historyTable').on('draw.dt', function() {
+                    $('[data-bs-toggle="tooltip"]').tooltip();
+                });
 
                 function initTooltips() {
                     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
@@ -821,18 +824,16 @@
                     const dists = $('#filter_distributor').val();
                     const currentTab = activeTab;
 
-                    let url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 'tab=' + currentTab;
-
-                    if (from && to) {
-                        if (from > to) {
-                            Swal.fire('Warning', 'From date cannot be later than To date.', 'warning');
-                            return;
-                        }
-                        url += '&date_from=' + encodeURIComponent(from) + '&date_to=' + encodeURIComponent(to);
+                    let selectedIds = [];
+                    if (currentTab === 'downloaded') {
+                        $('#historyTable .dt-checkbox:checked').each(function() {
+                            selectedIds.push($(this).val());
+                        });
                     }
 
-                    if (dists && dists.length > 0) {
-                        url += '&distributors=' + encodeURIComponent(dists.join(','));
+                    if (selectedIds.length === 0 && from && to && from > to) {
+                        Swal.fire('Warning', 'From date cannot be later than To date.', 'warning');
+                        return;
                     }
 
                     Swal.fire({
@@ -848,41 +849,32 @@
                             confirmButton: 'btn btn-primary rounded-pill px-4 fw-bold',
                             cancelButton: 'btn btn-light rounded-pill px-4 fw-bold border'
                         },
-                        buttonsStyling: false,
                         inputValidator: (value) => {
-                            if (!value) {
-                                return 'AP Number is required to proceed with the export.';
-                            }
+                            if (!value) return 'AP Number is required to proceed with the export.';
                         }
                     }).then((result) => {
                         if (result.isConfirmed) {
                             const apNumber = result.value;
-                            Swal.fire({
-                                title: 'Processing Export',
-                                html: '<span style="color: #64748b; font-size: 0.95rem;">Please wait while we process your export request.</span>',
-                                allowOutsideClick: false, 
-                                allowEscapeKey: false,
-                                showConfirmButton: false,
-                                didOpen: () => {
-                                    Swal.showLoading();
-                                }
-                            });
-
+                            
                             let url = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 'tab=' + currentTab + '&ap_number=' + encodeURIComponent(apNumber);
 
-                            if (from && to) {
-                                url += '&date_from=' + encodeURIComponent(from) + '&date_to=' + encodeURIComponent(to);
+                            if (selectedIds.length > 0) {
+                                url += '&ids=' + encodeURIComponent(selectedIds.join(','));
+                            } else {
+                                if (from && to) url += '&date_from=' + encodeURIComponent(from) + '&date_to=' + encodeURIComponent(to);
+                                if (dists && dists.length > 0) url += '&distributors=' + encodeURIComponent(dists.join(','));
                             }
-                            
-                            if (dists && dists.length > 0) {
-                                url += '&distributors=' + encodeURIComponent(dists.join(','));
-                            }
+
+                            Swal.fire({
+                                title: 'Processing Export',
+                                html: 'Please wait while we process your export request.',
+                                allowOutsideClick: false, 
+                                showConfirmButton: false,
+                                didOpen: () => { Swal.showLoading(); }
+                            });
 
                             window.location.href = url;
-
-                            setTimeout(() => {
-                                Swal.close();
-                            }, 3000); 
+                            setTimeout(() => { Swal.close(); }, 3000); 
                         }
                     });
                 }
@@ -938,7 +930,7 @@
                             
                             $('#itemTable tbody').empty();
                             $.each(editDataBuffer.items, function(key, item) {
-                                addRow(item.order_item_code, item.order_item_name, item.price_list, item.order_quantity, item.pack_size);
+                                addRow(item.order_item_code, item.order_item_name, item.price_list, item.order_quantity);
                             });
                             editDataBuffer = null;
                         } 
@@ -1127,24 +1119,35 @@
 
                         let tbody = $('#detail_items_table');
                         tbody.empty();
+                        let grandTotal = 0;
                         if (data.items && data.items.length > 0) {
                             $.each(data.items, function(index, item) {
+                                let itemPrice = parseFloat(item.price_list) || 0;
+                                let itemAmount = parseFloat(item.order_amount) || 0;
+                                grandTotal += itemAmount;
+                                
                                 tbody.append(`
                                 <tr>
                                     <td class="text-center text-muted py-2">${index + 1}</td>
                                     <td class="py-2">
-                                        <div class="fw-bold text-dark">${item.order_item_name}</div>
-                                        <small class="text-muted">${item.order_item_code || '-'}</small>
+                                        <span class="badge bg-light text-secondary border px-2 py-1">${item.order_item_code || '-'}</span>
                                     </td>
-                                    <td class="text-center fw-bold text-primary py-2">${item.pack_size}</td>
+                                    <td class="py-2">
+                                        <div class="fw-bold text-dark">${item.order_item_name}</div>
+                                    </td>
+                                    <td class="py-2">Rp ${new Intl.NumberFormat('id-ID').format(itemPrice)}</td>
                                     <td class="text-center fw-bold text-primary py-2">${item.order_quantity}</td>
+                                    <td class="py-2 fw-bold text-success">Rp ${new Intl.NumberFormat('id-ID').format(itemAmount)}</td>
                                 </tr>
                             `);
                             });
+                            $('#detail_grand_total').text('Rp ' + new Intl.NumberFormat('id-ID').format(grandTotal));
+                            $('#detail_items_footer').show();
                         } else {
                             tbody.append(
-                                '<tr><td colspan="4" class="text-center text-muted py-4">No item details available.</td></tr>'
+                                '<tr><td colspan="7" class="text-center text-muted py-4">No item details available.</td></tr>'
                             );
+                            $('#detail_items_footer').hide();
                         }
 
                         let logTbody = $('#detail_download_logs_table');
@@ -1330,13 +1333,12 @@
             function addRow(code = '', name = '', price = 0, qty = 1, packSize = '') {
                 $('#emptyRow').remove();
                 let index = Date.now() + Math.floor(Math.random() * 1000);
-                let initialTotal = (qty > 0) ? formatRupiah(qty * activeLogisticFee) : 'Rp 0';
+                let initialTotal = (qty > 0 && price > 0) ? formatRupiah(qty * price) : 'Rp 0';
                 let displayPrice = (price > 0) ? formatRupiah(price) : '';
                 let row = `
                 <tr>
                     <td><input type="text" name="items[${index}][item_code]" class="form-control form-control-sm" value="${code}" placeholder="Item Code" required></td>
                     <td><input type="text" name="items[${index}][item_name]" class="form-control form-control-sm" value="${name}" placeholder="Item Name" required></td>
-                    <td><input type="text" name="items[${index}][pack_size]" class="form-control form-control-sm" value="${packSize}" placeholder="e.g. 10 x 10's"></td>
                     <td><input type="text" name="items[${index}][price_list]" class="form-control form-control-sm price-input" value="${displayPrice}" placeholder="Rp 0" oninput="handlePriceInput(this)" required></td>
                     <td><input type="number" name="items[${index}][qty]" class="form-control form-control-sm qty-input" value="${qty}" placeholder="1" min="1" oninput="calculateRow(this)" required></td>
                     <td><input type="text" name="items[${index}][amount]" class="form-control form-control-sm bg-light amount-display fw-bold text-primary" readonly value="${initialTotal}"></td>
@@ -1356,8 +1358,12 @@
             }
 
             function calculateRow(input) {
-                let qty = parseFloat($(input).val()) || 0;
-                $(input).closest('tr').find('.amount-display').val(formatRupiah(qty * activeLogisticFee));
+                let row = $(input).closest('tr');
+                let qty = parseFloat(row.find('.qty-input').val()) || 0;
+                let priceStr = row.find('.price-input').val().replace(/[^0-9]/g, '');
+                let price = parseFloat(priceStr) || 0;
+                
+                row.find('.amount-display').val(formatRupiah(qty * price));
 
                 calculateGrandTotal();
             }

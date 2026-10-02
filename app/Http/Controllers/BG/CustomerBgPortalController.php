@@ -19,6 +19,9 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 use App\Mail\BgUpdateDocumentMail;
+use App\Mail\CustomerFillFormNotification;
+use App\Models\Master\ApprovalLog;
+use App\Jobs\ProcessFinanceApprovalEmail;
 use Illuminate\Support\Facades\Log;
 
 class CustomerBgPortalController extends Controller
@@ -56,8 +59,9 @@ class CustomerBgPortalController extends Controller
         $financeName = $financeUser ? $financeUser->name : 'Finance Dept.';
 
         $request->validate([
-            'details' => 'required|array',
-            'details.*.nominal' => 'required|numeric',
+            'custom_address'      => 'nullable|string|max:1000',
+            'details'             => 'required|array',
+            'details.*.nominal'   => 'required|numeric',
             'details.*.bank_name' => ($action === 'existing') ? 'nullable' : 'required',
         ]);
 
@@ -68,7 +72,7 @@ class CustomerBgPortalController extends Controller
             $msgType = '';
 
             if ($action === 'existing' && !empty($metadata['target_bg_id'])) {
-                $msgType = 'Update Data Existing';
+                $msgType = 'Update Existing Data';
                 $bg = BankGaransi::findOrFail($metadata['target_bg_id']);
                 $oldNominal = $bg->bg_nominal;
                 $newNominal = (float) $request->details[0]['nominal'];
@@ -82,10 +86,12 @@ class CustomerBgPortalController extends Controller
                 $formCode = 'UPD-' . date('Ymd') . '-' . strtoupper(Str::random(4));
                 $submission = BgSubmission::create([
                     'bg_recommendation_id' => $rec->id,
-                    'form_code'  => $formCode,
-                    'status'     => 'awaiting_upload',
-                    'token'      => Str::random(60),
-                    'created_at' => $timestamp
+                    'form_code'            => $formCode,
+                    'custom_address'       => $request->custom_address,
+                    'bg_nominal'           => $newNominal,
+                    'status'               => 'awaiting_upload',
+                    'token'                => Str::random(60),
+                    'created_at'           => $timestamp
                 ]);
 
                 activity()
@@ -100,36 +106,55 @@ class CustomerBgPortalController extends Controller
                         'difference'  => $newNominal - $oldNominal,
                         'form_code'   => $submission->form_code
                     ])
-                    ->log("Customer melakukan update EXISTING: Nominal berubah dari Rp " . number_format($oldNominal) . " menjadi Rp " . number_format($newNominal));
+                    ->log("Customer performed EXISTING update: Nominal changed from Rp " . number_format($oldNominal) . " to Rp " . number_format($newNominal));
 
                 $dataset = [[
-                    'bg' => $bg,
-                    'customer' => $rec->customer,
-                    'submission' => $submission,
-                    'rec' => $rec,
+                    'bg'           => $bg,
+                    'bgs'          => [$bg],
+                    'customer'     => $rec->customer,
+                    'submission'   => $submission,
+                    'rec'          => $rec,
                     'finance_name' => $financeName,
-                    'is_existing' => true,
-                    'old_nominal' => $oldNominal
+                    'is_existing'  => true,
+                    'old_nominal'  => $oldNominal
                 ]];
 
                 $pdf = Pdf::loadView('pdf.bg_confirmation', ['dataset' => $dataset]);
                 $fileName = 'Formulir_Update_' . $submission->form_code . '.pdf';
                 Storage::disk('public')->put('generated_pdfs/' . $fileName, $pdf->output());
 
-                if ($rec->customer && $rec->customer->email) {
-                    Mail::to($rec->customer->email)
+                $custEmail = $rec->customer->email ?? null;
+                if ($custEmail && filter_var($custEmail, FILTER_VALIDATE_EMAIL)) {
+                    Mail::to($custEmail)
                         ->queue(new BgUpdateDocumentMail($submission, base64_encode($pdf->output()), 'existing'));
                 }
             } else {
-                $msgType = ($action === 'extension') ? 'Input Extension BG' : 'Input BG Baru';
+                $msgType = ($action === 'extension') ? 'Input Extension BG' : 'Input New BG';
                 $currentYear = date('Y');
                 $existingCount = BankGaransi::where('customer_id', $rec->customer_id)
                                     ->whereYear('created_at', $currentYear)
                                     ->count();
 
+                // 1 Single Submission for the entire batch of banks
+                $formCode = ($action === 'extension' ? 'EXT-' : 'NEW-') . date('Ymd') . '-' . strtoupper(Str::random(6));
+                $totalBatchNominal = collect($request->details)->sum(function($d) {
+                    return (float) ($d['nominal'] ?? 0);
+                });
+
+                $submission = BgSubmission::create([
+                    'bg_recommendation_id' => $rec->id,
+                    'form_code'            => $formCode,
+                    'custom_address'       => $request->custom_address,
+                    'bg_nominal'           => $totalBatchNominal,
+                    'status'               => 'awaiting_upload',
+                    'token'                => Str::random(60),
+                    'created_at'           => $timestamp,
+                ]);
+
+                $createdBgs = [];
+
                 foreach ($request->details as $index => $d) {
                     $nominal = (float) $d['nominal'];
-
                     $sequence = $existingCount + ($index + 1);
                     $bgNumber = "BG-{$currentYear}-" . str_pad($sequence, 4, '0', STR_PAD_LEFT);
 
@@ -141,12 +166,13 @@ class CustomerBgPortalController extends Controller
                         'base_bg_id'  => null,
                         'status'      => 'draft',
                         'created_by'  => $rec->customer->user_id ?? null,
+                        'created_at'  => $timestamp,
                     ]);
                     $bg->update(['base_bg_id' => $bg->id]);
 
                     $logMessage = ($action === 'extension')
-                        ? "Customer mengajukan EXTENSION BG Baru senilai Rp " . number_format($nominal)
-                        : "Customer mengajukan BG BARU senilai Rp " . number_format($nominal);
+                        ? "Customer submitted New EXTENSION BG for Rp " . number_format($nominal)
+                        : "Customer submitted NEW BG for Rp " . number_format($nominal);
 
                     activity()
                         ->causedBy($rec->customer)
@@ -168,38 +194,36 @@ class CustomerBgPortalController extends Controller
                         'nominal'        => $nominal,
                     ]);
 
-                    $formCode = 'NEW-' . date('Ymd') . '-' . strtoupper(Str::random(4)) . '-' . ($index+1);
-                    $submission = BgSubmission::create([
-                        'bg_recommendation_id' => $rec->id,
-                        'form_code' => $formCode,
-                        'status'    => 'awaiting_upload',
-                        'token'     => Str::random(60),
-                    ]);
-
-                    $datasetItem = [
-                        'bg' => $bg,
-                        'customer' => $rec->customer,
-                        'submission' => $submission,
-                        'rec' => $rec,
-                        'finance_name' => $financeName
-                    ];
-
-                    $pdf = Pdf::loadView('pdf.bg_confirmation', ['dataset' => [$datasetItem]]);
-                    $fileName = 'Formulir_BG_' . $submission->form_code . '.pdf';
-                    Storage::disk('public')->put('generated_pdfs/' . $fileName, $pdf->output());
-
-                    if ($rec->customer && $rec->customer->email) {
-                        if($action === 'extension') {
-                            Mail::to($rec->customer->email)
-                                ->queue(new BgUpdateDocumentMail($submission, base64_encode($pdf->output()), 'extension'));
-                        } else {
-                            Mail::to($rec->customer->email)
-                                ->queue(new BgSubmissionDocumentMail($submission, base64_encode($pdf->output())));
-                        }
-                    }
+                    $createdBgs[] = $bg->load('details');
                 }
 
-                $submission = BgSubmission::where('bg_recommendation_id', $rec->id)->latest()->first();
+                // 1 Consolidated Dataset for PDF
+                $dataset = [
+                    [
+                        'bg'           => $createdBgs[0] ?? null,
+                        'bgs'          => $createdBgs,
+                        'customer'     => $rec->customer,
+                        'submission'   => $submission,
+                        'rec'          => $rec,
+                        'finance_name' => $financeName,
+                        'is_existing'  => false,
+                    ]
+                ];
+
+                $pdf = Pdf::loadView('pdf.bg_confirmation', ['dataset' => $dataset]);
+                $fileName = 'Formulir_BG_' . $submission->form_code . '.pdf';
+                Storage::disk('public')->put('generated_pdfs/' . $fileName, $pdf->output());
+
+                $custEmail = $rec->customer->email ?? null;
+                if ($custEmail && filter_var($custEmail, FILTER_VALIDATE_EMAIL)) {
+                    if ($action === 'extension') {
+                        Mail::to($custEmail)
+                            ->queue(new BgUpdateDocumentMail($submission, base64_encode($pdf->output()), 'extension'));
+                    } else {
+                        Mail::to($custEmail)
+                            ->queue(new BgSubmissionDocumentMail($submission, base64_encode($pdf->output())));
+                    }
+                }
             }
 
             $rec->update(['status' => 'waiting_upload', 'token' => null]);
@@ -207,11 +231,11 @@ class CustomerBgPortalController extends Controller
             DB::commit();
 
             try {
-                $admins = User::role(['super-admin'])->get();
+                $admins = User::role(['admin-rtm'])->get();
 
                 Notification::send($admins, new SystemNotification(
                     'Customer Input Data',
-                    "Customer <b>{$rec->customer->name}</b> telah menyelesaikan {$msgType} & Form Generated.",
+                    "Customer <b>{$rec->customer->name}</b> has completed {$msgType} & 1 Combined Form Generated ({$submission->form_code}).",
                     route('bg-submissions.index'),
                     'ph-file-text',
                     'info'
@@ -226,12 +250,12 @@ class CustomerBgPortalController extends Controller
                 'type'        => 'input_multi',
                 'downloadUrl' => $downloadUrl,
                 'uploadToken' => $submission->token,
-                'message'     => 'Berhasil! Dokumen telah diproses. Silakan cek email Anda, tandatangani dokumen, lalu Upload kembali.',
+                'message'     => 'Success! Document has been processed. Please download the single consolidated document, sign it, and upload it back along with the Bank Garansi scan.',
             ]);
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->with('error', 'Terjadi kesalahan sistem: ' . $e->getMessage());
+            return back()->with('error', 'System error occurred: ' . $e->getMessage());
         }
     }
 
@@ -256,44 +280,42 @@ class CustomerBgPortalController extends Controller
 
                 $dataset = [
                     [
-                        'bg' => $bg,
-                        'customer' => $rec->customer,
-                        'submission' => $submission,
-                        'rec' => $rec,
+                        'bg'          => $bg,
+                        'bgs'         => [$bg],
+                        'customer'    => $rec->customer,
+                        'submission'  => $submission,
+                        'rec'         => $rec,
                         'is_existing' => true,
-                        'old_nominal' => $bg->bg_nominal
+                        'old_nominal' => $bg ? $bg->bg_nominal : 0
                     ]
                 ];
-            }
-            else {
+            } else {
                 $createdAt = Carbon::parse($submission->created_at);
-                $startTime = $createdAt->copy()->subMinutes(5);
-                $endTime   = $createdAt->copy()->addMinutes(5);
-
-                $siblings = BgSubmission::where('bg_recommendation_id', $rec->id)
-                            ->whereBetween('created_at', [$startTime, $endTime])
-                            ->orderBy('id', 'asc')
-                            ->pluck('id')->toArray();
-
-                $myIndex = array_search($submission->id, $siblings);
                 $candidateBgs = BankGaransi::where('customer_id', $rec->customer_id)
-                                ->whereBetween('created_at', [$startTime, $endTime])
+                                ->whereBetween('created_at', [
+                                    $createdAt->copy()->subMinutes(2),
+                                    $createdAt->copy()->addMinutes(2)
+                                ])
                                 ->with('details')
                                 ->orderBy('id', 'asc')
                                 ->get();
 
-                if ($myIndex !== false && isset($candidateBgs[$myIndex])) {
-                    $bg = $candidateBgs[$myIndex];
-                } else {
-                    $bg = $candidateBgs->first();
+                if ($candidateBgs->isEmpty()) {
+                    $candidateBgs = BankGaransi::where('customer_id', $rec->customer_id)
+                                    ->with('details')
+                                    ->latest()
+                                    ->take(5)
+                                    ->get();
                 }
 
                 $dataset = [
                     [
-                        'bg' => $bg,
-                        'customer' => $rec->customer,
-                        'submission' => $submission,
-                        'rec' => $rec
+                        'bg'          => $candidateBgs->first(),
+                        'bgs'         => $candidateBgs,
+                        'customer'    => $rec->customer,
+                        'submission'  => $submission,
+                        'rec'         => $rec,
+                        'is_existing' => false,
                     ]
                 ];
             }
@@ -304,7 +326,7 @@ class CustomerBgPortalController extends Controller
             return $pdf->download($fileName);
 
         } catch (\Exception $e) {
-            abort(404, 'File dokumen tidak ditemukan atau terjadi kesalahan sistem.');
+            abort(404, 'Document file not found or system error occurred.');
         }
     }
 
@@ -323,10 +345,10 @@ class CustomerBgPortalController extends Controller
         $metadata = json_decode($rec->notes, true);
         $action = $metadata['action'] ?? 'new';
 
-        if ($action === 'existing' || $action === 'extension') {
+        if ($action === 'existing') {
             $bg = null;
 
-            if ($action === 'existing' && isset($metadata['target_bg_id'])) {
+            if (isset($metadata['target_bg_id'])) {
                 $bg = BankGaransi::with('details')->find($metadata['target_bg_id']);
             } else {
                 $bg = BankGaransi::where('customer_id', $rec->customer_id)
@@ -337,36 +359,42 @@ class CustomerBgPortalController extends Controller
 
             return view('page.customer_portal.update_upload_form', [
                 'submission' => $submission,
-                'token' => $token,
-                'bg' => $bg,
-                'type' => $action
+                'token'      => $token,
+                'bg'         => $bg,
+                'type'       => $action
             ]);
         }
 
         $createdAt = Carbon::parse($submission->created_at);
-        $startTime = $createdAt->copy()->subMinutes(5);
-        $endTime   = $createdAt->copy()->addMinutes(5);
-        $siblingSubmissions = BgSubmission::where('bg_recommendation_id', $rec->id)
-                                ->whereBetween('created_at', [$startTime, $endTime])
-                                ->orderBy('id', 'asc')
-                                ->pluck('id')
-                                ->toArray();
-
-        $myIndex = array_search($submission->id, $siblingSubmissions);
         $candidateBgs = BankGaransi::where('customer_id', $rec->customer_id)
-                            ->whereBetween('created_at', [$startTime, $endTime])
+                            ->whereBetween('created_at', [
+                                $createdAt->copy()->subMinutes(5),
+                                $createdAt->copy()->addMinutes(5)
+                            ])
                             ->with('details')
                             ->orderBy('id', 'asc')
                             ->get();
 
-        $bg = null;
-        if ($myIndex !== false && isset($candidateBgs[$myIndex])) {
-            $bg = $candidateBgs[$myIndex];
-        } else {
-            $bg = $candidateBgs->first();
+        if ($candidateBgs->isEmpty()) {
+            $candidateBgs = BankGaransi::where('customer_id', $rec->customer_id)
+                            ->where('status', 'draft')
+                            ->with('details')
+                            ->latest()
+                            ->get();
         }
 
-        return view('page.customer_portal.upload_form', compact('submission', 'token', 'bg'));
+        if ($candidateBgs->isEmpty()) {
+            $candidateBgs = BankGaransi::where('customer_id', $rec->customer_id)
+                            ->with('details')
+                            ->latest()
+                            ->take(5)
+                            ->get();
+        }
+
+        $bg = $candidateBgs->first();
+        $bgs = $candidateBgs;
+
+        return view('page.customer_portal.upload_form', compact('submission', 'token', 'bg', 'bgs'));
     }
 
     public function storeUploadData(Request $request, $token)
@@ -376,49 +404,68 @@ class CustomerBgPortalController extends Controller
 
         if (!$submission) {
             Log::error("Token tidak ditemukan: " . $token);
-            return back()->with('error', 'Token kadaluarsa atau tidak valid.');
+            return back()->with('error', 'Token is expired or invalid.');
         }
 
         if ($submission->status != 'awaiting_upload') {
             Log::warning("Status submission bukan awaiting_upload: " . $submission->status);
-            return back()->with('error', 'Dokumen sudah diupload sebelumnya.');
+            return back()->with('error', 'Document has already been uploaded.');
         }
 
         $request->validate([
-            'signed_document' => 'required|mimes:pdf|max:5120',
+            'signed_document' => 'required|file|mimes:pdf|max:10240',
         ], [
-            'signed_document.required' => 'File dokumen wajib diunggah.',
-            'signed_document.mimes' => 'Format file harus PDF.',
-            'signed_document.max' => 'Ukuran file maksimal 5MB.',
+            'signed_document.required' => 'Dokumen konfirmasi bertandatangan dan cap perusahaan wajib diunggah.',
+            'signed_document.mimes'    => 'Format file dokumen konfirmasi harus berupa PDF.',
+            'signed_document.max'      => 'Ukuran file dokumen konfirmasi maksimal 10MB.',
         ]);
 
         try {
-            $file = $request->file('signed_document');
-            Log::info("File diterima: " . $file->getClientOriginalName() . ", Size: " . $file->getSize());
+            $signedFile = $request->file('signed_document');
+            $signedPath = $signedFile->store('bg_documents/signed', 'public');
 
-            $path = $file->store('bg_documents/signed', 'public');
             $submission->update([
-                'signed_document_path' => 'storage/' . $path,
+                'signed_document_path' => 'storage/' . $signedPath,
                 'submitted_at'         => now(),
                 'upload_completed_at'  => now(),
                 'status'               => 'uploaded',
-                'token'                => null,
             ]);
+
+            $rec = $submission->recommendation;
 
             activity()
-                ->causedBy($submission->recommendation->customer)
+                ->causedBy($rec->customer ?? null)
                 ->performedOn($submission)
-                ->log('Customer Uploaded Signed Document');
+                ->log("Customer uploaded signed confirmation document ({$submission->form_code})");
 
-            Log::info("Upload Berhasil untuk Submission ID: " . $submission->id);
+            Log::info("Upload Dokumen Konfirmasi Berhasil untuk Submission ID: " . $submission->id);
 
-            return view('page.customer_portal.form-success', [
-                'type' => 'upload'
-            ]);
+            // Send instant notification and email to Admin RTM only (bukan ke Sales)
+            try {
+                $recipients = User::role(['admin-rtm'])->get();
+
+                Notification::sendNow($recipients, new SystemNotification(
+                    'Customer Uploaded Confirmation Document',
+                    "Customer <b>{$rec->customer->name}</b> telah mengunggah dokumen konfirmasi Bank Garansi ({$submission->form_code}). Menunggu verifikasi dokumen oleh Admin-RTM.",
+                    route('bg-submissions.index'),
+                    'ph-upload-simple',
+                    'success'
+                ));
+
+                foreach ($recipients as $recipient) {
+                    if ($recipient->email && filter_var($recipient->email, FILTER_VALIDATE_EMAIL)) {
+                        Mail::to($recipient->email)->send(new CustomerFillFormNotification($rec, true, $submission));
+                    }
+                }
+            } catch (\Exception $e) {
+                Log::error('Notif Upload Admin Error: ' . $e->getMessage());
+            }
+
+            return redirect()->route('customer.portal.upload-success');
 
         } catch (\Exception $e) {
             Log::error("Error Exception saat upload: " . $e->getMessage());
-            return back()->with('error', 'Gagal upload (Server Error): ' . $e->getMessage());
+            return back()->with('error', 'Upload failed (Server Error): ' . $e->getMessage());
         }
     }
 
@@ -450,7 +497,7 @@ class CustomerBgPortalController extends Controller
             return $pdf->download($fileName);
 
         } catch (\Exception $e) {
-            abort(404, 'Dokumen tidak ditemukan atau link kadaluarsa.');
+            abort(404, 'Document not found or link expired.');
         }
     }
 
@@ -514,7 +561,34 @@ class CustomerBgPortalController extends Controller
             return $pdf->download('Lampiran_D_' . $safeName . '.pdf');
 
         } catch (\Exception $e) {
-            abort(404, 'Dokumen tidak ditemukan atau terjadi kesalahan: ' . $e->getMessage());
+            abort(404, 'Document not found or error occurred: ' . $e->getMessage());
+        }
+    }
+
+    public function reviewUpload($token)
+    {
+        $submission = BgSubmission::with('recommendation.customer')->where('token', $token)->first();
+        if (!$submission || !$submission->signed_document_path) {
+            return view('page.customer_portal.invalid');
+        }
+
+        return view('page.customer_portal.admin_review_upload', compact('submission', 'token'));
+    }
+
+    public function downloadSubmissionPdf($token)
+    {
+        try {
+            $submission = BgSubmission::where('token', $token)->firstOrFail();
+            $path = $submission->signed_document_path;
+
+            if ($path && file_exists(public_path($path))) {
+                $fileName = 'Uploaded_Document_' . $submission->form_code . '.pdf';
+                return response()->download(public_path($path), $fileName);
+            }
+
+            return abort(404, 'File not found on server');
+        } catch (\Exception $e) {
+            abort(404, 'Document not found.');
         }
     }
 }

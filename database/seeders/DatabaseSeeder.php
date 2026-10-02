@@ -20,5 +20,6 @@ class DatabaseSeeder extends Seeder
         $this->call(BgLampiranDApprovalSeeder::class);
         $this->call(CustomerApprovalSeeder::class);
         $this->call(DistributorSeeder::class);
+        $this->call(BgWorkflowDummySeeder::class);
     }
 }

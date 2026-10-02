@@ -1,38 +1,40 @@
 <?php
 
-use App\Http\Controllers\Customer\AccountGroupController;
-use App\Http\Controllers\Master\ApprovalPathController;
-use App\Http\Controllers\Customer\BranchController;
-use App\Http\Controllers\Customer\CustomerClassController;
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\Master\DepartmentController;
-use App\Http\Controllers\Customer\CustomerController;
+use App\Http\Controllers\BG\ApprovalProcessController;
 use App\Http\Controllers\BG\BankGaransiController;
+use App\Http\Controllers\BG\BgApprovalInboxController;
 use App\Http\Controllers\BG\BgHistoryController;
 use App\Http\Controllers\BG\BgRecommendationController;
+use App\Http\Controllers\BG\BgReportController;
 use App\Http\Controllers\BG\BgSubmissionController;
+use App\Http\Controllers\BG\CustomerBgPortalController;
+use App\Http\Controllers\BG\LampiranDController;
+use App\Http\Controllers\BG\SalesBgSubmissionController;
+use App\Http\Controllers\Customer\AccountGroupController;
+use App\Http\Controllers\Customer\BranchController;
+use App\Http\Controllers\Customer\CustomerClassController;
+use App\Http\Controllers\Customer\CustomerController;
 use App\Http\Controllers\Customer\RegionsController;
 use App\Http\Controllers\Customer\SalesController;
 use App\Http\Controllers\Customer\TOPController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\LogisticOrder\LogisticOrderController;
+use App\Http\Controllers\Master\ApprovalPathController;
+use App\Http\Controllers\Master\BgLimitRuleController;
+use App\Http\Controllers\Master\BgTaxController;
+use App\Http\Controllers\Master\CustomerShipToController;
+use App\Http\Controllers\Master\DepartmentController;
+use App\Http\Controllers\Master\DistributorController;
+use App\Http\Controllers\Master\LogisticFeeController;
+use App\Http\Controllers\Master\MasterExportController;
 use App\Http\Controllers\Master\PermissionController;
+use App\Http\Controllers\Master\PositionController;
 use App\Http\Controllers\Master\RevisionController;
 use App\Http\Controllers\Master\RoleController;
+use App\Http\Controllers\Master\SystemLogController;
 use App\Http\Controllers\Master\UserController;
 use App\Http\Controllers\NotificationController;
-use App\Http\Controllers\Master\PositionController;
-use App\Http\Controllers\Master\BgTaxController;
-use App\Http\Controllers\Master\BgLimitRuleController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\Master\LogisticFeeController;
-use App\Http\Controllers\BG\CustomerBgPortalController;
-use App\Http\Controllers\BG\ApprovalProcessController;
-use App\Http\Controllers\BG\BgApprovalInboxController;
-use App\Http\Controllers\BG\BgReportController;
-use App\Http\Controllers\BG\LampiranDController;
-use App\Http\Controllers\LogisticOrder\LogisticOrderController;
-use App\Http\Controllers\Master\CustomerShipToController;
-use App\Http\Controllers\Master\DistributorController;
-use App\Http\Controllers\Master\SystemLogController;
 use Illuminate\Support\Facades\Route;
 
 // Redirect root to the named login route (actual login routes are defined in routes/auth.php)
@@ -59,15 +61,18 @@ Route::get('/tes-403', function () {
     abort(403, 'Akses Ditolak'); // Menampilkan halaman 403 dengan pesan kustom
 });
 
-
-
 Route::prefix('customer-portal')->name('customer.portal.')->group(function () {
     Route::get('/form/{token}', [CustomerBgPortalController::class, 'showInputForm'])->name('input-form');
     Route::post('/form/{token}', [CustomerBgPortalController::class, 'storeInputData'])->name('store-input');
     Route::get('/upload/{token}', [CustomerBgPortalController::class, 'showUploadForm'])->name('upload-form');
     Route::post('/upload/{token}', [CustomerBgPortalController::class, 'storeUploadData'])->name('store-upload');
+    Route::get('/upload-success', function () {
+        return view('page.customer_portal.form-success', ['type' => 'upload']);
+    })->name('upload-success');
     Route::get('/download/{token}', [CustomerBgPortalController::class, 'downloadPdf'])->name('download-pdf');
     Route::get('/download-lampiran-d/{token}', [CustomerBgPortalController::class, 'downloadLampiranD'])->name('download-lampiran-d');
+    Route::get('/review/{token}', [CustomerBgPortalController::class, 'reviewUpload'])->name('review-upload');
+    Route::get('/download-submission/{token}', [CustomerBgPortalController::class, 'downloadSubmissionPdf'])->name('download-submission-pdf');
 });
 
 Route::middleware('auth')->group(function () {
@@ -92,6 +97,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/recent-activities', [DashboardController::class, 'getRecentActivities'])->name('recent-activities');
         Route::get('/my-actions', [DashboardController::class, 'getMyActions'])->name('my-actions');
         Route::get('/logistic-stats', [DashboardController::class, 'getLogisticStats'])->name('logistic-stats');
+        Route::get('/customer-classes', [DashboardController::class, 'getCustomerClassesData'])->name('customer-classes');
+        Route::get('/class-stats-chart', [DashboardController::class, 'getClassStatsChart'])->name('class-stats-chart');
     });
 
     Route::post('/customers/{customer}/recall', [CustomerController::class, 'recall'])->name('customers.recall');
@@ -139,6 +146,13 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/get-customers-by-distributor/{distributor_id}', [DistributorController::class, 'getCustomersByDistributor']);
 
+    // MASTER EXPORT CENTER
+    Route::get('/master-export', [MasterExportController::class, 'index'])->name('master-export.index');
+    Route::get('/master-export/customer', [MasterExportController::class, 'exportCustomer'])->name('master-export.customer');
+    Route::get('/master-export/logistic-fee', [MasterExportController::class, 'exportLogisticFee'])->name('master-export.logistic-fee');
+    Route::get('/master-export/distributor', [MasterExportController::class, 'exportDistributor'])->name('master-export.distributor');
+    Route::get('/master-export/customer-ship-to', [MasterExportController::class, 'exportCustomerShipTo'])->name('master-export.customer-ship-to');
+
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
@@ -151,8 +165,9 @@ Route::middleware('auth')->group(function () {
     Route::delete('/notifications/delete-all', [NotificationController::class, 'deleteAll'])->name('notifications.delete.all');
     Route::delete('/notifications/{id}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
 
-
     Route::group(['prefix' => 'bg'], function () {
+        Route::get('bg-template/download', [BankGaransiController::class, 'downloadTemplate'])->name('bg.template');
+        Route::post('bg-list/import', [BankGaransiController::class, 'import'])->name('bg.import');
         Route::resource('bg-list', BankGaransiController::class);
         Route::get('generate-number', [BankGaransiController::class, 'generateNumber'])->name('bg.generate-number');
         Route::resource('bg-recommendations', BgRecommendationController::class);
@@ -160,10 +175,17 @@ Route::middleware('auth')->group(function () {
         Route::get('bg-histories/export', [BgHistoryController::class, 'export'])->name('bg-histories.export');
         Route::resource('bg-histories', BgHistoryController::class)->only(['index', 'destroy']);
         Route::post('bg-recommendations/{id}/periods', [BgRecommendationController::class, 'savePeriods'])->name('bg-recommendations.save-periods');
+        Route::post('bg-recommendations/{id}/sales-approve', [BgRecommendationController::class, 'salesApprove'])->name('bg-recommendations.sales-approve');
+        Route::post('bg-recommendations/{id}/sales-reject', [BgRecommendationController::class, 'salesReject'])->name('bg-recommendations.sales-reject');
+        Route::post('bg-recommendations/{id}/resubmit-duplicate', [BgRecommendationController::class, 'resubmitDuplicate'])->name('bg-recommendations.resubmit-duplicate');
         Route::get('customer/bg-form/{id}', [BgRecommendationController::class, 'showForm'])->name('customer.bg.form');
         Route::post('customer/bg-form/{id}', [BgRecommendationController::class, 'submitDetails'])->name('customer.bg.submit');
         Route::get('bg-submissions/{id}/edit-data', [BgSubmissionController::class, 'getEditData'])->name('bg-submissions.get-edit-data');
         Route::post('bg-submissions/{id}/process-review', [BgSubmissionController::class, 'processReview'])->name('bg-submissions.process-review');
+        Route::get('sales-submissions', [SalesBgSubmissionController::class, 'index'])->name('sales-submissions.index');
+        Route::get('sales-submissions/create', [SalesBgSubmissionController::class, 'create'])->name('sales-submissions.create');
+        Route::post('sales-submissions', [SalesBgSubmissionController::class, 'store'])->name('sales-submissions.store');
+        Route::get('sales-submissions/customer-bgs/{customerId}', [SalesBgSubmissionController::class, 'getCustomerBgs'])->name('sales-submissions.customer-bgs');
         Route::resource('lampiran-d', LampiranDController::class);
         Route::get('lampiran-d/{id}/versions', [LampiranDController::class, 'versions'])->name('lampiran-d.versions');
         Route::get('lampiran-d/version/{versionId}', [LampiranDController::class, 'showVersionDetail'])->name('lampiran-d.version.show');
@@ -174,6 +196,7 @@ Route::middleware('auth')->group(function () {
         Route::get('reports', [BgReportController::class, 'index'])->name('bg-reports.index');
         Route::post('reports/bulk-download', [BgReportController::class, 'bulkDownload'])->name('bg-reports.bulk-download');
         Route::get('reports/download/{id}/{doc_type}', [BgReportController::class, 'downloadDoc'])->name('bg-reports.download');
+        Route::get('reports/download-package/{id}', [BgReportController::class, 'downloadPackage'])->name('bg-reports.download-package');
         Route::get('reports/letters/{id}/{letter_type}', [BgReportController::class, 'downloadLetters'])->name('bg-reports.download-letters');
         Route::post('bg/request-existing/{id}', [BankGaransiController::class, 'requestExisting'])->name('bg.request.existing');
         Route::post('bg/request-extension', [BankGaransiController::class, 'requestExtension'])->name('bg.request.extension');
@@ -183,6 +206,7 @@ Route::middleware('auth')->group(function () {
 Route::group(['middleware' => ['role:super-admin|admin']], function () {
     Route::resource('users', UserController::class);
     Route::get('/users-data', [UserController::class, 'getData'])->name('users.data');
+    Route::post('/users/{id}/unlock', [UserController::class, 'unlock'])->name('users.unlock');
     Route::resource('departments', DepartmentController::class);
     Route::resource('permissions', PermissionController::class);
     Route::resource('roles', RoleController::class);
@@ -190,7 +214,6 @@ Route::group(['middleware' => ['role:super-admin|admin']], function () {
     Route::get('roles/{roleId}/give-permissions', [RoleController::class, 'addPermissionToRole'])->name('roles.give-permissions');
     Route::post('roles/{roleId}/give-permissions', [RoleController::class, 'givePermissionToRole'])->name('roles.give-permission');
 });
-
 
 // Route untuk halaman tanpa autentikasi, seperti halaman login, register, dll. (Jika menggunakan Laravel Breeze atau Jetstream, biasanya sudah otomatis mengatur ini)
 Route::get('/logistic-fees/approval/form/{token}/{action}', [LogisticFeeController::class, 'showApprovalForm'])->name('logistic-fees.approval.form');
@@ -206,5 +229,4 @@ Route::get('/approval/form/{token}/{action}', [ApprovalProcessController::class,
 Route::post('/approval/submit/{token}', [ApprovalProcessController::class, 'submit'])->name('approval.submit');
 Route::get('/public/download-doc/{bg_id}/{type}', [CustomerBgPortalController::class, 'downloadExpiringPdf'])->name('public.bg.download')->middleware('signed');
 
-
-require __DIR__ . '/auth.php';
+require __DIR__.'/auth.php';

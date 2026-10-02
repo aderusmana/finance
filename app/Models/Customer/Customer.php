@@ -7,6 +7,8 @@ use App\Models\Customer\CustomerFile;
 use App\Models\BG\BankGaransi;
 use App\Models\BG\BgRecommendation;
 use App\Models\Customer\CreditLimit;
+use App\Models\Customer\AccountGroup;
+use App\Models\Customer\Sales;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -18,14 +20,17 @@ class Customer extends Model
     protected static function booted(): void
     {
         static::saving(function (self $customer) {
-            if (is_string($customer->bank_garansi) && strtoupper($customer->bank_garansi) === 'TIDAK') {
-                $customer->credit_limit = 0;
+
+            if (is_string($customer->bank_garansi) && strtoupper($customer->bank_garansi) === 'YA') {
+                if (!$customer->approved_credit_limit) {
+                    $customer->approved_credit_limit = $customer->credit_limit;
+                }
             }
         });
     }
 
     protected $fillable = ['user_id',
-        'code', 'no_pkd', 'pic', 'name','sort_name', 'customer_class', 'account_group',
+        'code', 'no_pkd', 'pic', 'name','sort_name', 'customer_type', 'customer_class', 'account_group',
         'address1', 'address2', 'address3', 'city', 'postal_code', 'country',
         'shipping_to_name', 'shipping_to_address',
         'purchasing_manager_name', 'purchasing_manager_email', 'purchasing_manager_telepon',
@@ -39,7 +44,8 @@ class Customer extends Model
         'payment_date',
         'faktur_days',
         'faktur_date',
-        'created_by'
+        'created_by',
+        'approved_credit_limit'
     ];
 
     protected $casts = [
@@ -51,6 +57,7 @@ class Customer extends Model
         'payment_date' => 'array',
         'faktur_days' => 'array',
         'faktur_date' => 'array',
+        'approved_credit_limit' => 'decimal:2',
     ];
 
     protected $table = 'customers';
@@ -105,4 +112,54 @@ class Customer extends Model
         return $this->hasMany(CustomerItem::class, 'customer_id');
     }
 
+    public function scopeAllowedForUser($query, $user)
+    {
+        if ($user->hasRole(['super-admin', 'admin'])) {
+            return $query;
+        }
+
+        $salesAccountGroupIds = Sales::where('user_id', $user->id)
+            ->pluck('account_group_id')
+            ->toArray();
+
+        if (empty($salesAccountGroupIds)) {
+            // Jika bukan admin dan tidak punya pemetaan di tabel sales, fallback ke data buatan sendiri
+            return $query->where('customers.created_by', $user->id);
+        }
+
+        $accountGroups = AccountGroup::whereIn('id', $salesAccountGroupIds)->get();
+        
+        $allowedAccountGroupIds = [];
+        $isWest = false;
+        $isEast = false;
+        
+        foreach ($accountGroups as $ag) {
+            $allowedAccountGroupIds[] = $ag->id;
+            $name = strtoupper($ag->name_account_group);
+            if (str_starts_with($name, 'REGION 1') || str_starts_with($name, 'REGION 3')) {
+                $isWest = true;
+            }
+            if (str_starts_with($name, 'REGION 2') || str_starts_with($name, 'REGION 4')) {
+                $isEast = true;
+            }
+        }
+        
+        if ($isWest) {
+            $westIds = AccountGroup::where('name_account_group', 'LIKE', 'REGION 1%')
+                ->orWhere('name_account_group', 'LIKE', 'REGION 3%')
+                ->pluck('id')->toArray();
+            $allowedAccountGroupIds = array_merge($allowedAccountGroupIds, $westIds);
+        }
+        
+        if ($isEast) {
+            $eastIds = AccountGroup::where('name_account_group', 'LIKE', 'REGION 2%')
+                ->orWhere('name_account_group', 'LIKE', 'REGION 4%')
+                ->pluck('id')->toArray();
+            $allowedAccountGroupIds = array_merge($allowedAccountGroupIds, $eastIds);
+        }
+        
+        $allowedAccountGroupIds = array_unique($allowedAccountGroupIds);
+
+        return $query->whereIn('customers.account_group', $allowedAccountGroupIds);
+    }
 }

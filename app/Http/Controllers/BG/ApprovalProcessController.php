@@ -12,9 +12,14 @@ use Illuminate\Support\Facades\Mail;
 use App\Mail\CustomerBgReadyMail;
 use App\Models\BG\BgHistory;
 use App\Models\BG\LampiranD;
+use App\Models\Customer\CreditLimit;
+use App\Mail\CreditLimitUpdatedItMail;
 use App\Notifications\SystemNotification;
+use App\Models\BG\BgRecommendation;
+use App\Mail\CustomerFillFormNotification;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 
@@ -22,24 +27,89 @@ class ApprovalProcessController extends Controller
 {
     public function process($token, $action)
     {
-        $log = ApprovalLog::where('token', $token)
-                          ->where('status', 'Pending')
-                          ->first();
+        $log = ApprovalLog::where('token', $token)->first();
 
         if (!$log) {
             return view('page.customer_portal.form-invalid');
         }
 
-        if ($action == 'approve') {
-            $log->update([
-                'status' => 'Approved',
-                'updated_at' => now(),
-                'token' => null
+        // Cek jika log ini sudah pernah diproses sebelumnya
+        if ($log->status !== 'Pending') {
+            return view('page.customer_portal.form-success', [
+                'type'    => 'approval',
+                'title'   => 'Pengajuan Sudah Diproses',
+                'message' => "Pengajuan ini sudah diproses sebelumnya (Status: {$log->status}). " . ($log->notes ? "{$log->notes}." : "Tidak ada tindakan lebih lanjut yang diperlukan.")
             ]);
+        }
 
-            $this->finalizeSubmission($log->related_id);
+        if ($log->sub_category === 'Sales Recommendation') {
+            if ($action === 'approve') {
+                $log->update([
+                    'status' => 'Approved',
+                    'updated_at' => now(),
+                    'token' => null
+                ]);
 
-            return view('page.customer_portal.form-success', ['type' => 'upload', 'title' => 'Approved Successfully']);
+                $this->finalizeSalesRecommendationApproval($log->related_id, $log->approver_nik);
+
+                return view('page.customer_portal.form-success', [
+                    'type' => 'approval',
+                    'title' => 'Rekomendasi Berhasil Disetujui',
+                    'message' => 'Terima kasih, rekomendasi Bank Garansi telah disetujui. Tautan portal formulir pendaftaran telah otomatis dikirimkan ke distributor.'
+                ]);
+            }
+            abort(404);
+        }
+
+        $sub = BgSubmission::find($log->related_id);
+        if ($sub && in_array($sub->status, ['completed', 'approved', 'rejected_by_finance'])) {
+            $statusText = in_array($sub->status, ['completed', 'approved']) ? 'disetujui' : 'ditolak';
+            return view('page.customer_portal.form-success', [
+                'type'    => 'approval',
+                'title'   => 'Pengajuan Sudah Diproses',
+                'message' => "Pengajuan ini sebelumnya telah {$statusText} oleh Tim Finance. Anda tidak perlu mengambil tindakan lagi."
+            ]);
+        }
+
+        if ($action == 'approve') {
+            DB::beginTransaction();
+            try {
+                $approverUser = User::where('nik', $log->approver_nik)->first();
+                $approverName = $approverUser->name ?? ($log->approver_name ?: 'Finance');
+
+                // 1. Update log approver ini
+                $log->update([
+                    'status'        => 'Approved',
+                    'approver_name' => $approverName,
+                    'notes'         => 'Disetujui via Quick Approve',
+                    'updated_at'    => now(),
+                ]);
+
+                // 2. Kunci semua approval log pending lain untuk submission ini agar approver lain tidak bisa action
+                ApprovalLog::where('category', 'BG')
+                    ->where('related_id', $log->related_id)
+                    ->where('id', '!=', $log->id)
+                    ->where('status', 'Pending')
+                    ->update([
+                        'status'     => 'Approved',
+                        'notes'      => 'Otomatis selesai karena telah disetujui oleh ' . $approverName,
+                        'updated_at' => now(),
+                    ]);
+
+                $this->finalizeSubmission($log->related_id, $approverUser->id ?? null);
+
+                DB::commit();
+
+                return view('page.customer_portal.form-success', [
+                    'type'    => 'upload',
+                    'title'   => 'Approved Successfully',
+                    'message' => "Terima kasih ({$approverName}), pengajuan Bank Garansi telah berhasil disetujui."
+                ]);
+            } catch (\Exception $e) {
+                DB::rollBack();
+                Log::error("Approval Process Error: " . $e->getMessage());
+                return abort(500, 'Terjadi kesalahan sistem saat memproses approval.');
+            }
         }
 
         abort(404);
@@ -47,15 +117,36 @@ class ApprovalProcessController extends Controller
 
     public function showForm($token, $action)
     {
-        $log = ApprovalLog::where('token', $token)
-                          ->where('status', 'Pending')
-                          ->first();
+        $log = ApprovalLog::where('token', $token)->first();
 
         if (!$log) {
             return view('page.customer_portal.form-invalid');
         }
 
+        if ($log->status !== 'Pending') {
+            return view('page.customer_portal.form-success', [
+                'type'    => 'approval',
+                'title'   => 'Pengajuan Sudah Diproses',
+                'message' => "Pengajuan ini sudah diproses sebelumnya (Status: {$log->status}). " . ($log->notes ? "{$log->notes}." : "Tidak ada tindakan lebih lanjut yang diperlukan.")
+            ]);
+        }
+
+        if ($log->sub_category === 'Sales Recommendation') {
+            $recommendation = BgRecommendation::with(['customer', 'periods', 'tax'])->findOrFail($log->related_id);
+            return view('page.customer_portal.sales_recommendation_approval', compact('log', 'recommendation'));
+        }
+
         $submission = BgSubmission::with('recommendation.customer')->findOrFail($log->related_id);
+
+        // Jika submission sudah pernah disetujui atau ditolak
+        if (in_array($submission->status, ['completed', 'approved', 'rejected_by_finance'])) {
+            $statusText = in_array($submission->status, ['completed', 'approved']) ? 'disetujui' : 'ditolak';
+            return view('page.customer_portal.form-success', [
+                'type'    => 'approval',
+                'title'   => 'Pengajuan Sudah Diproses',
+                'message' => "Pengajuan ini sebelumnya telah {$statusText} oleh Tim Finance. Tidak ada tindakan lebih lanjut yang dapat dilakukan."
+            ]);
+        }
 
         $rec = $submission->recommendation;
         $metadata = json_decode($rec->notes, true) ?? [];
@@ -90,40 +181,161 @@ class ApprovalProcessController extends Controller
         }
 
         if (!$bg) {
-             return abort(404, 'Data Bank Garansi tidak ditemukan. Kemungkinan Timestamp mismatch atau ID salah.');
+             return abort(404, 'Bank Guarantee data not found. Possible Timestamp mismatch or incorrect ID.');
         }
 
-        $bgs = collect([$bg]);
-        $totalBgDiserahkan = $bg->bg_nominal;
+        // Ambil SEMUA Bank Garansi dalam batch ini
+        $bgs = BankGaransi::where('customer_id', $submission->recommendation->customer_id)
+            ->whereBetween('created_at', [
+                Carbon::parse($submission->created_at)->subMinutes(5),
+                Carbon::parse($submission->created_at)->addMinutes(5)
+            ])
+            ->get();
+
+        if ($bgs->isEmpty() && $bg) {
+            $bgs = collect([$bg]);
+        }
+
+        $totalBgDiserahkan = $bgs->sum('amount');
 
         return view('page.approval.action_lampiran', compact('token', 'action', 'submission', 'bgs', 'totalBgDiserahkan'));
     }
 
     public function submit(Request $request, $token)
     {
-        $log = ApprovalLog::where('token', $token)
-                          ->where('status', 'Pending')
-                          ->firstOrFail();
+        $log = ApprovalLog::where('token', $token)->first();
+
+        if (!$log) {
+            return view('page.customer_portal.form-invalid');
+        }
+
+        if ($log->status !== 'Pending') {
+            return view('page.customer_portal.form-success', [
+                'type'    => 'approval',
+                'title'   => 'Pengajuan Sudah Diproses',
+                'message' => "Pengajuan ini sudah diproses sebelumnya (Status: {$log->status}). " . ($log->notes ? "{$log->notes}." : "Tidak ada tindakan lebih lanjut yang diperlukan.")
+            ]);
+        }
+
+        if ($log->sub_category === 'Sales Recommendation') {
+            $rec = BgRecommendation::with('customer')->findOrFail($log->related_id);
+            $action = $request->input('action', 'approve');
+            $ronalUser = User::where('nik', $log->approver_nik)->first() ?? auth()->user();
+
+            if ($action === 'reject') {
+                $request->validate([
+                    'notes' => 'required|string|min:3'
+                ], [
+                    'notes.required' => 'Mohon isi catatan atau alasan penolakan.'
+                ]);
+
+                $log->update([
+                    'status' => 'Rejected',
+                    'notes' => $request->notes,
+                    'updated_at' => now(),
+                    'token' => null
+                ]);
+
+                $rec->update([
+                    'status' => 'rejected_by_sales',
+                    'rejection_reason' => $request->notes,
+                    'token' => null
+                ]);
+
+                activity()
+                    ->causedBy($ronalUser)
+                    ->performedOn($rec)
+                    ->useLog('bg_recommendation')
+                    ->event('sales_reject')
+                    ->withProperties(['customer' => $rec->customer->name ?? '-', 'reason' => $request->notes])
+                    ->log("Sales (Pak Ronal) rejected BG Recommendation via email/form. Reason: {$request->notes}");
+
+                $admins = User::role(['admin-rtm', 'super-admin'])->get();
+                Notification::sendNow($admins, new SystemNotification(
+                    'BG Recommendation Rejected by Sales',
+                    "Rekomendasi untuk <b>{$rec->customer->name}</b> ditolak oleh Pak Ronal. Alasan: <i>\"{$request->notes}\"</i>",
+                    route('bg-recommendations.index'),
+                    'ph-x-circle',
+                    'danger'
+                ));
+
+                return view('page.customer_portal.form-success', [
+                    'type' => 'approval',
+                    'title' => 'Rekomendasi Ditolak',
+                    'message' => 'Status rekomendasi telah diperbarui menjadi rejected. Admin-RTM telah menerima notifikasi untuk melakukan revisi/resubmit.'
+                ]);
+            } else {
+                $log->update([
+                    'status' => 'Approved',
+                    'notes' => $request->notes,
+                    'updated_at' => now(),
+                    'token' => null
+                ]);
+
+                $this->finalizeSalesRecommendationApproval($log->related_id, $log->approver_nik);
+
+                return view('page.customer_portal.form-success', [
+                    'type' => 'approval',
+                    'title' => 'Rekomendasi Berhasil Disetujui',
+                    'message' => 'Terima kasih, rekomendasi Bank Garansi telah disetujui. Tautan portal pengisian formulir telah otomatis dikirimkan ke distributor.'
+                ]);
+            }
+        }
 
         $sub = BgSubmission::with('recommendation.customer')->find($log->related_id);
 
         if (!$sub) {
-            return abort(404, 'Data Submission tidak ditemukan');
+            return abort(404, 'Submission data not found');
+        }
+
+        if (in_array($sub->status, ['completed', 'approved', 'rejected_by_finance'])) {
+            $statusText = in_array($sub->status, ['completed', 'approved']) ? 'disetujui' : 'ditolak';
+            return view('page.customer_portal.form-success', [
+                'type'    => 'approval',
+                'title'   => 'Pengajuan Sudah Diproses',
+                'message' => "Pengajuan ini sebelumnya telah {$statusText} oleh Tim Finance. Tidak ada tindakan lebih lanjut yang dapat dilakukan."
+            ]);
         }
 
         $action = $request->action;
         $status = ($action == 'reject') ? 'Rejected' : 'Approved';
 
+        if ($status == 'Rejected') {
+            $request->validate([
+                'notes' => 'required|string|min:3'
+            ], [
+                'notes.required' => 'Alasan penolakan / revisi wajib diisi.'
+            ]);
+        }
+
         DB::beginTransaction();
         try {
+            $approverUser = auth()->user() ?? User::where('nik', $log->approver_nik)->first();
+            $approverName = $approverUser->name ?? ($log->approver_name ?: 'Finance');
+
             $log->update([
-                'status'     => $status,
-                'notes'      => $request->notes,
-                'updated_at' => now(),
-                'token'      => null
+                'status'        => $status,
+                'approver_name' => $approverName,
+                'notes'         => $request->notes,
+                'updated_at'    => now(),
             ]);
 
-            $causer = auth()->user() ?? User::where('nik', $log->approver_nik)->first();
+            // Kunci & update approval log pending lainnya untuk submission ini
+            $siblingNote = ($status === 'Rejected')
+                ? 'Dibatalkan karena telah ditolak oleh ' . $approverName . ($request->notes ? " (Alasan: {$request->notes})" : "")
+                : 'Otomatis selesai karena telah disetujui oleh ' . $approverName;
+
+            ApprovalLog::where('category', 'BG')
+                ->where('related_id', $log->related_id)
+                ->where('id', '!=', $log->id)
+                ->where('status', 'Pending')
+                ->update([
+                    'status'     => $status,
+                    'notes'      => $siblingNote,
+                    'updated_at' => now(),
+                ]);
+
+            $causer = $approverUser;
             $actionText = ($status == 'Rejected') ? 'Rejected Approval' : 'Approved Document';
 
             activity()
@@ -131,65 +343,92 @@ class ApprovalProcessController extends Controller
                 ->performedOn($sub)
                 ->useLog('approval_process')
                 ->event($action)
-                ->withProperties(['notes' => $request->notes, 'approver' => $log->approver_name])
-                ->log("{$actionText} oleh Finance ({$log->approver_name})");
+                ->withProperties(['notes' => $request->notes, 'approver' => $approverName])
+                ->log("{$actionText} by Finance ({$approverName})");
+
+            $custName = $sub->recommendation->customer->name ?? 'Unknown Customer';
 
             if ($status == 'Rejected') {
                 $sub->update(['status' => 'rejected_by_finance']);
+
+                $recipients = User::role(['admin-rtm', 'super-admin'])->get();
+                $reasonText = $request->notes ? " Alasan: <i>\"{$request->notes}\"</i>. Silakan perbaiki dan submit kembali." : "";
+                Notification::send($recipients, new SystemNotification(
+                    "Lampiran D Perlu Revisi",
+                    "Perubahan Lampiran D untuk <b>{$custName}</b> ditolak oleh Finance ({$approverName}).{$reasonText}",
+                    route('lampiran-d.index'),
+                    'ph-x-circle',
+                    'danger'
+                ));
             } else {
-                $this->finalizeSubmission($log->related_id);
+                $this->finalizeSubmission($log->related_id, $approverUser->id ?? null);
+
+                $recipients = User::role(['admin-rtm', 'secretary-finance', 'super-admin'])->get();
+                Notification::send($recipients, new SystemNotification(
+                    "Lampiran D Disetujui",
+                    "Perubahan Lampiran D pada <b>{$custName}</b> telah di-approved oleh Finance ({$approverName}) dan siap di-download atau digunakan.",
+                    route('lampiran-d.index'),
+                    'ph-check-circle',
+                    'success'
+                ));
             }
-
-            $admins = User::role(['super-admin'])->get();
-            $statusBold = "<b>" . ($status == 'Approved' ? 'Disetujui' : 'Ditolak') . "</b>";
-            $color = ($status == 'Approved') ? 'success' : 'danger';
-            $icon  = ($status == 'Approved') ? 'ph-check-circle' : 'ph-x-circle';
-
-            $custName = $sub->recommendation->customer->name ?? 'Unknown Customer';
-            Notification::send($admins, new SystemNotification(
-                "Submission {$statusBold}",
-                "Pengajuan <b>{$custName}</b> telah {$statusBold} oleh Finance.",
-                route('bg-submissions.index'),
-                $icon,
-                $color
-            ));
 
             DB::commit();
 
+            $msgSuccess = ($status === 'Rejected')
+                ? "Pengajuan Bank Garansi telah ditolak. Admin RTM telah diberitahu untuk melakukan perbaikan."
+                : "Terima kasih ({$approverName}), pengajuan Bank Garansi telah berhasil disetujui.";
+
             return view('page.customer_portal.form-success', [
-                'type' => 'approval',
-                'title' => 'Processed Successfully',
-                'message' => 'Terima kasih, keputusan approval Anda telah disimpan.'
+                'type'    => ($status === 'Rejected') ? 'approval' : 'upload',
+                'title'   => ($status === 'Rejected') ? 'Pengajuan Ditolak' : 'Approved Successfully',
+                'message' => $msgSuccess
             ]);
 
         } catch (\Exception $e) {
             DB::rollBack();
-            \Log::error("Approval Error: " . $e->getMessage());
-            return abort(500, 'Terjadi kesalahan sistem saat memproses approval.');
+            Log::error("Approval Error: " . $e->getMessage());
+            return abort(500, 'A system error occurred while processing the approval.');
         }
     }
 
-    private function finalizeSubmission($submissionId) {
+    private function finalizeSubmission($submissionId, $approverId = null) {
         $sub = BgSubmission::with(['recommendation.customer'])->find($submissionId);
 
         if($sub) {
+            $secretaryUser = User::role('secretary-finance')->first();
+            $approverUserId = $approverId ?? ($secretaryUser ? $secretaryUser->id : null);
+
             $sub->update([
-                'status' => 'completed',
-                'token' => Str::random(60),
-                'reviewed_at' => now()
+                'status'       => 'completed',
+                'token'        => Str::random(60),
+                'reviewed_at'  => now(),
+                'validated_by' => $approverUserId,
+                'validated_at' => now(),
             ]);
 
-            $financeUser = User::role(['manager-finance', 'head-finance'])->first();
-            $approverId = $financeUser ? $financeUser->id : null;
-
             $rec = $sub->recommendation;
-            $metadata = json_decode($rec->notes, true) ?? [];
+            $cust = $rec ? $rec->customer : null;
+            $metadata = json_decode($rec->notes ?? '[]', true) ?? [];
             $targetBg = null;
 
-            if (isset($metadata['action']) && $metadata['action'] === 'existing' && !empty($metadata['target_bg_id'])) {
-                $targetBg = BankGaransi::find($metadata['target_bg_id']);
+            $isAdendum = ($sub->submission_type === 'adendum') || (isset($metadata['submission_type']) && $metadata['submission_type'] === 'adendum') || (isset($metadata['action']) && $metadata['action'] === 'existing');
+            $targetBgId = $metadata['target_bg_id'] ?? null;
+
+            if (!$targetBgId && $isAdendum) {
+                $draftBg = BankGaransi::where('customer_id', $rec->customer_id)
+                    ->where('is_adendum', 1)
+                    ->whereNotNull('base_bg_id')
+                    ->latest()
+                    ->first();
+                if ($draftBg) {
+                    $targetBgId = $draftBg->base_bg_id;
+                }
             }
-            else {
+
+            if ($isAdendum && $targetBgId) {
+                $targetBg = BankGaransi::find($targetBgId);
+            } else {
                 $createdAt = Carbon::parse($sub->created_at);
                 $start = $createdAt->copy()->subMinutes(2);
                 $end   = $createdAt->copy()->addMinutes(2);
@@ -214,11 +453,47 @@ class ApprovalProcessController extends Controller
             }
 
             if ($targetBg) {
+                $oldNominal = $targetBg->bg_nominal;
+                $oldExpDate = $targetBg->exp_date;
+
                 $targetBg->update([
-                    'status'      => 'approved',
-                    'issued_date' => now(),
-                    'exp_date'    => now()->addYear(),
+                    'status'               => 'approved',
+                    'bg_type'              => 'new', // Selalu 'new'
+                    'is_adendum'           => $isAdendum ? 1 : $targetBg->is_adendum,
+                    'issued_date'          => now(),
+                    'exp_date'             => $sub->exp_date ?? $targetBg->exp_date ?? now()->addYear(),
+                    'bg_number'            => $sub->bg_number ?? $targetBg->bg_number,
+                    'bg_nominal'           => $isAdendum ? ($sub->bg_nominal ?: $targetBg->bg_nominal) : $targetBg->bg_nominal,
+                    'warkat_file_path'     => $sub->warkat_file_path ?? $targetBg->warkat_file_path,
+                    'warkat_files'         => $sub->warkat_files ?: ($sub->warkat_file_path ? [$sub->warkat_file_path] : $targetBg->warkat_files),
+                    'lampiran_d_file_path' => $sub->signed_document_path ?: $targetBg->lampiran_d_file_path,
+                    'lampiran_d_files'     => $sub->signed_document_path ? [$sub->signed_document_path] : $targetBg->lampiran_d_files,
                 ]);
+
+                if ($isAdendum) {
+                    $bankName = $metadata['bank_name'] ?? null;
+                    $branchName = $metadata['branch_name'] ?? '';
+                    if ($bankName) {
+                        $targetBg->details()->delete();
+                        $targetBg->details()->create([
+                            'bank_name'   => $bankName,
+                            'branch_name' => $branchName,
+                            'nominal'     => $targetBg->bg_nominal,
+                        ]);
+                    } else {
+                        $targetBg->details()->update(['nominal' => $targetBg->bg_nominal]);
+                    }
+
+                    // Hapus draft duplicate BG yang sempat dibuat saat sales submit adendum
+                    BankGaransi::where('customer_id', $rec->customer_id)
+                        ->where('id', '!=', $targetBg->id)
+                        ->where(function($q) use ($targetBg, $sub) {
+                            $q->where('base_bg_id', $targetBg->id)
+                              ->orWhere('bg_number', $sub->bg_number);
+                        })
+                        ->where('status', 'draft')
+                        ->delete();
+                }
 
                 $prevBg = BankGaransi::where('customer_id', $targetBg->customer_id)
                             ->where('id', '<', $targetBg->id)
@@ -234,13 +509,78 @@ class ApprovalProcessController extends Controller
 
                 BgHistory::create([
                     'bank_garansi_id'   => $targetBg->id,
-                    'previous_nominal'  => $prevBg ? $prevBg->bg_nominal : 0,
+                    'previous_nominal'  => $isAdendum ? $oldNominal : ($prevBg ? $prevBg->bg_nominal : 0),
                     'new_nominal'       => $targetBg->bg_nominal,
-                    'previous_exp_date' => $prevBg ? $prevBg->exp_date : null,
+                    'previous_exp_date' => $isAdendum ? $oldExpDate : ($prevBg ? $prevBg->exp_date : null),
                     'new_exp_date'      => $targetBg->exp_date,
-                    'remarks'           => $remarks ?? 'Approved by Finance via Email Link',
-                    'created_by'        => $approverId
+                    'remarks'           => $remarks ?? ($isAdendum ? "Adendum disetujui via Email Link (Form: {$sub->form_code})" : 'Approved by Secretary Finance via Email Link'),
+                    'created_by'        => $approverUserId
                 ]);
+            }
+
+            // Kalkulasi Credit Limit yang akurat berdasarkan inputan BG dan aturan limit
+            $lampiranD = LampiranD::where('bg_submission_id', $sub->id)->with('activeVersion')->first();
+            $creditLimitToApply = 0;
+
+            if ($lampiranD && $lampiranD->activeVersion && !empty($lampiranD->activeVersion->data_snapshot['limit_kredit'])) {
+                $creditLimitToApply = (float) $lampiranD->activeVersion->data_snapshot['limit_kredit'];
+            }
+
+            if ($creditLimitToApply <= 0 && $sub->bg_nominal > 0) {
+                $rulePercent = $this->getLimitRulePercent($cust);
+                $activeRule = $rulePercent > 0 ? $rulePercent : 100;
+                $creditLimitToApply = (float) ($sub->bg_nominal / ($activeRule / 100));
+            }
+
+            if ($creditLimitToApply <= 0 && $rec && $rec->credit_limit_updated > 0) {
+                $creditLimitToApply = (float) $rec->credit_limit_updated;
+            }
+
+            // Background update credit limit & sync to customer
+            if ($cust && $creditLimitToApply > 0) {
+                if ($rec) {
+                    $rec->update([
+                        'credit_limit_updated' => $creditLimitToApply,
+                        'set_bg'               => $sub->bg_nominal ?: $rec->set_bg,
+                    ]);
+                }
+
+                $cust->update([
+                    'credit_limit'          => $creditLimitToApply,
+                    'approved_credit_limit' => $creditLimitToApply,
+                ]);
+
+                CreditLimit::create([
+                    'customer_id'           => $cust->id,
+                    'bank_garansi_id'       => $targetBg ? $targetBg->id : null,
+                    'recommendation_id'     => $rec ? $rec->id : null,
+                    'requested_limit'       => $creditLimitToApply,
+                    'approved_limit'        => $creditLimitToApply,
+                    'lampiran_d_version_id' => $lampiranD ? $lampiranD->active_version_id : null,
+                    'approved_by'           => $approverUserId,
+                    'approved_at'           => now(),
+                ]);
+
+                // Inform IT team (Info only, no action needed)
+                try {
+                    $itUsers = User::role('it')->get();
+                    if ($itUsers->isNotEmpty()) {
+                        Notification::send($itUsers, new SystemNotification(
+                            "Info IT: Background Credit Limit Sync Selesai",
+                            "Pembaruan Credit Limit untuk <b>{$cust->name}</b> sebesar <b>Rp " . number_format($creditLimitToApply, 0, ',', '.') . "</b> telah selesai diproses di background via email approval Bu Rita. Tidak perlu cek manual.",
+                            route('customers.index'),
+                            'ph-check-circle',
+                            'info'
+                        ));
+
+                        $itEmails = $itUsers->pluck('email')->filter(fn($e) => !empty($e) && filter_var($e, FILTER_VALIDATE_EMAIL))->toArray();
+                        foreach ($itEmails as $itEmail) {
+                            Mail::to($itEmail)->queue(new CreditLimitUpdatedItMail($sub, 'Secretary Finance (Bu Rita)', $creditLimitToApply));
+                        }
+                    }
+                } catch (\Exception $e) {
+                    Log::error("Gagal notifikasi IT via ApprovalProcessController: " . $e->getMessage());
+                }
             }
 
             $pendingSiblings = BgSubmission::where('bg_recommendation_id', $sub->bg_recommendation_id)
@@ -253,19 +593,90 @@ class ApprovalProcessController extends Controller
                     $sub->recommendation->update(['status' => 'approved']);
                 }
 
-                $customerEmail = $sub->recommendation->customer->email;
-                $salesEmails = User::role('head-SNM')->pluck('email')->toArray();
-                $financeEmails = User::role(['manager-finance', 'head-finance'])->pluck('email')->toArray();
+                // STRICT: Lampiran D dikirim HANYA ke admin-rtm dan manager purchasing
+                $adminRtmEmails = User::role('admin-rtm')->pluck('email')->toArray();
+                $purchasingEmail = ($cust && !empty($cust->purchasing_manager_email)) ? [$cust->purchasing_manager_email] : [];
 
-                $allRecipients = array_merge([$customerEmail], $salesEmails, $financeEmails);
-                $recipients = array_unique(array_filter($allRecipients));
+                $targetEmails = array_unique(array_filter(
+                    array_merge($adminRtmEmails, $purchasingEmail),
+                    fn($e) => !empty($e) && filter_var($e, FILTER_VALIDATE_EMAIL)
+                ));
 
-                foreach($recipients as $email) {
-                    if(!empty($email)) {
-                        Mail::to($email)->queue(new CustomerBgReadyMail($sub));
-                    }
+                foreach($targetEmails as $email) {
+                    Mail::to($email)->queue(new CustomerBgReadyMail($sub));
                 }
             }
         }
+    }
+
+    private function finalizeSalesRecommendationApproval($recId, $approverNik = null)
+    {
+        $rec = BgRecommendation::with(['customer', 'periods', 'tax'])->findOrFail($recId);
+        $user = $approverNik ? User::where('nik', $approverNik)->first() : auth()->user();
+
+        $token = Str::random(64);
+        $rec->update([
+            'status'            => 'process',
+            'token'             => $token,
+            'sales_approved_by' => $user->id ?? 11,
+            'sales_approved_at' => now(),
+        ]);
+
+        activity()
+            ->causedBy($user)
+            ->performedOn($rec)
+            ->useLog('bg_recommendation')
+            ->event('sales_approve')
+            ->withProperties([
+                'customer' => $rec->customer->name ?? '-',
+                'set_bg'   => $rec->set_bg,
+                'credit_limit' => $rec->credit_limit_updated
+            ])
+            ->log("Sales (Pak Ronal) approved BG Recommendation via token. Token generated and link sent to customer.");
+
+        // Send email to customer with portal link
+        $custEmail = $rec->customer->email ?? null;
+        if ($custEmail && filter_var($custEmail, FILTER_VALIDATE_EMAIL)) {
+            try {
+                Mail::to($custEmail)->send(new CustomerFillFormNotification($rec));
+            } catch (\Exception $e) {
+                Log::error('CustomerFillFormNotification Mail Error: ' . $e->getMessage());
+            }
+        }
+
+        // Notify Admin-RTM
+        try {
+            $admins = User::role(['admin-rtm', 'super-admin'])->get();
+            Notification::sendNow($admins, new SystemNotification(
+                'BG Recommendation Approved by Sales',
+                "Rekomendasi untuk <b>{$rec->customer->name}</b> telah disetujui oleh Pak Ronal dan dikirim ke customer.",
+                route('bg-recommendations.index'),
+                'ph-check-circle',
+                'success'
+            ));
+        } catch (\Exception $notifEx) {
+            Log::error('Notif Admin Error: ' . $notifEx->getMessage());
+        }
+    }
+
+    /**
+     * Hitung persentase batas limit garansi bank customer dari tabel bg_limit_rules berdasarkan join_date
+     */
+    private function getLimitRulePercent($customer)
+    {
+        if (!$customer || !$customer->join_date) {
+            return 0;
+        }
+
+        $joinDate = \Carbon\Carbon::parse($customer->join_date);
+        $years    = (int) abs($joinDate->diffInYears(\Carbon\Carbon::now()));
+
+        $rule = DB::table('bg_limit_rules')
+            ->where('min_year', '<=', $years)
+            ->where('max_year', '>=', $years)
+            ->orderBy('min_year', 'desc')
+            ->first();
+
+        return $rule ? (float)$rule->percentage : 0;
     }
 }

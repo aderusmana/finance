@@ -24,9 +24,8 @@
                         <i class="ph-duotone ph-printer fs-2"></i>
                     </div>
                     <div>
-                        <h5 class="fw-bold text-dark mb-2">Pusat Cetak Dokumen</h5>
-                        <p class="mb-0 text-muted" style="font-size: 0.9rem; line-height: 1.6; max-width: 700px;">
-                            Gunakan halaman ini untuk mencetak dokumen fisik secara massal. Anda dapat memilih beberapa customer sekaligus dan mengunduhnya dalam bentuk <strong>ZIP</strong> (terpisah) atau <strong>PDF Gabungan</strong> (merged).
+                        <h5 class="fw-bold text-dark mb-2">Document Print Center</h5>
+                            Use this page to print physical documents in bulk. You can select multiple customers at once and download them in <strong>ZIP</strong> (separate) or <strong>Merged PDF</strong> format.
                         </p>
                     </div>
                 </div>
@@ -45,7 +44,7 @@
                                     <div class="icon-wrapper"><i class="ph-bold ph-files"></i></div>
                                     <div>
                                         <div class="fw-bold fs-6 mb-1 text-dark">Transaction Documents</div>
-                                        <div class="small text-muted">Cetak Lampiran D & Formulir Pengajuan.</div>
+                                        <div class="small text-muted">Print Attachment D & Submission Form.</div>
                                     </div>
                                 </div>
                             </button>
@@ -57,7 +56,7 @@
                                     <div class="icon-wrapper"><i class="ph-bold ph-envelope-open"></i></div>
                                     <div>
                                         <div class="fw-bold fs-6 mb-1 text-dark">Expiring Letters</div>
-                                        <div class="small text-muted">Cetak Surat Pengantar Bank & Distributor.</div>
+                                        <div class="small text-muted">Print Bank & Distributor Cover Letters.</div>
                                     </div>
                                 </div>
                             </button>
@@ -76,14 +75,14 @@
                                         {{-- KIRI: JUDUL --}}
                                         <div>
                                             <h6 class="fw-bold mb-0 text-dark d-flex align-items-center gap-2">
-                                                <i class="ph-fill ph-stack text-primary"></i> Daftar Dokumen Transaksi
+                                                <i class="ph-fill ph-stack text-primary"></i> Transaction Document List
                                             </h6>
-                                            <div class="small text-muted mt-1">Data real-time dari database</div>
+                                            <div class="small text-muted mt-1">Real-time data from database</div>
                                         </div>
 
                                         {{-- KANAN: CUSTOM SEARCH INPUT --}}
                                         <div class="position-relative" style="min-width: 250px;">
-                                            <input type="text" id="searchTrans" class="form-control ps-5 rounded-pill border-0 bg-light" placeholder="Cari Ref No / Customer...">
+                                            <input type="text" id="searchTrans" class="form-control ps-5 rounded-pill border-0 bg-light" placeholder="Search Ref No / Customer...">
                                             <i class="ph-bold ph-magnifying-glass position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
                                         </div>
                                     </div>
@@ -115,14 +114,14 @@
 
                                         <div>
                                             <h6 class="fw-bold mb-0 text-dark d-flex align-items-center gap-2">
-                                                <i class="ph-fill ph-clock-countdown text-warning"></i> Daftar BG Jatuh Tempo
+                                                <i class="ph-fill ph-clock-countdown text-warning"></i> Expiring BG List
                                             </h6>
-                                            <div class="small text-muted mt-1">Menampilkan BG Aktif yang mendekati Expired</div>
+                                            <div class="small text-muted mt-1">Showing Active BGs that are nearing Expiration</div>
                                         </div>
 
                                         {{-- CUSTOM SEARCH INPUT --}}
                                         <div class="position-relative" style="min-width: 250px;">
-                                            <input type="text" id="searchLetters" class="form-control ps-5 rounded-pill border-0 bg-light" placeholder="Cari No BG / Customer...">
+                                            <input type="text" id="searchLetters" class="form-control ps-5 rounded-pill border-0 bg-light" placeholder="Search BG Number / Customer...">
                                             <i class="ph-bold ph-magnifying-glass position-absolute top-50 start-0 translate-middle-y ms-3 text-secondary"></i>
                                         </div>
                                     </div>
@@ -196,10 +195,27 @@
             </button>
 
             {{-- 4. TOMBOL CANCEL (BARU) --}}
-            <button type="button" id="btnCancelSelection" class="btn btn-light text-primary fw-bold rounded-pill shadow-sm d-flex align-items-center px-3" title="Batalkan Pilihan">
+            <button type="button" id="btnCancelSelection" class="btn btn-light text-primary fw-bold rounded-pill shadow-sm d-flex align-items-center px-3" title="Cancel Selection">
                 <i class="ph-bold ph-x me-2"></i> Cancel
             </button>
         </form>
+    </div>
+
+    {{-- MODAL PRINT OPTIONS --}}
+    <div class="modal fade" id="printModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 16px;">
+                <div class="modal-header bg-light border-bottom-0" style="border-radius: 16px 16px 0 0;">
+                    <h5 class="modal-title fw-bold text-dark" id="printModalTitle">
+                        <!-- Judul dinamis via JS -->
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4 bg-light" id="printModalBody">
+                    <!-- Opsi Card dinamis akan di-inject via JS -->
+                </div>
+            </div>
+        </div>
     </div>
 
     @push('scripts')
@@ -213,11 +229,12 @@
             const docOptions = {
                 'transactions': [
                     {val: 'lampiran_d', text: 'Lampiran D'},
-                    {val: 'submission_form', text: 'Formulir Pengajuan'}
+                    {val: 'submission_form', text: 'Submission Form'}
                 ],
                 'expiring': [
-                    {val: 'distributor', text: 'Surat Distributor'},
-                    {val: 'bank', text: 'Surat Bank'}
+                    {val: 'all_letters', text: 'Semua Berkas (Surat Bank + Distributor)'},
+                    {val: 'bank', text: 'Surat Bank'},
+                    {val: 'distributor', text: 'Surat Distributor'}
                 ]
             };
 
@@ -254,8 +271,13 @@
                 $('#checkAllTrans, #checkAllLetters').prop('checked', false);
 
                 updateBulkUI();
-                transTable.columns.adjust().draw();
-                lettersTable.columns.adjust().draw();
+                
+                if (typeof transTable !== 'undefined') {
+                    transTable.columns.adjust().draw();
+                }
+                if (typeof lettersTable !== 'undefined') {
+                    lettersTable.columns.adjust().draw();
+                }
             });
 
             $('#btnCancelSelection').on('click', function() {
@@ -369,15 +391,15 @@
                 let contentDesc = '';
 
                 if (modeVal === 'merged') {
-                    modeLabel = '<span class="badge bg-primary">Merged PDF (1 File Gabungan)</span>';
-                    contentDesc = `Semua dokumen <b>${docText}</b> milik <b>${count} Customer</b> akan digabung menjadi satu file PDF panjang (multi-page).`;
+                    modeLabel = '<span class="badge bg-primary">Merged PDF (1 Merged File)</span>';
+                    contentDesc = `All <b>${docText}</b> documents of <b>${count} Customers</b> will be merged into a single multi-page PDF file.`;
                 } else {
-                    modeLabel = '<span class="badge bg-warning text-dark">ZIP Archive (Terpisah)</span>';
-                    contentDesc = `Anda akan mengunduh folder ZIP yang berisi <b>${count} file PDF</b> (satu file per customer) untuk dokumen <b>${docText}</b>.`;
+                    modeLabel = '<span class="badge bg-warning text-dark">ZIP Archive (Separate)</span>';
+                    contentDesc = `You will download a ZIP folder containing <b>${count} PDF files</b> (one file per customer) for <b>${docText}</b> documents.`;
                 }
 
                 Swal.fire({
-                    title: 'Konfirmasi Download',
+                    title: 'Confirm Download',
                     html: `
                         <div class="text-start border p-3 rounded bg-light mt-2">
                             <table class="table table-borderless table-sm mb-0">
@@ -386,7 +408,7 @@
                                     <td>${modeLabel}</td>
                                 </tr>
                                 <tr>
-                                    <td class="text-muted small">Jenis Dokumen</td>
+                                    <td class="text-muted small">Document Type</td>
                                     <td class="fw-bold text-dark">${docText}</td>
                                 </tr>
                                 <tr>
@@ -404,8 +426,8 @@
                     showCancelButton: true,
                     confirmButtonColor: '#2563eb',
                     cancelButtonColor: '#64748b',
-                    confirmButtonText: '<i class="ph-bold ph-download-simple me-1"></i> Ya, Proses Download',
-                    cancelButtonText: 'Batal',
+                    confirmButtonText: '<i class="ph-bold ph-download-simple me-1"></i> Yes, Process Download',
+                    cancelButtonText: 'Cancel',
                     reverseButtons: true,
                     focusConfirm: false
                 }).then((result) => {
@@ -414,9 +436,107 @@
                         const Toast = Swal.mixin({
                             toast: true, position: 'top-end', showConfirmButton: false, timer: 3000
                         });
-                        Toast.fire({ icon: 'success', title: 'Download sedang diproses...' });
+                        Toast.fire({ icon: 'success', title: 'Download in process...' });
                     }
                 });
+            });
+
+            // --- LOGIC KLIK TOMBOL PRINT & MUNCULKAN MODAL ---
+            $(document).on('click', '.btn-print-modal', function() {
+                let id = $(this).data('id');
+                let category = $(this).data('category');
+                
+                let modalTitle = '';
+                let htmlOptions = '';
+
+                // BASE URL untuk Controller
+                let baseUrl = "{{ url('bg/reports') }}";
+
+                if (category === 'transactions') {
+                    modalTitle = '<i class="ph-bold ph-printer me-2 text-light"></i> Print Transaction Document';
+                    
+                    // URL Route untuk Lampiran D & Formulir
+                    let urlLampiranD = `${baseUrl}/download/${id}/lampiran_d`;
+                    let urlFormulir = `${baseUrl}/download/${id}/submission_form`;
+
+                    htmlOptions = `
+                        <div class="row g-3">
+                            <div class="col-6">
+                                <a href="${urlLampiranD}" target="_blank" class="card h-100 text-decoration-none border shadow-sm hover-elevate bg-white" onclick="$('#printModal').modal('hide')">
+                                    <div class="card-body text-center p-4">
+                                        <div class="bg-warning bg-opacity-10 text-warning d-inline-flex align-items-center justify-content-center rounded-circle mb-3" style="width: 60px; height: 60px;">
+                                            <i class="ph-duotone ph-file-text fs-1"></i>
+                                        </div>
+                                        <h6 class="fw-bold text-dark mb-1">Lampiran D</h6>
+                                        <span class="text-muted small">Print limit calculation draft</span>
+                                    </div>
+                                </a>
+                            </div>
+                            <div class="col-6">
+                                <a href="${urlFormulir}" target="_blank" class="card h-100 text-decoration-none border shadow-sm hover-elevate bg-white" onclick="$('#printModal').modal('hide')">
+                                    <div class="card-body text-center p-4">
+                                        <div class="bg-danger bg-opacity-10 text-danger d-inline-flex align-items-center justify-content-center rounded-circle mb-3" style="width: 60px; height: 60px;">
+                                            <i class="ph-duotone ph-file-pdf fs-1"></i>
+                                        </div>
+                                        <h6 class="fw-bold text-dark mb-1">Submission Form</h6>
+                                        <span class="text-muted small">Print BG submission proof</span>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                    `;
+                } else if (category === 'expiring') {
+                    modalTitle = '<i class="ph-bold ph-envelope-open me-2 text-light"></i> Print Cover Letter';
+                    
+                    let urlAll = `${baseUrl}/letters/${id}/all`;
+                    let urlDistributor = `${baseUrl}/letters/${id}/distributor`;
+                    let urlBank = `${baseUrl}/letters/${id}/bank`;
+
+                    htmlOptions = `
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <a href="${urlAll}" class="card text-decoration-none border border-primary border-opacity-25 shadow-sm hover-elevate bg-primary bg-opacity-10" onclick="$('#printModal').modal('hide')">
+                                    <div class="card-body d-flex align-items-center gap-3 p-3">
+                                        <div class="bg-primary text-white d-inline-flex align-items-center justify-content-center rounded-circle" style="width: 48px; height: 48px; min-width: 48px;">
+                                            <i class="ph-bold ph-file-zip fs-4"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="fw-bold text-dark mb-0">Download Semua Berkas (ZIP)</h6>
+                                            <span class="text-muted small">Surat Bank & Surat Distributor dalam format ZIP terpisah</span>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+                            <div class="col-6">
+                                <a href="${urlBank}" target="_blank" class="card h-100 text-decoration-none border shadow-sm hover-elevate bg-white" onclick="$('#printModal').modal('hide')">
+                                    <div class="card-body text-center p-3">
+                                        <div class="bg-success bg-opacity-10 text-success d-inline-flex align-items-center justify-content-center rounded-circle mb-2" style="width: 48px; height: 48px;">
+                                            <i class="ph-duotone ph-bank fs-2"></i>
+                                        </div>
+                                        <h6 class="fw-bold text-dark mb-1">Surat Bank</h6>
+                                        <span class="text-muted small">Pengantar ke Bank</span>
+                                    </div>
+                                </a>
+                            </div>
+                            <div class="col-6">
+                                <a href="${urlDistributor}" target="_blank" class="card h-100 text-decoration-none border shadow-sm hover-elevate bg-white" onclick="$('#printModal').modal('hide')">
+                                    <div class="card-body text-center p-3">
+                                        <div class="bg-primary bg-opacity-10 text-primary d-inline-flex align-items-center justify-content-center rounded-circle mb-2" style="width: 48px; height: 48px;">
+                                            <i class="ph-duotone ph-buildings fs-2"></i>
+                                        </div>
+                                        <h6 class="fw-bold text-dark mb-1">Surat Distributor</h6>
+                                        <span class="text-muted small">Pemberitahuan Customer</span>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                // Render ke modal lalu tampilkan
+                $('#printModalTitle').html(modalTitle);
+                $('#printModalBody').html(htmlOptions);
+                $('#printModal').modal('show');
             });
         });
     </script>

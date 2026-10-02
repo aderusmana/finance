@@ -168,6 +168,65 @@
                         </div>
                     </div>
 
+                    {{-- 3. CARD VERIFIKASI SERTIFIKAT BANK GARANSI --}}
+                    <div style="background: #ffffff; border-radius: 16px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.03); border: 1px solid #e2e8f0; margin-top: 24px; overflow: hidden;">
+                        <div style="padding: 20px 24px; border-bottom: 1px solid #f1f5f9; background: #ffffff; display: flex; align-items: center; gap: 10px;">
+                            <div style="background: #f0fdf4; color: #16a34a; padding: 8px; border-radius: 8px;">
+                                <i class="ph-bold ph-shield-check fs-5"></i>
+                            </div>
+                            <div>
+                                <h5 style="font-size: 1rem; font-weight: 700; color: #1e293b; margin: 0;">Verifikasi Sertifikat Bank Garansi</h5>
+                                <p style="margin: 0; font-size: 0.8rem; color: #64748b;">Pemeriksaan nomor sertifikat, masa berlaku, dan dokumen pindaian asli.</p>
+                            </div>
+                        </div>
+
+                        <div style="padding: 24px;">
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-6">
+                                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 16px;">
+                                        <div style="font-size: 0.75rem; color: #64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 4px;">
+                                            Nomor Bank Garansi Resmi
+                                        </div>
+                                        <div style="font-size: 1.05rem; font-weight: 700; font-family: monospace; color: #0f172a;">
+                                            {{ $submission->bg_number ?? '-' }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 16px;">
+                                        <div style="font-size: 0.75rem; color: #64748b; font-weight: 600; text-transform: uppercase; margin-bottom: 4px;">
+                                            Tanggal Jatuh Tempo (Expired)
+                                        </div>
+                                        <div style="font-size: 1.05rem; font-weight: 700; color: #dc2626;">
+                                            {{ $submission->exp_date ? \Carbon\Carbon::parse($submission->exp_date)->format('d F Y') : '-' }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style="font-size: 0.8rem; font-weight: 700; color: #475569; text-transform: uppercase; margin-bottom: 12px;">
+                                Dokumen Terkait:
+                            </div>
+                            <div class="d-flex flex-wrap gap-2">
+                                @if($submission->warkat_file_path)
+                                <a href="{{ asset($submission->warkat_file_path) }}" target="_blank" class="btn btn-outline-primary rounded-pill px-3 py-2 fw-semibold" style="font-size: 0.85rem;">
+                                    <i class="ph-bold ph-file-text me-1"></i> Buka Scan Sertifikat Bank Garansi Asli
+                                </a>
+                                @endif
+
+                                @if($submission->signed_document_path)
+                                <a href="{{ asset($submission->signed_document_path) }}" target="_blank" class="btn btn-outline-success rounded-pill px-3 py-2 fw-semibold" style="font-size: 0.85rem;">
+                                    <i class="ph-bold ph-file-pdf me-1"></i> Buka Dokumen Konfirmasi (TTD)
+                                </a>
+                                @endif
+
+                                <a href="{{ route('bg-reports.download', ['id' => $submission->id, 'doc_type' => 'lampiran_d']) }}" target="_blank" class="btn btn-outline-danger rounded-pill px-3 py-2 fw-semibold" style="font-size: 0.85rem;">
+                                    <i class="ph-bold ph-download-simple me-1"></i> Unduh Lampiran D (PDF)
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
 
                 {{-- KOLOM KANAN: ACTION PANEL --}}
@@ -176,7 +235,6 @@
 
                         {{-- Header Action --}}
                         <div style="padding: 30px 24px; text-align: center; color: white; background: {{ $action == 'reject' ? 'linear-gradient(135deg, #ef4444, #dc2626)' : 'linear-gradient(135deg, #3b82f6, #2563eb)' }}; position: relative; overflow: hidden;">
-                            {{-- Pattern Background --}}
                             <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.1; background-image: radial-gradient(#fff 1px, transparent 1px); background-size: 10px 10px;"></div>
 
                             <div style="position: relative; z-index: 1;">
@@ -186,12 +244,18 @@
                                     </div>
                                     <h4 style="font-weight: 800; margin-bottom: 4px;">Reject Submission</h4>
                                     <p style="font-size: 0.9rem; margin: 0; opacity: 0.9;">Kembalikan dokumen ke Admin</p>
+                                @elseif($action == 'review')
+                                    <div style="background: rgba(255,255,255,0.2); width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
+                                        <i class="ph-bold ph-clipboard-text fs-2"></i>
+                                    </div>
+                                    <h4 style="font-weight: 800; margin-bottom: 4px;">Review &amp; Keputusan</h4>
+                                    <p style="font-size: 0.9rem; margin: 0; opacity: 0.9;">Verifikasi data dan tentukan persetujuan</p>
                                 @else
                                     <div style="background: rgba(255,255,255,0.2); width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
                                         <i class="ph-bold ph-check fs-2"></i>
                                     </div>
                                     <h4 style="font-weight: 800; margin-bottom: 4px;">Approve Submission</h4>
-                                    <p style="font-size: 0.9rem; margin: 0; opacity: 0.9;">Setujui dokumen & terbitkan Lampiran D</p>
+                                    <p style="font-size: 0.9rem; margin: 0; opacity: 0.9;">Setujui dokumen &amp; aktifkan Bank Garansi</p>
                                 @endif
                             </div>
                         </div>
@@ -200,79 +264,85 @@
                         <div style="padding: 24px;">
                             <div class="mb-4">
                                 <label class="form-label fw-bold text-dark" style="font-size: 0.9rem;">
-                                    Catatan / Pesan <span class="text-danger">*</span>
+                                    Catatan / Pesan <span class="text-danger" id="notesRequiredStar" style="{{ $action == 'reject' ? '' : 'display:none;' }}">*</span>
                                 </label>
-                                <textarea id="noteTextarea" name="notes" class="form-control" rows="5"
-                                    placeholder="Tuliskan catatan revisi atau alasan penolakan secara detail..."
+                                <textarea id="noteTextarea" name="notes" class="form-control" rows="4"
+                                    placeholder="{{ $action == 'reject' ? 'Tuliskan catatan revisi atau alasan penolakan secara detail (wajib)...' : 'Tuliskan catatan persetujuan jika ada (opsional)...' }}"
                                     style="font-size: 0.95rem; border-radius: 10px; border: 1px solid #cbd5e1; padding: 12px; resize: none; background: #f8fafc;"
-                                    required></textarea>
+                                    {{ $action == 'reject' ? 'required' : '' }}></textarea>
                                 <div class="form-text text-muted" style="font-size: 0.8rem; margin-top: 8px;">
-                                    <i class="ph-bold ph-info me-1"></i> Catatan ini wajib diisi dan akan terkirim via email.
+                                    <i class="ph-bold ph-info me-1"></i> Catatan akan tercatat dalam log approval.
                                 </div>
                             </div>
 
-                            <div class="d-grid gap-3">
-                                <button type="submit" id="btnSubmit"
-                                    style="padding: 16px; font-weight: 700; border-radius: 50px; font-size: 1rem; transition: all 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 100%; border: none; cursor: pointer; color: white; background: {{ $action == 'reject' ? '#ef4444' : '#2563eb' }}; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                                    <i class="ph-bold ph-paper-plane-right fs-5"></i> Kirim Keputusan
-                                </button>
+                            <input type="hidden" name="action" id="actionInput" value="{{ $action == 'reject' ? 'reject' : 'approve' }}">
+
+                            <div class="d-grid gap-2">
+                                @if($action == 'review')
+                                    <button type="button" id="btnActionApprove"
+                                        style="padding: 14px; font-weight: 700; border-radius: 50px; font-size: 1rem; width: 100%; border: none; cursor: pointer; color: white; background: #16a34a; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                                        <i class="ph-bold ph-check-circle fs-5"></i> Setujui (Approve)
+                                    </button>
+                                    <button type="button" id="btnActionReject"
+                                        style="padding: 12px; font-weight: 700; border-radius: 50px; font-size: 0.95rem; width: 100%; border: none; cursor: pointer; color: white; background: #dc2626; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                                        <i class="ph-bold ph-x-circle fs-5"></i> Tolak / Minta Revisi
+                                    </button>
+                                @elseif($action == 'reject')
+                                    <button type="submit" id="btnSubmit"
+                                        style="padding: 16px; font-weight: 700; border-radius: 50px; font-size: 1rem; width: 100%; border: none; cursor: pointer; color: white; background: #ef4444; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                                        <i class="ph-bold ph-x-circle fs-5"></i> Tolak Submission
+                                    </button>
+                                @else
+                                    <button type="submit" id="btnSubmit"
+                                        style="padding: 16px; font-weight: 700; border-radius: 50px; font-size: 1rem; width: 100%; border: none; cursor: pointer; color: white; background: #2563eb; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                                        <i class="ph-bold ph-check-circle fs-5"></i> Setujui Submission
+                                    </button>
+                                @endif
 
                                 <a href="#" onclick="window.close()"
-                                    style="padding: 12px; font-weight: 600; border-radius: 50px; font-size: 0.95rem; width: 100%; display: block; text-align: center; color: #64748b; background: transparent; text-decoration: none; border: 1px solid transparent; transition: 0.2s;">
-                                    Batal & Tutup
+                                    style="padding: 10px; font-weight: 600; border-radius: 50px; font-size: 0.9rem; width: 100%; display: block; text-align: center; color: #64748b; text-decoration: none; margin-top: 5px;">
+                                    Batal &amp; Tutup
                                 </a>
                             </div>
                         </div>
 
                     </div>
-
-                    {{-- COPYRIGHT DIHAPUS DARI SINI --}}
                 </div>
 
             </div>
         </form>
     </div>
 
-    {{-- FOOTER GLOBAL BARU --}}
+    {{-- FOOTER GLOBAL --}}
     <footer style="margin-top: 60px; padding: 30px 0; background-color: #ffffff; border-top: 1px solid #e2e8f0; text-align: center; color: #94a3b8; font-size: 0.85rem; width: 100%;">
         &copy; {{ date('Y') }} PT. Sinar Meadow International Indonesia. All rights reserved.
     </footer>
 
     <script>
-        document.getElementById('approvalForm').addEventListener('submit', function (e) {
-            e.preventDefault();
-
+        function executeSubmission(actionType) {
             let noteValue = document.getElementById('noteTextarea').value.trim();
+            document.getElementById('actionInput').value = actionType;
 
-            if (!noteValue) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Oops...',
-                    text: 'Catatan tidak boleh kosong!',
-                    confirmButtonColor: '#334155'
-                });
-                return;
+            if (actionType === 'reject') {
+                if (!noteValue) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Catatan Wajib Diisi',
+                        text: 'Mohon tuliskan alasan penolakan secara jelas pada kolom catatan.',
+                        confirmButtonColor: '#dc2626'
+                    });
+                    document.getElementById('noteTextarea').focus();
+                    return;
+                }
             }
 
-            let hasLetters = /[a-zA-Z]/.test(noteValue);
-
-            if (!hasLetters) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Catatan Tidak Valid',
-                    text: 'Mohon tuliskan catatan yang jelas menggunakan kata-kata.',
-                    confirmButtonColor: '#f59e0b'
-                });
-                return;
-            }
-
-            let actionType = "{{ $action }}";
-            let confirmColor = actionType === 'reject' ? '#ef4444' : '#2563eb';
+            let confirmColor = actionType === 'reject' ? '#ef4444' : '#16a34a';
             let confirmText = actionType === 'reject' ? 'Ya, Tolak!' : 'Ya, Setujui!';
+            let titleText = actionType === 'reject' ? 'Tolak Pengajuan?' : 'Setujui Pengajuan?';
 
             Swal.fire({
-                title: 'Konfirmasi Keputusan',
-                html: "Apakah Anda yakin ingin mengirim keputusan ini?<br>Tindakan ini tidak dapat dibatalkan.",
+                title: titleText,
+                html: "Apakah Anda yakin dengan keputusan ini?<br>Tindakan ini akan memperbarui status pengajuan.",
                 icon: 'question',
                 showCancelButton: true,
                 confirmButtonColor: confirmColor,
@@ -288,9 +358,29 @@
                         allowOutsideClick: false,
                         didOpen: () => { Swal.showLoading() }
                     });
-                    this.submit();
+                    document.getElementById('approvalForm').submit();
                 }
             });
+        }
+
+        const btnApprove = document.getElementById('btnActionApprove');
+        if (btnApprove) {
+            btnApprove.addEventListener('click', function() {
+                executeSubmission('approve');
+            });
+        }
+
+        const btnReject = document.getElementById('btnActionReject');
+        if (btnReject) {
+            btnReject.addEventListener('click', function() {
+                executeSubmission('reject');
+            });
+        }
+
+        document.getElementById('approvalForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+            let actionType = document.getElementById('actionInput').value;
+            executeSubmission(actionType);
         });
     </script>
 

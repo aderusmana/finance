@@ -108,6 +108,11 @@ class LogisticOrderController extends Controller
 
             return DataTables::of($data)
                 ->addIndexColumn()
+                ->addColumn('checkbox', function($row) {
+                    return '<div class="form-check d-flex justify-content-center">
+                                <input class="form-check-input dt-checkbox" type="checkbox" value="'. $row->id .'">
+                            </div>';
+                })
                 ->editColumn('logistic_order_no', function ($row) {
                     $loNo = 'LO-' . str_pad($row->id, 4, '0', STR_PAD_LEFT);
                     $createdAt = $row->created_at->format('d M Y, H:i');
@@ -197,7 +202,7 @@ class LogisticOrderController extends Controller
                     
                     return '<div class="d-flex flex-row gap-1 align-items-center w-100">' . $btnDetail . $btnCancel . '</div>';
                 })
-                ->rawColumns(['logistic_order_no', 'do_no', 'status_badge', 'action'])
+                ->rawColumns(['checkbox', 'logistic_order_no', 'do_no', 'status_badge', 'action'])
                 ->make(true);
         }
 
@@ -212,8 +217,11 @@ class LogisticOrderController extends Controller
         $dateTo = $request->query('date_to');
         $distributors = $request->query('distributors');
         $apNumber = $request->query('ap_number', '-');
+        $statusTab = $request->query('tab', 'downloaded');
+        $searchCustomer = $request->query('search_customer');
+        $ids = $request->query('ids');
 
-        if ((!empty($dateFrom) && empty($dateTo)) || (empty($dateFrom) && !empty($dateTo))) {
+        if (empty($ids) && ((!empty($dateFrom) && empty($dateTo)) || (empty($dateFrom) && !empty($dateTo)))) {
             return response()->json([
                 'message' => 'The date filter must be filled in completely (From and To).',
             ], 422);
@@ -234,13 +242,10 @@ class LogisticOrderController extends Controller
                     'message' => 'The From date cannot be later than the To date.',
                 ], 422);
             }
-
-            $export = new DeliveryNoteItemExport($from, $to, $distributors, $apNumber);
-            $suffix = $from . '_to_' . $to;
-        } else {
-            $export = new DeliveryNoteItemExport(null, null, $distributors, $apNumber);
-            $suffix = now()->format('Ymd_His');
         }
+
+        $export = new DeliveryNoteItemExport($dateFrom, $dateTo, $distributors, $ids, $apNumber, $statusTab, $searchCustomer);
+        $suffix = !empty($ids) ? 'by_selection' : ((!empty($dateFrom) && !empty($dateTo)) ? $dateFrom . '_to_' . $dateTo : now()->format('Ymd_His'));
 
         return Excel::download($export, 'delivery_no_export_' . $suffix . '.xlsx');
     }
@@ -250,10 +255,12 @@ class LogisticOrderController extends Controller
         $dateFrom = $request->query('date_from');
         $dateTo = $request->query('date_to');
         $distributors = $request->query('distributors');
-        $query = LogisticOrderItem::with(['logisticOrder.distributor', 'logisticOrder.customer', 'logisticOrder.note']);
         $apNumber = $request->query('ap_number', '-');
-
         $statusTab = $request->query('tab', 'downloaded');
+        $ids = $request->query('ids');
+
+        $query = LogisticOrderItem::with(['logisticOrder.distributor', 'logisticOrder.customer', 'logisticOrder.note']);
+
         $query->whereHas('logisticOrder.note', function ($q) use ($statusTab) {
             if ($statusTab === 'downloaded') {
                 $q->where('status', 'Downloaded');
@@ -269,17 +276,21 @@ class LogisticOrderController extends Controller
             });
         }
 
-        if (!empty($dateFrom) && !empty($dateTo)) {
-            $query->whereHas('logisticOrder', function($q) use ($dateFrom, $dateTo) {
-                $q->whereBetween('delivery_date', [$dateFrom, $dateTo]);
-            });
-        }
-
-        if (!empty($distributors)) {
-            $distArray = explode(',', $distributors);
-            $query->whereHas('logisticOrder', function($q) use ($distArray) {
-                $q->whereIn('distributor_id', $distArray);
-            });
+        if (!empty($ids)) {
+            $idsArray = explode(',', $ids);
+            $query->whereIn('logistic_order_id', $idsArray);
+        } else {
+            if (!empty($dateFrom) && !empty($dateTo)) {
+                $query->whereHas('logisticOrder', function($q) use ($dateFrom, $dateTo) {
+                    $q->whereBetween('delivery_date', [$dateFrom, $dateTo]);
+                });
+            }
+            if (!empty($distributors)) {
+                $distArray = explode(',', $distributors);
+                $query->whereHas('logisticOrder', function($q) use ($distArray) {
+                    $q->whereIn('distributor_id', $distArray);
+                });
+            }
         }
 
         $searchCustomer = $request->query('search_customer');
@@ -288,6 +299,17 @@ class LogisticOrderController extends Controller
                 $q->where('name', 'LIKE', '%' . $searchCustomer . '%');
             });
         }
+        
+        $query->join('logistic_orders', 'logistic_orders.id', '=', 'logistic_order_items.logistic_order_id')
+              ->select('logistic_order_items.*');
+
+        if ($statusTab === 'downloaded' || $statusTab === 'canceled') {
+            $query->orderBy('logistic_orders.updated_at', 'desc');
+        } else {
+            $query->orderBy('logistic_orders.created_at', 'desc');
+        }
+        
+        $query->orderBy('logistic_order_items.id', 'asc');
 
         $items = $query->get();
 
@@ -321,7 +343,7 @@ class LogisticOrderController extends Controller
             'items.*.item_name'   => 'required|string',
             'items.*.qty'         => 'required|numeric|min:1',
             'items.*.price_list'  => 'required|numeric|min:0',
-            'items.*.pack_size'   => 'required|string',
+            // 'items.*.pack_size'   => 'nullable|string',
         ], [
             'items.*.item_code.required'  => 'All item codes are required.',
             'items.*.item_name.required'  => 'All item names are required.',
@@ -354,7 +376,7 @@ class LogisticOrderController extends Controller
                     'ship_to_code'      => $request->ship_to_code_header,
                     'order_item_code'   => $item['item_code'] ?? '-',
                     'order_item_name'   => $item['item_name'],
-                    'pack_size'         => $item['pack_size'] ?? null,
+                    // 'pack_size'         => $item['pack_size'] ?? null,
                     'order_quantity'    => $item['qty'],
                     'price_list'        => $item['price_list'] ?? 0,
                     'order_amount'      => str_replace(['Rp', '.', ' '], '', $item['amount']),
@@ -377,13 +399,13 @@ class LogisticOrderController extends Controller
                 'download_count'    => 0,
             ]);
 
-            if ($distributor && $distributor->email) {
+            if ($distributor && !empty($distributor->email)) {
                 $orderEmail = LogisticOrder::with(['distributor', 'customer', 'customerShipTo', 'note', 'items'])->find($order->id);
-                dispatch(new SendLogisticOrderEmailJob($orderEmail, $distributor->email, 'distributor'));
+                dispatch(new SendLogisticOrderEmailJob($orderEmail, $distributor->email_list, 'distributor'));
             }
 
             DB::commit();
-            return response()->json(['success' => true, 'message' => "Order ($loNo) & Note ($doNo) successfully created! Email sent to Distributor."], 201);
+            return response()->json(['success' => true, 'message' => "Logistic Order ($loNo) & Delivery Note ($doNo) successfully created! Email sent to Distributor."], 201);
         } catch (\Exception $e) {
             DB::rollback();
             return response()->json(['success' => false, 'message' => 'Failed to save: ' . $e->getMessage()], 500);
@@ -495,8 +517,8 @@ class LogisticOrderController extends Controller
                 $order->note->update(['status' => 'Canceled']);
             }
 
-            $distributorMail = $order->distributor->email ?? null;
-            if ($distributorMail) {
+            $distributorMail = $order->distributor ? $order->distributor->email_list : null;
+            if (!empty($distributorMail)) {
                 dispatch(new SendLogisticOrderEmailJob($order, $distributorMail, 'cancel'));
             }
 
@@ -532,7 +554,7 @@ class LogisticOrderController extends Controller
                     'ship_to_code'      => $request->ship_to_code_header,
                     'order_item_code'   => $item['item_code'] ?? '-',
                     'order_item_name'   => $item['item_name'],
-                    'pack_size'         => $item['pack_size'] ?? null,
+                    // 'pack_size'         => $item['pack_size'] ?? null,
                     'order_quantity'    => $item['qty'],
                     'price_list'        => str_replace(['Rp', '.', ' '], '', $item['price_list'] ?? 0),
                     'order_amount'      => str_replace(['Rp', '.', ' '], '', $item['amount']),
@@ -547,9 +569,9 @@ class LogisticOrderController extends Controller
             }
 
             $distributor = Distributor::find($request->distributor_id);
-            if ($distributor && $distributor->email) {
+            if ($distributor && !empty($distributor->email)) {
                 $orderEmail = LogisticOrder::with(['distributor', 'customer', 'customerShipTo', 'note', 'items'])->find($order->id);
-                dispatch(new SendLogisticOrderEmailJob($orderEmail, $distributor->email, 'distributor'));
+                dispatch(new SendLogisticOrderEmailJob($orderEmail, $distributor->email_list, 'distributor'));
             }
 
             return response()->json(['success' => true, 'message' => "Order data successfully revised! Email sent to Distributor."]);

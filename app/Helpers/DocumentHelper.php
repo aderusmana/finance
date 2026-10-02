@@ -18,42 +18,46 @@ class DocumentHelper
     }
 
     public static function terbilang($x) {
-        // Be defensive: this helper is used from views/PDF generation.
-        // In PHP, using `null` as an array key becomes "" and can raise notices.
         if ($x === null) {
-            return ' nol';
+            return 'nol';
         }
 
-        if (is_string($x)) {
+        if (is_numeric($x)) {
+            $x = (int) round((float) $x);
+        } elseif (is_string($x)) {
             $x = trim($x);
-            if ($x === '') {
-                return ' nol';
-            }
-
-            // Common inputs are formatted numbers like "1.000.000" / "1,000,000".
-            // Keep digits and an optional minus sign, discard separators.
-            $x = preg_replace('/[^0-9\-]/', '', $x);
             if ($x === '' || $x === '-') {
-                return ' nol';
+                return 'nol';
             }
-        }
 
-        if (!is_numeric($x)) {
-            return ' nol';
+            // Jika berformat desimal standar dari database seperti "1500000000.00"
+            if (preg_match('/^-?\d+\.\d+$/', $x)) {
+                $x = (int) round((float) $x);
+            }
+            // Jika ada koma sebagai pemisah desimal seperti "1.500.000,00"
+            elseif (strpos($x, ',') !== false) {
+                $parts = explode(',', $x);
+                $clean = preg_replace('/[^0-9\-]/', '', $parts[0]);
+                $x = (int) $clean;
+            }
+            // Jika berformat titik ribuan seperti "1.500.000.000"
+            else {
+                $clean = preg_replace('/[^0-9\-]/', '', $x);
+                $x = (int) $clean;
+            }
+        } else {
+            return 'nol';
         }
-
-        // Normalize input and use integer arithmetic for stable recursion
-        $x = (int) $x;
 
         if ($x === 0) {
-            return ' nol';
+            return 'nol';
         }
 
         if ($x < 0) {
-            return ' minus' . self::terbilangInternal(abs($x));
+            return 'minus ' . trim(self::terbilangInternal(abs($x)));
         }
 
-        return self::terbilangInternal($x);
+        return trim(self::terbilangInternal($x));
     }
 
     private static function terbilangInternal(int $x): string

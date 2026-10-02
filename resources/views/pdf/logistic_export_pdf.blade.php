@@ -42,16 +42,16 @@
         <thead>
             <tr>
                 <th style="width: 3%;">No</th>
-                <th style="width: 12%;">DN NO</th>
-                <th style="width: 11%;">NO PO</th> 
-                <th style="width: 8%;">Delivery Date</th>
-                <th style="width: 11%;">Distributor</th>
-                <th style="width: 13%;">Customer</th>
-                <th style="width: 11%;">Item Name</th>
-                <th style="width: 8%;">Price Item</th>
+                <th style="width: 10%;">DN NO</th>
+                <th style="width: 8%;">NO PO</th> 
+                <th style="width: 7%;">Delivery Date</th>
+                <th style="width: 10%;">Distributor</th>
+                <th style="width: 12%;">Customer</th>
+                <th style="width: 10%;">Item Name</th>
+                <th style="width: 8%;">Logistic Fee</th>
                 <th style="width: 3%;">Qty</th>
-                <th style="width: 8%;">Total Claim</th>
-                <th style="width: 9%;">Sales Value</th>
+                <th style="width: 10%;">Total Claim</th>
+                <th style="width: 10%;">Sales Value</th>
                 <th style="width: 5%;">Ratio</th>
             </tr>
         </thead>
@@ -64,12 +64,12 @@
                     $lo = $item->logisticOrder;
                     $qty = (float) $item->order_quantity;
                     $priceList = (float) $item->price_list;
-                    $amount = (float) $item->order_amount;
                     $salesValue = $priceList * $qty;
-                    $ratio = $salesValue > 0 ? ($amount / $salesValue) * 100 : 0;
                     $priceItem = \App\Models\Customer\DistributorCustomer::where('distributor_id', $lo->distributor_id)
                                 ->where('customer_id', $lo->customer_id)
-                                ->first()->logistic_fee ?? 0;
+                                ->first()->proposed_fee ?? 0;
+                    $amount = $priceItem * $qty;
+                    $ratio = $salesValue > 0 ? ($amount / $salesValue) * 100 : 0;
 
                     $totalClaim += $amount;
                     $totalSales += $salesValue;

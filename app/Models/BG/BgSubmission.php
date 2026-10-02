@@ -13,13 +13,21 @@ class BgSubmission extends Model
 
     protected $fillable = [
         'bg_recommendation_id', 'form_code', 'signed_document_path',
+        'custom_address', 'bg_number', 'bg_nominal', 'exp_date',
+        'warkat_file_path', 'lampiran_d_file_path', 'warkat_files', 'lampiran_d_files',
+        'submission_type', 'validated_by', 'validated_at',
         'submitted_at', 'upload_completed_at', 'status', 'token'
     ];
 
     protected $casts = [
         'total_nominal' => 'decimal:2',
+        'bg_nominal' => 'decimal:2',
+        'exp_date' => 'date',
         'submitted_at' => 'datetime',
         'upload_completed_at' => 'datetime',
+        'validated_at' => 'datetime',
+        'warkat_files' => 'array',
+        'lampiran_d_files' => 'array',
     ];
 
     public function recommendation()
@@ -35,5 +43,28 @@ class BgSubmission extends Model
     public function bankGaransi()
     {
         return $this->hasOne(BankGaransi::class, 'bg_submission_id');
+    }
+
+    public function validator()
+    {
+        return $this->belongsTo(\App\Models\User::class, 'validated_by');
+    }
+
+    public function getNominalAttribute()
+    {
+        if (!empty($this->bg_nominal) && $this->bg_nominal > 0) {
+            return (float) $this->bg_nominal;
+        }
+
+        $snapshot = $this->lampiranD?->activeVersion?->data_snapshot ?? [];
+        if (!empty($snapshot['nilai_bg_diserahkan']) && $snapshot['nilai_bg_diserahkan'] > 0) {
+            return (float) $snapshot['nilai_bg_diserahkan'];
+        }
+
+        if (!empty($snapshot['nilai_bg_ditetapkan']) && $snapshot['nilai_bg_ditetapkan'] > 0) {
+            return (float) $snapshot['nilai_bg_ditetapkan'];
+        }
+
+        return (float) ($this->recommendation->set_bg ?? 0);
     }
 }

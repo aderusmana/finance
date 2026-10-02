@@ -196,6 +196,22 @@
                                         <div class="info-label">General Email</div>
                                         <div class="info-value"><a href="mailto:{{ $customer->email }}">{{ $customer->email }}</a></div>
                                     </div>
+                                    <div class="col-md-12">
+                                        <div class="info-label">Sales</div>
+                                        <div class="info-value text-dark fw-bold">{{ $customer->user->name ?? '-' }}</div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="info-label">Account Group</div>
+                                        <div class="info-value text-dark fw-bold">{{ $customer->accountGroup->name_account_group ?? '-' }}</div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="info-label">Customer Type</div>
+                                        <div class="info-value text-dark fw-bold">{{ $customer->customer_type ?? '-' }}</div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="info-label">Customer Class</div>
+                                        <div class="info-value text-dark fw-bold">{{ $customer->customerClass->name_class ?? '-' }}</div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -335,17 +351,40 @@
 
                         {{-- 3. CREDIT LIMIT (AUTO CALC) --}}
                         <div class="col-md-4">
-                            <div class="p-3 border rounded bg-light h-100">
-                                <label class="info-label mb-2">Credit Limit (Calculated)</label>
-                                <input type="hidden" name="update_credit_limit_value" id="final_credit_limit_input" value="{{ $customer->credit_limit }}" form="approvalForm">
-                                <div class="fs-5 text-success fw-bold" id="display_credit_limit">
-                                    IDR {{ number_format($customer->credit_limit, 0, ',', '.') }}
-                                </div>
-                                <span id="calc-badge" class="badge bg-warning text-dark mt-1 d-none" style="font-size: 0.6rem;">
-                                    <i class="fas fa-calculator me-1"></i> Auto-Updated
-                                </span>
+                            <div class="p-3 border rounded bg-light h-100 position-relative">
+                                <label class="info-label mb-2">Credit Limit <span id="calc-badge" class="badge bg-warning ms-2 d-none">Calculated</span></label>
+                                <div class="fs-5 text-success fw-bold" id="display_credit_limit">IDR {{ number_format($customer->credit_limit, 0, ',', '.') }}</div>
+                                @if($canAdjust)
+                                    <input type="hidden" name="update_credit_limit_value" id="final_credit_limit_input" form="approvalForm" value="{{ $customer->credit_limit }}">
+                                @endif
                             </div>
                         </div>
+                        <div class="col-md-4">
+                            <div class="p-3 border rounded bg-light h-100 position-relative">
+                                <label class="info-label mb-2">Currency</label>
+                                <div class="fs-5 fw-bold" id="ccar_value">{{ $customer->ccar }}</div>
+                                @if($canAdjust)
+                                    <input type="hidden" name="ccar" id="ccar_input" value="{{ $customer->ccar }}" form="approvalForm">
+                                @endif
+                            </div>
+                        </div>
+
+                        {{-- NEW: Approved BG --}}
+                        @if($customer->bank_garansi === 'YA' || strtoupper($customer->term_of_payment) === 'CBD')
+                        <div class="col-md-4">
+                            <div class="p-3 border rounded border-success bg-light-success h-100">
+                                <label class="info-label mb-2 text-success">Approved BG</label>
+                                @if($canAdjust)
+                                    <input type="text" class="form-control fw-bold text-success editable-field" 
+                                           name="update_approved_credit_limit" 
+                                           value="{{ number_format((float)$customer->approved_credit_limit, 0, ',', '.') }}" 
+                                           form="approvalForm" disabled placeholder="Input Limit Opsional">
+                                @else
+                                    <div class="fs-5 text-success fw-bold">IDR {{ number_format((float)$customer->approved_credit_limit, 0, ',', '.') }}</div>
+                                @endif
+                            </div>
+                        </div>
+                        @endif
                     </div>
 
                     {{-- 4.5. FINANCE PAYMENT & FAKTUR DETAILS (New Section) --}}
@@ -583,10 +622,10 @@
                                         <label class="info-label mb-1">Tanggal NPPKP</label>
                                         <div class="info-value">{{ $customer->tanggal_nppkp ? \Carbon\Carbon::parse($customer->tanggal_nppkp)->format('d M Y') : '-' }}</div>
                                     </div>
-                                    <div class="col-md-3">
+                                    <!-- <div class="col-md-3">
                                         <label class="info-label mb-1">No Pengukuhan Kaber</label>
                                         <div class="info-value">{{ $customer->no_pengukuhan_kaber ?? '-' }}</div>
-                                    </div>
+                                    </div> -->
                                     <div class="col-md-3">
                                         <label class="info-label mb-1">Output Tax</label>
                                         <div class="info-value">{{ $customer->output_tax }}</div>
@@ -828,11 +867,11 @@
     </div>
 
     <!-- AJAX Success Modal -->
-    <div class="modal fade" id="ajaxSuccessModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0">
-                <div class="modal-body p-3" id="ajaxSuccessModalBody" style="background:transparent;">
-                    <!-- injected HTML -->
+    <div class="modal fade" id="ajaxSuccessModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 560px;">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
+                <div id="ajaxSuccessModalBody">
+                    <!-- injected HTML from approval-success-modal.blade.php -->
                 </div>
             </div>
         </div>
@@ -1258,12 +1297,29 @@
 
                         fetch(actionUrl, {
                             method: 'POST',
-                            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                            headers: { 
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'Accept': 'application/json'
+                            },
                             body: formData,
                             credentials: 'same-origin'
                         })
                         .then(async (res) => {
                             const text = await res.text();
+                            
+                            if (!res.ok) {
+                                let errorMsg = `HTTP Error ${res.status}`;
+                                try {
+                                    const errData = JSON.parse(text);
+                                    if (errData.errors) {
+                                        errorMsg = Object.values(errData.errors).flat().join('\n');
+                                    } else if (errData.message) {
+                                        errorMsg = errData.message;
+                                    }
+                                } catch(e) {}
+                                throw new Error(errorMsg);
+                            }
+
                             // Try parse JSON first; if response is JSON use it, otherwise treat as HTML
                             try {
                                 return JSON.parse(text);
@@ -1277,37 +1333,31 @@
                                 if (data.html) {
                                     const modalBody = document.getElementById('ajaxSuccessModalBody');
                                     modalBody.innerHTML = data.html;
+
                                     const ajaxModalEl = document.getElementById('ajaxSuccessModal');
                                     const ajaxModal = new bootstrap.Modal(ajaxModalEl);
                                     ajaxModal.show();
 
-                                    // start countdown inside modal
+                                    // Countdown: update #countdown el and close/clear page after 5s
                                     const countdownEl = modalBody.querySelector('#countdown');
-                                    let seconds = 3;
+                                    let seconds = parseInt(countdownEl?.innerText) || 5;
                                     if (countdownEl) {
                                         countdownEl.innerText = seconds;
-                                        const iv = setInterval(() => {
-                                            seconds--;
-                                            if (seconds <= 0) {
-                                                clearInterval(iv);
-                                                try { ajaxModal.hide(); } catch(e){}
-                                                // Try to close the window. If browser blocks it, show fallback message.
-                                                try {
-                                                    window.open('', '_self');
-                                                    window.close();
-                                                } catch (e) {}
-
-                                                // Fallback after short delay: replace body with inactive message
-                                                setTimeout(() => {
-                                                    try {
-                                                        document.body.innerHTML = "<div style='display:flex; height:100vh; justify-content:center; align-items:center; color:#64748b;'>Halaman sudah tidak aktif. Silakan tutup tab ini.</div>";
-                                                    } catch(e) {}
-                                                }, 500);
-                                            } else {
-                                                countdownEl.innerText = seconds;
-                                            }
-                                        }, 1000);
                                     }
+                                    const iv = setInterval(() => {
+                                        seconds--;
+                                        if (countdownEl) countdownEl.innerText = seconds;
+                                        if (seconds <= 0) {
+                                            clearInterval(iv);
+                                            try { ajaxModal.hide(); } catch(e){}
+                                            try { window.open('', '_self'); window.close(); } catch(e) {}
+                                            setTimeout(() => {
+                                                try {
+                                                    document.body.innerHTML = "<div style='display:flex;height:100vh;justify-content:center;align-items:center;font-family:sans-serif;color:#64748b;flex-direction:column;gap:12px;'><svg xmlns='http://www.w3.org/2000/svg' width='64' height='64' fill='#22c55e' viewBox='0 0 256 256'><path d='M173.66,98.34a8,8,0,0,1,0,11.32l-56,56a8,8,0,0,1-11.32,0l-24-24a8,8,0,0,1,11.32-11.32L112,148.69l50.34-50.35A8,8,0,0,1,173.66,98.34ZM232,128A104,104,0,1,1,128,24,104.11,104.11,0,0,1,232,128Zm-16,0a88,88,0,1,0-88,88A88.1,88.1,0,0,0,216,128Z'/></svg><div style='font-size:1.1rem;font-weight:600;'>Halaman sudah tidak aktif.</div><div style='font-size:0.9rem;'>Silakan tutup tab ini.</div></div>";
+                                                } catch(e) {}
+                                            }, 500);
+                                        }
+                                    }, 1000);
                                 } else {
                                     Swal.fire('Success', data.message || 'Action processed.', 'success').then(() => location.reload());
                                 }

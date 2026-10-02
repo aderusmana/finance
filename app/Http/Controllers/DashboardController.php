@@ -45,7 +45,14 @@ class DashboardController extends Controller
         //     abort(403, 'Anda tidak memiliki akses ke Dashboard Customer');
         // }
 
-        return view('dashboard.customer');
+        $availableYears = \App\Models\Customer\Customer::selectRaw('YEAR(created_at) as year')
+            ->whereNotNull('created_at')
+            ->groupBy('year')
+            ->orderBy('year', 'desc')
+            ->pluck('year')
+            ->toArray();
+
+        return view('dashboard.customer', compact('availableYears'));
     }
 
     public function bgIndex()
@@ -166,14 +173,155 @@ class DashboardController extends Controller
             ]);
         }
 
-        // --- PERBAIKAN DI SINI: Switch Query Berdasarkan Tipe ---
-        if ($type === 'customer') {
-            $query = Customer::query()->whereBetween('created_at', [$startDate, $endDate]);
-        } else {
-            $query = BankGaransi::query()->whereBetween('created_at', [$startDate, $endDate]);
+        if ($type === 'customer_exec') {
+            $data = Customer::query()->whereBetween('created_at', [$startDate, $endDate])
+                ->select('status_approval', 'status', DB::raw('MONTH(created_at) as month'))->get();
+
+            $created = array_fill(0, 12, 0);
+            $approved = array_fill(0, 12, 0);
+            $pending  = array_fill(0, 12, 0);
+            $rejected = array_fill(0, 12, 0);
+
+            foreach ($data as $row) {
+                $idx = $row->month - 1;
+                $created[$idx]++;
+
+                $st = strtolower($row->status_approval ?? '');
+                
+                if (in_array($st, ['approved'])) {
+                    $approved[$idx]++;
+                } elseif (in_array($st, ['rejected'])) {
+                    $rejected[$idx]++;
+                } else {
+                    $pending[$idx]++;
+                }
+            }
+
+            return response()->json([
+                'created' => $created,
+                'approved' => $approved,
+                'pending' => $pending,
+                'rejected' => $rejected
+            ]);
         }
 
-        // Ambil data status dan bulan
+        // --- PERBAIKAN DI SINI: Switch Query Berdasarkan Tipe ---
+        if ($type === 'customer') {
+            $year = $request->input('year');
+            $month = $request->input('month');
+            $view = $request->input('growth_view', 'all');
+
+            $query = Customer::query();
+            
+            if ($year && $year !== 'all') {
+                $query->whereYear('customers.created_at', $year);
+            } else if (! $year && ! $month) {
+                $query->whereBetween('customers.created_at', [$startDate, $endDate]);
+            }
+
+            if ($month && $month !== 'all') {
+                $query->whereMonth('customers.created_at', $month);
+            }
+
+            $isDaily = ($month && $month !== 'all');
+
+            if ($isDaily) {
+                $selectTime = DB::raw('DAY(customers.created_at) as time_val');
+                $daysInMonth = $year && $year !== 'all' ? cal_days_in_month(CAL_GREGORIAN, $month, $year) : 31;
+                $labels = range(1, $daysInMonth);
+                $dataLength = $daysInMonth;
+            } else {
+                $selectTime = DB::raw('MONTH(customers.created_at) as time_val');
+                $labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                $dataLength = 12;
+            }
+
+            $datasets = [];
+
+            if ($view === 'registration' || $view === 'all') {
+                $regQuery = clone $query;
+                $regData = $regQuery->select($selectTime, DB::raw('count(*) as total'))
+                                    ->groupBy('time_val')->pluck('total', 'time_val')->toArray();
+                
+                $regArray = array_fill(0, $dataLength, 0);
+                foreach ($regData as $time => $total) {
+                    $regArray[$time - 1] = $total;
+                }
+                
+                $datasets[] = [
+                    'label' => 'Total Registration',
+                    'data' => $regArray,
+                    'borderColor' => '#485ede',
+                    'backgroundColor' => 'rgba(72, 94, 222, 0.1)',
+                    'borderWidth' => 3,
+                    'pointBackgroundColor' => '#fff',
+                    'pointBorderColor' => '#485ede',
+                    'pointRadius' => 5,
+                    'fill' => true,
+                    'tension' => 0.4,
+                    'borderDash' => $view === 'all' ? [5, 5] : []
+                ];
+            }
+
+            if ($view === 'status' || $view === 'all') {
+                $statusQuery = clone $query;
+                $statusData = $statusQuery->select(
+                        $selectTime,
+                        DB::raw('COALESCE(customers.status_approval, "Pending") as status_name'),
+                        DB::raw('count(customers.id) as total')
+                    )
+                    ->groupBy('time_val', 'status_name')
+                    ->get();
+
+                $statusGrouped = [];
+                // Initialize all found statuses with 0s
+                $foundStatuses = $statusData->pluck('status_name')->unique();
+                foreach ($foundStatuses as $sName) {
+                    $statusGrouped[$sName] = array_fill(0, $dataLength, 0);
+                }
+
+                foreach ($statusData as $row) {
+                    $statusGrouped[$row->status_name][$row->time_val - 1] = $row->total;
+                }
+
+                $statusColors = [
+                    'Pending' => '#f59e0b',    // Amber
+                    'Processing' => '#3b82f6', // Blue
+                    'Approved' => '#10b981',   // Emerald
+                    'Rejected' => '#ef4444',   // Red
+                    'Completed' => '#8b5cf6',  // Purple
+                ];
+                $defaultColors = ['#1aac6e', '#f7b84b', '#ef476f', '#38bdf8', '#8b5cf6', '#f43f5e', '#a8a29e', '#485ede'];
+                $cIdx = 0;
+
+                foreach ($statusGrouped as $statusName => $dataArr) {
+                    $c = $statusColors[$statusName] ?? $defaultColors[$cIdx % count($defaultColors)];
+                    $datasets[] = [
+                        'label' => $statusName,
+                        'data' => $dataArr,
+                        'borderColor' => $c,
+                        'backgroundColor' => 'transparent',
+                        'borderWidth' => 2,
+                        'pointBackgroundColor' => '#fff',
+                        'pointBorderColor' => $c,
+                        'pointRadius' => 4,
+                        'fill' => false,
+                        'tension' => 0.4,
+                        'borderDash' => []
+                    ];
+                    $cIdx++;
+                }
+            }
+
+            return response()->json([
+                'type' => 'customer_dynamic',
+                'labels' => $labels,
+                'datasets' => $datasets,
+                'created' => isset($datasets[0]) ? $datasets[0]['data'] : array_fill(0, $dataLength, 0)
+            ]);
+        }
+
+        $query = BankGaransi::query()->whereBetween('created_at', [$startDate, $endDate]);
         $data = $query->select('status', DB::raw('MONTH(created_at) as month'))->get();
 
         $created = array_fill(0, 12, 0);
@@ -194,10 +342,7 @@ class DashboardController extends Controller
             } elseif (in_array($st, ['draft', 'pending', 'process', 'new', 'waiting_approval'])) {
                 $pending[$idx]++;
             } else {
-                if($type === 'customer' && $st == '') {
-                } else {
-                    $pending[$idx]++;
-                }
+                $pending[$idx]++;
             }
         }
 
@@ -268,7 +413,8 @@ class DashboardController extends Controller
         $activeCount = (clone $query)->whereIn('status', ['approved', 'active'])->count();
         $expiringCount = BankGaransi::whereBetween('exp_date', [now(), now()->addDays(60)])
                                     ->whereNotIn('status', ['expired', 'returned', 'rejected'])
-                                    ->count();
+                                    ->distinct('customer_id')
+                                    ->count('customer_id');
 
         $largestBg = (clone $query)->whereIn('status', ['approved', 'active'])
                                    ->orderBy('bg_nominal', 'desc')
@@ -290,22 +436,19 @@ class DashboardController extends Controller
     {
         $total = Customer::count();
 
-        $withBg = BankGaransi::whereIn('status', ['approved', 'active', 'completed'])
-                    ->distinct('customer_id')
-                    ->count('customer_id');
+        $totalClasses = Customer::whereNotNull('customer_class')->distinct('customer_class')->count('customer_class');
+        
+        $topClassQuery = Customer::leftJoin('customer_classes', 'customers.customer_class', '=', 'customer_classes.id')
+            ->select(
+                DB::raw('COALESCE(customer_classes.name_class, "Uncategorized") as class_name'), 
+                DB::raw('count(customers.id) as total')
+            )
+            ->groupBy('customer_classes.id', 'customer_classes.name_class')
+            ->orderByDesc('total')
+            ->first();
 
-        $withoutBg = $total - $withBg;
-
-        $creditExceeded = 0;
-        $customers = Customer::whereNotNull('credit_limit')->where('credit_limit', '>', 0)->get(['id','credit_limit']);
-        foreach ($customers as $c) {
-            $sumBg = BankGaransi::where('customer_id', $c->id)
-                                ->whereIn('status', ['approved', 'active'])
-                                ->sum('bg_nominal');
-            if ($sumBg > $c->credit_limit) {
-                $creditExceeded++;
-            }
-        }
+        $topClass = $topClassQuery ? $topClassQuery->class_name : 'N/A';
+        $topClassCount = $topClassQuery ? $topClassQuery->total : 0;
 
         $highestLimit = Customer::orderBy('credit_limit', 'desc')->first(['name', 'credit_limit']);
 
@@ -313,12 +456,13 @@ class DashboardController extends Controller
 
         return response()->json([
             'total' => $total,
-            'with_bg' => $withBg,
-            'without_bg' => $withoutBg,
-            'credit_exceeded' => $creditExceeded,
+            'total_classes' => $totalClasses,
+            'top_class' => $topClass,
+            'top_class_count' => $topClassCount,
             'highest_limit_name' => $highestLimit ? $highestLimit->name : '-',
             'highest_limit_amount' => $highestLimit ? $highestLimit->credit_limit : 0,
             'longest_joined_name' => $longestJoined ? $longestJoined->name : '-',
+            'credit_exceeded' => 0,
         ]);
     }
 
@@ -479,6 +623,76 @@ class DashboardController extends Controller
             ],
             'recent_orders' => $recentOrders,
             'recent_fee_logs' => $recentFeeLogs
+        ]);
+    }
+
+    /**
+     * STAT 5: Customer Class Distribution Data (Untuk List UI)
+     */
+    public function getCustomerClassesData(Request $request)
+    {
+        $month = $request->input('month', 'all');
+        $year = $request->input('year', date('Y'));
+
+        $query = Customer::leftJoin('customer_classes', 'customers.customer_class', '=', 'customer_classes.id')
+            ->select(
+                DB::raw('COALESCE(customer_classes.name_class, "Uncategorized") as class_name'), 
+                DB::raw('count(customers.id) as total')
+            );
+
+        if ($year && $year !== 'all') {
+            $query->whereYear('customers.created_at', $year);
+        }
+        
+        if ($month && $month !== 'all') {
+            $query->whereMonth('customers.created_at', $month);
+        }
+
+        $data = $query->groupBy('customer_classes.id', 'customer_classes.name_class')
+            ->orderByDesc('total')
+            ->get();
+
+        return response()->json($data);
+    }
+
+    /**
+     * CHART: Customer Class Stats for Chart.js
+     */
+    public function getClassStatsChart(Request $request)
+    {
+        $month = $request->input('month', 'all');
+        $year = $request->input('year', date('Y'));
+
+        $query = Customer::leftJoin('customer_classes', 'customers.customer_class', '=', 'customer_classes.id')
+            ->select(
+                DB::raw('COALESCE(customer_classes.name_class, "Uncategorized") as class_name'), 
+                DB::raw('count(customers.id) as total')
+            );
+
+        if ($year && $year !== 'all') {
+            $query->whereYear('customers.created_at', $year);
+        }
+        
+        if ($month && $month !== 'all') {
+            $query->whereMonth('customers.created_at', $month);
+        }
+
+        $results = $query->groupBy('customer_classes.id', 'customer_classes.name_class')
+            ->orderByDesc('total')
+            ->get();
+
+        $labels = [];
+        $values = [];
+
+        // Parsing data ke format yang diterima Chart.js (Array Terpisah)
+        foreach ($results as $row) {
+            $labels[] = $row->class_name;
+            $values[] = $row->total;
+        }
+
+        return response()->json([
+            'labels' => $labels,
+            'values' => $values
         ]);
     }
 }
