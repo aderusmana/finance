@@ -166,6 +166,18 @@
                 </li>
             @endcan
 
+            @can('manage-distributor-docs')
+                <li class="menu-title text-white"><span>Distributors</span></li>
+                <li>
+                    <a aria-expanded="false" data-bs-toggle="collapse" href="#finance-admin-menu">
+                        <i class="iconoir-folder"></i> Distributor Documents
+                    </a>
+                    <ul class="collapse" id="finance-admin-menu">
+                        <li><a href="{{ route('distributor.documents.index') }}">Distributor List</a></li>
+                    </ul>
+                </li>
+            @endcan
+
             @can('view bank garansi menu')
                 <li class="menu-title text-white"><span>Bank Garansi (BG)</span></li>
                 <li>

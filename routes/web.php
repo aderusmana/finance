@@ -14,6 +14,8 @@ use App\Http\Controllers\Customer\AccountGroupController;
 use App\Http\Controllers\Customer\BranchController;
 use App\Http\Controllers\Customer\CustomerClassController;
 use App\Http\Controllers\Customer\CustomerController;
+use App\Http\Controllers\Customer\DistributorDocumentController;
+use App\Http\Controllers\Customer\PublicDistributorDocumentController;
 use App\Http\Controllers\Customer\RegionsController;
 use App\Http\Controllers\Customer\SalesController;
 use App\Http\Controllers\Customer\TOPController;
@@ -228,5 +230,30 @@ Route::get('/approval/process/{token}/{action}', [ApprovalProcessController::cla
 Route::get('/approval/form/{token}/{action}', [ApprovalProcessController::class, 'showForm'])->name('approval.form');
 Route::post('/approval/submit/{token}', [ApprovalProcessController::class, 'submit'])->name('approval.submit');
 Route::get('/public/download-doc/{bg_id}/{type}', [CustomerBgPortalController::class, 'downloadExpiringPdf'])->name('public.bg.download')->middleware('signed');
+
+// DISTRIBUTOR DOCUMENTS MANAGEMENT
+Route::middleware(['auth', 'permission:manage-distributor-docs'])
+    ->prefix('distributor-documents')
+    ->name('distributor.documents.')
+    ->group(function () {
+        Route::get('/', [DistributorDocumentController::class, 'index'])->name('index');
+        Route::get('/detail/{distributorId}', [DistributorDocumentController::class, 'detailView'])->name('detail');
+        Route::post('/upload', [DistributorDocumentController::class, 'storeUpload'])->name('upload');
+        Route::delete('/{id}', [DistributorDocumentController::class, 'destroy'])->name('destroy');
+        Route::get('/preview/{id}', [DistributorDocumentController::class, 'previewFile'])->name('preview');
+        Route::get('/download/{id}', [DistributorDocumentController::class, 'downloadFile'])->name('download');
+        Route::get('/download-all-zip', [DistributorDocumentController::class, 'downloadAllZip'])->name('download.zip');
+    });
+
+// PUBLIC ROUTES FOR DISTRIBUTOR DOCUMENTS
+Route::prefix('portal-distributor')->name('portal.distributor.')->group(function () {
+    Route::post('/search', [PublicDistributorDocumentController::class, 'searchDocuments'])
+        ->middleware('throttle:10,1')
+        ->name('search');
+
+    Route::get('/preview/{id}', [PublicDistributorDocumentController::class, 'previewFile'])->name('preview');
+    Route::get('/download/{id}', [PublicDistributorDocumentController::class, 'downloadFile'])->name('download');
+    Route::get('/download-all-zip', [PublicDistributorDocumentController::class, 'downloadAllZip'])->name('download.zip');
+});
 
 require __DIR__.'/auth.php';

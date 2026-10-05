@@ -44,6 +44,7 @@ class AllSeeder extends Seeder
             'view customer dashboard', 'view bg dashboard', 'view dashboard area',
             'view logistic fees menu', 'view logistic-fees', 'create logistic-fee', 'update logistic-fee', 'delete logistic-fee',
             'view logistic-orders menu', 'view logistic-orders', 'create logistic-order', 'update logistic-order', 'delete logistic-order',
+            'manage-distributor-docs'
         ];
 
         foreach ($permissions as $perm) {
@@ -94,7 +95,7 @@ class AllSeeder extends Seeder
             'view dashboard', 'view customers menu', 'view customer', 'create customer', 'update customer', 'delete customer',
             'view bank garansi menu', 'view bg', 'create bg', 'update bg', 'delete bg',
             'view bg-approval', 'approve bg', 'reject bg',
-            'view log', 'view report', 'view approval'
+            'view log', 'view report', 'view approval', 'manage-distributor-docs'
         ];
 
         $managerFinanceRole = Role::updateOrCreate(['name' => 'manager-finance']);
@@ -141,6 +142,7 @@ class AllSeeder extends Seeder
         $staffFinanceRole->syncPermissions([
             'view dashboard', 'view bg dashboard', 'view bank garansi menu',
             'view bg', 'create bg', 'update bg', 'delete bg',
+            'manage-distributor-docs',
         ]);
 
         // ==========================================
