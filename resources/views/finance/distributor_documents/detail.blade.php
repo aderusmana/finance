@@ -283,12 +283,16 @@
                     monthlyWrapper.style.display = 'none';
                     transferWrapper.style.display = 'block';
                     monthInput.required = false;
+                    monthInput.disabled = true;
                     dateInput.required = true;
+                    dateInput.disabled = false;
                 } else {
                     monthlyWrapper.style.display = 'block';
                     transferWrapper.style.display = 'none';
                     monthInput.required = true;
+                    monthInput.disabled = false;
                     dateInput.required = false;
+                    dateInput.disabled = true;
                 }
             }
 

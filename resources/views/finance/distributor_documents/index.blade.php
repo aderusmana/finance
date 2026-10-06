@@ -1035,12 +1035,16 @@
                     monthlyWrapper.style.display = 'none';
                     transferWrapper.style.display = 'block';
                     monthInput.required = false;
+                    monthInput.disabled = true;
                     dateInput.required = true;
+                    dateInput.disabled = false;
                 } else {
                     monthlyWrapper.style.display = 'block';
                     transferWrapper.style.display = 'none';
                     monthInput.required = true;
+                    monthInput.disabled = false;
                     dateInput.required = false;
+                    dateInput.disabled = true;
                 }
             }
 
@@ -1176,6 +1180,7 @@
                     switchEl.checked = false;
                 }
                 toggleUploadSection();
+                onAddDocTypeChanged();
 
                 const alertContainer = document.getElementById('addDistributorAlertContainer');
                 if (alertContainer) alertContainer.innerHTML = '';
@@ -1213,13 +1218,31 @@
                 const docType = document.getElementById('add_doc_type').value;
                 const monthlyWrapper = document.getElementById('add_monthly_wrapper');
                 const transferWrapper = document.getElementById('add_transfer_wrapper');
+                const monthInput = document.getElementById('add_month');
+                const dateInput = document.getElementById('add_transaction_date');
 
                 if (docType === 'transfer') {
                     if (monthlyWrapper) monthlyWrapper.style.display = 'none';
                     if (transferWrapper) transferWrapper.style.display = 'block';
+                    if (monthInput) {
+                        monthInput.required = false;
+                        monthInput.disabled = true;
+                    }
+                    if (dateInput) {
+                        dateInput.required = true;
+                        dateInput.disabled = false;
+                    }
                 } else {
                     if (monthlyWrapper) monthlyWrapper.style.display = 'block';
                     if (transferWrapper) transferWrapper.style.display = 'none';
+                    if (monthInput) {
+                        monthInput.required = true;
+                        monthInput.disabled = false;
+                    }
+                    if (dateInput) {
+                        dateInput.required = false;
+                        dateInput.disabled = true;
+                    }
                 }
             }
 

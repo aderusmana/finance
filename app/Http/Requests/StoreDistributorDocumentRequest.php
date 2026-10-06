@@ -54,14 +54,32 @@ class StoreDistributorDocumentRequest extends FormRequest
         ];
     }
 
+    /**
+     * Prepare the data for validation.
+     */
+    protected function prepareForValidation(): void
+    {
+        if ($this->input('doc_type') === 'transfer') {
+            $this->merge([
+                'month' => null,
+            ]);
+        } else {
+            $this->merge([
+                'transaction_date' => null,
+            ]);
+        }
+    }
+
     public function messages(): array
     {
         return [
             'file.max' => 'Ukuran file tidak boleh melebihi 1 MB.',
             'file.mimes' => 'Format file harus berupa PDF.',
             'transaction_date.required_if' => 'Tanggal transaksi wajib diisi untuk dokumen Penjelasan Transfer.',
+            'transaction_date.prohibited_unless' => 'Tanggal transaksi hanya berlaku untuk dokumen Penjelasan Transfer.',
             'year.required_if' => 'Tahun wajib diisi untuk Bukti Potong dan TOP Insentif.',
             'month.required_if' => 'Bulan wajib diisi untuk Bukti Potong dan TOP Insentif.',
+            'month.prohibited_if' => 'Bulan dokumen tidak berlaku untuk dokumen Penjelasan Transfer.',
         ];
     }
 }
