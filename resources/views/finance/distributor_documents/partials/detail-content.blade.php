@@ -8,10 +8,24 @@
                 </h3>
                 <span class="distributor-code-badge-light">{{ $distributor->code }}</span>
             </div>
-            <div class="small" style="color: #cbd5e1;">
-                <span>
-                    <i class="iconoir-mail me-1"></i><strong>Email:</strong> {{ $distributor->email ?: '-' }}
+            @php
+                $bupotEmails = $distributor->bupot_email_list;
+            @endphp
+            <div class="small d-flex align-items-center flex-wrap gap-2 mt-1" style="color: #cbd5e1;">
+                <span class="d-inline-flex align-items-center">
+                    <i class="iconoir-mail me-1 text-info"></i><strong>Email BuPot:</strong>
                 </span>
+                @if (!empty($bupotEmails))
+                    <div class="d-inline-flex flex-wrap gap-1 align-items-center">
+                        @foreach ($bupotEmails as $bEmail)
+                            <span class="badge border fw-normal text-white px-2 py-1" style="font-size: 0.75rem; background-color: rgba(255, 255, 255, 0.15); border-color: rgba(255, 255, 255, 0.25) !important;" title="{{ $bEmail }}">
+                                {{ $bEmail }}
+                            </span>
+                        @endforeach
+                    </div>
+                @else
+                    <span class="text-white-50 fst-italic">-</span>
+                @endif
             </div>
         </div>
 

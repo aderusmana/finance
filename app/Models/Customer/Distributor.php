@@ -6,9 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class Distributor extends Model
 {
-    protected $fillable = ['customer_id', 'code', 'name', 'email'];
+    protected $fillable = ['customer_id', 'code', 'name', 'email', 'bupot_email'];
 
-    protected $appends = ['email_list'];
+    protected $appends = ['email_list', 'bupot_email_list'];
 
     /**
      * Get distributor emails as an array of strings.
@@ -24,6 +24,24 @@ class Distributor extends Model
         $emails = is_array($this->email)
             ? $this->email
             : preg_split('/[;,]+/', (string) $this->email);
+
+        return array_values(array_filter(array_map('trim', (array) $emails)));
+    }
+
+    /**
+     * Get distributor bupot emails as an array of strings.
+     *
+     * @return array<string>
+     */
+    public function getBupotEmailListAttribute(): array
+    {
+        if (empty($this->bupot_email)) {
+            return [];
+        }
+
+        $emails = is_array($this->bupot_email)
+            ? $this->bupot_email
+            : preg_split('/[;,]+/', (string) $this->bupot_email);
 
         return array_values(array_filter(array_map('trim', (array) $emails)));
     }
@@ -51,6 +69,7 @@ class Distributor extends Model
     {
         return $this->hasMany(DistributorDocument::class)
             ->where('doc_type', 'transfer')
+            ->whereNotNull('file_path')
             ->orderByDesc('transaction_date')
             ->orderByDesc('year')
             ->orderByDesc('created_at');
@@ -61,8 +80,9 @@ class Distributor extends Model
      */
     public function getMonthlyDocumentSummary(int $year): array
     {
-        // Only get BuPot and TOP Insentif for the selected year
+        // Only get BuPot and TOP Insentif for the selected year with uploaded files
         $docs = $this->documents()
+            ->whereNotNull('file_path')
             ->whereIn('doc_type', ['bupot', 'top_insentif'])
             ->where('year', $year)
             ->get();

@@ -239,9 +239,10 @@ Route::middleware(['auth', 'permission:manage-distributor-docs'])
         Route::get('/', [DistributorDocumentController::class, 'index'])->name('index');
         Route::get('/detail/{distributorId}', [DistributorDocumentController::class, 'detailView'])->name('detail');
         Route::post('/upload', [DistributorDocumentController::class, 'storeUpload'])->name('upload');
-        Route::delete('/{id}', [DistributorDocumentController::class, 'destroy'])->name('destroy');
-        Route::get('/preview/{id}', [DistributorDocumentController::class, 'previewFile'])->name('preview');
-        Route::get('/download/{id}', [DistributorDocumentController::class, 'downloadFile'])->name('download');
+        Route::post('/distributor-list', [DistributorDocumentController::class, 'storeDistributorList'])->name('list.store');
+        Route::delete('/{id}', [DistributorDocumentController::class, 'destroy'])->name('destroy')->whereNumber('id');
+        Route::get('/preview/{id}', [DistributorDocumentController::class, 'previewFile'])->name('preview')->whereNumber('id');
+        Route::get('/download/{id}', [DistributorDocumentController::class, 'downloadFile'])->name('download')->whereNumber('id');
         Route::get('/download-all-zip', [DistributorDocumentController::class, 'downloadAllZip'])->name('download.zip');
     });
 

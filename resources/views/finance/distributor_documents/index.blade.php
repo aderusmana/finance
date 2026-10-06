@@ -1,7 +1,35 @@
 <x-app-layout>
     @section('title', 'Manajemen Dokumen Distributor')
 
+    <!-- Select2 & Select2 Bootstrap 5 Theme -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+
     <style>
+        /* Select2 inside Bootstrap 5 Modal */
+        .select2-container--bootstrap-5 {
+            z-index: 1066;
+            width: 100% !important;
+        }
+        .select2-container--bootstrap-5 .select2-dropdown {
+            z-index: 1075 !important;
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+            border: 1px solid #e2e8f0;
+        }
+        .select2-container--bootstrap-5 .select2-results__options {
+            max-height: 240px !important;
+            overflow-y: auto !important;
+        }
+        .select2-container--bootstrap-5 .select2-results__option--highlighted {
+            background-color: #f1f5f9 !important;
+            color: #0f172a !important;
+        }
+        .select2-container--bootstrap-5 .select2-results__option--selected {
+            background-color: #e0e7ff !important;
+            color: #3730a3 !important;
+        }
+
         .month-matrix-container {
             display: inline-flex;
             gap: 4px;
@@ -222,8 +250,8 @@
                         @endfor
                     </select>
                 </form>
-                <button type="button" class="btn btn-sm btn-primary text-nowrap" data-bs-toggle="modal" data-bs-target="#bulkUploadModal">
-                    <i class="iconoir-upload me-1"></i> Upload Massal
+                <button type="button" class="btn btn-sm btn-primary text-nowrap" onclick="openAddDistributorModal()">
+                    <i class="iconoir-plus me-1"></i> Tambah Distributor
                 </button>
             </div>
         </div>
@@ -298,11 +326,20 @@
                                         </td>
                                         <td>
                                             <div class="fw-bold text-dark">{{ $distributor->name }}</div>
-                                            <div class="small text-muted">
-                                                @if ($distributor->email)
-                                                    <span><i class="iconoir-mail me-1"></i>{{ $distributor->email }}</span>
+                                            @php
+                                                $bupotEmails = $distributor->bupot_email_list;
+                                            @endphp
+                                            <div class="small mt-1">
+                                                @if (!empty($bupotEmails))
+                                                    <div class="d-flex flex-wrap gap-1 align-items-center">
+                                                        @foreach ($bupotEmails as $bEmail)
+                                                            <span class="badge bg-light text-dark border fw-normal text-truncate" style="font-size: 0.75rem; max-width: 250px;" title="{{ $bEmail }}">
+                                                                <i class="iconoir-mail me-1 text-primary"></i>{{ $bEmail }}
+                                                            </span>
+                                                        @endforeach
+                                                    </div>
                                                 @else
-                                                    <span class="text-muted">-</span>
+                                                    <span class="text-muted fst-italic">-</span>
                                                 @endif
                                             </div>
                                         </td>
@@ -513,20 +550,129 @@
         </div>
     </div>
 
-    {{-- Modal Mass Upload --}}
-    <div class="modal fade" id="bulkUploadModal" tabindex="-1" aria-labelledby="bulkUploadModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
+    {{-- ======================================================== --}}
+    {{-- MODAL TAMBAH DISTRIBUTOR KE LIST DOKUMEN                 --}}
+    {{-- ======================================================== --}}
+    <div class="modal fade" id="addDistributorModal" tabindex="-1" aria-labelledby="addDistributorModalLabel" aria-hidden="true" style="z-index: 1065;">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow-lg">
-                <div class="modal-header py-2 px-3 bg-white border-bottom d-flex align-items-center justify-content-between">
-                    <h5 class="modal-title fs-6 fw-bold text-dark mb-0 d-flex align-items-center" id="bulkUploadModalLabel">
-                        <i class="iconoir-upload me-2 text-primary"></i>Upload Dokumen Massal
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup" style="filter: none; opacity: 0.8;"></button>
-                </div>
-               <p>coming soon </p>
-                <div class="modal-footer py-2 px-3 bg-white border-top">
-                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Tutup</button>
-                </div>
+                <form id="addDistributorForm" onsubmit="handleAddDistributorSubmit(event)">
+                    @csrf
+                    <div class="modal-header py-2 px-3 bg-white border-bottom d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="iconoir-user-plus text-primary fs-5"></i>
+                            <h6 class="modal-title fw-bold mb-0 text-dark" id="addDistributorModalLabel">Tambah Distributor ke Dokumen</h6>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup" style="filter: none; opacity: 0.8;"></button>
+                    </div>
+
+                    <div class="modal-body p-3">
+                        <div id="addDistributorAlertContainer"></div>
+
+                        {{-- Input Tahun Periode --}}
+                        <div class="mb-3">
+                            <label for="add_year" class="form-label fw-semibold">Tahun Periode <span class="text-danger">*</span></label>
+                            <select id="add_year" name="year" class="form-select form-select-sm" required>
+                                @for ($optionYear = now()->year + 1; $optionYear >= now()->year - 5; $optionYear--)
+                                    <option value="{{ $optionYear }}" @selected((int) $year === $optionYear)>{{ $optionYear }}</option>
+                                @endfor
+                            </select>
+                            <small class="text-muted" style="font-size: 0.75rem;">Distributor akan dimasukkan ke list aktif pada tahun ini.</small>
+                        </div>
+
+                        {{-- Input Pilih Distributor --}}
+                        <div class="mb-3">
+                            <label for="add_distributor_id" class="form-label fw-semibold">Pilih Distributor <span class="text-danger">*</span></label>
+                            <select id="add_distributor_id" name="distributor_id" class="form-select" required style="width: 100%;">
+                                <option value="">-- Cari Kode atau Nama Distributor --</option>
+                                @if(isset($availableDistributors))
+                                    @foreach($availableDistributors as $d)
+                                        <option value="{{ $d->id }}" 
+                                                data-code="{{ $d->code }}" 
+                                                data-name="{{ $d->name }}" 
+                                                data-email="{{ $d->email }}" 
+                                                data-bupot="{{ $d->bupot_email }}">
+                                            [{{ $d->code }}] {{ $d->name }}
+                                        </option>
+                                    @endforeach
+                                @endif
+                            </select>
+                        </div>
+
+                        {{-- Card Preview Info Distributor --}}
+                        <div id="distributorInfoPreview" class="p-2 mb-3 bg-light rounded border" style="display: none; font-size: 0.8rem;">
+                            <div class="fw-bold text-dark mb-1" id="previewDistName">-</div>
+                            <div class="text-muted d-flex align-items-start gap-1">
+                                <span class="text-nowrap"><i class="iconoir-mail me-1 text-primary"></i>Email BuPot:</span>
+                                <div id="previewDistBupotEmail" class="d-flex flex-wrap gap-1"></div>
+                            </div>
+                        </div>
+
+                        {{-- Switch Sekalian Upload Dokumen --}}
+                        <div class="form-check form-switch p-2 ps-5 bg-light rounded border mb-3">
+                            <input class="form-check-input ms-n4 me-2" type="checkbox" role="switch" id="with_upload_switch" name="with_upload" value="1" onchange="toggleUploadSection()">
+                            <label class="form-check-label fw-semibold text-dark" for="with_upload_switch">
+                                Sekalian upload & isi dokumen sekarang?
+                            </label>
+                            <div class="text-muted" style="font-size: 0.75rem;">
+                                Jika diaktifkan, Anda dapat langsung mengunggah file BuPot, TOP Insentif, atau Penjelasan Transfer.
+                            </div>
+                        </div>
+
+                        {{-- Form Section Upload Dokumen (Hidden by default) --}}
+                        <div id="add_upload_section" style="display: none;" class="p-3 border rounded bg-white mb-2 shadow-sm">
+                            <h6 class="fw-bold text-primary mb-2" style="font-size: 0.85rem;">
+                                <i class="iconoir-doc-upload me-1"></i>Unggah Dokumen Pertama
+                            </h6>
+
+                            <div class="mb-2">
+                                <label for="add_doc_type" class="form-label fw-semibold small">Jenis Dokumen <span class="text-danger">*</span></label>
+                                <select id="add_doc_type" name="doc_type" class="form-select form-select-sm" onchange="onAddDocTypeChanged()">
+                                    <option value="bupot">Bukti Potong (BuPot)</option>
+                                    <option value="top_insentif">TOP Insentif</option>
+                                    <option value="transfer">Penjelasan Transfer (Running)</option>
+                                </select>
+                            </div>
+
+                            <div id="add_monthly_wrapper" class="mb-2">
+                                <label for="add_month" class="form-label fw-semibold small">Bulan Dokumen <span class="text-danger">*</span></label>
+                                <select id="add_month" name="month" class="form-select form-select-sm">
+                                    @foreach ([1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April', 5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus', 9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'] as $mNum => $mName)
+                                        <option value="{{ $mNum }}">{{ $mName }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div id="add_transfer_wrapper" class="mb-2" style="display: none;">
+                                <label for="add_transaction_date" class="form-label fw-semibold small">Tanggal Transaksi Transfer <span class="text-danger">*</span></label>
+                                <input type="date" id="add_transaction_date" name="transaction_date" class="form-control form-control-sm">
+                            </div>
+
+                            <div class="mb-2">
+                                <label for="add_title" class="form-label fw-semibold small">Judul / Keterangan Dokumen</label>
+                                <input type="text" id="add_title" name="title" class="form-control form-control-sm" maxlength="255" placeholder="Contoh: BuPot PPh 23 Jan 2026">
+                            </div>
+
+                            <div class="mb-2">
+                                <label for="add_notes" class="form-label fw-semibold small">Catatan Tambahan</label>
+                                <textarea id="add_notes" name="notes" class="form-control form-control-sm" rows="2" placeholder="Catatan opsional"></textarea>
+                            </div>
+
+                            <div class="mb-1">
+                                <label for="add_file" class="form-label fw-semibold small">Pilih Berkas PDF <span class="text-danger">*</span></label>
+                                <input type="file" id="add_file" name="file" class="form-control form-control-sm" accept=".pdf">
+                                <small class="text-muted d-block mt-1" style="font-size: 0.72rem;">Hanya format <strong>PDF</strong>. Maksimal 1 MB.</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer py-2 px-3 bg-white border-top">
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-primary btn-sm" id="btnSubmitAddDistributor">
+                            <i class="iconoir-check me-1"></i> Simpan ke List
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -541,6 +687,7 @@
             let distributorDetailModalInstance = null;
             let previewPdfModalInstance = null;
             let uploadModalInstance = null;
+            let addDistributorModalInstance = null;
 
             document.addEventListener('DOMContentLoaded', function () {
                 var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
@@ -569,6 +716,76 @@
                 const uploadModalEl = document.getElementById('uploadDocumentModal');
                 if (uploadModalEl) {
                     uploadModalInstance = new bootstrap.Modal(uploadModalEl);
+                }
+
+                const addDistModalEl = document.getElementById('addDistributorModal');
+                if (addDistModalEl) {
+                    addDistributorModalInstance = new bootstrap.Modal(addDistModalEl);
+                }
+
+                if (window.jQuery && $.fn.select2) {
+                    $('#add_distributor_id').select2({
+                        theme: 'bootstrap-5',
+                        dropdownParent: $('#addDistributorModal'),
+                        placeholder: '-- Cari Kode atau Nama Distributor --',
+                        allowClear: true,
+                        width: '100%',
+                        matcher: function(params, data) {
+                            if ($.trim(params.term) === '') {
+                                return data;
+                            }
+                            if (typeof data.text === 'undefined') {
+                                return null;
+                            }
+                            var term = params.term.toLowerCase();
+                            var text = data.text.toLowerCase();
+                            var code = ($(data.element).data('code') || '').toString().toLowerCase();
+                            var name = ($(data.element).data('name') || '').toString().toLowerCase();
+
+                            if (text.indexOf(term) > -1 || code.indexOf(term) > -1 || name.indexOf(term) > -1) {
+                                return data;
+                            }
+                            return null;
+                        },
+                        templateResult: function(data) {
+                            if (!data.id) {
+                                return data.text;
+                            }
+                            var code = $(data.element).data('code') || '';
+                            var name = $(data.element).data('name') || data.text;
+                            return $(
+                                '<div class="d-flex align-items-center py-1">' +
+                                    '<span class="badge bg-light text-primary border font-monospace me-2 px-2 py-1" style="font-size: 0.78rem;">' + $('<div>').text(code).html() + '</span>' +
+                                    '<span class="fw-semibold text-dark">' + $('<div>').text(name).html() + '</span>' +
+                                '</div>'
+                            );
+                        }
+                    }).on('change', function () {
+                        let opt = $(this).find('option:selected');
+                        let code = opt.data('code');
+                        let name = opt.data('name');
+                        let bupot = opt.data('bupot');
+
+                        if (code && name) {
+                            $('#previewDistName').text(`[${code}] ${name}`);
+                            let bupotContainer = $('#previewDistBupotEmail');
+                            bupotContainer.empty();
+                            if (bupot && typeof bupot === 'string' && bupot.trim() !== '') {
+                                let emails = bupot.split(/[,;]+/).map(s => s.trim()).filter(s => s.length > 0);
+                                if (emails.length > 0) {
+                                    let badgesHtml = emails.map(em => `<span class="badge bg-white text-dark border fw-normal me-1 mb-1">${$('<div>').text(em).html()}</span>`).join('');
+                                    bupotContainer.html(badgesHtml);
+                                } else {
+                                    bupotContainer.html('<span class="fst-italic text-muted">-</span>');
+                                }
+                            } else {
+                                bupotContainer.html('<span class="fst-italic text-muted">-</span>');
+                            }
+                            $('#distributorInfoPreview').slideDown(150);
+                        } else {
+                            $('#distributorInfoPreview').slideUp(150);
+                        }
+                    });
                 }
 
                 // Global fallback for Escape key to close active modal
@@ -830,6 +1047,125 @@
                 })
                 .catch(err => {
                     alert(err.message);
+                });
+            }
+
+            // ==========================================
+            // TAMBAH DISTRIBUTOR KE LIST & UPLOAD FUNCTIONS
+            // ==========================================
+            function openAddDistributorModal() {
+                const form = document.getElementById('addDistributorForm');
+                if (form) form.reset();
+
+                if (window.jQuery && $.fn.select2) {
+                    $('#add_distributor_id').val('').trigger('change');
+                }
+                const yearSelect = document.getElementById('add_year');
+                if (yearSelect) {
+                    yearSelect.value = currentYear;
+                }
+                const switchEl = document.getElementById('with_upload_switch');
+                if (switchEl) {
+                    switchEl.checked = false;
+                }
+                toggleUploadSection();
+
+                const alertContainer = document.getElementById('addDistributorAlertContainer');
+                if (alertContainer) alertContainer.innerHTML = '';
+
+                const previewEl = document.getElementById('distributorInfoPreview');
+                if (previewEl) previewEl.style.display = 'none';
+
+                if (addDistributorModalInstance) {
+                    addDistributorModalInstance.show();
+                }
+            }
+
+            function toggleUploadSection() {
+                const switchEl = document.getElementById('with_upload_switch');
+                const uploadSection = document.getElementById('add_upload_section');
+                const btnSubmit = document.getElementById('btnSubmitAddDistributor');
+                const fileInput = document.getElementById('add_file');
+
+                if (switchEl && switchEl.checked) {
+                    if (uploadSection) uploadSection.style.display = 'block';
+                    if (btnSubmit) btnSubmit.innerHTML = `<i class="iconoir-upload me-1"></i> Simpan & Unggah Dokumen`;
+                    if (fileInput) fileInput.required = true;
+                } else {
+                    if (uploadSection) uploadSection.style.display = 'none';
+                    if (btnSubmit) btnSubmit.innerHTML = `<i class="iconoir-check me-1"></i> Simpan ke List`;
+                    if (fileInput) fileInput.required = false;
+                }
+            }
+
+            function onAddDocTypeChanged() {
+                const docType = document.getElementById('add_doc_type').value;
+                const monthlyWrapper = document.getElementById('add_monthly_wrapper');
+                const transferWrapper = document.getElementById('add_transfer_wrapper');
+
+                if (docType === 'transfer') {
+                    if (monthlyWrapper) monthlyWrapper.style.display = 'none';
+                    if (transferWrapper) transferWrapper.style.display = 'block';
+                } else {
+                    if (monthlyWrapper) monthlyWrapper.style.display = 'block';
+                    if (transferWrapper) transferWrapper.style.display = 'none';
+                }
+            }
+
+            function handleAddDistributorSubmit(e) {
+                e.preventDefault();
+                const form = e.target;
+                const btnSubmit = document.getElementById('btnSubmitAddDistributor');
+                const alertContainer = document.getElementById('addDistributorAlertContainer');
+                alertContainer.innerHTML = '';
+
+                btnSubmit.disabled = true;
+                const originalText = btnSubmit.innerHTML;
+                btnSubmit.innerHTML = `<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Menyimpan...`;
+
+                const formData = new FormData(form);
+
+                fetch("{{ route('distributor.documents.list.store') }}", {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    },
+                    body: formData
+                })
+                .then(async response => {
+                    const data = await response.json();
+                    if (!response.ok) {
+                        let msg = data.message || 'Terjadi kesalahan saat menyimpan distributor.';
+                        if (data.errors) {
+                            msg = Object.values(data.errors).flat().join('<br>');
+                        }
+                        throw new Error(msg);
+                    }
+                    return data;
+                })
+                .then(data => {
+                    if (addDistributorModalInstance) {
+                        addDistributorModalInstance.hide();
+                    }
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil!',
+                        text: data.message,
+                        timer: 1800,
+                        showConfirmButton: false
+                    }).then(() => {
+                        window.location.href = "{{ route('distributor.documents.index') }}?year=" + data.year;
+                    });
+                })
+                .catch(err => {
+                    btnSubmit.disabled = false;
+                    btnSubmit.innerHTML = originalText;
+                    alertContainer.innerHTML = `
+                        <div class="alert alert-danger py-2 small mb-3">
+                            <i class="iconoir-warning-triangle me-1"></i> ${err.message}
+                        </div>
+                    `;
                 });
             }
         </script>

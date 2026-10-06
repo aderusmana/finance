@@ -34,13 +34,23 @@ class DistributorController extends Controller
                     }, $emails);
                     return '<div class="d-flex flex-wrap gap-1">' . implode('', $badges) . '</div>';
                 })
+                ->editColumn('bupot_email', function($row) {
+                    $emails = $row->bupot_email_list;
+                    if (empty($emails)) {
+                        return '<span class="text-muted fst-italic">-</span>';
+                    }
+                    $badges = array_map(function($e) {
+                        return '<span class="badge bg-light text-dark border me-1 mb-1" style="font-size: 0.78rem; font-weight: normal;"><i class="ph-bold ph-file-text me-1 text-info"></i>' . e($e) . '</span>';
+                    }, $emails);
+                    return '<div class="d-flex flex-wrap gap-1">' . implode('', $badges) . '</div>';
+                })
                 ->addColumn('action', function($row){
                     return '
                         <button class="btn btn-sm btn-primary btn-edit" data-id="'.$row->id.'"><i class="ph-bold ph-pencil"></i> Edit</button>
                         <button class="btn btn-sm btn-danger btn-delete" data-id="'.$row->id.'"><i class="ph-bold ph-trash"></i> Hapus</button>
                     ';
                 })
-                ->rawColumns(['name', 'email', 'action'])
+                ->rawColumns(['name', 'email', 'bupot_email', 'action'])
                 ->make(true);
         }
 
@@ -76,21 +86,26 @@ class DistributorController extends Controller
     public function store(Request $request)
     {
         $emails = $this->parseEmails($request->input('email') ?? $request->input('emails'));
+        $bupotEmails = $this->parseEmails($request->input('bupot_email') ?? $request->input('bupot_emails'));
 
         $request->merge([
-            'email_items' => $emails,
+            'email_items'       => $emails,
+            'bupot_email_items' => $bupotEmails,
         ]);
 
         $request->validate([
-            'customer_id'   => 'nullable|exists:customers,id',
-            'code'          => 'required|string|max:100|unique:distributors,code',
-            'name'          => 'required|string|max:255',
-            'email_items'   => 'required|array|min:1',
-            'email_items.*' => 'required|email|max:255',
+            'customer_id'         => 'nullable|exists:customers,id',
+            'code'                => 'required|string|max:100|unique:distributors,code',
+            'name'                => 'required|string|max:255',
+            'email_items'         => 'required|array|min:1',
+            'email_items.*'       => 'required|email|max:255',
+            'bupot_email_items'   => 'nullable|array',
+            'bupot_email_items.*' => 'required|email|max:255',
         ], [
-            'email_items.required' => 'Email distributor wajib diisi minimal 1 email.',
-            'email_items.min'      => 'Email distributor wajib diisi minimal 1 email.',
-            'email_items.*.email'  => 'Format email :input tidak valid.',
+            'email_items.required'      => 'Email distributor wajib diisi minimal 1 email.',
+            'email_items.min'           => 'Email distributor wajib diisi minimal 1 email.',
+            'email_items.*.email'       => 'Format email :input tidak valid.',
+            'bupot_email_items.*.email' => 'Format email BuPot :input tidak valid.',
         ]);
 
         Distributor::create([
@@ -98,6 +113,7 @@ class DistributorController extends Controller
             'code'        => $request->code,
             'name'        => $request->name,
             'email'       => implode(', ', $emails),
+            'bupot_email' => !empty($bupotEmails) ? implode(', ', $bupotEmails) : null,
         ]);
 
         return response()->json(['success' => true, 'message' => 'Distributor berhasil ditambahkan!']);
@@ -114,21 +130,26 @@ class DistributorController extends Controller
         $distributor = Distributor::findOrFail($id);
 
         $emails = $this->parseEmails($request->input('email') ?? $request->input('emails'));
+        $bupotEmails = $this->parseEmails($request->input('bupot_email') ?? $request->input('bupot_emails'));
 
         $request->merge([
-            'email_items' => $emails,
+            'email_items'       => $emails,
+            'bupot_email_items' => $bupotEmails,
         ]);
 
         $request->validate([
-            'customer_id'   => 'nullable|exists:customers,id',
-            'code'          => 'required|string|max:100|unique:distributors,code,'.$id,
-            'name'          => 'required|string|max:255',
-            'email_items'   => 'required|array|min:1',
-            'email_items.*' => 'required|email|max:255',
+            'customer_id'         => 'nullable|exists:customers,id',
+            'code'                => 'required|string|max:100|unique:distributors,code,'.$id,
+            'name'                => 'required|string|max:255',
+            'email_items'         => 'required|array|min:1',
+            'email_items.*'       => 'required|email|max:255',
+            'bupot_email_items'   => 'nullable|array',
+            'bupot_email_items.*' => 'required|email|max:255',
         ], [
-            'email_items.required' => 'Email distributor wajib diisi minimal 1 email.',
-            'email_items.min'      => 'Email distributor wajib diisi minimal 1 email.',
-            'email_items.*.email'  => 'Format email :input tidak valid.',
+            'email_items.required'      => 'Email distributor wajib diisi minimal 1 email.',
+            'email_items.min'           => 'Email distributor wajib diisi minimal 1 email.',
+            'email_items.*.email'       => 'Format email :input tidak valid.',
+            'bupot_email_items.*.email' => 'Format email BuPot :input tidak valid.',
         ]);
 
         $distributor->update([
@@ -136,6 +157,7 @@ class DistributorController extends Controller
             'code'        => $request->code,
             'name'        => $request->name,
             'email'       => implode(', ', $emails),
+            'bupot_email' => !empty($bupotEmails) ? implode(', ', $bupotEmails) : null,
         ]);
 
         return response()->json(['success' => true, 'message' => 'Distributor berhasil diubah!']);

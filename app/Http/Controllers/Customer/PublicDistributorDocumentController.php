@@ -31,6 +31,7 @@ class PublicDistributorDocumentController extends Controller
 
         // get monthly docs (BuPot & TOP) for the selected year
         $monthlyDocs = DistributorDocument::where('distributor_id', $distributor->id)
+            ->whereNotNull('file_path')
             ->whereIn('doc_type', ['bupot', 'top_insentif'])
             ->where('year', $year)
             ->get()
@@ -102,6 +103,7 @@ class PublicDistributorDocumentController extends Controller
 
         // get monthly documents for this year + all running transfer files
         $documents = DistributorDocument::where('distributor_id', $distributor->id)
+            ->whereNotNull('file_path')
             ->where(function ($query) use ($year) {
                 $query->where(function ($q) use ($year) {
                     $q->whereIn('doc_type', ['bupot', 'top_insentif'])

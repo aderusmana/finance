@@ -64,6 +64,7 @@
                                     <th>Kode Distributor</th>
                                     <th>Nama Distributor</th>
                                     <th>Email</th>
+                                    <th>Email BuPot</th>
                                     <th>Aksi</th>
                                 </tr>
                             </thead>
@@ -131,6 +132,14 @@
                                 <i class="ph-bold ph-info"></i> Ketik email lalu tekan <kbd class="bg-light text-dark border">Enter</kbd> atau <kbd class="bg-light text-dark border">,</kbd> (koma). Bisa memasukkan lebih dari 1 email.
                             </div>
                         </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Email Bukti Potong (BuPot) <span class="text-muted fw-normal">(Opsional)</span></label>
+                            <select name="bupot_email[]" id="bupot_email" class="form-select select2-bupot-email" multiple="multiple" style="width: 100%;">
+                            </select>
+                            <div class="form-text text-muted" style="font-size: 0.78rem;">
+                                <i class="ph-bold ph-info"></i> Ketik email lalu tekan <kbd class="bg-light text-dark border">Enter</kbd> atau <kbd class="bg-light text-dark border">,</kbd> (koma). Bisa memasukkan lebih dari 1 email untuk penerima BuPot.
+                            </div>
+                        </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
@@ -159,6 +168,25 @@
                 tags: true,
                 tokenSeparators: [',', ';', ' '],
                 placeholder: 'Ketik email lalu tekan Enter...',
+                createTag: function (params) {
+                    let term = $.trim(params.term);
+                    if (term === '') {
+                        return null;
+                    }
+                    return {
+                        id: term,
+                        text: term,
+                        newTag: true
+                    };
+                }
+            });
+
+            $('#bupot_email').select2({
+                theme: 'bootstrap-5',
+                dropdownParent: $('#modalForm'),
+                tags: true,
+                tokenSeparators: [',', ';', ' '],
+                placeholder: 'Ketik email BuPot lalu tekan Enter...',
                 createTag: function (params) {
                     let term = $.trim(params.term);
                     if (term === '') {
@@ -210,6 +238,7 @@
                     { data: 'code', name: 'code' },
                     { data: 'name', name: 'name' },
                     { data: 'email', name: 'email' },
+                    { data: 'bupot_email', name: 'bupot_email' },
                     { data: 'action', name: 'action', orderable: false, searchable: false }
                 ]
             });
@@ -283,6 +312,21 @@
                     }
                     $('#email').trigger('change');
 
+                    $('#bupot_email').empty();
+                    let bupotEmailList = data.bupot_email_list;
+                    if (!bupotEmailList && data.bupot_email) {
+                        bupotEmailList = data.bupot_email.split(/[,;]+/).map(s => s.trim()).filter(s => s.length > 0);
+                    }
+                    if (Array.isArray(bupotEmailList)) {
+                        bupotEmailList.forEach(function(em) {
+                            if (em) {
+                                let newOption = new Option(em, em, true, true);
+                                $('#bupot_email').append(newOption);
+                            }
+                        });
+                    }
+                    $('#bupot_email').trigger('change');
+
                     $('#modalTitle').text('Edit Distributor');
                     $('#modalForm').modal('show');
                 });
@@ -323,6 +367,7 @@
             $('#dataId').val('');
             $('#customer_id').val('').trigger('change.select2');
             $('#email').empty().trigger('change');
+            $('#bupot_email').empty().trigger('change');
             $('#modalTitle').text('Tambah Distributor');
             $('#modalForm').modal('show');
         }

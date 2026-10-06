@@ -49,14 +49,18 @@ class DistributorDocument extends Model
     }
 
     // Accessor: public file URL
-    public function getFileUrlAttribute(): string
+    public function getFileUrlAttribute(): ?string
     {
-        return Storage::disk('public')->url($this->file_path);
+        return $this->file_path ? Storage::disk('public')->url($this->file_path) : null;
     }
 
     // Accessor: Human readable file size (KB/MB)
     public function getHumanFileSizeAttribute(): string
     {
+        if (! $this->file_path || $this->file_size <= 0) {
+            return '-';
+        }
+
         $bytes = $this->file_size;
         if ($bytes >= 1048576) {
             return number_format($bytes / 1048576, 2).' MB';
@@ -74,7 +78,8 @@ class DistributorDocument extends Model
             'bupot' => 'Bukti Potong',
             'transfer' => 'Penjelasan Transfer',
             'top_insentif' => 'TOP Insentif',
-            default => ucfirst($this->doc_type),
+            null => 'Pendaftaran',
+            default => ucfirst((string) $this->doc_type),
         };
     }
 
@@ -111,10 +116,18 @@ class DistributorDocument extends Model
         return $query->where('doc_type', $type);
     }
 
+    // Scope: Only documents with physical files
+    public function scopeWithFile($query)
+    {
+        return $query->whereNotNull('file_path');
+    }
+
     // Scope: Get running transfer documents (cross-year from 2020 to present)
     public function scopeRunningTransfers($query, ?int $distributorId = null)
     {
-        $query->where('doc_type', 'transfer');
+        $query->where('doc_type', 'transfer')
+            ->whereNotNull('file_path');
+
         if ($distributorId) {
             $query->where('distributor_id', $distributorId);
         }
