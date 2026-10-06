@@ -64,6 +64,10 @@ class DistributorDocumentController extends Controller
             return $distributor;
         });
 
+        if ($request->ajax()) {
+            return view('finance.distributor_documents.partials.table', compact('distributors', 'year', 'search'));
+        }
+
         // Get all distributors for the Add Distributor modal dropdown option
         $availableDistributors = Distributor::orderBy('code', 'asc')->get(['id', 'code', 'name', 'email', 'bupot_email']);
 
