@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreDistributorDocumentRequest;
 use App\Models\Customer\Distributor;
 use App\Models\Customer\DistributorDocument;
+use App\Models\Customer\DistributorDocumentAttachment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -24,20 +25,23 @@ class DistributorDocumentController extends Controller
                 $q->where('year', $year);
             })
             ->with('customer')
+            ->with(['documents' => function ($q) use ($year) {
+                $q->where('year', $year)->with('attachments');
+            }])
+            ->withCount(['transferDocuments'])
+            ->with(['transferDocuments' => function ($q) {
+                $q->select('id', 'distributor_id', 'transaction_date', 'created_at');
+            }])
             ->when($search, function ($q) use ($search) {
                 $q->where(function ($query) use ($search) {
                     $query->where('distributors.name', 'like', "%{$search}%")
                         ->orWhere('distributors.code', 'like', "%{$search}%");
                 });
             })
-            ->withCount(['transferDocuments'])
-            ->with(['transferDocuments' => function ($q) {
-                $q->select('id', 'distributor_id', 'year', 'transaction_date');
-            }])
             ->orderBy('distributors.name', 'asc')
             ->paginate(15);
 
-        // Map status 12 bulan dan range tahun transfer per distributor
+        // Map 12-month status and transfer year range per distributor
         $distributors->getCollection()->transform(function ($distributor) use ($year) {
             $distributor->monthly_summary = $distributor->getMonthlyDocumentSummary($year);
 
@@ -46,7 +50,7 @@ class DistributorDocumentController extends Controller
                     return (int) $doc->transaction_date->format('Y');
                 }
 
-                return $doc->year ? (int) $doc->year : null;
+                return (int) $doc->created_at->format('Y');
             })->filter()->unique()->sort()->values();
 
             if ($transferYears->isNotEmpty()) {
@@ -60,7 +64,7 @@ class DistributorDocumentController extends Controller
             return $distributor;
         });
 
-        // Ambil semua distributor untuk opsi pilihan dropdown modal Tambah Distributor
+        // Get all distributors for the Add Distributor modal dropdown option
         $availableDistributors = Distributor::orderBy('code', 'asc')->get(['id', 'code', 'name', 'email', 'bupot_email']);
 
         return view('finance.distributor_documents.index', compact('distributors', 'year', 'search', 'availableDistributors'));
@@ -74,29 +78,40 @@ class DistributorDocumentController extends Controller
         $tab = $request->input('tab', 'monthly');
         $tab = in_array($tab, ['monthly', 'transfer'], true) ? $tab : 'monthly';
 
-        $monthlyDocs = DistributorDocument::where('distributor_id', $distributor->id)
-            ->whereNotNull('file_path')
-            ->whereIn('doc_type', ['bupot', 'top_insentif'])
+        // Header document for selected year
+        $yearDoc = DistributorDocument::where('distributor_id', $distributor->id)
             ->where('year', $year)
-            ->get()
-            ->groupBy(['month', 'doc_type']);
+            ->first();
 
-        $transferDocsQuery = DistributorDocument::runningTransfers($distributor->id);
+        $monthlyDocs = $yearDoc
+            ? $yearDoc->attachments()
+                ->whereIn('doc_type', ['bupot', 'top_insentif'])
+                ->whereNotNull('file_path')
+                ->get()
+                ->groupBy(['month', 'doc_type'])
+            : collect();
+
+        $transferDocsQuery = DistributorDocumentAttachment::runningTransfers($distributor->id);
         if ($transferYear && $transferYear !== 'all') {
             $transferDocsQuery->where(function ($q) use ($transferYear) {
                 $q->whereYear('transaction_date', $transferYear)
-                    ->orWhere('year', $transferYear);
+                    ->orWhere(function ($sub) use ($transferYear) {
+                        $sub->whereNull('transaction_date')
+                            ->whereYear('created_at', $transferYear);
+                    });
             });
         }
         $transferDocs = $transferDocsQuery->get();
 
-        // List year for transfer documents (dropdown)
-        $availableTransferYears = DistributorDocument::where('distributor_id', $distributor->id)
+        // List of years for transfer documents (dropdown filter)
+        $availableTransferYears = DistributorDocumentAttachment::where('distributor_id', $distributor->id)
             ->where('doc_type', 'transfer')
             ->whereNotNull('file_path')
             ->get()
             ->map(function ($doc) {
-                return $doc->transaction_date ? (int) $doc->transaction_date->format('Y') : ($doc->year ? (int) $doc->year : null);
+                return $doc->transaction_date
+                    ? (int) $doc->transaction_date->format('Y')
+                    : (int) $doc->created_at->format('Y');
             })
             ->filter()
             ->unique()
@@ -125,8 +140,12 @@ class DistributorDocumentController extends Controller
         $originalName = $file->getClientOriginalName();
         $fileSize = $file->getSize();
         $mimeType = $file->getMimeType();
-        $year = $validated['year'] ?? (int) date('Y');
         $isTransfer = $validated['doc_type'] === 'transfer';
+
+        // Determine year for DistributorDocument header
+        $year = ! empty($validated['year'])
+            ? (int) $validated['year']
+            : (! empty($validated['transaction_date']) ? (int) date('Y', strtotime($validated['transaction_date'])) : (int) date('Y'));
 
         $folderPath = "distributor_docs/{$distributor->code}/{$validated['doc_type']}";
         $hashedFilename = Str::uuid().'.'.$extension;
@@ -138,16 +157,17 @@ class DistributorDocumentController extends Controller
 
         try {
             DB::transaction(function () use ($distributor, $validated, $year, $isTransfer, $originalName, $storedPath, $extension, $fileSize, $mimeType) {
-                // Jika distributor sebelumnya punya record pendaftaran kosong di tahun ini, bersihkan
-                DistributorDocument::where('distributor_id', $distributor->id)
-                    ->where('year', $year)
-                    ->whereNull('file_path')
-                    ->delete();
+                // Ensure DistributorDocument header for this year exists
+                $docHeader = DistributorDocument::firstOrCreate([
+                    'distributor_id' => $distributor->id,
+                    'year' => $year,
+                ]);
 
-                DistributorDocument::create([
+                // Save physical file to attachment table
+                DistributorDocumentAttachment::create([
+                    'distributor_document_id' => $docHeader->id,
                     'distributor_id' => $distributor->id,
                     'doc_type' => $validated['doc_type'],
-                    'year' => $year,
                     'month' => $isTransfer ? null : $validated['month'],
                     'title' => $validated['title'] ?? $originalName,
                     'file_name' => $originalName,
@@ -184,35 +204,19 @@ class DistributorDocumentController extends Controller
 
     public function destroy(Request $request, $id)
     {
-        $document = DistributorDocument::findOrFail($id);
-        $distributorId = $document->distributor_id;
-        $year = $document->year ?? date('Y');
-        $docType = $document->doc_type;
+        $attachment = DistributorDocumentAttachment::with('document')->findOrFail($id);
+        $distributorId = $attachment->distributor_id;
+        $year = $attachment->document->year ?? date('Y');
+        $docType = $attachment->doc_type;
 
-        if ($document->file_path && Storage::disk('public')->exists($document->file_path)) {
-            Storage::disk('public')->delete($document->file_path);
+        if ($attachment->file_path && Storage::disk('public')->exists($attachment->file_path)) {
+            Storage::disk('public')->delete($attachment->file_path);
         }
 
-        $document->delete();
+        $attachment->delete();
 
-        // Cek apakah masih ada dokumen lain untuk distributor ini di tahun yang sama
-        $remainingCount = DistributorDocument::where('distributor_id', $distributorId)
-            ->where('year', $year)
-            ->count();
-
-        // Jika tidak ada record tersisa di tahun ini, pertahankan di list dengan baris pendaftaran kosong
-        if ($remainingCount === 0) {
-            DistributorDocument::create([
-                'distributor_id' => $distributorId,
-                'year' => $year,
-                'doc_type' => null,
-                'file_name' => null,
-                'file_path' => null,
-                'file_ext' => null,
-                'file_size' => 0,
-                'uploaded_by' => auth()->id(),
-            ]);
-        }
+        // Header DistributorDocument still saved in database, so distributor
+        // still appears in the monitoring list for that year even if all its files have been deleted.
 
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
@@ -233,13 +237,13 @@ class DistributorDocumentController extends Controller
 
     public function previewFile($id)
     {
-        $document = DistributorDocument::findOrFail($id);
+        $attachment = DistributorDocumentAttachment::findOrFail($id);
 
-        if (! $document->file_path || ! Storage::disk('public')->exists($document->file_path)) {
+        if (! $attachment->file_path || ! Storage::disk('public')->exists($attachment->file_path)) {
             abort(404, 'File tidak ditemukan di server.');
         }
 
-        $filePath = Storage::disk('public')->path($document->file_path);
+        $filePath = Storage::disk('public')->path($attachment->file_path);
         $allowedMimeTypes = [
             'application/pdf',
             'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -247,10 +251,10 @@ class DistributorDocumentController extends Controller
             'image/jpeg',
             'image/png',
         ];
-        $mimeType = in_array($document->mime_type, $allowedMimeTypes, true)
-            ? $document->mime_type
+        $mimeType = in_array($attachment->mime_type, $allowedMimeTypes, true)
+            ? $attachment->mime_type
             : 'application/octet-stream';
-        $fileName = str_replace(['"', "\r", "\n"], '', $document->file_name);
+        $fileName = str_replace(['"', "\r", "\n"], '', $attachment->file_name);
 
         return response()->file($filePath, [
             'Content-Type' => $mimeType,
@@ -260,25 +264,25 @@ class DistributorDocumentController extends Controller
 
     public function downloadFile(Request $request, $id)
     {
-        $document = DistributorDocument::findOrFail($id);
+        $attachment = DistributorDocumentAttachment::findOrFail($id);
 
-        if (! $document->file_path || ! Storage::disk('public')->exists($document->file_path)) {
+        if (! $attachment->file_path || ! Storage::disk('public')->exists($attachment->file_path)) {
             abort(404, 'File tidak ditemukan.');
         }
 
         // Record download audit trail to database
         DB::table('distributor_document_downloads')->insert([
-            'distributor_document_id' => $document->id,
-            'distributor_id' => $document->distributor_id,
+            'distributor_document_attachment_id' => $attachment->id,
+            'distributor_id' => $attachment->distributor_id,
             'ip_address' => $request->ip(),
             'user_agent' => $request->userAgent(),
             'downloaded_via' => auth()->check() ? 'internal' : 'guest_portal',
             'downloaded_at' => now(),
         ]);
 
-        $filePath = Storage::disk('public')->path($document->file_path);
+        $filePath = Storage::disk('public')->path($attachment->file_path);
 
-        return response()->download($filePath, $document->file_name);
+        return response()->download($filePath, $attachment->file_name);
     }
 
     public function downloadAllZip(Request $request)
@@ -291,17 +295,21 @@ class DistributorDocumentController extends Controller
         $distributor = Distributor::findOrFail($request->distributor_id);
         $year = (int) $request->year;
 
-        $documents = DistributorDocument::where('distributor_id', $distributor->id)
+        // Get monthly document attachments for selected year + all running transfer files
+        $attachments = DistributorDocumentAttachment::where('distributor_id', $distributor->id)
             ->whereNotNull('file_path')
             ->where(function ($query) use ($year) {
                 $query->where(function ($q) use ($year) {
                     $q->whereIn('doc_type', ['bupot', 'top_insentif'])
-                        ->where('year', $year);
+                        ->whereHas('document', function ($docQ) use ($year) {
+                            $docQ->where('year', $year);
+                        });
                 })->orWhere('doc_type', 'transfer');
             })
+            ->with('document')
             ->get();
 
-        if ($documents->isEmpty()) {
+        if ($attachments->isEmpty()) {
             return redirect()->back()->with('error', 'Tidak ada dokumen yang dapat diunduh.');
         }
 
@@ -316,23 +324,23 @@ class DistributorDocumentController extends Controller
 
         $zip = new ZipArchive;
         if ($zip->open($zipFilePath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true) {
-            foreach ($documents as $doc) {
-                if ($doc->file_path && Storage::disk('public')->exists($doc->file_path)) {
-                    $realPath = Storage::disk('public')->path($doc->file_path);
+            foreach ($attachments as $att) {
+                if ($att->file_path && Storage::disk('public')->exists($att->file_path)) {
+                    $realPath = Storage::disk('public')->path($att->file_path);
 
-                    if ($doc->doc_type === 'transfer') {
+                    if ($att->doc_type === 'transfer') {
                         $zipFolder = 'Penjelasan Transfer Running/';
                     } else {
-                        $monthName = sprintf('%02d', $doc->month).' - '.($doc->month_name ?? "Bulan {$doc->month}");
-                        $typeFolder = $doc->doc_type === 'bupot' ? 'Bukti Potong' : 'TOP Insentif';
+                        $monthName = sprintf('%02d', $att->month).' - '.($att->month_name ?? "Bulan {$att->month}");
+                        $typeFolder = $att->doc_type === 'bupot' ? 'Bukti Potong' : 'TOP Insentif';
                         $zipFolder = "Dokumen Bulanan {$year}/{$monthName}/{$typeFolder}/";
                     }
 
-                    $zip->addFile($realPath, $zipFolder.$doc->file_name);
+                    $zip->addFile($realPath, $zipFolder.$att->file_name);
 
                     DB::table('distributor_document_downloads')->insert([
-                        'distributor_document_id' => $doc->id,
-                        'distributor_id' => $doc->distributor_id,
+                        'distributor_document_attachment_id' => $att->id,
+                        'distributor_id' => $att->distributor_id,
                         'ip_address' => $request->ip(),
                         'user_agent' => $request->userAgent(),
                         'downloaded_via' => auth()->check() ? 'internal' : 'guest_portal',
@@ -366,7 +374,7 @@ class DistributorDocumentController extends Controller
         $year = (int) $request->year;
         $withUpload = $request->boolean('with_upload');
 
-        // Check unique (distributor_id, year) di tabel distributor_documents
+        // Check unique (distributor_id, year) in distributor_documents table
         $alreadyInList = DistributorDocument::where('distributor_id', $distributor->id)
             ->where('year', $year)
             ->exists();
@@ -378,7 +386,6 @@ class DistributorDocumentController extends Controller
             ], 422);
         }
 
-        // If user chooses to upload documents
         if ($withUpload) {
             $request->validate([
                 'doc_type' => ['required', 'in:bupot,transfer,top_insentif'],
@@ -407,6 +414,12 @@ class DistributorDocumentController extends Controller
         }
 
         DB::transaction(function () use ($request, $distributor, $year, $withUpload) {
+            // Create DistributorDocument header for registration in the corresponding year
+            $docHeader = DistributorDocument::create([
+                'distributor_id' => $distributor->id,
+                'year' => $year,
+            ]);
+
             if ($withUpload && $request->hasFile('file')) {
                 $file = $request->file('file');
                 $extension = strtolower($file->getClientOriginalExtension());
@@ -423,10 +436,10 @@ class DistributorDocumentController extends Controller
                     throw new \RuntimeException('Gagal menyimpan berkas di server.');
                 }
 
-                DistributorDocument::create([
+                DistributorDocumentAttachment::create([
+                    'distributor_document_id' => $docHeader->id,
                     'distributor_id' => $distributor->id,
                     'doc_type' => $request->doc_type,
-                    'year' => $year,
                     'month' => $isTransfer ? null : $request->month,
                     'title' => $request->title ?? $originalName,
                     'file_name' => $originalName,
@@ -436,19 +449,6 @@ class DistributorDocumentController extends Controller
                     'mime_type' => $mimeType,
                     'transaction_date' => $isTransfer ? $request->transaction_date : null,
                     'notes' => $request->notes ?? null,
-                    'uploaded_by' => auth()->id(),
-                ]);
-            } else {
-                // Simpan pendaftaran distributor kosong (tanpa berkas awal)
-                DistributorDocument::create([
-                    'distributor_id' => $distributor->id,
-                    'year' => $year,
-                    'doc_type' => null,
-                    'file_name' => null,
-                    'file_path' => null,
-                    'file_ext' => null,
-                    'file_size' => 0,
-                    'mime_type' => null,
                     'uploaded_by' => auth()->id(),
                 ]);
             }

@@ -13,8 +13,12 @@ return new class extends Migration
     {
         Schema::create('distributor_document_downloads', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('distributor_document_id')->constrained('distributor_documents')->cascadeOnDelete();
-            $table->foreignId('distributor_id')->constrained('distributors')->cascadeOnDelete();
+            $table->foreignId('distributor_document_attachment_id')
+                ->constrained('distributor_document_attachments', 'id', 'dist_doc_down_att_fk')
+                ->cascadeOnDelete();
+            $table->foreignId('distributor_id')
+                ->constrained('distributors', 'id', 'dist_doc_down_dist_fk')
+                ->cascadeOnDelete();
             $table->string('ip_address', 45)->nullable();
             $table->text('user_agent')->nullable();
             $table->enum('downloaded_via', ['guest_portal', 'internal'])->default('guest_portal');

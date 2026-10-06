@@ -58,20 +58,25 @@ class Distributor extends Model
             ->withTimestamps();
     }
 
-    // all distributor documents
+    // all registered distributor documents (headers per year)
     public function documents()
     {
         return $this->hasMany(DistributorDocument::class);
     }
 
-    // transfer explanation running document
+    // all physical file attachments
+    public function attachments()
+    {
+        return $this->hasMany(DistributorDocumentAttachment::class);
+    }
+
+    // transfer explanation running documents
     public function transferDocuments()
     {
-        return $this->hasMany(DistributorDocument::class)
+        return $this->hasMany(DistributorDocumentAttachment::class)
             ->where('doc_type', 'transfer')
             ->whereNotNull('file_path')
             ->orderByDesc('transaction_date')
-            ->orderByDesc('year')
             ->orderByDesc('created_at');
     }
 
@@ -80,16 +85,22 @@ class Distributor extends Model
      */
     public function getMonthlyDocumentSummary(int $year): array
     {
-        // Only get BuPot and TOP Insentif for the selected year with uploaded files
-        $docs = $this->documents()
-            ->whereNotNull('file_path')
-            ->whereIn('doc_type', ['bupot', 'top_insentif'])
-            ->where('year', $year)
-            ->get();
+        // Check if documents and their attachments are eager-loaded
+        $yearDoc = $this->relationLoaded('documents')
+            ? $this->documents->firstWhere('year', $year)
+            : $this->documents()->where('year', $year)->first();
+
+        if ($yearDoc) {
+            $attachments = $yearDoc->relationLoaded('attachments')
+                ? $yearDoc->attachments->whereIn('doc_type', ['bupot', 'top_insentif'])
+                : $yearDoc->attachments()->whereIn('doc_type', ['bupot', 'top_insentif'])->get();
+        } else {
+            $attachments = collect();
+        }
 
         $summary = [];
         for ($m = 1; $m <= 12; $m++) {
-            $monthDocs = $docs->where('month', $m);
+            $monthDocs = $attachments->where('month', $m);
             $hasBupot = $monthDocs->where('doc_type', 'bupot')->isNotEmpty();
             $hasTop = $monthDocs->where('doc_type', 'top_insentif')->isNotEmpty();
 
@@ -104,7 +115,7 @@ class Distributor extends Model
                 'total' => $monthDocs->count(),
                 'has_bupot' => $hasBupot,
                 'has_top_insentif' => $hasTop,
-                'status' => $status, // complete (hijau), partial (kuning), empty (abu-abu)
+                'status' => $status, // complete (green), partial (yellow), empty (gray)
             ];
         }
 

@@ -2,136 +2,54 @@
 
 namespace App\Models\Customer;
 
-use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Storage;
 
 class DistributorDocument extends Model
 {
     use HasFactory;
 
+    protected $table = 'distributor_documents';
+
     protected $fillable = [
         'distributor_id',
         'year',
-        'month',
-        'doc_type',
-        'title',
-        'file_name',
-        'file_path',
-        'file_ext',
-        'file_size',
-        'mime_type',
-        'transaction_date',
-        'notes',
-        'uploaded_by',
     ];
 
     protected $casts = [
         'year' => 'integer',
-        'month' => 'integer',
-        'transaction_date' => 'date',
-        'file_size' => 'integer',
     ];
 
-    protected $appends = ['file_url', 'human_file_size', 'type_label', 'month_name'];
-
-    // Relation to Distributor
+    // Relation to parent Distributor
     public function distributor()
     {
         return $this->belongsTo(Distributor::class);
     }
 
-    // Relation to User uploader
-    public function uploader()
+    // All physical file attachments under this year header
+    public function attachments()
     {
-        return $this->belongsTo(User::class, 'uploaded_by');
+        return $this->hasMany(DistributorDocumentAttachment::class, 'distributor_document_id');
     }
 
-    // Accessor: public file URL
-    public function getFileUrlAttribute(): ?string
+    // Specific attachments for Withholding Tax (BuPot)
+    public function bupotAttachments()
     {
-        return $this->file_path ? Storage::disk('public')->url($this->file_path) : null;
+        return $this->hasMany(DistributorDocumentAttachment::class, 'distributor_document_id')
+            ->where('doc_type', 'bupot');
     }
 
-    // Accessor: Human readable file size (KB/MB)
-    public function getHumanFileSizeAttribute(): string
+    // Specific attachments for TOP Incentive
+    public function topInsentifAttachments()
     {
-        if (! $this->file_path || $this->file_size <= 0) {
-            return '-';
-        }
-
-        $bytes = $this->file_size;
-        if ($bytes >= 1048576) {
-            return number_format($bytes / 1048576, 2).' MB';
-        } elseif ($bytes >= 1024) {
-            return number_format($bytes / 1024, 1).' KB';
-        }
-
-        return $bytes.' B';
+        return $this->hasMany(DistributorDocumentAttachment::class, 'distributor_document_id')
+            ->where('doc_type', 'top_insentif');
     }
 
-    // Accessor: Document type label (Bupot, Transfer, TOP Insentif)
-    public function getTypeLabelAttribute(): string
+    // Specific attachments for Transfer Explanation
+    public function transferAttachments()
     {
-        return match ($this->doc_type) {
-            'bupot' => 'Bukti Potong',
-            'transfer' => 'Penjelasan Transfer',
-            'top_insentif' => 'TOP Insentif',
-            null => 'Pendaftaran',
-            default => ucfirst((string) $this->doc_type),
-        };
-    }
-
-    // Accessor: Indonesian Month Name
-    public function getMonthNameAttribute(): ?string
-    {
-        if (! $this->month) {
-            return null;
-        }
-
-        $months = [
-            1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
-            5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
-            9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember',
-        ];
-
-        return $months[$this->month] ?? "Bulan {$this->month}";
-    }
-
-    // Scope: Filter by Monthly Period (Bupot & TOP Insentif)
-    public function scopePeriod($query, int $year, ?int $month = null)
-    {
-        $query->where('year', $year);
-        if ($month) {
-            $query->where('month', $month);
-        }
-
-        return $query;
-    }
-
-    // Scope: Filter document type
-    public function scopeOfType($query, string $type)
-    {
-        return $query->where('doc_type', $type);
-    }
-
-    // Scope: Only documents with physical files
-    public function scopeWithFile($query)
-    {
-        return $query->whereNotNull('file_path');
-    }
-
-    // Scope: Get running transfer documents (cross-year from 2020 to present)
-    public function scopeRunningTransfers($query, ?int $distributorId = null)
-    {
-        $query->where('doc_type', 'transfer')
-            ->whereNotNull('file_path');
-
-        if ($distributorId) {
-            $query->where('distributor_id', $distributorId);
-        }
-
-        return $query->orderByDesc('transaction_date')->orderByDesc('year')->orderByDesc('created_at');
+        return $this->hasMany(DistributorDocumentAttachment::class, 'distributor_document_id')
+            ->where('doc_type', 'transfer');
     }
 }

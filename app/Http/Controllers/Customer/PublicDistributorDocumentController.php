@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
 use App\Models\Customer\Distributor;
-use App\Models\Customer\DistributorDocument;
+use App\Models\Customer\DistributorDocumentAttachment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -29,16 +29,18 @@ class PublicDistributorDocumentController extends Controller
         $distributor = Distributor::where('code', $request->code)->firstOrFail();
         $year = (int) $request->year;
 
-        // get monthly docs (BuPot & TOP) for the selected year
-        $monthlyDocs = DistributorDocument::where('distributor_id', $distributor->id)
+        // Get monthly attachments (BuPot & TOP) for selected year
+        $monthlyDocs = DistributorDocumentAttachment::where('distributor_id', $distributor->id)
             ->whereNotNull('file_path')
             ->whereIn('doc_type', ['bupot', 'top_insentif'])
-            ->where('year', $year)
+            ->whereHas('document', function ($q) use ($year) {
+                $q->where('year', $year);
+            })
             ->get()
             ->groupBy(['month', 'doc_type']);
 
-        // get all running transfer explanation documents (multi-year)
-        $transferDocs = DistributorDocument::runningTransfers($distributor->id)->get();
+        // Get all running transfer explanation attachments (multi-year)
+        $transferDocs = DistributorDocumentAttachment::runningTransfers($distributor->id)->get();
 
         return view('auth.portal_distributor_result', compact('distributor', 'year', 'monthlyDocs', 'transferDocs'));
     }
@@ -48,9 +50,9 @@ class PublicDistributorDocumentController extends Controller
      */
     public function previewFile($id)
     {
-        $document = DistributorDocument::findOrFail($id);
+        $document = DistributorDocumentAttachment::findOrFail($id);
 
-        if (! Storage::disk('public')->exists($document->file_path)) {
+        if (! $document->file_path || ! Storage::disk('public')->exists($document->file_path)) {
             abort(404, 'File tidak ditemukan.');
         }
 
@@ -67,15 +69,15 @@ class PublicDistributorDocumentController extends Controller
      */
     public function downloadFile(Request $request, $id)
     {
-        $document = DistributorDocument::findOrFail($id);
+        $document = DistributorDocumentAttachment::findOrFail($id);
 
-        if (! Storage::disk('public')->exists($document->file_path)) {
+        if (! $document->file_path || ! Storage::disk('public')->exists($document->file_path)) {
             abort(404, 'File tidak ditemukan.');
         }
 
         // Record download audit trail to database
         DB::table('distributor_document_downloads')->insert([
-            'distributor_document_id' => $document->id,
+            'distributor_document_attachment_id' => $document->id,
             'distributor_id' => $document->distributor_id,
             'ip_address' => $request->ip(),
             'user_agent' => $request->userAgent(),
@@ -101,13 +103,15 @@ class PublicDistributorDocumentController extends Controller
         $distributor = Distributor::findOrFail($request->distributor_id);
         $year = (int) $request->year;
 
-        // get monthly documents for this year + all running transfer files
-        $documents = DistributorDocument::where('distributor_id', $distributor->id)
+        // Get monthly attachments for this year + all running transfer files
+        $documents = DistributorDocumentAttachment::where('distributor_id', $distributor->id)
             ->whereNotNull('file_path')
             ->where(function ($query) use ($year) {
                 $query->where(function ($q) use ($year) {
                     $q->whereIn('doc_type', ['bupot', 'top_insentif'])
-                        ->where('year', $year);
+                        ->whereHas('document', function ($docQ) use ($year) {
+                            $docQ->where('year', $year);
+                        });
                 })->orWhere('doc_type', 'transfer');
             })
             ->get();
@@ -147,7 +151,7 @@ class PublicDistributorDocumentController extends Controller
 
                     // Log Audit Trail for each file included in the ZIP download
                     DB::table('distributor_document_downloads')->insert([
-                        'distributor_document_id' => $doc->id,
+                        'distributor_document_attachment_id' => $doc->id,
                         'distributor_id' => $doc->distributor_id,
                         'ip_address' => $request->ip(),
                         'user_agent' => $request->userAgent(),

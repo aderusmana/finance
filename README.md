@@ -192,9 +192,11 @@ Distributor mengakses dokumen tanpa login internal karyawan:
 
 ```mermaid
 erDiagram
-    distributors ||--o{ distributor_documents : "memiliki banyak berkas"
-    users ||--o{ distributor_documents : "diunggah oleh"
-    distributor_documents ||--o{ distributor_document_downloads : "dicatat riwayat unduh"
+    distributors ||--o{ distributor_documents : "terdaftar per tahun"
+    distributors ||--o{ distributor_document_attachments : "memiliki berkas"
+    distributor_documents ||--o{ distributor_document_attachments : "memiliki lampiran berkas"
+    distributor_document_attachments ||--o{ distributor_document_downloads : "dicatat riwayat unduh"
+    users ||--o{ distributor_document_attachments : "diunggah oleh"
 
     distributors {
         bigint id PK
@@ -202,19 +204,27 @@ erDiagram
         string code UK "contoh: DST-001"
         string name "Nama Distributor"
         string email
+        text bupot_email "JSON email penerima bukti potong"
         timestamps created_at
     }
 
     distributor_documents {
         bigint id PK
         bigint distributor_id FK
-        smallint year "Nullable: Tahun (wajib untuk bupot/top, opsional arsip transfer misal: 2020)"
-        tinyint month "Nullable: Bulan 1-12 (wajib untuk bupot/top, null untuk transfer)"
+        smallint year "Tahun Dokumen (misal: 2026)"
+        timestamps created_at
+    }
+
+    distributor_document_attachments {
+        bigint id PK
+        bigint distributor_document_id FK
+        bigint distributor_id FK
         enum doc_type "bupot, transfer, top_insentif"
+        tinyint month "Bulan 1-12 (null untuk transfer)"
         string title "Judul/Nama Tampilan Dokumen"
         string file_name "Nama file asli saat diupload"
         string file_path "Path file di storage/app/public"
-        string file_ext "pdf, xlsx, docx, jpg, png"
+        string file_ext "pdf, dll"
         bigint file_size "Ukuran file dalam bytes"
         string mime_type "application/pdf, dsb"
         date transaction_date "Opsional: tgl transfer riil"
@@ -225,7 +235,7 @@ erDiagram
 
     distributor_document_downloads {
         bigint id PK
-        bigint distributor_document_id FK
+        bigint distributor_document_attachment_id FK
         bigint distributor_id FK
         string ip_address
         string user_agent
@@ -236,125 +246,102 @@ erDiagram
 
 ---
 
-### Migration 1: `create_distributor_documents_table.php`
+### Migration 1: `create_distributor_documents_table.php` (Header Pendaftaran per Tahun)
 
 ```php
-<?php
+Schema::create('distributor_documents', function (Blueprint $table) {
+    $table->id();
+    $table->foreignId('distributor_id')->constrained('distributors')->cascadeOnDelete();
+    $table->unsignedSmallInteger('year')->index();
+    $table->timestamps();
 
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
-
-return new class extends Migration
-{
-    public function up(): void
-    {
-        Schema::create('distributor_documents', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('distributor_id')->constrained('distributors')->cascadeOnDelete();
-            
-            // Klasifikasi Dokumen
-            $table->enum('doc_type', ['bupot', 'transfer', 'top_insentif'])->index();
-
-            // Periode Dokumen:
-            // - Wajib untuk 'bupot' & 'top_insentif' (siklus kalender tahunan Jan-Des)
-            // - Nullable untuk 'transfer' (running terus per distributor, bisa dari arsip 2020 s/d sekarang)
-            $table->unsignedSmallInteger('year')->nullable()->index(); // Misal: 2026, atau 2020
-            $table->unsignedTinyInteger('month')->nullable()->index(); // 1 = Januari, 12 = Desember (NULL untuk transfer)
-            
-            // Detail Berkas
-            $table->string('title')->nullable(); // Misal: "Transfer Pelunasan Inv-01", "BuPot PPh 23 Jan"
-            $table->string('file_name');         // Nama file asli
-            $table->string('file_path');         // Path relatif di storage
-            $table->string('file_ext', 20);      // pdf, xlsx, png, dll.
-            $table->unsignedBigInteger('file_size')->default(0); // Dalam byte
-            $table->string('mime_type', 100)->nullable();
-            
-            // Kolom Khusus Penjelasan Transfer Running & Catatan
-            $table->date('transaction_date')->nullable(); // Tanggal riil transaksi transfer
-            $table->text('notes')->nullable();            // Catatan/keterangan transfer berjalan
-            
-            // Audit Log Internal
-            $table->foreignId('uploaded_by')->nullable()->constrained('users')->nullOnDelete();
-            $table->timestamps();
-
-            // Compound Index untuk Performa Query Cepat:
-            // 1. Query Dokumen Bulanan (BuPot & TOP Insentif)
-            $table->index(['distributor_id', 'year', 'month'], 'dist_doc_period_idx');
-            // 2. Query Penjelasan Transfer Running (Mengambil seluruh file transfer distributor tanpa batas tahun)
-            $table->index(['distributor_id', 'doc_type'], 'dist_doc_type_idx');
-            // 3. Query Timeline Transfer Urut Tanggal
-            $table->index(['distributor_id', 'doc_type', 'transaction_date'], 'dist_doc_trf_timeline_idx');
-        });
-    }
-
-    public function down(): void
-    {
-        Schema::dropIfExists('distributor_documents');
-    }
-};
+    $table->unique(['distributor_id', 'year'], 'dist_doc_distributor_year_unique');
+});
 ```
 
 ---
 
-### Migration 2: `create_distributor_document_downloads_table.php` (Audit Log)
+### Migration 2: `create_distributor_document_attachments_table.php` (Berkas Lampiran Fisik)
 
 ```php
-<?php
+Schema::create('distributor_document_attachments', function (Blueprint $table) {
+    $table->id();
+    $table->foreignId('distributor_document_id')->constrained('distributor_documents')->cascadeOnDelete();
+    $table->foreignId('distributor_id')->constrained('distributors')->cascadeOnDelete();
+    $table->enum('doc_type', ['bupot', 'transfer', 'top_insentif'])->index();
+    $table->unsignedTinyInteger('month')->nullable()->index();
+    $table->string('title')->nullable();
+    $table->string('file_name');
+    $table->string('file_path');
+    $table->string('file_ext', 20);
+    $table->unsignedBigInteger('file_size')->default(0);
+    $table->string('mime_type', 100)->nullable();
+    $table->date('transaction_date')->nullable();
+    $table->text('notes')->nullable();
+    $table->foreignId('uploaded_by')->nullable()->constrained('users')->nullOnDelete();
+    $table->timestamps();
 
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
-
-return new class extends Migration
-{
-    public function up(): void
-    {
-        Schema::create('distributor_document_downloads', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('distributor_document_id')->constrained('distributor_documents')->cascadeOnDelete();
-            $table->foreignId('distributor_id')->constrained('distributors')->cascadeOnDelete();
-            $table->string('ip_address', 45)->nullable();
-            $table->text('user_agent')->nullable();
-            $table->enum('downloaded_via', ['guest_portal', 'internal'])->default('guest_portal');
-            $table->timestamp('downloaded_at')->useCurrent();
-
-            $table->index(['distributor_id', 'downloaded_at']);
-        });
-    }
-
-    public function down(): void
-    {
-        Schema::dropIfExists('distributor_document_downloads');
-    }
-};
+    $table->index(['distributor_document_id', 'doc_type', 'month'], 'dist_doc_att_period_idx');
+    $table->index(['distributor_id', 'doc_type'], 'dist_doc_att_type_idx');
+    $table->index(['distributor_id', 'doc_type', 'transaction_date'], 'dist_doc_att_trf_timeline_idx');
+});
 ```
 
 ---
 
-## 6. Rekomendasi Model Eloquent & Relasi Laravel
-
-### Model: `App\Models\Customer\DistributorDocument.php`
+### Migration 3: `create_distributor_document_downloads_table.php` (Audit Log Unduhan)
 
 ```php
-<?php
+Schema::create('distributor_document_downloads', function (Blueprint $table) {
+    $table->id();
+    $table->foreignId('distributor_document_attachment_id')
+        ->constrained('distributor_document_attachments', 'id', 'dist_doc_down_att_fk')
+        ->cascadeOnDelete();
+    $table->foreignId('distributor_id')
+        ->constrained('distributors', 'id', 'dist_doc_down_dist_fk')
+        ->cascadeOnDelete();
+    $table->string('ip_address', 45)->nullable();
+    $table->text('user_agent')->nullable();
+    $table->enum('downloaded_via', ['guest_portal', 'internal'])->default('guest_portal');
+    $table->timestamp('downloaded_at')->useCurrent();
 
-namespace App\Models\Customer;
+    $table->index(['distributor_id', 'downloaded_at'], 'dist_doc_downloaded_at_idx');
+});
+```
 
-use App\Models\User;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Storage;
+---
 
+## 6. Model Eloquent & Relasi Laravel
+
+### Model Header: `App\Models\Customer\DistributorDocument.php`
+
+```php
 class DistributorDocument extends Model
 {
-    use HasFactory;
+    protected $fillable = ['distributor_id', 'year'];
 
+    public function distributor()
+    {
+        return $this->belongsTo(Distributor::class);
+    }
+
+    public function attachments()
+    {
+        return $this->hasMany(DistributorDocumentAttachment::class, 'distributor_document_id');
+    }
+}
+```
+
+### Model Lampiran: `App\Models\Customer\DistributorDocumentAttachment.php`
+
+```php
+class DistributorDocumentAttachment extends Model
+{
     protected $fillable = [
+        'distributor_document_id',
         'distributor_id',
-        'year',
-        'month',
         'doc_type',
+        'month',
         'title',
         'file_name',
         'file_path',
@@ -366,95 +353,19 @@ class DistributorDocument extends Model
         'uploaded_by',
     ];
 
-    protected $casts = [
-        'year' => 'integer',
-        'month' => 'integer',
-        'transaction_date' => 'date',
-        'file_size' => 'integer',
-    ];
-
-    protected $appends = ['file_url', 'human_file_size', 'type_label', 'month_name'];
-
-    // Relasi ke Distributor
-    public function distributor()
+    public function document()
     {
-        return $this->belongsTo(Distributor::class);
+        return $this->belongsTo(DistributorDocument::class, 'distributor_document_id');
     }
 
-    // Relasi ke User pengunggah
+    public function distributor()
+    {
+        return $this->belongsTo(Distributor::class, 'distributor_id');
+    }
+
     public function uploader()
     {
         return $this->belongsTo(User::class, 'uploaded_by');
-    }
-
-    // Accessor: URL Berkas publik / stream
-    public function getFileUrlAttribute(): string
-    {
-        return Storage::disk('public')->url($this->file_path);
-    }
-
-    // Accessor: Ukuran Berkas yang mudah dibaca (KB/MB)
-    public function getHumanFileSizeAttribute(): string
-    {
-        $bytes = $this->file_size;
-        if ($bytes >= 1048576) {
-            return number_format($bytes / 1048576, 2) . ' MB';
-        } elseif ($bytes >= 1024) {
-            return number_format($bytes / 1024, 1) . ' KB';
-        }
-        return $bytes . ' B';
-    }
-
-    // Accessor: Label Tipe yang Manusiawi
-    public function getTypeLabelAttribute(): string
-    {
-        return match ($this->doc_type) {
-            'bupot' => 'Bukti Potong',
-            'transfer' => 'Penjelasan Transfer',
-            'top_insentif' => 'TOP Insentif',
-            default => ucfirst($this->doc_type),
-        };
-    }
-
-    // Accessor: Nama Bulan Bahasa Indonesia
-    public function getMonthNameAttribute(): ?string
-    {
-        if (!$this->month) {
-            return null;
-        }
-
-        $months = [
-            1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
-            5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
-            9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
-        ];
-        return $months[$this->month] ?? "Bulan {$this->month}";
-    }
-
-    // Scope: Filter Berdasarkan Periode Bulanan (Khusus BuPot & TOP Insentif)
-    public function scopePeriod($query, int $year, ?int $month = null)
-    {
-        $query->where('year', $year);
-        if ($month) {
-            $query->where('month', $month);
-        }
-        return $query;
-    }
-
-    // Scope: Filter Tipe Dokumen
-    public function scopeOfType($query, string $type)
-    {
-        return $query->where('doc_type', $type);
-    }
-
-    // Scope: Ambil Dokumen Penjelasan Transfer Running (Lintas Tahun sejak 2020 s/d sekarang)
-    public function scopeRunningTransfers($query, ?int $distributorId = null)
-    {
-        $query->where('doc_type', 'transfer');
-        if ($distributorId) {
-            $query->where('distributor_id', $distributorId);
-        }
-        return $query->orderByDesc('transaction_date')->orderByDesc('year')->orderByDesc('created_at');
     }
 }
 ```
@@ -463,25 +374,27 @@ class DistributorDocument extends Model
 
 ### Update Relasi di `App\Models\Customer\Distributor.php`
 
-Tambahkan relasi ke model `Distributor`:
-
 ```php
-// Tambahkan di dalam App\Models\Customer\Distributor.php
-
-// Semua dokumen
+// Semua header pendaftaran dokumen per tahun
 public function documents()
 {
     return $this->hasMany(DistributorDocument::class);
 }
 
-// Khusus Penjelasan Transfer Running (Multi-year timeline)
+// Semua berkas fisik lampiran
+public function attachments()
+{
+    return $this->hasMany(DistributorDocumentAttachment::class);
+}
+
+// Khusus berkas Penjelasan Transfer Running (Multi-year timeline)
 public function transferDocuments()
 {
-    return $this->hasMany(DistributorDocument::class)
-                ->where('doc_type', 'transfer')
-                ->orderByDesc('transaction_date')
-                ->orderByDesc('year')
-                ->orderByDesc('created_at');
+    return $this->hasMany(DistributorDocumentAttachment::class)
+        ->where('doc_type', 'transfer')
+        ->whereNotNull('file_path')
+        ->orderByDesc('transaction_date')
+        ->orderByDesc('created_at');
 }
 
 /**
