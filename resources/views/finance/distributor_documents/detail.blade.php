@@ -110,6 +110,9 @@
             color: #6b7280;
             border: 1px solid #e5e7eb;
         }
+        .swal2-container {
+            z-index: 99999 !important;
+        }
     </style>
 
     <div class="row m-1 mb-2">
@@ -309,27 +312,68 @@
             }
 
             function deleteDocument(deleteUrl, docTitle) {
-                if (!confirm(`Hapus dokumen "${docTitle}"?`)) return;
+                const escapeHtml = (text) => {
+                    const div = document.createElement('div');
+                    div.textContent = text || '';
+                    return div.innerHTML;
+                };
 
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = deleteUrl;
+                const safeTitle = escapeHtml(docTitle);
 
-                const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-                const csrfInput = document.createElement('input');
-                csrfInput.type = 'hidden';
-                csrfInput.name = '_token';
-                csrfInput.value = csrfToken;
-                form.appendChild(csrfInput);
+                const executeDelete = () => {
+                    Swal.fire({
+                        title: 'Menghapus Dokumen...',
+                        html: 'Mohon tunggu sebentar.',
+                        allowOutsideClick: false,
+                        showConfirmButton: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
 
-                const methodInput = document.createElement('input');
-                methodInput.type = 'hidden';
-                methodInput.name = '_method';
-                methodInput.value = 'DELETE';
-                form.appendChild(methodInput);
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = deleteUrl;
 
-                document.body.appendChild(form);
-                form.submit();
+                    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                    const csrfInput = document.createElement('input');
+                    csrfInput.type = 'hidden';
+                    csrfInput.name = '_token';
+                    csrfInput.value = csrfToken;
+                    form.appendChild(csrfInput);
+
+                    const methodInput = document.createElement('input');
+                    methodInput.type = 'hidden';
+                    methodInput.name = '_method';
+                    methodInput.value = 'DELETE';
+                    form.appendChild(methodInput);
+
+                    document.body.appendChild(form);
+                    form.submit();
+                };
+
+                if (window.Swal) {
+                    Swal.fire({
+                        title: 'Hapus Dokumen?',
+                        html: `Apakah Anda yakin ingin menghapus dokumen <strong>"${safeTitle}"</strong>?<br><small class="text-muted">Berkas akan dihapus secara permanen dari server.</small>`,
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#dc3545',
+                        cancelButtonColor: '#6c757d',
+                        confirmButtonText: '<i class="iconoir-trash me-1"></i> Ya, Hapus!',
+                        cancelButtonText: 'Batal',
+                        reverseButtons: true,
+                        focusCancel: true
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            executeDelete();
+                        }
+                    });
+                } else {
+                    if (confirm(`Hapus dokumen "${docTitle}"?`)) {
+                        executeDelete();
+                    }
+                }
             }
         </script>
     @endpush

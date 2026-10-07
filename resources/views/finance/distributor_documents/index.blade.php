@@ -251,6 +251,9 @@
         #distributorTableContainer {
             transition: opacity 0.2s ease;
         }
+        .swal2-container {
+            z-index: 99999 !important;
+        }
     </style>
 
     {{-- Header Section --}}
@@ -648,6 +651,7 @@
             let currentDistributorId = null;
             let currentYear = {{ (int) $year }};
             let currentTab = 'monthly';
+            let currentTableUrl = null;
             let lastActiveTrigger = null;
 
             let distributorDetailModalInstance = null;
@@ -872,6 +876,7 @@
                     e.preventDefault();
                     const url = $(this).attr('href');
                     if (url) {
+                        currentTableUrl = url;
                         reloadDistributorTable(null, url);
                     }
                 });
@@ -1101,6 +1106,22 @@
 
                     // Refresh Distributor Detail Modal Content
                     loadDistributorDetail(currentDistributorId, currentYear, currentTab);
+
+                    // Auto-refresh main table in background
+                    reloadDistributorTable();
+
+                    // Toast notification for user confirmation
+                    if (window.Swal) {
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: 'success',
+                            title: data.message || 'Dokumen berhasil diunggah.',
+                            showConfirmButton: false,
+                            timer: 2000,
+                            timerProgressBar: true
+                        });
+                    }
                 })
                 .catch(err => {
                     btnSubmit.disabled = false;
@@ -1117,29 +1138,90 @@
             // DELETE DOCUMENT VIA AJAX
             // ==========================================
             function deleteDocument(deleteUrl, docTitle) {
-                if (!confirm(`Hapus dokumen "${docTitle}"?`)) return;
+                const escapeHtml = (text) => {
+                    const div = document.createElement('div');
+                    div.textContent = text || '';
+                    return div.innerHTML;
+                };
 
-                const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                const safeTitle = escapeHtml(docTitle);
 
-                fetch(deleteUrl, {
-                    method: 'DELETE',
-                    headers: {
-                        'X-CSRF-TOKEN': csrfToken,
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Accept': 'application/json'
+                const executeDelete = () => {
+                    Swal.fire({
+                        title: 'Menghapus Dokumen...',
+                        html: 'Mohon tunggu sebentar.',
+                        allowOutsideClick: false,
+                        showConfirmButton: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+                    fetch(deleteUrl, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': csrfToken,
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json'
+                        }
+                    })
+                    .then(response => {
+                        if (!response.ok) throw new Error('Gagal menghapus dokumen.');
+                        return response.json();
+                    })
+                    .then(data => {
+                        Swal.close();
+
+                        // Refresh Distributor Detail Modal Content
+                        loadDistributorDetail(currentDistributorId, currentYear, currentTab);
+
+                        // Auto-refresh main table in background
+                        reloadDistributorTable();
+
+                        // Toast notification for user confirmation
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: 'success',
+                            title: data.message || 'Dokumen berhasil dihapus.',
+                            showConfirmButton: false,
+                            timer: 2000,
+                            timerProgressBar: true
+                        });
+                    })
+                    .catch(err => {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Gagal Menghapus',
+                            text: err.message || 'Terjadi kesalahan saat menghapus dokumen.'
+                        });
+                    });
+                };
+
+                if (window.Swal) {
+                    Swal.fire({
+                        title: 'Hapus Dokumen?',
+                        html: `Apakah Anda yakin ingin menghapus dokumen <strong>"${safeTitle}"</strong>?<br><small class="text-muted">Berkas akan dihapus secara permanen dari server.</small>`,
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#dc3545',
+                        cancelButtonColor: '#6c757d',
+                        confirmButtonText: '<i class="iconoir-trash me-1"></i> Ya, Hapus!',
+                        cancelButtonText: 'Batal',
+                        reverseButtons: true,
+                        focusCancel: true
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            executeDelete();
+                        }
+                    });
+                } else {
+                    if (confirm(`Hapus dokumen "${docTitle}"?`)) {
+                        executeDelete();
                     }
-                })
-                .then(response => {
-                    if (!response.ok) throw new Error('Gagal menghapus dokumen.');
-                    return response.json();
-                })
-                .then(data => {
-                    // Refresh Distributor Detail Modal Content
-                    loadDistributorDetail(currentDistributorId, currentYear, currentTab);
-                })
-                .catch(err => {
-                    alert(err.message);
-                });
+                }
             }
 
             // ==========================================
@@ -1337,9 +1419,16 @@
             function reloadDistributorTable(targetYear = null, targetUrl = null, customSearch = null) {
                 const year = targetYear || $('#header_year').val() || currentYear;
                 const search = customSearch !== null ? customSearch : ($('#search').val() || '');
-                let url = targetUrl || "{{ route('distributor.documents.index') }}";
 
-                if (!targetUrl) {
+                if (targetUrl) {
+                    currentTableUrl = targetUrl;
+                } else if (targetYear || customSearch !== null) {
+                    currentTableUrl = null;
+                }
+
+                let url = targetUrl || currentTableUrl || "{{ route('distributor.documents.index') }}";
+
+                if (!targetUrl && !currentTableUrl) {
                     url += `?year=${encodeURIComponent(year)}&search=${encodeURIComponent(search)}`;
                 }
 
@@ -1378,6 +1467,7 @@
             }
 
             function handleYearFilterChange(newYear) {
+                currentTableUrl = null;
                 currentYear = parseInt(newYear);
                 $('#search_year').val(newYear);
                 reloadDistributorTable(newYear);
@@ -1385,10 +1475,12 @@
 
             function handleSearchSubmit(e) {
                 e.preventDefault();
+                currentTableUrl = null;
                 reloadDistributorTable(null, null, $('#search').val());
             }
 
             function handleResetFilter() {
+                currentTableUrl = null;
                 $('#search').val('');
                 reloadDistributorTable(null, null, '');
             }
