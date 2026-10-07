@@ -60,7 +60,43 @@ class DistributorController extends Controller
             ->orderBy('code', 'asc')
             ->get(['id', 'code', 'name', 'email', 'purchasing_manager_email', 'finance_manager_email']);
 
-        return view('page.master.distributor.index', compact('customers'));
+        return view('page.master.distributor.index', [
+            'customers' => $customers,
+            'isSales'   => $this->isSalesUser(),
+            'isFinance' => $this->isFinanceUser(),
+        ]);
+    }
+
+    protected function isSuperAdminOrIt($user = null): bool
+    {
+        $user = $user ?? auth()->user();
+        if (!$user) {
+            return false;
+        }
+
+        return $user->hasRole(['super-admin', 'it']);
+    }
+
+    protected function isSalesUser($user = null): bool
+    {
+        $user = $user ?? auth()->user();
+        if (!$user || $this->isSuperAdminOrIt($user)) {
+            return false;
+        }
+
+        return $user->hasRole(['staff-sales', 'head-SNM', 'dep-SNM', 'admin-rtm'])
+            || ($user->department && str_contains(strtolower($user->department->name), 'sales'));
+    }
+
+    protected function isFinanceUser($user = null): bool
+    {
+        $user = $user ?? auth()->user();
+        if (!$user || $this->isSuperAdminOrIt($user)) {
+            return false;
+        }
+
+        return $user->hasRole(['staff-finance', 'head-finance', 'manager-finance', 'secretary-finance'])
+            || ($user->department && str_contains(strtolower($user->department->name), 'finance'));
     }
 
     protected function parseEmails($input): array
@@ -85,35 +121,61 @@ class DistributorController extends Controller
 
     public function store(Request $request)
     {
-        $emails = $this->parseEmails($request->input('email') ?? $request->input('emails'));
-        $bupotEmails = $this->parseEmails($request->input('bupot_email') ?? $request->input('bupot_emails'));
+        $isSales = $this->isSalesUser();
+        $isFinance = $this->isFinanceUser();
 
-        $request->merge([
-            'email_items'       => $emails,
-            'bupot_email_items' => $bupotEmails,
-        ]);
+        $rules = [
+            'customer_id' => 'nullable|exists:customers,id',
+            'code'        => 'required|string|max:100|unique:distributors,code',
+            'name'        => 'required|string|max:255',
+        ];
 
-        $request->validate([
-            'customer_id'         => 'nullable|exists:customers,id',
-            'code'                => 'required|string|max:100|unique:distributors,code',
-            'name'                => 'required|string|max:255',
-            'email_items'         => 'required|array|min:1',
-            'email_items.*'       => 'required|email|max:255',
-            'bupot_email_items'   => 'nullable|array',
-            'bupot_email_items.*' => 'required|email|max:255',
-        ], [
-            'email_items.required'      => 'Email distributor wajib diisi minimal 1 email.',
-            'email_items.min'           => 'Email distributor wajib diisi minimal 1 email.',
+        $customMessages = [
             'email_items.*.email'       => 'Format email :input tidak valid.',
             'bupot_email_items.*.email' => 'Format email BuPot :input tidak valid.',
-        ]);
+        ];
+
+        // Email handling: Finance is readonly
+        if (!$isFinance) {
+            $emails = $this->parseEmails($request->input('email') ?? $request->input('emails'));
+            $request->merge(['email_items' => $emails]);
+            $rules['email_items'] = 'nullable|array';
+            $rules['email_items.*'] = 'required|email|max:255';
+            $emailValue = !empty($emails) ? implode(', ', $emails) : null;
+        } else {
+            $emailValue = null;
+            if ($request->customer_id) {
+                $customer = Customer::find($request->customer_id);
+                if ($customer) {
+                    $custEmails = array_values(array_unique(array_filter([
+                        $customer->email,
+                        $customer->purchasing_manager_email,
+                        $customer->finance_manager_email
+                    ])));
+                    $emailValue = !empty($custEmails) ? implode(', ', $custEmails) : null;
+                }
+            }
+        }
+
+        // BuPot email handling: Sales is readonly
+        if (!$isSales) {
+            $bupotEmails = $this->parseEmails($request->input('bupot_email') ?? $request->input('bupot_emails'));
+            $request->merge(['bupot_email_items' => $bupotEmails]);
+            $rules['bupot_email_items'] = 'nullable|array';
+            $rules['bupot_email_items.*'] = 'required|email|max:255';
+            $bupotEmailValue = !empty($bupotEmails) ? implode(', ', $bupotEmails) : null;
+        } else {
+            $bupotEmailValue = null;
+        }
+
+        $request->validate($rules, $customMessages);
 
         Distributor::create([
             'customer_id' => $request->customer_id,
             'code'        => $request->code,
             'name'        => $request->name,
-            'email'       => implode(', ', $emails),
-            'bupot_email' => !empty($bupotEmails) ? implode(', ', $bupotEmails) : null,
+            'email'       => $emailValue,
+            'bupot_email' => $bupotEmailValue,
         ]);
 
         return response()->json(['success' => true, 'message' => 'Distributor berhasil ditambahkan!']);
@@ -128,36 +190,50 @@ class DistributorController extends Controller
     public function update(Request $request, $id)
     {
         $distributor = Distributor::findOrFail($id);
+        $isSales = $this->isSalesUser();
+        $isFinance = $this->isFinanceUser();
 
-        $emails = $this->parseEmails($request->input('email') ?? $request->input('emails'));
-        $bupotEmails = $this->parseEmails($request->input('bupot_email') ?? $request->input('bupot_emails'));
+        $rules = [
+            'customer_id' => 'nullable|exists:customers,id',
+            'code'        => 'required|string|max:100|unique:distributors,code,'.$id,
+            'name'        => 'required|string|max:255',
+        ];
 
-        $request->merge([
-            'email_items'       => $emails,
-            'bupot_email_items' => $bupotEmails,
-        ]);
-
-        $request->validate([
-            'customer_id'         => 'nullable|exists:customers,id',
-            'code'                => 'required|string|max:100|unique:distributors,code,'.$id,
-            'name'                => 'required|string|max:255',
-            'email_items'         => 'required|array|min:1',
-            'email_items.*'       => 'required|email|max:255',
-            'bupot_email_items'   => 'nullable|array',
-            'bupot_email_items.*' => 'required|email|max:255',
-        ], [
-            'email_items.required'      => 'Email distributor wajib diisi minimal 1 email.',
-            'email_items.min'           => 'Email distributor wajib diisi minimal 1 email.',
+        $customMessages = [
             'email_items.*.email'       => 'Format email :input tidak valid.',
             'bupot_email_items.*.email' => 'Format email BuPot :input tidak valid.',
-        ]);
+        ];
+
+        // Email handling: Finance is readonly -> preserve existing
+        if (!$isFinance) {
+            $emails = $this->parseEmails($request->input('email') ?? $request->input('emails'));
+            $request->merge(['email_items' => $emails]);
+            $rules['email_items'] = 'nullable|array';
+            $rules['email_items.*'] = 'required|email|max:255';
+            $emailValue = !empty($emails) ? implode(', ', $emails) : null;
+        } else {
+            $emailValue = $distributor->email;
+        }
+
+        // BuPot email handling: Sales is readonly -> preserve existing
+        if (!$isSales) {
+            $bupotEmails = $this->parseEmails($request->input('bupot_email') ?? $request->input('bupot_emails'));
+            $request->merge(['bupot_email_items' => $bupotEmails]);
+            $rules['bupot_email_items'] = 'nullable|array';
+            $rules['bupot_email_items.*'] = 'required|email|max:255';
+            $bupotEmailValue = !empty($bupotEmails) ? implode(', ', $bupotEmails) : null;
+        } else {
+            $bupotEmailValue = $distributor->bupot_email;
+        }
+
+        $request->validate($rules, $customMessages);
 
         $distributor->update([
             'customer_id' => $request->customer_id,
             'code'        => $request->code,
             'name'        => $request->name,
-            'email'       => implode(', ', $emails),
-            'bupot_email' => !empty($bupotEmails) ? implode(', ', $bupotEmails) : null,
+            'email'       => $emailValue,
+            'bupot_email' => $bupotEmailValue,
         ]);
 
         return response()->json(['success' => true, 'message' => 'Distributor berhasil diubah!']);

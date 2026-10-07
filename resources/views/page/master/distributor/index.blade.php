@@ -36,6 +36,19 @@
         .select2-container--bootstrap-5 .select2-selection--multiple .select2-selection__choice__remove:hover {
             color: #b91c1c !important;
         }
+        .select2-container--bootstrap-5.select2-container--disabled .select2-selection {
+            background-color: #f1f5f9 !important;
+            cursor: not-allowed !important;
+            border-color: #cbd5e1 !important;
+        }
+        .select2-container--bootstrap-5.select2-container--disabled .select2-selection__choice {
+            background-color: #e2e8f0 !important;
+            border-color: #cbd5e1 !important;
+            color: #475569 !important;
+        }
+        .select2-container--bootstrap-5.select2-container--disabled .select2-selection__choice__remove {
+            display: none !important;
+        }
         .select2-container--bootstrap-5 .select2-search--inline .select2-search__field {
             margin-top: 3px;
         }
@@ -125,20 +138,52 @@
                             <input type="text" name="name" id="name" class="form-control" placeholder="Contoh: PT. CITRA BHOGA JAYA" required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">Email Distributor <span class="text-danger">*</span></label>
-                            <select name="email[]" id="email" class="form-select select2-email" multiple="multiple" style="width: 100%;">
-                            </select>
-                            <div class="form-text text-muted" style="font-size: 0.78rem;">
-                                <i class="ph-bold ph-info"></i> Ketik email lalu tekan <kbd class="bg-light text-dark border">Enter</kbd> atau <kbd class="bg-light text-dark border">,</kbd> (koma). Bisa memasukkan lebih dari 1 email.
-                            </div>
+                            @if(!empty($isFinance))
+                                <label class="form-label fw-semibold">
+                                    Email Distributor 
+                                    <span class="badge bg-secondary-subtle text-secondary border ms-1" style="font-size: 0.72rem;">
+                                        <i class="ph-bold ph-lock"></i> Read Only (Sales)
+                                    </span>
+                                </label>
+                                <select name="email[]" id="email" class="form-select select2-email" multiple="multiple" style="width: 100%;" disabled>
+                                </select>
+                                <div class="form-text text-muted" style="font-size: 0.78rem;">
+                                    <i class="ph-bold ph-lock me-1"></i> Email distributor hanya dapat diisi/diubah oleh tim Sales atau terisi otomatis dari Customer.
+                                </div>
+                            @else
+                                <label class="form-label fw-semibold">
+                                    Email Distributor <span class="text-muted fw-normal">(Opsional)</span>
+                                </label>
+                                <select name="email[]" id="email" class="form-select select2-email" multiple="multiple" style="width: 100%;">
+                                </select>
+                                <div class="form-text text-muted" style="font-size: 0.78rem;">
+                                    <i class="ph-bold ph-info"></i> Ketik email lalu tekan <kbd class="bg-light text-dark border">Enter</kbd> atau <kbd class="bg-light text-dark border">,</kbd> (koma). Bisa memasukkan lebih dari 1 email.
+                                </div>
+                            @endif
                         </div>
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">Email Bukti Potong (BuPot) <span class="text-muted fw-normal">(Opsional)</span></label>
-                            <select name="bupot_email[]" id="bupot_email" class="form-select select2-bupot-email" multiple="multiple" style="width: 100%;">
-                            </select>
-                            <div class="form-text text-muted" style="font-size: 0.78rem;">
-                                <i class="ph-bold ph-info"></i> Ketik email lalu tekan <kbd class="bg-light text-dark border">Enter</kbd> atau <kbd class="bg-light text-dark border">,</kbd> (koma). Bisa memasukkan lebih dari 1 email untuk penerima BuPot.
-                            </div>
+                            @if(!empty($isSales))
+                                <label class="form-label fw-semibold">
+                                    Email Bukti Potong (BuPot) 
+                                    <span class="badge bg-secondary-subtle text-secondary border ms-1" style="font-size: 0.72rem;">
+                                        <i class="ph-bold ph-lock"></i> Read Only (Finance)
+                                    </span>
+                                </label>
+                                <select name="bupot_email[]" id="bupot_email" class="form-select select2-bupot-email" multiple="multiple" style="width: 100%;" disabled>
+                                </select>
+                                <div class="form-text text-muted" style="font-size: 0.78rem;">
+                                    <i class="ph-bold ph-lock me-1"></i> Email BuPot hanya dapat diisi/diubah oleh tim Finance.
+                                </div>
+                            @else
+                                <label class="form-label fw-semibold">
+                                    Email Bukti Potong (BuPot) <span class="text-muted fw-normal">(Opsional)</span>
+                                </label>
+                                <select name="bupot_email[]" id="bupot_email" class="form-select select2-bupot-email" multiple="multiple" style="width: 100%;">
+                                </select>
+                                <div class="form-text text-muted" style="font-size: 0.78rem;">
+                                    <i class="ph-bold ph-info"></i> Ketik email lalu tekan <kbd class="bg-light text-dark border">Enter</kbd> atau <kbd class="bg-light text-dark border">,</kbd> (koma). Bisa memasukkan lebih dari 1 email untuk penerima BuPot.
+                                </div>
+                            @endif
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -153,6 +198,8 @@
     @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
+        const isSales = {{ !empty($isSales) ? 'true' : 'false' }};
+        const isFinance = {{ !empty($isFinance) ? 'true' : 'false' }};
         let table;
         $(document).ready(function() {
             $('#customer_id').select2({
@@ -246,16 +293,6 @@
             $('#mainForm').on('submit', function(e){
                 e.preventDefault();
 
-                let emails = $('#email').val();
-                if (!emails || emails.length === 0) {
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'Email Wajib Diisi',
-                        text: 'Silakan masukkan minimal 1 alamat email untuk distributor.'
-                    });
-                    return false;
-                }
-
                 let id = $('#dataId').val();
                 let url = "{{ route('distributors.store') }}";
                 let method = "POST";
@@ -327,6 +364,13 @@
                     }
                     $('#bupot_email').trigger('change');
 
+                    if (isFinance) {
+                        $('#email').prop('disabled', true);
+                    }
+                    if (isSales) {
+                        $('#bupot_email').prop('disabled', true);
+                    }
+
                     $('#modalTitle').text('Edit Distributor');
                     $('#modalForm').modal('show');
                 });
@@ -368,6 +412,12 @@
             $('#customer_id').val('').trigger('change.select2');
             $('#email').empty().trigger('change');
             $('#bupot_email').empty().trigger('change');
+            if (isFinance) {
+                $('#email').prop('disabled', true);
+            }
+            if (isSales) {
+                $('#bupot_email').prop('disabled', true);
+            }
             $('#modalTitle').text('Tambah Distributor');
             $('#modalForm').modal('show');
         }
