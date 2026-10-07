@@ -147,6 +147,12 @@
                                         @endforeach
                                     </select>
                                 </div>
+                                <div id="duplicateWarningBox" class="alert alert-warning d-none d-flex align-items-center gap-2 mb-3" style="border-radius: 0.75rem; font-size: 0.85rem; border: 1px solid #fde68a; background-color: #fffbeb; color: #92400e;">
+                                    <i class="ph-bold ph-warning-circle fs-5 flex-shrink-0"></i>
+                                    <div>
+                                        <strong>Data Sudah Ada!</strong> Kombinasi Distributor dan Customer ini sudah terdaftar di Logistic Fee. Silakan cari datanya di tabel dan gunakan tombol <b>Edit</b>.
+                                    </div>
+                                </div>
                             </div>
 
                             <div id="editModeWrapper" style="display: none;">
@@ -183,7 +189,7 @@
 
                         <div class="modal-footer d-flex justify-content-end gap-2" style="background-color: #f8fafc; border-top: 1px solid #e2e8f0; padding: 1.5rem 2rem;">
                             <button type="button" class="btn btn-light rounded-pill px-4 py-2 fw-bold border shadow-sm" style="color: #475569;" data-bs-dismiss="modal">Cancel</button>
-                            <button type="submit" class="btn rounded-pill px-5 py-2 fw-bold shadow-sm" style="background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%); border: none; color: white;"><i class="ph-bold ph-paper-plane-right me-2"></i>Submit Request</button>
+                            <button type="submit" id="btnSubmitModal" class="btn rounded-pill px-5 py-2 fw-bold shadow-sm" style="background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%); border: none; color: white;"><i class="ph-bold ph-paper-plane-right me-2"></i>Submit Request</button>
                         </div>
                     </form>
                 </div>
@@ -293,28 +299,50 @@
 
                 $('#logistic_fee').on('keyup', function() { $(this).val(formatRupiah($(this).val())); });
 
-                $('#distributor_id').on('change', function() {
-                    let distId = $(this).val();
-                    let custSelect = $('#customer_id');
-                    custSelect.val(null).trigger('change');
-                    if (!distId) {
-                        if (originalCustomerOptionsHtml) custSelect.html(originalCustomerOptionsHtml);
-                        refreshCustomerSelect2(); return;
+                function checkDuplicatePair() {
+                    let distId = $('#distributor_id').val();
+                    let custId = $('#customer_id').val();
+                    let isCreate = !$('#dataId').val();
+
+                    if (isCreate && distId && custId) {
+                        $.get("{{ route('logistic-fees.check-duplicate') }}", { distributor_id: distId, customer_id: custId })
+                            .done(function(res) {
+                                if (res.exists) {
+                                    $('#duplicateWarningBox').removeClass('d-none');
+                                    $('#btnSubmitModal').prop('disabled', true);
+                                } else {
+                                    $('#duplicateWarningBox').addClass('d-none');
+                                    $('#btnSubmitModal').prop('disabled', false);
+                                }
+                            })
+                            .fail(function() {
+                                $('#duplicateWarningBox').addClass('d-none');
+                                $('#btnSubmitModal').prop('disabled', false);
+                            });
+                    } else {
+                        $('#duplicateWarningBox').addClass('d-none');
+                        $('#btnSubmitModal').prop('disabled', false);
                     }
-                    $.get("{{ url('/get-customers-by-distributor') }}/" + distId).done(function(data) {
-                        custSelect.empty().append('<option value="">-- Type to search --</option>');
-                        $.each(data, function(k, v) {
-                            let code = v.customer_code ? v.customer_code : v.code;
-                            let sortName = v.sort_name ? ' [' + v.sort_name + ']' : '';
-                            custSelect.append('<option value="'+v.id+'">'+code+' - '+v.name + sortName + '</option>');
-                        });
-                        refreshCustomerSelect2();
-                    });
+                }
+
+                $('#distributor_id, #customer_id').on('change', function() {
+                    checkDuplicatePair();
                 });
 
                 $('#mainForm').on('submit', function(e) {
                     e.preventDefault();
                     let id = $('#dataId').val();
+
+                    if (!id && $('#btnSubmitModal').prop('disabled')) {
+                        Swal.fire({
+                            title: 'Data Sudah Ada',
+                            html: 'Distributor dan Customer ini sudah terdaftar di Logistic Fee. Silakan cari datanya di tabel dan gunakan tombol <b>Edit</b>.',
+                            icon: 'warning',
+                            confirmButtonColor: '#4f46e5'
+                        });
+                        return;
+                    }
+
                     let url = id ? "{{ url('/logistic-fees') }}/" + id : "{{ route('logistic-fees.store') }}";
                     let method = id ? "PUT" : "POST";
 
@@ -374,7 +402,15 @@
                                         customClass: { confirmButton: 'btn btn-success rounded-pill px-4 fw-bold shadow-sm' }, buttonsStyling: false
                                     });
                                 },
-                                error: function(err) { Swal.fire('Failed', 'An error occurred.', 'error'); }
+                                error: function(err) {
+                                    let msg = (err.responseJSON && err.responseJSON.message) ? err.responseJSON.message : 'An error occurred.';
+                                    Swal.fire({
+                                        title: 'Gagal',
+                                        html: msg,
+                                        icon: 'error',
+                                        confirmButtonColor: '#4f46e5'
+                                    });
+                                }
                             });
                         }
                     });
@@ -392,6 +428,9 @@
                         $('#current_logistic_fee').text('Rp ' + formatRupiah(data.logistic_fee.toString()));
                         $('#logistic_fee').val('');
 
+                        $('#duplicateWarningBox').addClass('d-none');
+                        $('#btnSubmitModal').prop('disabled', false);
+
                         $('#modalTitle').html('<i class="ph-fill ph-pencil-simple-line me-2" style="color: #4f46e5;"></i>Edit Logistic Fee');
                         $('#modalSubtitle').text('Change the price and resend for approval.');
                         $('#createModeWrapper').hide();
@@ -406,11 +445,16 @@
                 $('#mainForm')[0].reset();
                 $('#dataId').val('');
                 $('#old_logistic_fee').val(0);
-                $('#distributor_id').val('').trigger('change');
 
-                if (originalCustomerOptionsHtml) $('#customer_id').html(originalCustomerOptionsHtml);
-                else $('#customer_id').empty().append('<option value="">-- Type to search --</option>');
+                if (originalCustomerOptionsHtml) {
+                    $('#customer_id').html(originalCustomerOptionsHtml);
+                }
+                $('#distributor_id').val('').trigger('change.select2');
+                $('#customer_id').val('').trigger('change.select2');
                 refreshCustomerSelect2();
+
+                $('#duplicateWarningBox').addClass('d-none');
+                $('#btnSubmitModal').prop('disabled', false);
 
                 $('#modalTitle').html('<i class="ph-fill ph-plus-circle me-2" style="color: #4f46e5;"></i>Add Logistic Fee');
                 $('#modalSubtitle').text('Add a new price relationship between Distributor and Customer.');

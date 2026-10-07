@@ -134,6 +134,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('customer-classes', CustomerClassController::class);
     Route::resource('tax', BgTaxController::class);
     Route::resource('limit-rules', BgLimitRuleController::class);
+    Route::get('/logistic-fees/check-duplicate', [LogisticFeeController::class, 'checkDuplicate'])->name('logistic-fees.check-duplicate');
     Route::resource('logistic-fees', LogisticFeeController::class);
     Route::resource('distributors', DistributorController::class);
     Route::resource('customer-ship-tos', CustomerShipToController::class);

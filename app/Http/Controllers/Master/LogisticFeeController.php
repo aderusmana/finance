@@ -188,6 +188,15 @@ class LogisticFeeController extends Controller
         return view('page.master.logistic-fee.index', compact('distributors', 'customers'));
     }
 
+    public function checkDuplicate(Request $request)
+    {
+        $exists = DistributorCustomer::where('distributor_id', $request->distributor_id)
+            ->where('customer_id', $request->customer_id)
+            ->exists();
+
+        return response()->json(['exists' => $exists]);
+    }
+
     public function store(Request $request)
     {
         $request->validate([
@@ -196,15 +205,27 @@ class LogisticFeeController extends Controller
             'logistic_fee'   => 'required|numeric|min:0',
         ]);
 
-        $record = DistributorCustomer::firstOrCreate(
-            ['distributor_id' => $request->distributor_id, 'customer_id' => $request->customer_id],
-            ['logistic_fee' => 0]
-        );
+        $exists = DistributorCustomer::where('distributor_id', $request->distributor_id)
+            ->where('customer_id', $request->customer_id)
+            ->exists();
 
-        $oldFee = $record->logistic_fee;
+        if ($exists) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Distributor dan Customer ini sudah memiliki data Logistic Fee. Silakan cari datanya di tabel dan gunakan tombol <b>Edit</b> untuk mengubah tarif.'
+            ], 422);
+        }
+
         $newFee = $request->logistic_fee;
+        $oldFee = 0;
 
-        $record->update(['status' => 'Pending', 'proposed_fee' => $newFee]);
+        $record = DistributorCustomer::create([
+            'distributor_id' => $request->distributor_id,
+            'customer_id'    => $request->customer_id,
+            'logistic_fee'   => 0,
+            'status'         => 'Pending',
+            'proposed_fee'   => $newFee,
+        ]);
 
         LogisticFeeLog::create([
             'distributor_customer_id' => $record->id,
