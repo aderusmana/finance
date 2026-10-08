@@ -43,7 +43,7 @@ class AllSeeder extends Seeder
             'view approval-path', 'view revision',
             'view customer dashboard', 'view bg dashboard', 'view dashboard area',
             'view logistic fees menu', 'view logistic-fees', 'create logistic-fee', 'update logistic-fee', 'delete logistic-fee',
-            'view logistic-orders menu', 'view logistic-orders', 'create logistic-order', 'update logistic-order', 'delete logistic-order',
+            'view logistic-orders menu', 'view logistic-orders', 'create logistic-order', 'update logistic-order', 'delete logistic-order', 'cancel logistic-order',
         ];
 
         foreach ($permissions as $perm) {
@@ -141,6 +141,13 @@ class AllSeeder extends Seeder
         $staffFinanceRole->syncPermissions([
             'view dashboard', 'view bg dashboard', 'view bank garansi menu',
             'view bg', 'create bg', 'update bg', 'delete bg',
+        ]);
+
+        // Logistic Viewer (View-Only Orders)
+        $logisticViewerRole = Role::updateOrCreate(['name' => 'logistic-viewer-orders']);
+        $logisticViewerRole->syncPermissions([
+            'view logistic-orders menu',
+            'view logistic-orders',
         ]);
 
         // ==========================================

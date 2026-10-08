@@ -64,7 +64,7 @@ class DeliveryNoteItemExport implements FromQuery, WithHeadings, WithMapping, Wi
         });
 
         $user = Auth::user();
-        if (!$user->hasRole(['super-admin', 'sales-ka-approver'])) {
+        if (!$user->hasRole(['super-admin', 'sales-ka-approver', 'logistic-viewer-orders'])) {
             $query->whereHas('logisticOrder', function ($q) use ($user) {
                 $q->where('created_by', $user->id);
             });

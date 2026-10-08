@@ -88,7 +88,7 @@ class LogisticOrderController extends Controller
                 ->select('logistic_orders.*');
 
             $user = Auth::user();
-            if (!$user->hasRole(['super-admin', 'sales-ka-approver'])) {
+            if (!$user->hasRole(['super-admin', 'sales-ka-approver', 'logistic-viewer-orders'])) {
                 $data->where('created_by', $user->id);
             }
 
@@ -179,26 +179,34 @@ class LogisticOrderController extends Controller
                     }
                     return '<span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-3 py-1 rounded-pill"><i class="ph-bold ph-clock me-1"></i> Pending</span>';
                 })
-                ->addColumn('action', function ($row) use ($tab) {
+                ->addColumn('action', function ($row) use ($tab, $user) {
                     $btnDetail = '<button type="button" class="btn btn-sm btn-primary text-white btn-detail shadow-sm px-2 rounded-pill flex-fill" data-id="' . $row->id . '" title="Detail Document"><i class="ph-bold ph-eye"></i></button>';
+
+                    $canCancel = $user->can('cancel logistic-order');
 
                     // TAB DOWNLOADED (Delivery Notes)
                     if ($tab === 'downloaded') {
                         $btnDownload = '<a href="' . URL::signedRoute('public.lo.download', ['id' => $row->id, 'fromEmail' => 0]) . '" target="_blank" class="btn btn-sm btn-success text-white shadow-sm px-2 rounded-pill flex-fill" title="Download DN & PO"><i class="ph-bold ph-printer"></i></a>';
-                        $btnCancel = '<button type="button" class="btn btn-sm btn-danger text-white btn-cancel shadow-sm px-2 rounded-pill flex-fill" data-id="' . $row->id . '" title="Cancel Order"><i class="ph-bold ph-x-circle"></i></button>';
+                        $btnCancel = $canCancel 
+                            ? '<button type="button" class="btn btn-sm btn-danger text-white btn-cancel shadow-sm px-2 rounded-pill flex-fill" data-id="' . $row->id . '" title="Cancel Order"><i class="ph-bold ph-x-circle"></i></button>' 
+                            : '';
                         
                         return '<div class="d-flex flex-row gap-1 align-items-center w-100">' . $btnDetail . $btnDownload . $btnCancel . '</div>';
                     } 
                     
                     // TAB CANCELED
                     if ($tab === 'canceled') {
-                        $btnEdit = '<button type="button" class="btn btn-sm btn-warning text-dark btn-edit shadow-sm px-2 rounded-pill flex-fill" data-id="' . $row->id . '" title="Revise/Resubmit Order"><i class="ph-bold ph-pencil-simple"></i></button>';
+                        $btnEdit = $user->can('update logistic-order')
+                            ? '<button type="button" class="btn btn-sm btn-warning text-dark btn-edit shadow-sm px-2 rounded-pill flex-fill" data-id="' . $row->id . '" title="Revise/Resubmit Order"><i class="ph-bold ph-pencil-simple"></i></button>'
+                            : '';
                         
                         return '<div class="d-flex flex-row gap-1 align-items-center w-100">' . $btnDetail . $btnEdit . '</div>';
                     }
 
                     // TAB PENDING (Logistic Orders)
-                    $btnCancel = '<button type="button" class="btn btn-sm btn-danger text-white btn-cancel shadow-sm px-2 rounded-pill flex-fill" data-id="' . $row->id . '" title="Cancel Order"><i class="ph-bold ph-x-circle"></i></button>';
+                    $btnCancel = $canCancel 
+                        ? '<button type="button" class="btn btn-sm btn-danger text-white btn-cancel shadow-sm px-2 rounded-pill flex-fill" data-id="' . $row->id . '" title="Cancel Order"><i class="ph-bold ph-x-circle"></i></button>' 
+                        : '';
                     
                     return '<div class="d-flex flex-row gap-1 align-items-center w-100">' . $btnDetail . $btnCancel . '</div>';
                 })
@@ -270,7 +278,7 @@ class LogisticOrderController extends Controller
         });
 
         $user = Auth::user();
-        if (!$user->hasRole(['super-admin', 'sales-ka-approver'])) {
+        if (!$user->hasRole(['super-admin', 'sales-ka-approver', 'logistic-viewer-orders'])) {
             $query->whereHas('logisticOrder', function($q) use ($user) {
                 $q->where('created_by', $user->id);
             });
@@ -503,10 +511,17 @@ class LogisticOrderController extends Controller
     }
 
     public function cancel(Request $request, $id)
-        {
-            $request->validate(['reason' => 'required|string']);
-            
-            $order = LogisticOrder::with(['note', 'distributor', 'customer'])->findOrFail($id);
+    {
+        if (!Auth::user()->can('cancel logistic-order')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Anda tidak memiliki hak akses untuk membatalkan order ini.'
+            ], 403);
+        }
+
+        $request->validate(['reason' => 'required|string']);
+        
+        $order = LogisticOrder::with(['note', 'distributor', 'customer'])->findOrFail($id);
             
             $order->update([
                 'cancel_reason' => $request->reason,

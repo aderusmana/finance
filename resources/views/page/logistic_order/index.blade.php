@@ -121,11 +121,13 @@
                             Pending status.</p>
                     </div>
 
-                    {{-- Tombol Buat Order (Hanya tampil di tab Pending) --}}
+                    {{-- Tombol Buat Order (Hanya tampil jika memiliki permission create logistic-order) --}}
+                    @can('create logistic-order')
                     <button class="btn btn-primary px-4 py-2 rounded-pill fw-semibold shadow-sm" id="btn-create-order"
                         onclick="openModal()">
                         <i class="ph-bold ph-plus me-1"></i> New Order
                     </button>
+                    @endcan
                 </div>
 
                 {{-- AREA FILTER + EXPORT --}}
@@ -1258,6 +1260,21 @@
                                         if (res2.isConfirmed) {
                                             openEditModal(id);
                                         }
+                                    });
+                                },
+                                error: function(xhr) {
+                                    let msg = xhr.responseJSON && xhr.responseJSON.message 
+                                        ? xhr.responseJSON.message 
+                                        : 'Failed to cancel order.';
+                                    Swal.fire({
+                                        title: 'Gagal!',
+                                        text: msg,
+                                        icon: 'error',
+                                        confirmButtonText: 'Tutup',
+                                        customClass: { 
+                                            confirmButton: 'btn btn-secondary px-4 shadow-sm' 
+                                        },
+                                        buttonsStyling: false
                                     });
                                 }
                             });
