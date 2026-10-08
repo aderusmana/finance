@@ -315,7 +315,7 @@
     <div class="row mb-5 pb-5">
         <div class="col-12">
             <div id="distributorTableContainer">
-                @include('finance.distributor_documents.partials.table', ['distributors' => $distributors, 'year' => $year, 'search' => $search])
+                @include('page.distributor_documents.partials.table', ['distributors' => $distributors, 'year' => $year, 'search' => $search])
             </div>
         </div>
     </div>
@@ -345,15 +345,15 @@
     </div>
 
     {{-- PDF DOCUMENT PREVIEW MODAL (IFRAME EMBED VIEWER) --}}
-    @include('finance.distributor_documents.partials.preview-modal')
+    @include('page.distributor_documents.partials.preview-modal')
 
     {{-- DOCUMENT UPLOAD MODAL --}}
-    @include('finance.distributor_documents.partials.upload-modal', [
+    @include('page.distributor_documents.partials.upload-modal', [
         'year' => $year,
     ])
 
     {{-- MODAL ADD DISTRIBUTOR TO DOCUMENT LIST --}}
-    @include('finance.distributor_documents.partials.add-distributor-modal', [
+    @include('page.distributor_documents.partials.add-distributor-modal', [
         'year' => $year,
         'availableDistributors' => $availableDistributors,
     ])

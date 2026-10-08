@@ -94,4 +94,4 @@
 {{-- ======================================================== --}}
 {{-- 3. PDF DOCUMENT PREVIEW MODAL                            --}}
 {{-- ======================================================== --}}
-@include('finance.distributor_documents.partials.preview-modal')
+@include('page.distributor_documents.partials.preview-modal')

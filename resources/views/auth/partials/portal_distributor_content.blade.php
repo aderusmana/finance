@@ -1,4 +1,4 @@
-@include('finance.distributor_documents.partials.detail-content', [
+@include('page.distributor_documents.partials.detail-content', [
     'distributor' => $distributor,
     'year' => $year,
     'tab' => $tab ?? 'monthly',

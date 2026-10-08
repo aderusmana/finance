@@ -124,14 +124,14 @@
     </div>
 
     <div id="detailContentContainer" class="mb-5 pb-5">
-        @include('finance.distributor_documents.partials.detail-content')
+        @include('page.distributor_documents.partials.detail-content')
     </div>
 
     {{-- Modal PDF Viewer --}}
-    @include('finance.distributor_documents.partials.preview-modal')
+    @include('page.distributor_documents.partials.preview-modal')
 
     {{-- Modal Upload Document --}}
-    @include('finance.distributor_documents.partials.upload-modal', [
+    @include('page.distributor_documents.partials.upload-modal', [
         'distributor' => $distributor,
         'year' => $year,
     ])

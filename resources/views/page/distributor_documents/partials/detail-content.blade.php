@@ -147,8 +147,8 @@
 
                             @forelse ($bupotDocuments as $doc)
                                 <div class="doc-item-row d-flex justify-content-between align-items-center">
-                                    @include('finance.distributor_documents.partials.document-file', ['document' => $doc])
-                                    @include('finance.distributor_documents.partials.document-actions', [
+                                    @include('page.distributor_documents.partials.document-file', ['document' => $doc])
+                                    @include('page.distributor_documents.partials.document-actions', [
                                         'document' => $doc,
                                         'isPortal' => $isPortal,
                                         'canManage' => $canManage,
@@ -178,8 +178,8 @@
 
                             @forelse ($topDocuments as $doc)
                                 <div class="doc-item-row d-flex justify-content-between align-items-center">
-                                    @include('finance.distributor_documents.partials.document-file', ['document' => $doc])
-                                    @include('finance.distributor_documents.partials.document-actions', [
+                                    @include('page.distributor_documents.partials.document-file', ['document' => $doc])
+                                    @include('page.distributor_documents.partials.document-actions', [
                                         'document' => $doc,
                                         'isPortal' => $isPortal,
                                         'canManage' => $canManage,
@@ -268,7 +268,7 @@
                                     @endif
                                 </td>
                                 <td>
-                                    @include('finance.distributor_documents.partials.document-file', ['document' => $doc])
+                                    @include('page.distributor_documents.partials.document-file', ['document' => $doc])
                                 </td>
                                 <td>
                                     <span class="text-secondary">{{ $doc->notes ?: '-' }}</span>
@@ -277,7 +277,7 @@
                                     <span class="badge bg-light text-dark border">{{ $doc->human_file_size }}</span>
                                 </td>
                                 <td class="text-end pe-3">
-                                    @include('finance.distributor_documents.partials.document-actions', [
+                                    @include('page.distributor_documents.partials.document-actions', [
                                         'document' => $doc,
                                         'isPortal' => $isPortal,
                                         'canManage' => $canManage,

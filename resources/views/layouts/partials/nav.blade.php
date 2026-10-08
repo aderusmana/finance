@@ -169,10 +169,10 @@
             @can('manage-distributor-docs')
                 <li class="menu-title text-white"><span>Distributors</span></li>
                 <li>
-                    <a aria-expanded="false" data-bs-toggle="collapse" href="#finance-admin-menu">
+                    <a aria-expanded="false" data-bs-toggle="collapse" href="#distributor-docs-menu">
                         <i class="iconoir-folder"></i> Distributor Documents
                     </a>
-                    <ul class="collapse" id="finance-admin-menu">
+                    <ul class="collapse" id="distributor-docs-menu">
                         <li><a href="{{ route('distributor.documents.index') }}">Distributor List</a></li>
                     </ul>
                 </li>

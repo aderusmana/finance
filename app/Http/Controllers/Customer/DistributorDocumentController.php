@@ -28,13 +28,13 @@ class DistributorDocumentController extends Controller
         $distributors = $this->documentService->getMonitoringDistributors($year, $search, 15);
 
         if ($request->ajax()) {
-            return view('finance.distributor_documents.partials.table', compact('distributors', 'year', 'search'));
+            return view('page.distributor_documents.partials.table', compact('distributors', 'year', 'search'));
         }
 
         // Get all distributors for the Add Distributor modal dropdown option
         $availableDistributors = Distributor::orderBy('code', 'asc')->get(['id', 'code', 'name', 'email', 'bupot_email']);
 
-        return view('finance.distributor_documents.index', compact('distributors', 'year', 'search', 'availableDistributors'));
+        return view('page.distributor_documents.index', compact('distributors', 'year', 'search', 'availableDistributors'));
     }
 
     public function detailView(Request $request, $distributorId): View
@@ -53,10 +53,10 @@ class DistributorDocumentController extends Controller
 
         // Return partial view if requested via AJAX (Modal Detail)
         if ($request->ajax() || $request->has('ajax')) {
-            return view('finance.distributor_documents.partials.detail-content', $viewData);
+            return view('page.distributor_documents.partials.detail-content', $viewData);
         }
 
-        return view('finance.distributor_documents.detail', $viewData);
+        return view('page.distributor_documents.detail', $viewData);
     }
 
     public function storeUpload(StoreDistributorDocumentRequest $request): JsonResponse|RedirectResponse
