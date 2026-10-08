@@ -1955,28 +1955,41 @@
                     @csrf
                     <div class="card modal-body p-4">
                         <div class="alert alert-info border-0 shadow-sm f-s-13">
-                            <i class="ph-fill ph-info me-2"></i> Gunakan format CSV standar untuk memigrasi data. Data
-                            yang di-import akan langsung masuk sebagai <strong>Active</strong> &
-                            <strong>Approved</strong>.
+                            <div class="d-flex align-items-start">
+                                <i class="ph-fill ph-info f-s-18 me-2 text-primary mt-1"></i>
+                                <div>
+                                    Please use the provided Excel (<strong>.xlsx</strong>) or CSV template. 
+                                    Customer data should be entered in <strong>Sheet 1</strong> (including <strong>Customer Type</strong>). 
+                                    <strong>Sheets 2 to 5</strong> provide reference data (Customer Class, Account Group, Field Instructions, & Sales Representatives).
+                                    <div class="mt-1 text-muted f-s-12">All imported customers will automatically be set as <strong>Active</strong> & <strong>Approved</strong>.</div>
+                                </div>
+                            </div>
                         </div>
 
-                        <div class="mb-4 text-center">
+                        <div class="mb-4 text-center d-flex justify-content-center gap-2">
                             <a href="{{ route('customers.template') }}"
-                                class="btn btn-sm btn-outline-primary rounded-pill px-4">
-                                <i class="ph-bold ph-download-simple me-1"></i> Download Template CSV
+                                class="btn btn-sm btn-outline-primary rounded-pill px-3 shadow-sm fw-semibold">
+                                <i class="ph-bold ph-file-xls me-1 text-success f-s-16"></i> Download Excel Template (.xlsx)
+                            </a>
+                            <a href="{{ route('customers.template', ['format' => 'csv']) }}"
+                                class="btn btn-sm btn-outline-secondary rounded-pill px-3 shadow-sm fw-semibold">
+                                <i class="ph-bold ph-file-csv me-1 f-s-16"></i> CSV Template
                             </a>
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label fw-bold">Pilih File CSV <span
+                            <label class="form-label fw-bold">Select Import File (.xlsx, .xls, .csv) <span
                                     class="text-danger">*</span></label>
-                            <input type="file" class="form-control" name="file" accept=".csv" required>
+                            <input type="file" class="form-control" name="file" accept=".xlsx,.xls,.csv,.txt" required>
+                            <small class="text-muted d-block mt-1">
+                                <i class="ph-bold ph-check-circle text-success me-1"></i> Supported formats: <strong>Excel (.xlsx, .xls)</strong> and <strong>CSV (.csv)</strong>. Maximum file size: 10MB.
+                            </small>
                         </div>
                     </div>
                     <div class="modal-footer bg-white">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                         <button type="submit" class="btn btn-success fw-bold"><i
-                                class="ph-bold ph-check me-1"></i> Mulai Import</button>
+                                class="ph-bold ph-check me-1"></i> Start Import</button>
                     </div>
                 </form>
             </div>
@@ -4092,7 +4105,7 @@
                             if (response.success) {
                                 Swal.fire({
                                     icon: 'success',
-                                    title: 'Import Selesai!',
+                                    title: 'Import Completed!',
                                     text: response.message,
                                     timer: 2500,
                                     showConfirmButton: false

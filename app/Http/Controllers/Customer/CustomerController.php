@@ -32,6 +32,9 @@ use App\Traits\ApprovalTrait;
 use Illuminate\Http\UploadedFile;
 use App\Models\Master\Revision;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\CustomerImportTemplateExport;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class CustomerController extends Controller
 {
@@ -1736,240 +1739,305 @@ class CustomerController extends Controller
             ->make(true);
     }
 
-    public function downloadTemplate()
+    public function downloadTemplate(Request $request)
     {
-        $headers = [
-            'Content-type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename=template_import_customers_lengkap.csv',
-            'Pragma' => 'no-cache',
-            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
-            'Expires' => '0',
-        ];
+        if ($request->get('format') === 'csv') {
+            $headers = [
+                'Content-type' => 'text/csv',
+                'Content-Disposition' => 'attachment; filename=template_import_customers.csv',
+                'Pragma' => 'no-cache',
+                'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+                'Expires' => '0',
+            ];
 
-        $columns = [
-            'user_id',
-            'code',
-            'no_pkd',
-            'pic',
-            'name',
-            'sort_name',
-            'customer_class',
-            'account_group',
-            'address1',
-            'address2',
-            'address3',
-            'city',
-            'postal_code',
-            'country',
-            'shipping_to_name',
-            'shipping_to_address',
-            'purchasing_manager_name',
-            'purchasing_manager_email',
-            'finance_manager_name',
-            'finance_manager_email',
-            'penagihan_nama_kontak',
-            'penagihan_telepon',
-            'penagihan_address',
-            'surat_menyurat_address',
-            'email',
-            'tax_contact_name',
-            'tax_contact_email',
-            'tax_contact_phone',
-            'npwp',
-            'tanggal_npwp',
-            'nppkp',
-            'tanggal_nppkp',
-            'no_pengukuhan_kaber',
-            'output_tax',
-            'term_of_payment',
-            'lead_time',
-            'credit_limit',
-            'ccar',
-            'bank_garansi',
-            'area',
-            'status',
-            'pembagian',
-            'customer_total',
-            'virtual_account',
-            'payment_days',
-            'payment_date',
-            'faktur_days',
-            'faktur_date',
-            'join_date'
-        ];
+            $sheet = new \App\Exports\Sheets\CustomerImportTemplateSheet();
+            $columns = $sheet->headings();
+            $rows = $sheet->array();
 
-        $callback = function () use ($columns) {
-            $file = fopen('php://output', 'w');
-            fputcsv($file, $columns, ';');
+            $callback = function () use ($columns, $rows) {
+                $file = fopen('php://output', 'w');
+                fputcsv($file, $columns, ';');
+                foreach ($rows as $row) {
+                    fputcsv($file, $row, ';');
+                }
+                fclose($file);
+            };
 
-            fputcsv($file, [
-                '1',
-                'CUST-001',
-                'NULL',
-                'Bapak Budi',
-                'PT Maju Jaya',
-                'MJY',
-                '1',
-                '1',
-                'Jl. Sudirman No 1',
-                'NULL',
-                'NULL',
-                'Jakarta',
-                '12345',
-                'Indonesia',
-                'Bapak Andi',
-                'Jl. Gudang Baru No 2',
-                'Bapak Coki',
-                'coki@majujaya.com',
-                'Ibu Dini',
-                'dini@majujaya.com',
-                'Ibu Eka',
-                '08123456789',
-                'Jl. Sudirman No 1',
-                'Jl. Sudirman No 1',
-                'info@majujaya.com',
-                'Ibu Fani',
-                'tax@majujaya.com',
-                '08123456780',
-                '12.345.678.9-123.000',
-                '2020-01-01',
-                'NULL',
-                'NULL',
-                'NULL',
-                'PPN',
-                '30',
-                '0',
-                '10000000',
-                'smd_idr',
-                'TIDAK',
-                'Jabodetabek',
-                'Active',
-                'NULL',
-                '0',
-                '1234567890',
-                'Senin,Selasa',
-                '15,30',
-                'Rabu,Kamis',
-                '10,20',
-                '2026-03-11'
-            ], ';');
-            fclose($file);
-        };
+            return response()->stream($callback, 200, $headers);
+        }
 
-        return response()->stream($callback, 200, $headers);
+        return Excel::download(new CustomerImportTemplateExport, 'template_import_customers.xlsx');
     }
 
     public function import(Request $request)
     {
         $request->validate([
-            'file' => 'required|mimes:csv,txt|max:5120',
+            'file' => 'required|file|mimes:xlsx,xls,csv,txt|max:10240',
+        ], [
+            'file.required' => 'The import file is required.',
+            'file.mimes'    => 'The file must be an Excel (.xlsx, .xls) or CSV (.csv) file.',
+            'file.max'      => 'The file size must not exceed 10MB.',
         ]);
 
         $file = $request->file('file');
-        $content = file_get_contents($file->getPathname());
-        $delimiter = strpos(substr($content, 0, 500), ';') !== false ? ';' : ',';
+        $ext = strtolower($file->getClientOriginalExtension());
+        $rows = [];
 
-        $handle = fopen($file->getPathname(), "r");
+        try {
+            if (in_array($ext, ['xlsx', 'xls'])) {
+                $spreadsheet = IOFactory::load($file->getPathname());
+                // Load Sheet 1 (index 0) containing customer import data
+                $sheet = $spreadsheet->getSheet(0);
+                $rows = $sheet->toArray(null, true, true, false);
+            } else {
+                $content = file_get_contents($file->getPathname());
+                $delimiter = strpos(substr($content, 0, 500), ';') !== false ? ';' : ',';
+                $handle = fopen($file->getPathname(), "r");
+                while (($row = fgetcsv($handle, 2000, $delimiter)) !== false) {
+                    $rows[] = $row;
+                }
+                fclose($handle);
+            }
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to read file: ' . $e->getMessage()
+            ], 422);
+        }
 
-        $header = fgetcsv($handle, 1000, $delimiter);
-        $header[0] = preg_replace('/[\x00-\x1F\x80-\xFF]/', '', $header[0]);
-        $header = array_map('trim', $header);
+        if (empty($rows) || count($rows) < 2) {
+            return response()->json([
+                'success' => false,
+                'message' => 'The file is empty or contains only header rows.'
+            ], 422);
+        }
+
+        $rawHeader = array_shift($rows);
+        $header = [];
+        foreach ($rawHeader as $h) {
+            $hClean = preg_replace('/[\x00-\x1F\x80-\xFF]/', '', (string)$h);
+            $header[] = strtolower(trim($hClean));
+        }
 
         $importedCount = 0;
+        $updatedCount = 0;
 
         DB::beginTransaction();
         try {
-            while (($row = fgetcsv($handle, 1000, $delimiter)) !== FALSE) {
-                if (array_filter($row)) {
-                    if (count($header) !== count($row)) {
-                        continue;
+            foreach ($rows as $row) {
+                // Skip empty rows
+                if (empty(array_filter($row, fn($v) => !is_null($v) && trim((string)$v) !== ''))) {
+                    continue;
+                }
+
+                if (count($row) < count($header)) {
+                    $row = array_pad($row, count($header), null);
+                }
+                $data = array_combine($header, array_slice($row, 0, count($header)));
+
+                $clean = function ($key, $default = null) use ($data) {
+                    if (!isset($data[$key])) {
+                        return $default;
                     }
+                    $val = trim((string)$data[$key]);
+                    if ($val === '' || strtoupper($val) === 'NULL') {
+                        return $default;
+                    }
+                    return $val;
+                };
 
-                    $data = array_combine($header, $row);
-                    $clean = function ($key, $default = null) use ($data) {
-                        $val = isset($data[$key]) ? trim($data[$key]) : null;
-                        if ($val === '' || strtoupper($val) === 'NULL') {
-                            return $default;
+                $name = $clean('name');
+                $code = $clean('code');
+
+                // Skip if both name and code are empty
+                if (!$name && !$code) {
+                    continue;
+                }
+
+                // Resolve User ID safely
+                $rawUserId = $clean('user_id');
+                $userId = null;
+                if ($rawUserId && is_numeric($rawUserId)) {
+                    if (User::where('id', (int) $rawUserId)->exists()) {
+                        $userId = (int) $rawUserId;
+                    }
+                }
+                if (!$userId) {
+                    $userId = Auth::id() ?? User::first()?->id ?? 1;
+                }
+
+                // Customer Type
+                $rawCustomerType = $clean('customer_type', 'Company/Badan Usaha');
+                if (stripos($rawCustomerType, 'Individu') !== false || stripos($rawCustomerType, 'Perorangan') !== false) {
+                    $customerType = 'Individual/Perorangan';
+                } else {
+                    $customerType = 'Company/Badan Usaha';
+                }
+
+                // Customer Class (ID or name lookup)
+                $rawCc = $clean('customer_class') ?? $clean('customer_class_id');
+                $customerClassId = null;
+                if ($rawCc) {
+                    if (is_numeric($rawCc)) {
+                        $customerClassId = (int) $rawCc;
+                    } else {
+                        $foundCc = CustomerClass::where('name_class', 'LIKE', $rawCc)->first();
+                        $customerClassId = $foundCc ? $foundCc->id : null;
+                    }
+                }
+
+                // Account Group (ID or name lookup)
+                $rawAg = $clean('account_group') ?? $clean('account_group_id');
+                $accountGroupId = null;
+                if ($rawAg) {
+                    if (is_numeric($rawAg)) {
+                        $accountGroupId = (int) $rawAg;
+                    } else {
+                        $foundAg = AccountGroup::where('name_account_group', 'LIKE', $rawAg)->first();
+                        $accountGroupId = $foundAg ? $foundAg->id : null;
+                    }
+                }
+
+                // Credit Limit
+                $rawCreditLimit = $clean('credit_limit', 0);
+                $creditLimit = (float) str_replace(['.', ','], '', (string)$rawCreditLimit);
+
+                // Date parser
+                $parseDate = function ($val, $default = null) {
+                    if (empty($val) || strtoupper((string)$val) === 'NULL') {
+                        return $default;
+                    }
+                    try {
+                        if (is_numeric($val) && (float)$val > 20000 && (float)$val < 70000) {
+                            return \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject((float)$val)->format('Y-m-d');
                         }
+                        return Carbon::parse($val)->format('Y-m-d');
+                    } catch (\Exception $e) {
+                        return $default;
+                    }
+                };
+
+                $tanggalNpwp = $parseDate($clean('tanggal_npwp'));
+                $tanggalNppkp = $parseDate($clean('tanggal_nppkp'));
+                $joinDate = $parseDate($clean('join_date'), now()->format('Y-m-d'));
+
+                // Array parser for payment_days, payment_date, faktur_days, faktur_date
+                $parseArray = function ($val) {
+                    if (empty($val) || strtoupper((string)$val) === 'NULL') {
+                        return null;
+                    }
+                    if (is_array($val)) {
                         return $val;
-                    };
+                    }
+                    $items = array_map('trim', explode(',', (string)$val));
+                    $filtered = array_values(array_filter($items, fn($item) => $item !== ''));
+                    return !empty($filtered) ? $filtered : null;
+                };
 
-                    $rawCreditLimit = $clean('credit_limit', 0);
-                    $creditLimit = (float) str_replace(['.', ','], '', $rawCreditLimit);
-                    $tanggalNpwp = $clean('tanggal_npwp');
-                    $tanggalNppkp = $clean('tanggal_nppkp');
-                    $joinDate = $clean('join_date', now());
+                $paymentDays = $parseArray($clean('payment_days'));
+                $paymentDate = $parseArray($clean('payment_date'));
+                $fakturDays = $parseArray($clean('faktur_days'));
+                $fakturDate = $parseArray($clean('faktur_date'));
 
-                    Customer::create([
-                        'user_id' => $clean('user_id', Auth::id()),
-                        'code' => $clean('code'),
-                        'no_pkd' => $clean('no_pkd'),
-                        'pic' => $clean('pic', '-'),
-                        'name' => $clean('name', 'Unknown'),
-                        'sort_name' => $clean('sort_name'),
-                        'customer_class' => $clean('customer_class') ?? $clean('customer_class_id'),
-                        'account_group' => $clean('account_group') ?? $clean('account_group_id'),
-                        'address1' => $clean('address1', '-'),
-                        'address2' => $clean('address2'),
-                        'address3' => $clean('address3'),
-                        'city' => $clean('city', '-'),
-                        'postal_code' => $clean('postal_code', '-'),
-                        'country' => $clean('country', 'Indonesia'),
-                        'area' => $clean('area', '-'),
-                        'shipping_to_name' => $clean('shipping_to_name'),
-                        'shipping_to_address' => $clean('shipping_to_address'),
-                        'purchasing_manager_name' => $clean('purchasing_manager_name'),
-                        'purchasing_manager_email' => $clean('purchasing_manager_email'),
-                        'finance_manager_name' => $clean('finance_manager_name'),
-                        'finance_manager_email' => $clean('finance_manager_email'),
-                        'penagihan_nama_kontak' => $clean('penagihan_nama_kontak'),
-                        'penagihan_telepon' => $clean('penagihan_telepon'),
-                        'penagihan_address' => $clean('penagihan_address'),
-                        'surat_menyurat_address' => $clean('surat_menyurat_address'),
-                        'email' => $clean('email', '-'),
-                        'tax_contact_name' => $clean('tax_contact_name'),
-                        'tax_contact_email' => $clean('tax_contact_email'),
-                        'tax_contact_phone' => $clean('tax_contact_phone'),
-                        'npwp' => $clean('npwp'),
-                        'tanggal_npwp' => $tanggalNpwp ? Carbon::parse($tanggalNpwp) : null,
-                        'nppkp' => $clean('nppkp'),
-                        'tanggal_nppkp' => $tanggalNppkp ? Carbon::parse($tanggalNppkp) : null,
-                        'no_pengukuhan_kaber' => $clean('no_pengukuhan_kaber'),
-                        'output_tax' => $clean('output_tax', 'PPN'),
-                        'term_of_payment' => $clean('term_of_payment', '0'),
-                        'lead_time' => $clean('lead_time', 0),
-                        'credit_limit' => $creditLimit,
-                        'ccar' => $clean('ccar', 'smd_idr'),
-                        'bank_garansi' => $clean('bank_garansi', 'TIDAK'),
-                        'pembagian' => $clean('pembagian'),
-                        'customer_total' => $clean('customer_total', 0),
-                        'virtual_account' => $clean('virtual_account'),
-                        'payment_days' => $clean('payment_days'),
-                        'payment_date' => $clean('payment_date'),
-                        'faktur_days' => $clean('faktur_days'),
-                        'faktur_date' => $clean('faktur_date'),
-                        'status' => $clean('status', 'Active'),
-                        'status_approval' => $clean('status_approval', 'Approved'),
-                        'route_to' => $clean('route_to', 'Finished'),
-                        'created_by' => Auth::id(),
-                        'join_date' => $joinDate,
-                    ]);
+                // Normalize output_tax (PPN, NON-PPN, Terhutang PPN)
+                $rawTax = $clean('output_tax', 'PPN');
+                if (stripos($rawTax, 'NON') !== false) {
+                    $outputTax = 'NON-PPN';
+                } elseif (stripos($rawTax, 'Terhutang') !== false) {
+                    $outputTax = 'Terhutang PPN';
+                } else {
+                    $outputTax = 'PPN';
+                }
+
+                // Normalize bank_garansi (YA / TIDAK)
+                $rawBg = strtoupper((string) $clean('bank_garansi', 'TIDAK'));
+                $bankGaransi = in_array($rawBg, ['YA', 'YES', '1', 'TRUE']) ? 'YA' : 'TIDAK';
+
+                // Automatically ensure imported customers are Active and Approved
+                $payload = [
+                    'user_id' => $userId,
+                    'no_pkd' => $clean('no_pkd'),
+                    'pic' => $clean('pic', '-'),
+                    'name' => $name ?? 'Unknown',
+                    'sort_name' => $clean('sort_name'),
+                    'customer_type' => $customerType,
+                    'customer_class' => $customerClassId,
+                    'account_group' => $accountGroupId,
+                    'address1' => $clean('address1', '-'),
+                    'address2' => $clean('address2'),
+                    'address3' => $clean('address3'),
+                    'city' => $clean('city', '-'),
+                    'postal_code' => $clean('postal_code', '-'),
+                    'country' => $clean('country', 'Indonesia'),
+                    'area' => $clean('area', '-'),
+                    'shipping_to_name' => $clean('shipping_to_name'),
+                    'shipping_to_address' => $clean('shipping_to_address'),
+                    'purchasing_manager_name' => $clean('purchasing_manager_name'),
+                    'purchasing_manager_email' => $clean('purchasing_manager_email'),
+                    'finance_manager_name' => $clean('finance_manager_name'),
+                    'finance_manager_email' => $clean('finance_manager_email'),
+                    'penagihan_nama_kontak' => $clean('penagihan_nama_kontak'),
+                    'penagihan_telepon' => $clean('penagihan_telepon'),
+                    'penagihan_address' => $clean('penagihan_address'),
+                    'surat_menyurat_address' => $clean('surat_menyurat_address'),
+                    'email' => $clean('email', '-'),
+                    'tax_contact_name' => $clean('tax_contact_name'),
+                    'tax_contact_email' => $clean('tax_contact_email'),
+                    'tax_contact_phone' => $clean('tax_contact_phone'),
+                    'npwp' => $clean('npwp'),
+                    'tanggal_npwp' => $tanggalNpwp,
+                    'nppkp' => $clean('nppkp'),
+                    'tanggal_nppkp' => $tanggalNppkp,
+                    'no_pengukuhan_kaber' => $clean('no_pengukuhan_kaber'),
+                    'output_tax' => $outputTax,
+                    'term_of_payment' => $clean('term_of_payment', '0'),
+                    'lead_time' => $clean('lead_time', 0),
+                    'credit_limit' => $creditLimit,
+                    'ccar' => $clean('ccar', 'smd_idr'),
+                    'bank_garansi' => $bankGaransi,
+                    'pembagian' => $clean('pembagian'),
+                    'customer_total' => $clean('customer_total', 0),
+                    'virtual_account' => $clean('virtual_account'),
+                    'payment_days' => $paymentDays,
+                    'payment_date' => $paymentDate,
+                    'faktur_days' => $fakturDays,
+                    'faktur_date' => $fakturDate,
+                    'status' => 'active', // Automatically active
+                    'status_approval' => 'Approved', // Automatically Approved
+                    'route_to' => 'Finished', // Automatically Finished
+                    'created_by' => $userId,
+                    'join_date' => $joinDate,
+                ];
+
+                if ($code) {
+                    $existing = Customer::where('code', $code)->first();
+                    if ($existing) {
+                        $existing->update($payload);
+                        $updatedCount++;
+                    } else {
+                        $payload['code'] = $code;
+                        Customer::create($payload);
+                        $importedCount++;
+                    }
+                } else {
+                    Customer::create($payload);
                     $importedCount++;
                 }
             }
-            fclose($handle);
+
             DB::commit();
 
+            $total = $importedCount + $updatedCount;
             return response()->json([
                 'success' => true,
-                'message' => "Successfully imported {$importedCount} customers."
+                'message' => "Successfully processed {$total} customers ({$importedCount} created, {$updatedCount} updated). All imported records are Approved."
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error("Import Customer Error: " . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal Import: ' . $e->getMessage()
+                'message' => 'Import failed: ' . $e->getMessage()
             ], 500);
         }
     }
