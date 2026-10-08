@@ -94,30 +94,4 @@
 {{-- ======================================================== --}}
 {{-- 3. PDF DOCUMENT PREVIEW MODAL                            --}}
 {{-- ======================================================== --}}
-<div class="modal fade" id="previewPdfModal" tabindex="-1" aria-labelledby="previewPdfModalLabel" aria-hidden="true" style="z-index: 1075;">
-    <div class="modal-dialog modal-xl modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg">
-            <div class="modal-header py-2 px-3 bg-white border-bottom">
-                <div class="d-flex align-items-center gap-2 overflow-hidden">
-                    <i class="fa-solid fa-file-pdf text-danger fs-5"></i>
-                    <div>
-                        <h6 class="modal-title text-truncate fw-bold mb-0 text-dark" id="previewPdfModalLabel">Pratinjau Dokumen PDF</h6>
-                        <small class="text-muted" id="previewPdfModalSubtitle">Memuat berkas PDF...</small>
-                    </div>
-                </div>
-                <div class="d-flex align-items-center gap-2 ms-auto">
-                    <a href="#" id="previewPdfDownloadBtn" class="btn btn-sm btn-outline-primary" download>
-                        <i class="fa-solid fa-download me-1"></i> Unduh PDF
-                    </a>
-                    <a href="#" id="previewPdfNewTabBtn" target="_blank" class="btn btn-sm btn-outline-secondary" title="Buka di tab baru">
-                        <i class="fa-solid fa-up-right-from-square"></i>
-                    </a>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup" style="filter: none; opacity: 0.8;"></button>
-                </div>
-            </div>
-            <div class="modal-body p-0" style="height: 75vh;">
-                <iframe id="previewPdfIframe" src="about:blank" style="width: 100%; height: 100%; border: none;"></iframe>
-            </div>
-        </div>
-    </div>
-</div>
+@include('finance.distributor_documents.partials.preview-modal')

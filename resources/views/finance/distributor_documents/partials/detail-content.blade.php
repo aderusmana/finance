@@ -1,3 +1,17 @@
+@php
+    // SECURE BY DEFAULT:
+    // Requires authenticated internal user with permission AND explicit internal mode.
+    $isPortal = isset($isPortal) ? (bool) $isPortal : (!auth()->check());
+    $canManage = auth()->check() && auth()->user()->can('manage-distributor-docs') && !$isPortal;
+
+    $routePrefix = $isPortal ? 'portal.distributor.' : 'distributor.documents.';
+    $yearChangeCallback = $isPortal ? 'changePortalYear' : 'changeDetailYear';
+    $tabSwitchCallback = $isPortal ? 'switchPortalTab' : 'switchDetailTab';
+    $transferYearCallback = $isPortal ? 'changePortalTransferYear' : 'changeTransferYear';
+    $modalYearSelectId = $isPortal ? 'portal_modal_year' : 'detail_modal_year';
+    $modalTransferSelectId = $isPortal ? 'portal_transfer_year_select' : 'transfer_year_select';
+@endphp
+
 {{-- Header Card Distributor --}}
 <div class="detail-header-card mb-3">
     <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
@@ -32,8 +46,8 @@
         <div class="d-flex align-items-center gap-2 flex-wrap">
             {{-- Filter Year inside Modal --}}
             <div class="d-inline-flex align-items-center gap-2">
-                <label for="detail_modal_year" class="small mb-0 text-white-50 text-nowrap">Year:</label>
-                <select id="detail_modal_year" class="form-select form-select-sm" style="min-width: 100px;" onchange="changeDetailYear({{ $distributor->id }}, this.value, '{{ $tab }}')">
+                <label for="{{ $modalYearSelectId }}" class="small mb-0 text-white-50 text-nowrap">Year:</label>
+                <select id="{{ $modalYearSelectId }}" class="form-select form-select-sm" style="min-width: 100px;" onchange="{{ $yearChangeCallback }}({{ $distributor->id }}, this.value, '{{ $tab }}')">
                     @for ($optionYear = now()->year + 1; $optionYear >= now()->year - 5; $optionYear--)
                         <option value="{{ $optionYear }}" @selected($year === $optionYear)>{{ $optionYear }}</option>
                     @endfor
@@ -41,14 +55,16 @@
             </div>
 
             {{-- Download All .ZIP Button --}}
-            <a href="{{ route('distributor.documents.download.zip', ['distributor_id' => $distributor->id, 'year' => $year]) }}" class="btn btn-sm btn-success text-nowrap">
+            <a href="{{ route($routePrefix . 'download.zip', ['distributor_id' => $distributor->id, 'year' => $year]) }}" class="btn btn-sm btn-success text-nowrap">
                 <i class="iconoir-archive me-1"></i> Download All .ZIP
             </a>
 
-            {{-- Upload Document Button --}}
-            <button type="button" class="btn btn-sm btn-light text-nowrap fw-semibold text-primary" onclick="openUploadModal('bupot', 1, {{ $distributor->id }}, {{ $year }})">
-                <i class="iconoir-upload me-1 text-primary"></i> Upload Document
-            </button>
+            @if ($canManage)
+                {{-- Upload Document Button --}}
+                <button type="button" class="btn btn-sm btn-light text-nowrap fw-semibold text-primary" onclick="openUploadModal('bupot', 1, {{ $distributor->id }}, {{ $year }})">
+                    <i class="iconoir-upload me-1 text-primary"></i> Upload Document
+                </button>
+            @endif
         </div>
     </div>
 </div>
@@ -57,12 +73,12 @@
 <div class="mb-3">
     <ul class="nav nav-tabs-custom" role="tablist">
         <li class="nav-item">
-            <button type="button" class="nav-link {{ $tab === 'monthly' ? 'active' : '' }}" onclick="switchDetailTab({{ $distributor->id }}, {{ $year }}, 'monthly')">
+            <button type="button" class="nav-link {{ $tab === 'monthly' ? 'active' : '' }}" onclick="{{ $tabSwitchCallback }}({{ $distributor->id }}, {{ $year }}, 'monthly')">
                 <i class="iconoir-calendar me-2"></i>Dokumen Bulanan (BuPot & TOP Insentif)
             </button>
         </li>
         <li class="nav-item">
-            <button type="button" class="nav-link {{ $tab === 'transfer' ? 'active' : '' }}" onclick="switchDetailTab({{ $distributor->id }}, {{ $year }}, 'transfer')">
+            <button type="button" class="nav-link {{ $tab === 'transfer' ? 'active' : '' }}" onclick="{{ $tabSwitchCallback }}({{ $distributor->id }}, {{ $year }}, 'transfer')">
                 <i class="iconoir-calendar-rotate me-2"></i>Penjelasan Transfer (Running Multi-Year)
                 @if ($transferDocs->count() > 0)
                     <span class="badge bg-primary-subtle text-primary ms-1">{{ $transferDocs->count() }}</span>
@@ -122,15 +138,23 @@
                                 <span class="fw-bold small text-dark d-inline-flex align-items-center">
                                     <i class="iconoir-notes me-1 text-primary"></i> Bukti Potong ({{ $bupotDocuments->count() }} File)
                                 </span>
-                                <button type="button" class="btn btn-outline-primary btn-add-quick d-inline-flex align-items-center" onclick="openUploadModal('bupot', {{ $monthNumber }}, {{ $distributor->id }}, {{ $year }})">
-                                    <i class="iconoir-plus me-1"></i> Tambah BuPot
-                                </button>
+                                @if ($canManage)
+                                    <button type="button" class="btn btn-outline-primary btn-add-quick d-inline-flex align-items-center" onclick="openUploadModal('bupot', {{ $monthNumber }}, {{ $distributor->id }}, {{ $year }})">
+                                        <i class="iconoir-plus me-1"></i> Tambah BuPot
+                                    </button>
+                                @endif
                             </div>
 
                             @forelse ($bupotDocuments as $doc)
                                 <div class="doc-item-row d-flex justify-content-between align-items-center">
                                     @include('finance.distributor_documents.partials.document-file', ['document' => $doc])
-                                    @include('finance.distributor_documents.partials.document-actions', ['document' => $doc, 'year' => $year, 'tab' => 'monthly'])
+                                    @include('finance.distributor_documents.partials.document-actions', [
+                                        'document' => $doc,
+                                        'isPortal' => $isPortal,
+                                        'canManage' => $canManage,
+                                        'year' => $year,
+                                        'tab' => 'monthly'
+                                    ])
                                 </div>
                             @empty
                                 <div class="text-center py-2 text-muted small border border-dashed rounded bg-white">
@@ -145,15 +169,23 @@
                                 <span class="fw-bold small text-dark d-inline-flex align-items-center">
                                     <i class="iconoir-medal me-1 text-warning"></i> TOP Insentif ({{ $topDocuments->count() }} File)
                                 </span>
-                                <button type="button" class="btn btn-outline-primary btn-add-quick d-inline-flex align-items-center" onclick="openUploadModal('top_insentif', {{ $monthNumber }}, {{ $distributor->id }}, {{ $year }})">
-                                    <i class="iconoir-plus me-1"></i> Tambah TOP Insentif
-                                </button>
+                                @if ($canManage)
+                                    <button type="button" class="btn btn-outline-primary btn-add-quick d-inline-flex align-items-center" onclick="openUploadModal('top_insentif', {{ $monthNumber }}, {{ $distributor->id }}, {{ $year }})">
+                                        <i class="iconoir-plus me-1"></i> Tambah TOP Insentif
+                                    </button>
+                                @endif
                             </div>
 
                             @forelse ($topDocuments as $doc)
                                 <div class="doc-item-row d-flex justify-content-between align-items-center">
                                     @include('finance.distributor_documents.partials.document-file', ['document' => $doc])
-                                    @include('finance.distributor_documents.partials.document-actions', ['document' => $doc, 'year' => $year, 'tab' => 'monthly'])
+                                    @include('finance.distributor_documents.partials.document-actions', [
+                                        'document' => $doc,
+                                        'isPortal' => $isPortal,
+                                        'canManage' => $canManage,
+                                        'year' => $year,
+                                        'tab' => 'monthly'
+                                    ])
                                 </div>
                             @empty
                                 <div class="text-center py-2 text-muted small border border-dashed rounded bg-white">
@@ -179,8 +211,8 @@
                 <div class="d-flex align-items-center gap-2 flex-wrap">
                     {{-- Filter year Transfer --}}
                     <div class="d-inline-flex align-items-center gap-2">
-                        <label for="transfer_year_select" class="small mb-0 text-muted text-nowrap">Filter Tahun:</label>
-                        <select id="transfer_year_select" class="form-select form-select-sm" style="min-width: 140px;" onchange="changeTransferYear({{ $distributor->id }}, {{ $year }}, this.value)">
+                        <label for="{{ $modalTransferSelectId }}" class="small mb-0 text-muted text-nowrap">Filter Tahun:</label>
+                        <select id="{{ $modalTransferSelectId }}" class="form-select form-select-sm" style="min-width: 140px;" onchange="{{ $transferYearCallback }}({{ $distributor->id }}, {{ $year }}, this.value)">
                             <option value="all" @selected(!$transferYear || $transferYear === 'all')>Semua Tahun</option>
                             @foreach ($availableTransferYears as $availYear)
                                 <option value="{{ $availYear }}" @selected((string)$transferYear === (string)$availYear)>Tahun {{ $availYear }}</option>
@@ -188,10 +220,12 @@
                         </select>
                     </div>
 
-                    {{-- Quick Upload Transfer Button --}}
-                    <button type="button" class="btn btn-sm btn-primary text-nowrap" onclick="openUploadModal('transfer', null, {{ $distributor->id }}, {{ $year }})">
-                        <i class="iconoir-upload me-1"></i> Upload File Transfer Baru
-                    </button>
+                    @if ($canManage)
+                        {{-- Quick Upload Transfer Button --}}
+                        <button type="button" class="btn btn-sm btn-primary text-nowrap" onclick="openUploadModal('transfer', null, {{ $distributor->id }}, {{ $year }})">
+                            <i class="iconoir-upload me-1"></i> Upload File Transfer Baru
+                        </button>
+                    @endif
                 </div>
             </div>
         </div>
@@ -200,10 +234,14 @@
             <div class="card-body p-5 text-center">
                 <i class="iconoir-empty-page fs-1 text-muted"></i>
                 <h5 class="mt-3">Belum Ada Dokumen Penjelasan Transfer</h5>
-                <p class="text-muted mb-3">Unggah berkas transfer pelunasan, rekap transfer, atau arsip kerja sama distributor ini.</p>
-                <button type="button" class="btn btn-sm btn-primary" onclick="openUploadModal('transfer', null, {{ $distributor->id }}, {{ $year }})">
-                    <i class="iconoir-upload me-1"></i> Upload File Transfer (PDF)
-                </button>
+                <p class="text-muted mb-3">
+                    {{ $canManage ? 'Unggah berkas transfer pelunasan, rekap transfer, atau arsip kerja sama distributor ini.' : 'Belum ada dokumen transfer yang diunggah untuk distributor ini.' }}
+                </p>
+                @if ($canManage)
+                    <button type="button" class="btn btn-sm btn-primary" onclick="openUploadModal('transfer', null, {{ $distributor->id }}, {{ $year }})">
+                        <i class="iconoir-upload me-1"></i> Upload File Transfer (PDF)
+                    </button>
+                @endif
             </div>
         @else
             <div class="table-responsive">
@@ -239,7 +277,13 @@
                                     <span class="badge bg-light text-dark border">{{ $doc->human_file_size }}</span>
                                 </td>
                                 <td class="text-end pe-3">
-                                    @include('finance.distributor_documents.partials.document-actions', ['document' => $doc, 'year' => $year, 'tab' => 'transfer'])
+                                    @include('finance.distributor_documents.partials.document-actions', [
+                                        'document' => $doc,
+                                        'isPortal' => $isPortal,
+                                        'canManage' => $canManage,
+                                        'year' => $year,
+                                        'tab' => 'transfer'
+                                    ])
                                 </td>
                             </tr>
                         @endforeach

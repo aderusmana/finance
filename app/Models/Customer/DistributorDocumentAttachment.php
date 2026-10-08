@@ -119,6 +119,24 @@ class DistributorDocumentAttachment extends Model
         return $months[$this->month] ?? "Bulan {$this->month}";
     }
 
+    // Relation to Download Audit Logs
+    public function downloads()
+    {
+        return $this->hasMany(DistributorDocumentDownload::class, 'distributor_document_attachment_id');
+    }
+
+    // Check if physical file exists on public disk
+    public function existsOnDisk(): bool
+    {
+        return ! empty($this->file_path) && Storage::disk('public')->exists($this->file_path);
+    }
+
+    // Get absolute filesystem path on public disk
+    public function getDiskPath(): ?string
+    {
+        return $this->existsOnDisk() ? Storage::disk('public')->path($this->file_path) : null;
+    }
+
     // Scope: Document type Filter
     public function scopeOfType($query, string $type)
     {
