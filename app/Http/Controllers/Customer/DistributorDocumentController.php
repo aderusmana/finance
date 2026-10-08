@@ -13,6 +13,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Yajra\DataTables\Facades\DataTables;
 
 class DistributorDocumentController extends Controller
 {
@@ -23,18 +24,105 @@ class DistributorDocumentController extends Controller
     public function index(Request $request): View|JsonResponse
     {
         $year = (int) $request->input('year', date('Y'));
-        $search = $request->input('search');
-
-        $distributors = $this->documentService->getMonitoringDistributors($year, $search, 15);
 
         if ($request->ajax()) {
-            return view('page.distributor_documents.partials.table', compact('distributors', 'year', 'search'));
+            $query = $this->documentService->getMonitoringDistributorsQuery($year);
+
+            return DataTables::eloquent($query)
+                ->addColumn('code', function ($distributor) {
+                    return '<span class="distributor-code-badge">' . e($distributor->code) . '</span>';
+                })
+                ->addColumn('name', function ($distributor) {
+                    $output = '<div class="fw-bold text-dark">' . e($distributor->name) . '</div>';
+                    $bupotEmails = $distributor->bupot_email_list;
+                    $output .= '<div class="small mt-1">';
+                    if (!empty($bupotEmails)) {
+                        $output .= '<div class="d-flex flex-wrap gap-1 align-items-center">';
+                        foreach ($bupotEmails as $bEmail) {
+                            $output .= '<span class="badge bg-light text-dark border fw-normal text-truncate" style="font-size: 0.75rem; max-width: 250px;" title="' . e($bEmail) . '">';
+                            $output .= '<i class="iconoir-mail me-1 text-primary"></i>' . e($bEmail);
+                            $output .= '</span>';
+                        }
+                        $output .= '</div>';
+                    } else {
+                        $output .= '<span class="text-muted fst-italic">-</span>';
+                    }
+                    $output .= '</div>';
+
+                    return $output;
+                })
+                ->filterColumn('code', function ($query, $keyword) {
+                    $query->where('distributors.code', 'like', "%{$keyword}%");
+                })
+                ->filterColumn('name', function ($query, $keyword) {
+                    $query->where(function ($q) use ($keyword) {
+                        $q->where('distributors.name', 'like', "%{$keyword}%")
+                            ->orWhere('distributors.code', 'like', "%{$keyword}%")
+                            ->orWhere('distributors.bupot_email', 'like', "%{$keyword}%");
+                    });
+                })
+                ->addColumn('monthly_progress', function ($distributor) use ($year) {
+                    $monthNames = [
+                        1 => 'Jan', 2 => 'Feb', 3 => 'Mar', 4 => 'Apr', 5 => 'Mei', 6 => 'Jun',
+                        7 => 'Jul', 8 => 'Agu', 9 => 'Sep', 10 => 'Okt', 11 => 'Nov', 12 => 'Des',
+                    ];
+                    $monthlySummary = $distributor->getMonthlyDocumentSummary($year);
+
+                    $html = '<div class="month-matrix-container justify-content-center">';
+                    for ($m = 1; $m <= 12; $m++) {
+                        $summary = $monthlySummary[$m] ?? ['status' => 'empty', 'total' => 0, 'has_bupot' => false, 'has_top_insentif' => false];
+                        $status = $summary['status'];
+                        $tooltip = $monthNames[$m] . ': ' . ($status === 'complete' ? 'Lengkap (BuPot & TOP)' : ($status === 'partial' ? 'Sebagian (' . ($summary['has_bupot'] ? 'BuPot' : 'TOP') . ')' : 'Belum Ada Dokumen'));
+                        $icon = ($status === 'complete') ? '✓' : (($status === 'partial') ? '!' : '•');
+
+                        $html .= '<button type="button" class="month-matrix-pill ' . $status . '" title="' . e($tooltip) . '" data-bs-toggle="tooltip" aria-label="Bulan ' . e($monthNames[$m]) . ': ' . e($tooltip) . '" onclick="openDistributorDetailModal(' . $distributor->id . ', ' . $year . ', \'monthly\', ' . $m . ')">';
+                        $html .= '<span class="month-num">' . $m . '</span>';
+                        $html .= '<span class="month-icon">' . $icon . '</span>';
+                        $html .= '</button>';
+                    }
+                    $html .= '</div>';
+
+                    return $html;
+                })
+                ->addColumn('transfer_running', function ($distributor) use ($year) {
+                    if ($distributor->transfer_documents_count > 0) {
+                        $transferYears = $distributor->transferDocuments->map(function ($doc) {
+                            return $doc->transaction_date
+                                ? (int) $doc->transaction_date->format('Y')
+                                : (int) $doc->created_at->format('Y');
+                        })->filter()->unique()->sort()->values();
+
+                        $rangeHtml = '';
+                        if ($transferYears->isNotEmpty()) {
+                            $minY = $transferYears->first();
+                            $maxY = $transferYears->last();
+                            $range = $minY === $maxY ? (string) $minY : "{$minY}-{$maxY}";
+                            $rangeHtml = '<div class="small text-muted mt-1" style="font-size: 0.72rem;">(' . e($range) . ')</div>';
+                        }
+
+                        return '<button type="button" class="btn btn-sm btn-link text-decoration-none p-0" onclick="openDistributorDetailModal(' . $distributor->id . ', ' . $year . ', \'transfer\')">'
+                            . '<span class="badge bg-light text-dark border px-2 py-1 fw-bold">'
+                            . $distributor->transfer_documents_count . ' File'
+                            . '</span>'
+                            . $rangeHtml
+                            . '</button>';
+                    }
+
+                    return '<span class="text-muted small">0 File</span>';
+                })
+                ->addColumn('action', function ($distributor) use ($year) {
+                    return '<button type="button" class="btn btn-sm btn-outline-primary text-nowrap" onclick="openDistributorDetailModal(' . $distributor->id . ', ' . $year . ')">'
+                        . '<i class="iconoir-folder me-1"></i> Kelola File'
+                        . '</button>';
+                })
+                ->rawColumns(['code', 'name', 'monthly_progress', 'transfer_running', 'action'])
+                ->make(true);
         }
 
         // Get all distributors for the Add Distributor modal dropdown option
         $availableDistributors = Distributor::orderBy('code', 'asc')->get(['id', 'code', 'name', 'email', 'bupot_email']);
 
-        return view('page.distributor_documents.index', compact('distributors', 'year', 'search', 'availableDistributors'));
+        return view('page.distributor_documents.index', compact('year', 'availableDistributors'));
     }
 
     public function detailView(Request $request, $distributorId): View

@@ -267,16 +267,15 @@
             </div>
             <div class="d-flex align-items-center gap-2">
                 <form action="{{ route('distributor.documents.index') }}" method="GET" class="d-inline-flex align-items-center gap-2" id="headerYearForm" onsubmit="event.preventDefault(); handleYearFilterChange($('#header_year').val());">
-                    <input type="hidden" name="search" id="header_search_input" value="{{ $search }}">
-                    <label for="header_year" class="fw-semibold text-muted small mb-0 text-nowrap">Filter Tahun:</label>
-                    <select id="header_year" name="year" class="form-select form-select-sm" style="min-width: 110px;" onchange="handleYearFilterChange(this.value)">
+                    <label for="header_year" class="fw-semibold text-muted small mb-0 text-nowrap"><i class="iconoir-calendar me-1"></i>Filter Tahun:</label>
+                    <select id="header_year" name="year" class="form-select form-select-sm" style="min-width: 105px;" onchange="handleYearFilterChange(this.value)" aria-label="Filter Tahun Dokumen">
                         @for ($optionYear = now()->year + 1; $optionYear >= now()->year - 5; $optionYear--)
                             <option value="{{ $optionYear }}" @selected((int) $year === $optionYear)>{{ $optionYear }}</option>
                         @endfor
                     </select>
                 </form>
-                <button type="button" class="btn btn-sm btn-primary text-nowrap" onclick="openAddDistributorModal()">
-                    <i class="ph-bold ph-plus me-1"></i> Tambah Distributor
+                <button type="button" class="btn btn-sm btn-primary text-nowrap d-flex align-items-center gap-1 shadow-sm" onclick="openAddDistributorModal()">
+                    <i class="ph-bold ph-plus"></i> Tambah Distributor
                 </button>
             </div>
         </div>
@@ -287,18 +286,17 @@
         <div class="col-12">
             <div class="card border-0 shadow-sm">
                 <div class="card-body p-3">
-                    <form id="searchDistributorForm" onsubmit="handleSearchSubmit(event)" action="{{ route('distributor.documents.index') }}" method="GET" class="row g-2 align-items-center">
-                        <input type="hidden" name="year" id="search_year" value="{{ $year }}">
+                    <form id="searchDistributorForm" onsubmit="handleSearchSubmit(event)" class="row g-2 align-items-center">
                         <div class="col-12 col-md-8 col-lg-9">
                             <div class="input-group">
                                 <span class="input-group-text bg-light border-end-0">
                                     <i class="iconoir-search"></i>
                                 </span>
-                                <input type="search" id="search" name="search" value="{{ $search }}" class="form-control border-start-0 ps-0" placeholder="Cari nama atau kode distributor...">
+                                <input type="search" id="search" name="search" aria-label="Cari nama atau kode distributor" class="form-control border-start-0 ps-0" placeholder="Cari nama atau kode distributor...">
                             </div>
                         </div>
                         <div class="col-12 col-md-4 col-lg-3 d-flex gap-2">
-                            <button type="submit" class="btn btn-primary flex-grow-1">
+                            <button type="submit" class="btn btn-primary flex-grow-1" aria-label="Cari distributor">
                                 <i class="iconoir-filter me-1"></i> Cari
                             </button>
                             <button type="button" onclick="handleResetFilter()" class="btn btn-light border" title="Reset filter" aria-label="Reset filter">
@@ -315,7 +313,7 @@
     <div class="row mb-5 pb-5">
         <div class="col-12">
             <div id="distributorTableContainer">
-                @include('page.distributor_documents.partials.table', ['distributors' => $distributors, 'year' => $year, 'search' => $search])
+                @include('page.distributor_documents.partials.table', ['year' => $year])
             </div>
         </div>
     </div>
@@ -360,10 +358,10 @@
 
     @push('scripts')
         <script>
+            let distributorTable = null;
             let currentDistributorId = null;
             let currentYear = {{ (int) $year }};
             let currentTab = 'monthly';
-            let currentTableUrl = null;
             let lastActiveTrigger = null;
 
             let distributorDetailModalInstance = null;
@@ -375,6 +373,52 @@
                 var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
                 tooltipTriggerList.map(function (tooltipTriggerEl) {
                     return new bootstrap.Tooltip(tooltipTriggerEl);
+                });
+
+                // Initialize DataTables
+                distributorTable = $('#distributorDocumentsTable').DataTable({
+                    processing: true,
+                    serverSide: true,
+                    dom: "<'d-none'l>" +
+                         "<'row'<'col-12'tr>>" +
+                         "<'row p-3 border-top align-items-center'<'col-12 col-md-6 text-muted small'i><'col-12 col-md-6 d-flex justify-content-md-end'p>>",
+                    ajax: {
+                        url: "{{ route('distributor.documents.index') }}",
+                        data: function (d) {
+                            d.year = $('#header_year').val() || currentYear;
+                        }
+                    },
+                    columns: [
+                        { data: 'code', name: 'distributors.code', className: 'ps-3', orderable: true, searchable: true },
+                        { data: 'name', name: 'distributors.name', orderable: true, searchable: true },
+                        { data: 'monthly_progress', name: 'monthly_progress', className: 'text-center', orderable: false, searchable: false },
+                        { data: 'transfer_running', name: 'transfer_running', className: 'text-center', orderable: false, searchable: false },
+                        { data: 'action', name: 'action', className: 'text-end pe-3', orderable: false, searchable: false }
+                    ],
+                    order: [[1, 'asc']],
+                    pageLength: 10,
+                    lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
+                    initComplete: function () {
+                        const lengthEl = $('#distributorDocumentsTable_length');
+                        if (lengthEl.length) {
+                            lengthEl.appendTo('#tableLengthContainer');
+                            lengthEl.removeClass('d-none');
+                            lengthEl.find('label').addClass('d-flex align-items-center gap-2 mb-0 small text-muted');
+                            lengthEl.find('select').addClass('form-select form-select-sm').attr('aria-label', 'Jumlah baris per halaman');
+                        }
+                    },
+                    drawCallback: function () {
+                        var tooltipTriggerList = [].slice.call(document.querySelectorAll('#distributorDocumentsTable [data-bs-toggle="tooltip"]'));
+                        tooltipTriggerList.map(function (tooltipTriggerEl) {
+                            return new bootstrap.Tooltip(tooltipTriggerEl);
+                        });
+                    }
+                });
+
+                $('#search').on('search', function() {
+                    if (!this.value && distributorTable) {
+                        distributorTable.search('').draw();
+                    }
                 });
 
                 const detailModalEl = document.getElementById('distributorDetailModal');
@@ -583,15 +627,7 @@
                     }
                 });
 
-                // Handle pagination click via AJAX
-                $(document).on('click', '#distributorTableContainer .pagination a', function(e) {
-                    e.preventDefault();
-                    const url = $(this).attr('href');
-                    if (url) {
-                        currentTableUrl = url;
-                        reloadDistributorTable(null, url);
-                    }
-                });
+
 
                 // Global fallback for Escape key to close active modal
                 document.addEventListener('keydown', function (e) {
@@ -820,7 +856,9 @@
                     loadDistributorDetail(currentDistributorId, currentYear, currentTab);
 
                     // Auto-refresh main table in background
-                    reloadDistributorTable();
+                    if (distributorTable) {
+                        distributorTable.ajax.reload(null, false);
+                    }
 
                     // Toast notification for user confirmation
                     if (window.Swal) {
@@ -890,7 +928,9 @@
                         loadDistributorDetail(currentDistributorId, currentYear, currentTab);
 
                         // Auto-refresh main table in background
-                        reloadDistributorTable();
+                        if (distributorTable) {
+                            distributorTable.ajax.reload(null, false);
+                        }
 
                         // Toast notification for user confirmation
                         Swal.fire({
@@ -1109,8 +1149,13 @@
                                 showConfirmButton: false
                             });
 
-                            // Reload table via AJAX - NO FULL PAGE RELOAD!
-                            reloadDistributorTable(data.year);
+                            // Reload table via AJAX
+                            if (data.year && parseInt(data.year) !== currentYear) {
+                                $('#header_year').val(data.year);
+                                handleYearFilterChange(data.year);
+                            } else if (distributorTable) {
+                                distributorTable.ajax.reload(null, false);
+                            }
                         })
                         .catch(err => {
                             Swal.close();
@@ -1126,75 +1171,30 @@
             }
 
             // ==========================================
-            // DYNAMIC AJAX TABLE RELOAD FUNCTIONS
+            // DATATABLES FILTER & SEARCH FUNCTIONS
             // ==========================================
-            function reloadDistributorTable(targetYear = null, targetUrl = null, customSearch = null) {
-                const year = targetYear || $('#header_year').val() || currentYear;
-                const search = customSearch !== null ? customSearch : ($('#search').val() || '');
-
-                if (targetUrl) {
-                    currentTableUrl = targetUrl;
-                } else if (targetYear || customSearch !== null) {
-                    currentTableUrl = null;
-                }
-
-                let url = targetUrl || currentTableUrl || "{{ route('distributor.documents.index') }}";
-
-                if (!targetUrl && !currentTableUrl) {
-                    url += `?year=${encodeURIComponent(year)}&search=${encodeURIComponent(search)}`;
-                }
-
-                const container = $('#distributorTableContainer');
-                container.css('opacity', '0.5');
-
-                fetch(url, {
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                })
-                .then(response => {
-                    if (!response.ok) throw new Error('Gagal memuat daftar dokumen distributor.');
-                    return response.text();
-                })
-                .then(html => {
-                    container.html(html).css('opacity', '1');
-
-                    // Re-initialize bootstrap tooltips on new elements
-                    const tooltipTriggerList = [].slice.call(container[0].querySelectorAll('[data-bs-toggle="tooltip"]'));
-                    tooltipTriggerList.map(function (tooltipTriggerEl) {
-                        return new bootstrap.Tooltip(tooltipTriggerEl);
-                    });
-
-                    // Sync currentYear and inputs if targetYear provided
-                    if (targetYear) {
-                        currentYear = parseInt(targetYear);
-                        $('#header_year').val(targetYear);
-                        $('#search_year').val(targetYear);
-                    }
-                })
-                .catch(err => {
-                    container.css('opacity', '1');
-                    console.error('Error reloading distributor table:', err);
-                });
-            }
-
             function handleYearFilterChange(newYear) {
-                currentTableUrl = null;
                 currentYear = parseInt(newYear);
-                $('#search_year').val(newYear);
-                reloadDistributorTable(newYear);
+                $('#activeYearBadge').text(newYear);
+                $('#headerMonthlyProgress').text('PROGRES BULANAN ' + newYear + ' (JAN - DES)');
+                if (distributorTable) {
+                    distributorTable.ajax.reload();
+                }
             }
 
             function handleSearchSubmit(e) {
                 e.preventDefault();
-                currentTableUrl = null;
-                reloadDistributorTable(null, null, $('#search').val());
+                const keyword = $('#search').val();
+                if (distributorTable) {
+                    distributorTable.search(keyword).draw();
+                }
             }
 
             function handleResetFilter() {
-                currentTableUrl = null;
                 $('#search').val('');
-                reloadDistributorTable(null, null, '');
+                if (distributorTable) {
+                    distributorTable.search('').draw();
+                }
             }
         </script>
     @endpush

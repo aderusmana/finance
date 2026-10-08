@@ -6,7 +6,7 @@ use App\Models\Customer\Distributor;
 use App\Models\Customer\DistributorDocument;
 use App\Models\Customer\DistributorDocumentAttachment;
 use App\Models\Customer\DistributorDocumentDownload;
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -18,55 +18,25 @@ use ZipArchive;
 class DistributorDocumentService
 {
     /**
-     * Get paginated distributor document monitoring list with monthly summaries and transfer ranges.
+     * Get Eloquent query for distributor document monitoring list.
      */
-    public function getMonitoringDistributors(int $year, ?string $search = null, int $perPage = 15): LengthAwarePaginator
+    public function getMonitoringDistributorsQuery(int $year): Builder
     {
-        $distributors = Distributor::query()
+        return Distributor::query()
+            ->select('distributors.*')
             ->whereHas('documents', function ($q) use ($year) {
                 $q->where('year', $year);
             })
-            ->with('customer')
-            ->with(['documents' => function ($q) use ($year) {
-                $q->where('year', $year)->with('attachments');
-            }])
-            ->withCount(['transferDocuments'])
-            ->with(['transferDocuments' => function ($q) {
-                $q->select('id', 'distributor_id', 'transaction_date', 'created_at');
-            }])
-            ->when($search, function ($q) use ($search) {
-                $q->where(function ($query) use ($search) {
-                    $query->where('distributors.name', 'like', "%{$search}%")
-                        ->orWhere('distributors.code', 'like', "%{$search}%");
-                });
-            })
-            ->orderBy('distributors.name', 'asc')
-            ->paginate($perPage);
-
-        // Map 12-month summary status and running transfer year range
-        $distributors->getCollection()->transform(function ($distributor) use ($year) {
-            $distributor->monthly_summary = $distributor->getMonthlyDocumentSummary($year);
-
-            $transferYears = $distributor->transferDocuments->map(function ($doc) {
-                if ($doc->transaction_date) {
-                    return (int) $doc->transaction_date->format('Y');
-                }
-
-                return (int) $doc->created_at->format('Y');
-            })->filter()->unique()->sort()->values();
-
-            if ($transferYears->isNotEmpty()) {
-                $minY = $transferYears->first();
-                $maxY = $transferYears->last();
-                $distributor->transfer_range = $minY === $maxY ? (string) $minY : "{$minY}-{$maxY}";
-            } else {
-                $distributor->transfer_range = null;
-            }
-
-            return $distributor;
-        });
-
-        return $distributors;
+            ->with([
+                'customer',
+                'documents' => function ($q) use ($year) {
+                    $q->where('year', $year)->with('attachments');
+                },
+                'transferDocuments' => function ($q) {
+                    $q->select('id', 'distributor_id', 'transaction_date', 'created_at');
+                },
+            ])
+            ->withCount(['transferDocuments']);
     }
 
     /**
