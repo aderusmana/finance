@@ -16,6 +16,9 @@
     <!--font-awesome-css-->
     <link href="{{ asset('assets') }}/vendor/fontawesome/css/all-1.css" rel="stylesheet">
 
+    <!-- iconoir icon css -->
+    <link href="{{ asset('assets') }}/vendor/ionio-icon/css/iconoir.css" rel="stylesheet">
+
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com" rel="preconnect">
     <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
