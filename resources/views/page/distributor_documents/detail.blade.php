@@ -140,6 +140,7 @@
         <script>
             let previewPdfModalInstance = null;
             let uploadModalInstance = null;
+            let transferTable = null;
 
             document.addEventListener('DOMContentLoaded', function () {
                 const previewEl = document.getElementById('previewPdfModal');
@@ -153,6 +154,10 @@
                 const uploadEl = document.getElementById('uploadDocumentModal');
                 if (uploadEl) {
                     uploadModalInstance = new bootstrap.Modal(uploadEl);
+                }
+
+                if (document.getElementById('transferDocsTable')) {
+                    initTransferDataTable({{ $distributor->id }});
                 }
             });
 
@@ -210,6 +215,54 @@
                 }
             }
 
+            function initTransferDataTable(distributorId) {
+                if ($.fn.DataTable.isDataTable('#transferDocsTable')) {
+                    $('#transferDocsTable').DataTable().destroy();
+                }
+                const tableEl = $('#transferDocsTable');
+                if (!tableEl.length) return;
+
+                transferTable = tableEl.DataTable({
+                    processing: true,
+                    serverSide: true,
+                    dom: "<'row p-2 align-items-center'<'col-12 col-md-6'l><'col-12 col-md-6 d-flex justify-content-md-end'f>>" +
+                         "<'row'<'col-12'tr>>" +
+                         "<'row p-3 border-top align-items-center'<'col-12 col-md-6 text-muted small'i><'col-12 col-md-6 d-flex justify-content-md-end'p>>",
+                    ajax: {
+                        url: `{{ url('distributor-documents/detail') }}/${distributorId}`,
+                        data: function (d) {
+                            d.table = 'transfer';
+                            d.transfer_year = $('#transfer_year_select').val() || 'all';
+                        }
+                    },
+                    columns: [
+                        { data: 'formatted_date', name: 'transaction_date', className: 'ps-3 fw-semibold text-nowrap', orderable: true },
+                        { data: 'file_display', name: 'title', orderable: false },
+                        { data: 'notes', name: 'notes', orderable: false },
+                        { data: 'file_size_badge', name: 'file_size', className: 'text-center text-nowrap', orderable: true },
+                        { data: 'actions', name: 'actions', className: 'text-end pe-3 text-nowrap', orderable: false, searchable: false }
+                    ],
+                    order: [[0, 'desc']],
+                    pageLength: 10,
+                    lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
+                    language: {
+                        processing: '<div class="d-flex justify-content-center align-items-center py-3"><div class="spinner-border spinner-border-sm text-primary me-2"></div>Memuat berkas transfer...</div>',
+                        emptyTable: '<div class="py-4 text-center text-muted"><i class="iconoir-empty-page fs-2 d-block mb-2"></i>Belum ada dokumen penjelasan transfer</div>',
+                        zeroRecords: '<div class="py-4 text-center text-muted"><i class="iconoir-search fs-2 d-block mb-2"></i>Tidak ada dokumen yang sesuai dengan filter / pencarian</div>',
+                        lengthMenu: '_MENU_ per halaman',
+                        info: 'Menampilkan _START_ sampai _END_ dari _TOTAL_ berkas',
+                        infoEmpty: 'Menampilkan 0 berkas',
+                        infoFiltered: '(disaring dari _MAX_ total berkas)',
+                        search: '_INPUT_',
+                        searchPlaceholder: 'Cari berkas transfer...',
+                        paginate: {
+                            previous: '<i class="iconoir-nav-arrow-left"></i>',
+                            next: '<i class="iconoir-nav-arrow-right"></i>'
+                        }
+                    }
+                });
+            }
+
             function changeDetailYear(distributorId, newYear, tab) {
                 window.location.href = `{{ url('distributor-documents/detail') }}/${distributorId}?year=${newYear}&tab=${tab}`;
             }
@@ -219,7 +272,11 @@
             }
 
             function changeTransferYear(distributorId, year, transferYear) {
-                window.location.href = `{{ url('distributor-documents/detail') }}/${distributorId}?year=${year}&tab=transfer&transfer_year=${transferYear}`;
+                if (transferTable) {
+                    transferTable.ajax.reload();
+                } else {
+                    window.location.href = `{{ url('distributor-documents/detail') }}/${distributorId}?year=${year}&tab=transfer&transfer_year=${transferYear}`;
+                }
             }
 
             function deleteDocument(deleteUrl, docTitle) {

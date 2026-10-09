@@ -125,11 +125,22 @@ class DistributorDocumentController extends Controller
         return view('page.distributor_documents.index', compact('year', 'availableDistributors'));
     }
 
-    public function detailView(Request $request, $distributorId): View
+    public function detailView(Request $request, $distributorId): View|JsonResponse
     {
         $distributor = Distributor::with('customer')->findOrFail($distributorId);
-        $year = (int) $request->input('year', date('Y'));
         $transferYear = $request->input('transfer_year', 'all');
+
+        // Return JSON response for transfer running table
+        if ($request->has('draw') || $request->input('table') === 'transfer') {
+            return $this->documentService->getTransferDataTable(
+                $distributor,
+                $transferYear,
+                isPortal: false,
+                canManage: auth()->user()?->can('manage-distributor-docs') ?? false
+            );
+        }
+
+        $year = (int) $request->input('year', date('Y'));
         $tab = $request->input('tab', 'monthly');
 
         $documentData = $this->documentService->getDetailData($distributor, $year, $tab, $transferYear);

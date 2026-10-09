@@ -89,9 +89,20 @@ class PublicDistributorDocumentController extends Controller
         $this->authService->authorizePortalAccess($distributorId);
 
         $distributor = Distributor::findOrFail($distributorId);
+        $transferYear = $request->get('transfer_year', 'all');
+
+        // Return JSON response for portal transfer running table
+        if ($request->has('draw') || $request->input('table') === 'transfer') {
+            return $this->documentService->getTransferDataTable(
+                $distributor,
+                $transferYear,
+                isPortal: true,
+                canManage: false
+            );
+        }
+
         $year = (int) ($request->get('year') ?: now()->year);
         $tab = $request->get('tab', 'monthly');
-        $transferYear = $request->get('transfer_year', 'all');
 
         $documentData = $this->documentService->getDetailData($distributor, $year, $tab, $transferYear);
 

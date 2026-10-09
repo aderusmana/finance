@@ -33,6 +33,7 @@
     <link href="{{ asset('assets') }}/css/responsive-1.css" rel="stylesheet" type="text/css">
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @stack('styles')
 </head>
 
 <body class="sign-in-bg"
@@ -51,6 +52,7 @@
     <!-- Bootstrap js-->
     <script src="{{ asset('assets') }}/vendor/bootstrap/bootstrap.bundle.min-1.js"></script>
 
+    @stack('scripts')
 </body>
 
 </html>

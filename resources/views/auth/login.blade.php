@@ -3,6 +3,12 @@
         Login
     @endsection
 
+    @push('styles')
+        <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/2.3.4/css/dataTables.dataTables.min.css">
+        <link rel="stylesheet" href="https://cdn.datatables.net/2.3.7/css/dataTables.bootstrap5.css">
+        <link rel="stylesheet" href="https://cdn.datatables.net/responsive/3.0.8/css/responsive.bootstrap5.css">
+    @endpush
+
     <style>
         /* Tab Navigation Styling */
         #authTabs .nav-link {
@@ -133,6 +139,104 @@
             font-weight: 700;
             height: 56px;
             border-radius: 10px;
+        }
+
+        /* Input Contrast pada Modal Dokumen Distributor */
+        #distributorDocsModalBody {
+            color: #1e293b !important;
+        }
+
+        /* 1. Fix Text Search Contrast & Styling */
+        #distributorDocsModalBody .dt-search input,
+        #distributorDocsModalBody .dataTables_filter input {
+            color: #1e293b !important;
+            background-color: #ffffff !important;
+            border: 1px solid #cbd5e1 !important;
+            border-radius: 6px !important;
+            padding: 0.375rem 0.75rem !important;
+            font-size: 0.875rem !important;
+        }
+        #distributorDocsModalBody .dt-search input:focus,
+        #distributorDocsModalBody .dataTables_filter input:focus {
+            color: #1e293b !important;
+            border-color: #2563eb !important;
+            outline: 0 !important;
+            box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.15) !important;
+        }
+
+        /* 2. Fix Length Select Styling */
+        #distributorDocsModalBody .dt-length select,
+        #distributorDocsModalBody .dataTables_length select {
+            color: #1e293b !important;
+            background-color: #ffffff !important;
+            border: 1px solid #cbd5e1 !important;
+            border-radius: 6px !important;
+            padding: 0.375rem 2rem 0.375rem 0.75rem !important;
+            font-size: 0.875rem !important;
+        }
+
+        /* 3. Fix Info Text Color */
+        #distributorDocsModalBody .dt-info,
+        #distributorDocsModalBody .dataTables_info {
+            color: #64748b !important;
+            font-size: 0.85rem !important;
+        }
+
+        /* 4. Reset Global 'nav' Interference on Pagination & Match Internal Modal Style */
+        #distributorDocsModalBody .dt-paging nav,
+        #distributorDocsModalBody .dataTables_paginate nav {
+            position: static !important;
+            width: auto !important;
+            height: auto !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            background-color: transparent !important;
+            z-index: auto !important;
+        }
+
+        #distributorDocsModalBody .dt-paging .dt-paging-button {
+            box-sizing: border-box !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            min-width: 1.5em !important;
+            padding: 6px 12px !important;
+            margin-left: 2px !important;
+            text-align: center !important;
+            text-decoration: none !important;
+            cursor: pointer !important;
+            color: #1e293b !important;
+            border: 1px solid transparent !important;
+            border-radius: 2px !important;
+            background: transparent !important;
+            font-size: 0.85rem !important;
+            line-height: 1.2 !important;
+            transition: all 0.15s ease-in-out !important;
+        }
+
+        #distributorDocsModalBody .dt-paging .dt-paging-button.current,
+        #distributorDocsModalBody .dt-paging .dt-paging-button.current:hover {
+            color: #1e293b !important;
+            border: 1px solid rgba(0, 0, 0, 0.3) !important;
+            background-color: #ffffff !important;
+            background: linear-gradient(to bottom, rgba(230, 230, 230, 0.1) 0%, rgba(0, 0, 0, 0.05) 100%) !important;
+            font-weight: 500 !important;
+        }
+
+        #distributorDocsModalBody .dt-paging .dt-paging-button.disabled,
+        #distributorDocsModalBody .dt-paging .dt-paging-button.disabled:hover,
+        #distributorDocsModalBody .dt-paging .dt-paging-button.disabled:active {
+            cursor: default !important;
+            color: rgba(0, 0, 0, 0.4) !important;
+            border: 1px solid transparent !important;
+            background: transparent !important;
+            box-shadow: none !important;
+        }
+
+        #distributorDocsModalBody .dt-paging .dt-paging-button:hover:not(.disabled):not(.current) {
+            color: #0f172a !important;
+            border-color: #cbd5e1 !important;
+            background-color: #f1f5f9 !important;
         }
     </style>
 
@@ -346,6 +450,11 @@
     {{-- Modals for Distributor Documents & PDF Preview --}}
     @include('auth.partials.portal_distributor_modal')
 
+    @push('scripts')
+    <script src="https://cdn.datatables.net/2.3.4/js/dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/3.0.8/js/dataTables.responsive.js"></script>
+    <script src="https://cdn.datatables.net/responsive/3.0.8/js/responsive.bootstrap5.js"></script>
+
     <script>
         function togglePassword() {
             const passwordInput = document.getElementById('password');
@@ -447,6 +556,7 @@
         let otpModalInstance = null;
         let docsModalInstance = null;
         let pdfModalInstance = null;
+        let portalTransferTable = null;
 
         function showPortalAlert(message, type = 'danger') {
             const container = document.getElementById('portal-alert-container');
@@ -678,6 +788,9 @@
                     const containerEl = document.getElementById('distributorDocsContainer');
                     if (containerEl) {
                         containerEl.innerHTML = data.html;
+                        if (data.tab === 'transfer' || document.getElementById('portalTransferDocsTable')) {
+                            initPortalTransferDataTable(activeDistributorId);
+                        }
                     }
 
                     // Close OTP Modal
@@ -715,7 +828,60 @@
         }
 
         function changePortalTransferYear(distributorId, year, transferYear) {
-            loadPortalDocuments(distributorId, year, 'transfer', transferYear);
+            if (portalTransferTable) {
+                portalTransferTable.ajax.reload();
+            } else {
+                loadPortalDocuments(distributorId, year, 'transfer', transferYear);
+            }
+        }
+
+        function initPortalTransferDataTable(distributorId) {
+            if ($.fn.DataTable.isDataTable('#portalTransferDocsTable')) {
+                $('#portalTransferDocsTable').DataTable().destroy();
+            }
+            const tableEl = $('#portalTransferDocsTable');
+            if (!tableEl.length) return;
+
+            portalTransferTable = tableEl.DataTable({
+                processing: true,
+                serverSide: true,
+                dom: "<'row p-2 align-items-center'<'col-12 col-md-6'l><'col-12 col-md-6 d-flex justify-content-md-end'f>>" +
+                     "<'row'<'col-12'tr>>" +
+                     "<'row p-3 border-top align-items-center'<'col-12 col-md-6 text-muted small'i><'col-12 col-md-6 d-flex justify-content-md-end'p>>",
+                ajax: {
+                    url: "{{ route('portal.distributor.documents') }}",
+                    data: function (d) {
+                        d.distributor_id = distributorId;
+                        d.table = 'transfer';
+                        d.transfer_year = $('#portal_transfer_year_select').val() || 'all';
+                    }
+                },
+                columns: [
+                    { data: 'formatted_date', name: 'transaction_date', className: 'ps-3 fw-semibold text-nowrap', orderable: true },
+                    { data: 'file_display', name: 'title', orderable: false },
+                    { data: 'notes', name: 'notes', orderable: false },
+                    { data: 'file_size_badge', name: 'file_size', className: 'text-center text-nowrap', orderable: true },
+                    { data: 'actions', name: 'actions', className: 'text-end pe-3 text-nowrap', orderable: false, searchable: false }
+                ],
+                order: [[0, 'desc']],
+                pageLength: 10,
+                lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
+                language: {
+                    processing: '<div class="d-flex justify-content-center align-items-center py-3"><div class="spinner-border spinner-border-sm text-primary me-2"></div>Memuat berkas transfer...</div>',
+                    emptyTable: '<div class="py-4 text-center text-muted"><i class="iconoir-empty-page fs-2 d-block mb-2"></i>Belum ada dokumen penjelasan transfer</div>',
+                    zeroRecords: '<div class="py-4 text-center text-muted"><i class="iconoir-search fs-2 d-block mb-2"></i>Tidak ada dokumen yang sesuai dengan filter / pencarian</div>',
+                    lengthMenu: '_MENU_ per halaman',
+                    info: 'Menampilkan _START_ sampai _END_ dari _TOTAL_ berkas',
+                    infoEmpty: 'Menampilkan 0 berkas',
+                    infoFiltered: '(disaring dari _MAX_ total berkas)',
+                    search: '_INPUT_',
+                    searchPlaceholder: 'Cari berkas transfer...',
+                    paginate: {
+                        previous: '<i class="iconoir-nav-arrow-left"></i>',
+                        next: '<i class="iconoir-nav-arrow-right"></i>'
+                    }
+                }
+            });
         }
 
         function loadPortalDocuments(distributorId, year, tab = 'monthly', transferYear = 'all') {
@@ -734,12 +900,16 @@
                 if (container) container.style.opacity = '1';
                 if (data.success) {
                     if (container) container.innerHTML = data.html;
+                    if (tab === 'transfer' || document.getElementById('portalTransferDocsTable')) {
+                        initPortalTransferDataTable(distributorId);
+                    }
                 } else {
                     alert(data.message || 'Gagal memuat dokumen.');
                 }
             })
-            .catch(() => {
+            .catch(err => {
                 if (container) container.style.opacity = '1';
+                console.error('Error loading portal documents:', err);
                 alert('Gagal memuat dokumen distributor.');
             });
         }
@@ -764,6 +934,11 @@
         }
 
         function closePortalModalAndLogout() {
+            if (portalTransferTable) {
+                portalTransferTable.destroy();
+                portalTransferTable = null;
+            }
+
             fetch('{{ route('portal.distributor.logout') }}', {
                 method: 'POST',
                 headers: {
@@ -783,4 +958,5 @@
             clearPortalModalOtpAlert();
         }
     </script>
+    @endpush
 </x-guest-layout>

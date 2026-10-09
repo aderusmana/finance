@@ -7,12 +7,14 @@ use App\Models\Customer\DistributorDocument;
 use App\Models\Customer\DistributorDocumentAttachment;
 use App\Models\Customer\DistributorDocumentDownload;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Yajra\DataTables\Facades\DataTables;
 use ZipArchive;
 
 class DistributorDocumentService
@@ -40,6 +42,87 @@ class DistributorDocumentService
     }
 
     /**
+     * Get Eloquent query for running transfer documents of a distributor.
+     */
+    public function getTransferDocumentsQuery(int $distributorId, $transferYear = 'all'): Builder
+    {
+        $query = DistributorDocumentAttachment::runningTransfers($distributorId);
+
+        if ($transferYear && $transferYear !== 'all') {
+            $transferYearInt = (int) $transferYear;
+            $query->where(function ($q) use ($transferYearInt) {
+                $q->whereYear('transaction_date', $transferYearInt)
+                    ->orWhere(function ($sub) use ($transferYearInt) {
+                        $sub->whereNull('transaction_date')
+                            ->whereYear('created_at', $transferYearInt);
+                    });
+            });
+        }
+
+        return $query;
+    }
+
+    /**
+     * Build response for running transfer documents.
+     */
+    public function getTransferDataTable(
+        Distributor $distributor,
+        $transferYear = 'all',
+        bool $isPortal = false,
+        bool $canManage = false
+    ): JsonResponse {
+        $query = $this->getTransferDocumentsQuery($distributor->id, $transferYear);
+
+        return DataTables::eloquent($query)
+            ->addColumn('formatted_date', function ($doc) {
+                if ($doc->transaction_date) {
+                    return '<div class="fw-semibold text-nowrap">'.e($doc->transaction_date->format('d M Y')).'</div>';
+                } elseif ($doc->year) {
+                    return '<div class="fw-semibold text-nowrap">Tahun '.e((string) $doc->year).'</div>';
+                }
+
+                return '<span class="text-muted">-</span>';
+            })
+            ->addColumn('file_display', function ($doc) {
+                return view('page.distributor_documents.partials.document-file', [
+                    'document' => $doc,
+                ])->render();
+            })
+            ->addColumn('notes', function ($doc) {
+                return '<span class="text-secondary">'.e($doc->notes ?: '-').'</span>';
+            })
+            ->addColumn('file_size_badge', function ($doc) {
+                return '<span class="badge bg-light text-dark border">'.e($doc->human_file_size).'</span>';
+            })
+            ->addColumn('actions', function ($doc) use ($isPortal, $canManage) {
+                return view('page.distributor_documents.partials.document-actions', [
+                    'document' => $doc,
+                    'isPortal' => $isPortal,
+                    'canManage' => $canManage,
+                    'year' => $doc->year ?: (int) date('Y'),
+                    'tab' => 'transfer',
+                ])->render();
+            })
+            ->filter(function ($query) {
+                if ($keyword = request()->input('search.value')) {
+                    $query->where(function ($q) use ($keyword) {
+                        $q->where('title', 'like', "%{$keyword}%")
+                            ->orWhere('file_name', 'like', "%{$keyword}%")
+                            ->orWhere('notes', 'like', "%{$keyword}%")
+                            ->orWhereYear('transaction_date', $keyword)
+                            ->orWhereYear('created_at', $keyword);
+                    });
+                }
+            })
+            ->orderColumn('formatted_date', function ($query, $order) {
+                $query->orderBy('transaction_date', $order)->orderBy('created_at', $order);
+            })
+            ->orderColumn('file_size_badge', 'file_size $1')
+            ->rawColumns(['formatted_date', 'file_display', 'notes', 'file_size_badge', 'actions'])
+            ->make(true);
+    }
+
+    /**
      * Fetch organized document detail data for both internal and public portal views.
      */
     public function getDetailData(Distributor $distributor, int $year, string $tab = 'monthly', $transferYear = 'all'): array
@@ -59,19 +142,11 @@ class DistributorDocumentService
                 ->groupBy(['month', 'doc_type'])
             : collect();
 
-        // Running transfer documents
-        $transferDocsQuery = DistributorDocumentAttachment::runningTransfers($distributor->id);
-        if ($transferYear && $transferYear !== 'all') {
-            $transferYearInt = (int) $transferYear;
-            $transferDocsQuery->where(function ($q) use ($transferYearInt) {
-                $q->whereYear('transaction_date', $transferYearInt)
-                    ->orWhere(function ($sub) use ($transferYearInt) {
-                        $sub->whereNull('transaction_date')
-                            ->whereYear('created_at', $transferYearInt);
-                    });
-            });
-        }
-        $transferDocs = $transferDocsQuery->get();
+        // Count of all running transfer documents for tab badge
+        $transferDocsCount = DistributorDocumentAttachment::where('distributor_id', $distributor->id)
+            ->where('doc_type', 'transfer')
+            ->whereNotNull('file_path')
+            ->count();
 
         // Distinct available years for transfer filter
         $availableTransferYears = DistributorDocumentAttachment::where('distributor_id', $distributor->id)
@@ -90,7 +165,8 @@ class DistributorDocumentService
 
         return [
             'monthlyDocs' => $monthlyDocs,
-            'transferDocs' => $transferDocs,
+            'transferDocs' => collect(),
+            'transferDocsCount' => $transferDocsCount,
             'tab' => $validTab,
             'transferYear' => $transferYear,
             'availableTransferYears' => $availableTransferYears,

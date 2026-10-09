@@ -10,6 +10,8 @@
     $transferYearCallback = $isPortal ? 'changePortalTransferYear' : 'changeTransferYear';
     $modalYearSelectId = $isPortal ? 'portal_modal_year' : 'detail_modal_year';
     $modalTransferSelectId = $isPortal ? 'portal_transfer_year_select' : 'transfer_year_select';
+    $transferTableId = $isPortal ? 'portalTransferDocsTable' : 'transferDocsTable';
+    $totalTransferDocs = $transferDocsCount ?? (isset($transferDocs) ? $transferDocs->count() : 0);
 @endphp
 
 {{-- Header Card Distributor --}}
@@ -80,8 +82,8 @@
         <li class="nav-item">
             <button type="button" class="nav-link {{ $tab === 'transfer' ? 'active' : '' }}" onclick="{{ $tabSwitchCallback }}({{ $distributor->id }}, {{ $year }}, 'transfer')">
                 <i class="iconoir-calendar-rotate me-2"></i>Penjelasan Transfer (Running Multi-Year)
-                @if ($transferDocs->count() > 0)
-                    <span class="badge bg-primary-subtle text-primary ms-1">{{ $transferDocs->count() }}</span>
+                @if ($totalTransferDocs > 0)
+                    <span class="badge bg-primary-subtle text-primary ms-1">{{ $totalTransferDocs }}</span>
                 @endif
             </button>
         </li>
@@ -230,22 +232,9 @@
             </div>
         </div>
 
-        @if ($transferDocs->isEmpty())
-            <div class="card-body p-5 text-center">
-                <i class="iconoir-empty-page fs-1 text-muted"></i>
-                <h5 class="mt-3">Belum Ada Dokumen Penjelasan Transfer</h5>
-                <p class="text-muted mb-3">
-                    {{ $canManage ? 'Unggah berkas transfer pelunasan, rekap transfer, atau arsip kerja sama distributor ini.' : 'Belum ada dokumen transfer yang diunggah untuk distributor ini.' }}
-                </p>
-                @if ($canManage)
-                    <button type="button" class="btn btn-sm btn-primary" onclick="openUploadModal('transfer', null, {{ $distributor->id }}, {{ $year }})">
-                        <i class="iconoir-upload me-1"></i> Upload File Transfer (PDF)
-                    </button>
-                @endif
-            </div>
-        @else
+        <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
+                <table id="{{ $transferTableId }}" class="table table-hover align-middle mb-0 w-100" style="width: 100%;">
                     <thead class="table-light">
                         <tr>
                             <th class="ps-3" style="width: 140px;">TGL / TAHUN</th>
@@ -255,44 +244,9 @@
                             <th class="text-end pe-3" style="width: 150px;">AKSI</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        @foreach ($transferDocs as $doc)
-                            <tr>
-                                <td class="ps-3 fw-semibold text-nowrap">
-                                    @if ($doc->transaction_date)
-                                        {{ $doc->transaction_date->format('d M Y') }}
-                                    @elseif ($doc->year)
-                                        Tahun {{ $doc->year }}
-                                    @else
-                                        -
-                                    @endif
-                                </td>
-                                <td>
-                                    @include('page.distributor_documents.partials.document-file', ['document' => $doc])
-                                </td>
-                                <td>
-                                    <span class="text-secondary">{{ $doc->notes ?: '-' }}</span>
-                                </td>
-                                <td class="text-center text-nowrap">
-                                    <span class="badge bg-light text-dark border">{{ $doc->human_file_size }}</span>
-                                </td>
-                                <td class="text-end pe-3">
-                                    @include('page.distributor_documents.partials.document-actions', [
-                                        'document' => $doc,
-                                        'isPortal' => $isPortal,
-                                        'canManage' => $canManage,
-                                        'year' => $year,
-                                        'tab' => 'transfer'
-                                    ])
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
+                    <tbody></tbody>
                 </table>
             </div>
-            <div class="card-footer bg-white border-top p-3 text-muted small">
-                Menampilkan <strong>{{ $transferDocs->count() }}</strong> berkas transfer penjelasan running.
-            </div>
-        @endif
+        </div>
     </div>
 @endif
