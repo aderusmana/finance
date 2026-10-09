@@ -17,7 +17,6 @@ class VerifyDistributorOtpRequest extends FormRequest
             'code' => ['required', 'string', 'max:50'],
             'email' => ['required', 'email', 'max:150'],
             'otp' => ['required', 'digits:6'],
-            'year' => ['nullable', 'integer', 'digits:4'],
             'website_hp' => ['nullable', 'prohibited'],
         ];
     }

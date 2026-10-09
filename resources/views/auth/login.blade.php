@@ -385,7 +385,7 @@
                                 {{-- Alert Container for Portal --}}
                                 <div id="portal-alert-container" class="mb-3" style="display: none;"></div>
 
-                                {{-- Step 1: Input Code, Bupot Email & Year --}}
+                                {{-- Step 1: Input Code & Bupot Email --}}
                                 <div id="portal-step-credentials">
                                     {{-- Anti-bot honeypot --}}
                                     <input type="text" id="portal_website_hp" name="website_hp" style="display: none !important;" tabindex="-1" autocomplete="off">
@@ -420,17 +420,6 @@
                                                    required>
                                         </div>
                                         <small class="text-muted">OTP akan dikirimkan ke alamat Email BuPot ini.</small>
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label for="portal_year" class="form-label fw-semibold">
-                                            Tahun Dokumen <span class="text-danger">*</span>
-                                        </label>
-                                        <select class="form-select" id="portal_year">
-                                            @for ($optYear = now()->year + 1; $optYear >= now()->year - 5; $optYear--)
-                                                <option value="{{ $optYear }}" @selected(now()->year === $optYear)>Tahun {{ $optYear }}</option>
-                                            @endfor
-                                        </select>
                                     </div>
 
                                     <div class="mb-3">
@@ -737,7 +726,6 @@
             const email = document.getElementById('portal_email').value.trim();
             const otpInput = document.getElementById('portal_modal_otp');
             const otp = otpInput ? otpInput.value.trim() : '';
-            const year = document.getElementById('portal_year').value;
             const honeypot = document.getElementById('portal_website_hp').value.trim();
             const btn = document.getElementById('btn-modal-confirm-otp');
 
@@ -762,7 +750,6 @@
                     code: code,
                     email: email,
                     otp: otp,
-                    year: year,
                     website_hp: honeypot
                 })
             })

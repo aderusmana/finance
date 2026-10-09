@@ -58,7 +58,7 @@ class PublicDistributorDocumentController extends Controller
             ], 422);
         }
 
-        $year = (int) ($request->input('year') ?: now()->year);
+        $year = now()->year;
         $documentData = $this->documentService->getDetailData($distributor, $year, 'monthly', 'all');
 
         $html = view('auth.partials.portal_distributor_content', array_merge([
