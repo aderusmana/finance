@@ -739,6 +739,11 @@
                 const tableEl = $('#transferDocsTable');
                 if (!tableEl.length) return;
 
+                // Suppress native DataTables browser alert popups
+                if ($.fn.dataTable && $.fn.dataTable.ext) {
+                    $.fn.dataTable.ext.errMode = 'none';
+                }
+
                 transferTable = tableEl.DataTable({
                     processing: true,
                     serverSide: true,
@@ -750,11 +755,17 @@
                         data: function (d) {
                             d.table = 'transfer';
                             d.transfer_year = $('#transfer_year_select').val() || 'all';
+                        },
+                        error: function (xhr, error, thrown) {
+                            if (xhr.status === 0 || error === 'abort') {
+                                return;
+                            }
+                            console.error('Transfer documents error:', xhr.status, error);
                         }
                     },
                     columns: [
                         { data: 'formatted_date', name: 'transaction_date', className: 'ps-3 fw-semibold text-nowrap', orderable: true },
-                        { data: 'file_display', name: 'title', orderable: false },
+                        { data: 'file_display', name: 'title', orderable: true },
                         { data: 'notes', name: 'notes', orderable: false },
                         { data: 'file_size_badge', name: 'file_size', className: 'text-center text-nowrap', orderable: true },
                         { data: 'actions', name: 'actions', className: 'text-end pe-3 text-nowrap', orderable: false, searchable: false }

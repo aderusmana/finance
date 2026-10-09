@@ -59,7 +59,7 @@ class DistributorDocumentService
             });
         }
 
-        return $query;
+        return $query->reorder();
     }
 
     /**
@@ -114,9 +114,21 @@ class DistributorDocumentService
                     });
                 }
             })
-            ->orderColumn('formatted_date', function ($query, $order) {
-                $query->orderBy('transaction_date', $order)->orderBy('created_at', $order);
+            ->orderColumn('transaction_date', function ($query, $order) {
+                $query->orderByRaw("COALESCE(transaction_date, created_at) {$order}")
+                    ->orderBy('created_at', $order);
             })
+            ->orderColumn('formatted_date', function ($query, $order) {
+                $query->orderByRaw("COALESCE(transaction_date, created_at) {$order}")
+                    ->orderBy('created_at', $order);
+            })
+            ->orderColumn('title', function ($query, $order) {
+                $query->orderBy('title', $order)->orderBy('file_name', $order);
+            })
+            ->orderColumn('file_display', function ($query, $order) {
+                $query->orderBy('title', $order)->orderBy('file_name', $order);
+            })
+            ->orderColumn('file_size', 'file_size $1')
             ->orderColumn('file_size_badge', 'file_size $1')
             ->rawColumns(['formatted_date', 'file_display', 'notes', 'file_size_badge', 'actions'])
             ->make(true);

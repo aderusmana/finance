@@ -153,6 +153,6 @@ class DistributorDocumentAttachment extends Model
             $query->where('distributor_id', $distributorId);
         }
 
-        return $query->orderByDesc('transaction_date')->orderByDesc('created_at');
+        return $query;
     }
 }

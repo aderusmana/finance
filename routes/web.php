@@ -257,7 +257,7 @@ Route::prefix('portal-distributor')->name('portal.distributor.')->group(function
         ->name('verify.otp');
 
     Route::get('/documents', [PublicDistributorDocumentController::class, 'getDocuments'])
-        ->middleware('throttle:30,1')
+        ->middleware('throttle:120,1')
         ->name('documents');
 
     Route::get('/preview/{id}', [PublicDistributorDocumentController::class, 'previewFile'])
