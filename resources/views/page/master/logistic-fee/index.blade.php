@@ -101,7 +101,7 @@
                                         <th style="background-color: #f8fafc; color: #475569; font-weight: 700; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.5px; padding: 1.25rem 1.5rem; border-bottom: 2px solid #e2e8f0; width: 15%;"><i class="ph-bold ph-currency-circle-dollar me-1" style="color: #4f46e5;"></i> Logistic Fee / ctn</th>
                                         <th class="text-center" style="background-color: #f8fafc; color: #475569; font-weight: 700; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.5px; padding: 1.25rem 1.5rem; border-bottom: 2px solid #e2e8f0; width: 10%;">Status</th>
                                         <th class="text-center" style="background-color: #f8fafc; color: #475569; font-weight: 700; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.5px; padding: 1.25rem 1.5rem; border-bottom: 2px solid #e2e8f0; width: 10%;">Route to</th>
-                                        <th class="text-center" style="background-color: #f8fafc; color: #475569; font-weight: 700; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.5px; padding: 1.25rem 1.5rem; border-bottom: 2px solid #e2e8f0; width: 10%;">Action</th>
+                                        <th class="text-center" style="background-color: #f8fafc; color: #475569; font-weight: 700; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.5px; padding: 1.25rem 1.5rem; border-bottom: 2px solid #e2e8f0; width: 12%; min-width: 170px;">Action</th>
                                     </tr>
                                 </thead>
                             </table>
@@ -270,7 +270,7 @@
                         { data: 'logistic_fee', name: 'logistic_fee' },
                         { data: 'status', name: 'status', className: 'text-center' },
                         { data: 'route_to', name: 'route_to', className: 'text-center' },
-                        { data: 'action', name: 'action', orderable: false, searchable: false, className: 'text-center' }
+                        { data: 'action', name: 'action', orderable: false, searchable: false, className: 'text-center text-nowrap' }
                     ],
                     order: [],
                     language: {
@@ -437,6 +437,69 @@
                         $('#editModeWrapper').show();
                         $('#distributor_id, #customer_id').prop('required', false);
                         $('#modalForm').modal('show');
+                    });
+                });
+
+                $(document).on('click', '.btn-delete', function() {
+                    let id = $(this).data('id');
+
+                    Swal.fire({
+                        title: 'Confirm Delete',
+                        html: `
+                        <div class="text-center" style="font-size: 0.95rem;">
+                            <p class="mb-0" style="color: #64748b;">
+                                Are you sure you want to delete this Logistic Fee data? This action cannot be undone.
+                            </p>
+                        </div>
+                        `,
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#ef4444',
+                        cancelButtonColor: '#cbd5e1',
+                        confirmButtonText: '<i class="ph-bold ph-trash me-1"></i> Yes, Delete',
+                        cancelButtonText: 'Cancel',
+                        reverseButtons: true,
+                        customClass: {
+                            confirmButton: 'btn btn-danger rounded-pill px-4 fw-bold border-0 shadow-sm',
+                            cancelButton: 'btn rounded-pill px-4 fw-bold border shadow-sm'
+                        },
+                        buttonsStyling: false
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            Swal.fire({
+                                title: 'Deleting...',
+                                text: 'Please wait...',
+                                allowOutsideClick: false,
+                                didOpen: () => { Swal.showLoading(); }
+                            });
+
+                            $.ajax({
+                                url: "{{ url('/logistic-fees') }}/" + id,
+                                type: 'DELETE',
+                                headers: {
+                                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                                },
+                                success: function(res) {
+                                    table.ajax.reload(null, false);
+                                    Swal.fire({
+                                        title: 'Deleted!',
+                                        text: res.message || 'Logistic Fee successfully deleted.',
+                                        icon: 'success',
+                                        customClass: { confirmButton: 'btn btn-success rounded-pill px-4 fw-bold shadow-sm' },
+                                        buttonsStyling: false
+                                    });
+                                },
+                                error: function(err) {
+                                    let msg = (err.responseJSON && err.responseJSON.message) ? err.responseJSON.message : 'Failed to delete Logistic Fee.';
+                                    Swal.fire({
+                                        title: 'Failed',
+                                        html: msg,
+                                        icon: 'error',
+                                        confirmButtonColor: '#4f46e5'
+                                    });
+                                }
+                            });
+                        }
                     });
                 });
             });

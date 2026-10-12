@@ -160,18 +160,32 @@ class LogisticFeeController extends Controller
                             </div>';
                 })
                 ->addColumn('action', function($row){
+                    $btn = '<div class="d-inline-flex align-items-center justify-content-center gap-2">';
+
                     if($row->status == 'Pending') {
-                        return '
-                            <button class="btn d-inline-flex align-items-center justify-content-center" disabled style="background-color: #f1f5f9; border: 1px solid #cbd5e1; color: #94a3b8; font-weight: 700; font-size: 0.85rem; padding: 0.5rem 1rem; border-radius: 0.75rem; cursor: not-allowed; width: 110px;">
-                                <i class="ph-bold ph-hourglass-high me-2"></i> Waiting
+                        $btn .= '
+                            <button class="btn d-inline-flex align-items-center justify-content-center" disabled style="background-color: #f1f5f9; border: 1px solid #cbd5e1; color: #94a3b8; font-weight: 700; font-size: 0.85rem; padding: 0.5rem 0.9rem; border-radius: 0.75rem; cursor: not-allowed;">
+                                <i class="ph-bold ph-hourglass-high me-1"></i> Waiting
+                            </button>
+                        ';
+                    } else {
+                        $btn .= '
+                            <button class="btn btn-edit d-inline-flex align-items-center justify-content-center" data-id="'.$row->id.'" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; border: none; font-weight: 700; font-size: 0.85rem; padding: 0.5rem 0.9rem; border-radius: 0.75rem; box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3); transition: all 0.2s;">
+                                <i class="ph-bold ph-pencil-simple me-1"></i> Edit
                             </button>
                         ';
                     }
-                    return '
-                        <button class="btn btn-edit d-inline-flex align-items-center justify-content-center" data-id="'.$row->id.'" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; border: none; font-weight: 700; font-size: 0.85rem; padding: 0.5rem 1rem; border-radius: 0.75rem; box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3); width: 110px; transition: all 0.2s;">
-                            <i class="ph-bold ph-pencil-simple me-2"></i> Edit
-                        </button>
-                    ';
+
+                    if (Auth::user() && Auth::user()->can('delete logistic fee')) {
+                        $btn .= '
+                            <button class="btn btn-delete d-inline-flex align-items-center justify-content-center" data-id="'.$row->id.'" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; border: none; font-weight: 700; font-size: 0.85rem; padding: 0.5rem 0.9rem; border-radius: 0.75rem; box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3); transition: all 0.2s;">
+                                <i class="ph-bold ph-trash me-1"></i> Delete
+                            </button>
+                        ';
+                    }
+
+                    $btn .= '</div>';
+                    return $btn;
                 })
 
                 ->rawColumns(['distributor_code', 'distributor_name', 'customer_code', 'customer_name', 'customer_sort_name', 'logistic_fee', 'status', 'route_to', 'action'])
@@ -343,6 +357,49 @@ class LogisticFeeController extends Controller
             'customer_sort_name' => $logisticFee->customer->sort_name ?? '-',
             'logistic_fee' => $logisticFee->status === 'Pending' ? $logisticFee->proposed_fee : $logisticFee->logistic_fee,
         ]);
+    }
+
+    public function destroy($id)
+    {
+        if (!Auth::user() || !Auth::user()->can('delete logistic fee')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Anda tidak memiliki hak akses untuk menghapus Logistic Fee.'
+            ], 403);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $record = DistributorCustomer::findOrFail($id);
+
+            // Bersihkan data log approval terkait jika ada
+            ApprovalLog::where('category', 'Customer')
+                ->where('sub_category', 'Logistic Fee')
+                ->where('related_id', $record->id)
+                ->delete();
+
+            // Bersihkan log riwayat perubahan fee jika ada
+            LogisticFeeLog::where('distributor_customer_id', $record->id)->delete();
+
+            // Hapus data Logistic Fee
+            $record->delete();
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Data Logistic Fee berhasil dihapus.'
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Gagal menghapus Logistic Fee ID ' . $id . ': ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat menghapus data: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     public function showApprovalForm($token, $action)
