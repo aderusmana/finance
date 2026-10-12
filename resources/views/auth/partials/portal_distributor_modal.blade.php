@@ -83,6 +83,9 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup" onclick="closePortalModalAndLogout()" style="filter: none; opacity: 0.8;"></button>
             </div>
             <div class="modal-body p-3 bg-light" id="distributorDocsModalBody" style="min-height: 480px;">
+                {{-- Alert Container for Distributor Documents Modal --}}
+                <div id="portal-docs-modal-alert" class="mb-3" style="display: none;"></div>
+
                 <div id="distributorDocsContainer">
                     {{-- Dynamically populated via AJAX --}}
                 </div>

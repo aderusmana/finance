@@ -9,11 +9,11 @@
                 <input type="hidden" id="modal_distributor_id" name="distributor_id" value="{{ $distributor->id ?? '' }}">
                 <input type="hidden" id="modal_year_input" name="year" value="{{ $year ?? '' }}">
 
-                <div class="modal-header">
-                    <h5 class="modal-title" id="uploadDocumentModalLabel">
-                        <i class="iconoir-upload me-2 text-primary"></i>Upload Dokumen Distributor
+                <div class="modal-header text-white" style="background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);">
+                    <h5 class="modal-title text-white" id="uploadDocumentModalLabel">
+                        <i class="iconoir-upload me-2 text-white"></i>Upload Dokumen Distributor
                     </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Tutup"></button>
                 </div>
 
                 <div class="modal-body">

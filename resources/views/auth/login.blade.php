@@ -438,6 +438,8 @@
     </div>
 
     {{-- Modals for Distributor Documents & PDF Preview --}}
+    @include('page.distributor_documents.partials.styles')
+    @include('page.distributor_documents.partials.scripts')
     @include('auth.partials.portal_distributor_modal')
 
     @push('scripts')
@@ -588,6 +590,29 @@
 
         function clearPortalModalOtpAlert() {
             const container = document.getElementById('portal-otp-modal-alert');
+            if (container) {
+                container.innerHTML = '';
+                container.style.display = 'none';
+            }
+        }
+
+        function showPortalDocsModalAlert(message, type = 'danger') {
+            const container = document.getElementById('portal-docs-modal-alert');
+            if (!container) return;
+            const iconClass = type === 'success' ? 'fa-circle-check text-success' : 'fa-triangle-exclamation text-danger';
+            const bgClass = type === 'success' ? 'alert-success text-success-emphasis bg-success-subtle border-success-subtle' : 'alert-danger text-danger-emphasis bg-danger-subtle border-danger-subtle';
+
+            container.innerHTML = `
+                <div class="alert ${bgClass} d-flex align-items-center py-2 px-3 rounded-3 border mb-3" role="alert" style="font-size: 0.85rem;">
+                    <i class="fa-solid ${iconClass} me-2 fs-5 flex-shrink-0"></i>
+                    <div>${message}</div>
+                </div>
+            `;
+            container.style.display = 'block';
+        }
+
+        function clearPortalDocsModalAlert() {
+            const container = document.getElementById('portal-docs-modal-alert');
             if (container) {
                 container.innerHTML = '';
                 container.style.display = 'none';
@@ -824,57 +849,27 @@
         }
 
         function initPortalTransferDataTable(distributorId) {
-            if ($.fn.DataTable.isDataTable('#portalTransferDocsTable')) {
-                $('#portalTransferDocsTable').DataTable().destroy();
-            }
-            const tableEl = $('#portalTransferDocsTable');
-            if (!tableEl.length) return;
-
-            // Suppress native DataTables browser alert popups
-            if ($.fn.dataTable && $.fn.dataTable.ext) {
-                $.fn.dataTable.ext.errMode = 'none';
-            }
-
-            portalTransferTable = tableEl.DataTable({
-                processing: true,
-                serverSide: true,
-                ajax: {
-                    url: "{{ route('portal.distributor.documents') }}",
-                    data: function (d) {
-                        d.distributor_id = distributorId;
-                        d.table = 'transfer';
-                        d.transfer_year = $('#portal_transfer_year_select').val() || 'all';
-                    },
-                    error: function (xhr, error, thrown) {
-                        // Silently handle cancelled/aborted requests or rate limits without popup alert
-                        if (xhr.status === 0 || error === 'abort') {
-                            return;
-                        }
-                        if (xhr.status === 429) {
-                            console.warn('Terlalu banyak permintaan transfer documents. Harap tunggu sebentar.');
-                            return;
-                        }
-                        console.error('Portal transfer documents error:', xhr.status, error);
-                    }
+            portalTransferTable = initDistributorTransferDataTable({
+                tableSelector: '#portalTransferDocsTable',
+                ajaxUrl: "{{ route('portal.distributor.documents') }}",
+                dataParams: function (d) {
+                    d.distributor_id = distributorId;
+                    d.table = 'transfer';
+                    d.transfer_year = $('#portal_transfer_year_select').val() || 'all';
                 },
-                columns: [
-                    { data: 'formatted_date', name: 'transaction_date', className: 'ps-3 fw-semibold text-nowrap', orderable: true },
-                    { data: 'file_display', name: 'title', orderable: true },
-                    { data: 'notes', name: 'notes', orderable: false },
-                    { data: 'file_size_badge', name: 'file_size', className: 'text-center text-nowrap', orderable: true },
-                    { data: 'actions', name: 'actions', className: 'text-end pe-3 text-nowrap', orderable: false, searchable: false }
-                ],
-                order: [[0, 'desc']],
-                pageLength: 10,
-                lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
-                language: {
-                    search: "_INPUT_",
-                    searchPlaceholder: "🔍 Cari berkas transfer..."
+                searchPlaceholder: "🔍 Cari berkas transfer...",
+                onError: function (xhr, error) {
+                    if (xhr.status === 429) {
+                        showPortalDocsModalAlert('Terlalu banyak permintaan berkas transfer. Harap tunggu sebentar.');
+                    } else {
+                        showPortalDocsModalAlert('Gagal memuat berkas transfer distributor.');
+                    }
                 }
             });
         }
 
         function loadPortalDocuments(distributorId, year, tab = 'monthly', transferYear = 'all') {
+            clearPortalDocsModalAlert();
             const container = document.getElementById('distributorDocsContainer');
             if (container) {
                 container.style.opacity = '0.5';
@@ -894,33 +889,18 @@
                         initPortalTransferDataTable(distributorId);
                     }
                 } else {
-                    alert(data.message || 'Gagal memuat dokumen.');
+                    showPortalDocsModalAlert(data.message || 'Gagal memuat dokumen distributor.');
                 }
             })
             .catch(err => {
                 if (container) container.style.opacity = '1';
                 console.error('Error loading portal documents:', err);
-                alert('Gagal memuat dokumen distributor.');
+                showPortalDocsModalAlert('Gagal memuat dokumen distributor karena gangguan jaringan.');
             });
         }
 
         function openPublicPdfPreview(previewUrl, title, downloadUrl) {
-            document.getElementById('previewPdfModalLabel').textContent = title || 'Pratinjau Dokumen PDF';
-            document.getElementById('previewPdfModalSubtitle').textContent = 'Memuat berkas PDF...';
-            document.getElementById('previewPdfDownloadBtn').href = downloadUrl;
-            document.getElementById('previewPdfNewTabBtn').href = previewUrl;
-
-            const iframe = document.getElementById('previewPdfIframe');
-            iframe.src = previewUrl;
-            iframe.onload = function () {
-                document.getElementById('previewPdfModalSubtitle').textContent = 'Selesai dimuat.';
-            };
-
-            const pdfEl = document.getElementById('previewPdfModal');
-            if (!pdfModalInstance) {
-                pdfModalInstance = new bootstrap.Modal(pdfEl);
-            }
-            pdfModalInstance.show();
+            openPdfPreview(previewUrl, title, downloadUrl, 'previewPdfModal');
         }
 
         function closePortalModalAndLogout() {

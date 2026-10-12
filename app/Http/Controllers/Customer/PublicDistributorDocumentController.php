@@ -132,8 +132,16 @@ class PublicDistributorDocumentController extends Controller
                 $request
             );
         } catch (\Symfony\Component\HttpKernel\Exception\NotFoundHttpException $e) {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json(['success' => false, 'message' => 'Tidak ada dokumen yang dapat diunduh.'], 404);
+            }
+
             return redirect()->back()->with('error', 'Tidak ada dokumen yang dapat diunduh.');
         } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json(['success' => false, 'message' => $e->getMessage()], $e->getStatusCode());
+            }
+
             return redirect()->back()->with('error', $e->getMessage());
         }
     }

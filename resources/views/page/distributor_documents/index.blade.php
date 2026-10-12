@@ -2,6 +2,8 @@
     @section('title', 'Manajemen Dokumen Distributor')
 
     @include('components.sample-table-styles')
+    @include('page.distributor_documents.partials.styles')
+    @include('page.distributor_documents.partials.scripts')
 
     <!-- Select2 & Select2 Bootstrap 5 Theme -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
@@ -30,240 +32,6 @@
         .select2-container--bootstrap-5 .select2-results__option--selected {
             background-color: #e0e7ff !important;
             color: #3730a3 !important;
-        }
-
-        .month-matrix-container {
-            display: inline-flex;
-            gap: 4px;
-            align-items: center;
-            flex-wrap: nowrap;
-        }
-
-        .month-matrix-pill {
-            display: inline-flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            width: 32px;
-            height: 38px;
-            border-radius: 6px;
-            text-decoration: none;
-            transition: all 0.15s ease-in-out;
-            border: 1px solid transparent;
-            font-size: 0.72rem;
-            cursor: pointer;
-        }
-
-        .month-matrix-pill .month-num {
-            font-size: 0.68rem;
-            font-weight: 700;
-            line-height: 1;
-        }
-
-        .month-matrix-pill .month-icon {
-            font-size: 0.8rem;
-            line-height: 1;
-            margin-top: 2px;
-        }
-
-        /* Complete: BuPot & TOP exists */
-        .month-matrix-pill.complete {
-            background-color: #d1fae5;
-            border-color: #6ee7b7;
-            color: #065f46;
-        }
-        .month-matrix-pill.complete:hover {
-            background-color: #a7f3d0;
-            color: #064e3b;
-        }
-
-        /* Partial: BuPot or TOP exists */
-        .month-matrix-pill.partial {
-            background-color: #fef3c7;
-            border-color: #fcd34d;
-            color: #92400e;
-        }
-        .month-matrix-pill.partial:hover {
-            background-color: #fde68a;
-            color: #78350f;
-        }
-
-        /* empty */
-        .month-matrix-pill.empty {
-            background-color: #f3f4f6;
-            border-color: #e5e7eb;
-            color: #9ca3af;
-        }
-        .month-matrix-pill.empty:hover {
-            background-color: #e5e7eb;
-            color: #6b7280;
-        }
-
-        .legend-indicator {
-            display: inline-block;
-            width: 14px;
-            height: 14px;
-            border-radius: 3px;
-            vertical-align: middle;
-            margin-right: 5px;
-        }
-        .legend-complete { background-color: #10b981; border: 1px solid #059669; }
-        .legend-partial  { background-color: #f59e0b; border: 1px solid #d97706; }
-        .legend-empty    { background-color: #d1d5db; border: 1px solid #9ca3af; }
-
-        .distributor-code-badge {
-            font-family: monospace;
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: #1e3a8a;
-            background-color: #eff6ff;
-            border: 1px solid #bfdbfe;
-            padding: 2px 8px;
-            border-radius: 4px;
-        }
-
-        .distributor-bupot-badge {
-            font-size: 0.75rem;
-            max-width: 250px;
-        }
-
-        .distributor-transfer-range {
-            font-size: 0.72rem;
-        }
-
-        /* Detail Modal Style */
-        .detail-header-card {
-            background: linear-gradient(135deg, #152238 0%, #1e3a5f 100%);
-            border-radius: 0.75rem;
-            color: #fff;
-            padding: 1.25rem 1.5rem;
-            box-shadow: 0 4px 12px rgba(21, 34, 56, 0.15);
-        }
-
-        .distributor-code-badge-light {
-            font-family: monospace;
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: #93c5fd;
-            background-color: rgba(255, 255, 255, 0.12);
-            border: 1px solid rgba(147, 197, 253, 0.3);
-            padding: 2px 8px;
-            border-radius: 4px;
-        }
-
-        .nav-tabs-custom {
-            border-bottom: 2px solid #e2e8f0;
-            gap: 8px;
-        }
-
-        .nav-tabs-custom .nav-link {
-            border: none;
-            border-bottom: 3px solid transparent;
-            color: #64748b;
-            font-weight: 600;
-            padding: 0.65rem 1.15rem;
-            border-radius: 0;
-            background: transparent;
-            transition: all 0.2s ease;
-        }
-
-        .nav-tabs-custom .nav-link:hover {
-            color: #1e3a8a;
-            border-bottom-color: #cbd5e1;
-        }
-
-        .nav-tabs-custom .nav-link.active {
-            color: #1e3a8a;
-            border-bottom-color: #2563eb;
-            background: transparent;
-        }
-
-        .month-card {
-            border: 1px solid #e2e8f0;
-            border-radius: 0.75rem;
-            background: #ffffff;
-            transition: box-shadow 0.2s ease, border-color 0.2s ease;
-        }
-
-        .month-card:hover {
-            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
-            border-color: #cbd5e1;
-        }
-
-        .month-card-header {
-            padding: 0.75rem 1rem;
-            border-bottom: 1px solid #f1f5f9;
-            background: #fafbfc;
-            border-top-left-radius: 0.75rem;
-            border-top-right-radius: 0.75rem;
-        }
-
-        .doc-section {
-            border: 1px solid #f1f5f9;
-            background: #f8fafc;
-            border-radius: 0.5rem;
-            padding: 0.65rem 0.85rem;
-        }
-
-        .doc-item-row {
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
-            border-radius: 0.375rem;
-            padding: 0.45rem 0.65rem;
-            margin-bottom: 0.5rem;
-        }
-        .doc-item-row:last-child {
-            margin-bottom: 0;
-        }
-
-        .btn-add-quick {
-            font-size: 0.72rem;
-            font-weight: 600;
-            padding: 0.2rem 0.45rem;
-            border-radius: 0.375rem;
-        }
-
-        .badge-status-complete {
-            background-color: #d1fae5;
-            color: #065f46;
-            border: 1px solid #6ee7b7;
-        }
-
-        .badge-status-partial {
-            background-color: #fef3c7;
-            color: #92400e;
-            border: 1px solid #fcd34d;
-        }
-
-        .badge-status-empty {
-            background-color: #f3f4f6;
-            color: #6b7280;
-            border: 1px solid #e5e7eb;
-        }
-
-        /* Distributor Document file upload zone */
-        .distributor-file-zone {
-            transition: all 0.2s ease-in-out;
-        }
-        .distributor-file-zone .file-card {
-            transition: transform 0.15s ease, box-shadow 0.15s ease;
-        }
-        .distributor-file-zone .file-card:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
-        }
-        .distributor-file-zone .btn-remove-file {
-            transition: all 0.15s ease;
-        }
-        .distributor-file-zone .btn-remove-file:hover {
-            background: rgba(239, 68, 68, 0.2) !important;
-            transform: scale(1.1);
-        }
-        #distributorTableContainer {
-            transition: opacity 0.2s ease;
-        }
-        .swal2-container {
-            z-index: 99999 !important;
         }
     </style>
 
@@ -308,12 +76,12 @@
     <div class="modal fade" id="distributorDetailModal" tabindex="-1" aria-labelledby="distributorDetailModalLabel" aria-hidden="true" style="z-index: 1060;">
         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" style="max-width: 94vw; width: 94vw;">
             <div class="modal-content border-0 shadow-lg">
-                <div class="modal-header py-2 px-3 bg-white border-bottom d-flex align-items-center justify-content-between">
+                <div class="modal-header py-2 px-3 text-white border-bottom d-flex align-items-center justify-content-between" style="background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);">
                     <div class="d-flex align-items-center gap-2">
-                        <i class="iconoir-folder text-primary fs-5"></i>
-                        <h6 class="modal-title fw-bold mb-0 text-dark" id="distributorDetailModalLabel">Kelola Dokumen Distributor</h6>
+                        <i class="iconoir-folder text-white fs-5"></i>
+                        <h6 class="modal-title fw-bold mb-0 text-white" id="distributorDetailModalLabel">Kelola Dokumen Distributor</h6>
                     </div>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup" style="filter: none; opacity: 0.8;"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Tutup" style="opacity: 0.85;"></button>
                 </div>
                 <div class="modal-body p-3 bg-light" id="distributorDetailModalBody" style="min-height: 480px;">
                     <div class="d-flex justify-content-center align-items-center py-5">
@@ -703,46 +471,12 @@
             }
 
             function initTransferDataTable(distributorId) {
-                if ($.fn.DataTable.isDataTable('#transferDocsTable')) {
-                    $('#transferDocsTable').DataTable().destroy();
-                }
-                const tableEl = $('#transferDocsTable');
-                if (!tableEl.length) return;
-
-                // Suppress native DataTables browser alert popups
-                if ($.fn.dataTable && $.fn.dataTable.ext) {
-                    $.fn.dataTable.ext.errMode = 'none';
-                }
-
-                transferTable = tableEl.DataTable({
-                    processing: true,
-                    serverSide: true,
-                    ajax: {
-                        url: `{{ url('distributor-documents/detail') }}/${distributorId}`,
-                        data: function (d) {
-                            d.table = 'transfer';
-                            d.transfer_year = $('#transfer_year_select').val() || 'all';
-                        },
-                        error: function (xhr, error, thrown) {
-                            if (xhr.status === 0 || error === 'abort') {
-                                return;
-                            }
-                            console.error('Transfer documents error:', xhr.status, error);
-                        }
-                    },
-                    columns: [
-                        { data: 'formatted_date', name: 'transaction_date', className: 'ps-3 fw-semibold text-nowrap', orderable: true },
-                        { data: 'file_display', name: 'title', orderable: true },
-                        { data: 'notes', name: 'notes', orderable: false },
-                        { data: 'file_size_badge', name: 'file_size', className: 'text-center text-nowrap', orderable: true },
-                        { data: 'actions', name: 'actions', className: 'text-end pe-3 text-nowrap', orderable: false, searchable: false }
-                    ],
-                    order: [[0, 'desc']],
-                    pageLength: 10,
-                    lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
-                    language: {
-                        search: "_INPUT_",
-                        searchPlaceholder: "🔍 Cari berkas transfer..."
+                transferTable = initDistributorTransferDataTable({
+                    tableSelector: '#transferDocsTable',
+                    ajaxUrl: `{{ url('distributor-documents/detail') }}/${distributorId}`,
+                    dataParams: function (d) {
+                        d.table = 'transfer';
+                        d.transfer_year = $('#transfer_year_select').val() || 'all';
                     }
                 });
             }
@@ -760,26 +494,6 @@
                     transferTable.ajax.reload();
                 } else {
                     loadDistributorDetail(distributorId, year, 'transfer', null, transferYear);
-                }
-            }
-
-            // ==========================================
-            // PDF PREVIEW MODAL FUNCTIONS
-            // ==========================================
-            function openPdfPreview(previewUrl, title, downloadUrl) {
-                document.getElementById('previewPdfModalLabel').textContent = title || 'Pratinjau Dokumen PDF';
-                document.getElementById('previewPdfModalSubtitle').textContent = 'Memuat berkas PDF...';
-                document.getElementById('previewPdfDownloadBtn').href = downloadUrl;
-                document.getElementById('previewPdfNewTabBtn').href = previewUrl;
-
-                const iframe = document.getElementById('previewPdfIframe');
-                iframe.src = previewUrl;
-                iframe.onload = function () {
-                    document.getElementById('previewPdfModalSubtitle').textContent = 'Selesai dimuat.';
-                };
-
-                if (previewPdfModalInstance) {
-                    previewPdfModalInstance.show();
                 }
             }
 
@@ -917,105 +631,19 @@
             // DELETE DOCUMENT VIA AJAX
             // ==========================================
             function deleteDocument(deleteUrl, docTitle) {
-                const escapeHtml = (text) => {
-                    const div = document.createElement('div');
-                    div.textContent = text || '';
-                    return div.innerHTML;
-                };
-
-                const safeTitle = escapeHtml(docTitle);
-
-                const executeDelete = () => {
-                    Swal.fire({
-                        title: 'Menghapus Dokumen...',
-                        html: 'Mohon tunggu sebentar.',
-                        allowOutsideClick: false,
-                        showConfirmButton: false,
-                        didOpen: () => {
-                            Swal.showLoading();
-                        }
-                    });
-
-                    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-
-                    fetch(deleteUrl, {
-                        method: 'DELETE',
-                        headers: {
-                            'X-CSRF-TOKEN': csrfToken,
-                            'X-Requested-With': 'XMLHttpRequest',
-                            'Accept': 'application/json'
-                        }
-                    })
-                    .then(response => {
-                        if (!response.ok) throw new Error('Gagal menghapus dokumen.');
-                        return response.json();
-                    })
-                    .then(data => {
-                        Swal.close();
-
-                        // Refresh Distributor Detail Modal Content
+                deleteDistributorDocument(deleteUrl, docTitle, {
+                    onSuccess: function () {
                         loadDistributorDetail(currentDistributorId, currentYear, currentTab);
-
-                        // Auto-refresh main table in background
                         if (distributorTable) {
                             distributorTable.ajax.reload(null, false);
                         }
-
-                        // Toast notification for user confirmation
-                        Swal.fire({
-                            toast: true,
-                            position: 'top-end',
-                            icon: 'success',
-                            title: data.message || 'Dokumen berhasil dihapus.',
-                            showConfirmButton: false,
-                            timer: 2000,
-                            timerProgressBar: true
-                        });
-                    })
-                    .catch(err => {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Gagal Menghapus',
-                            text: err.message || 'Terjadi kesalahan saat menghapus dokumen.'
-                        });
-                    });
-                };
-
-                if (window.Swal) {
-                    Swal.fire({
-                        title: 'Hapus Dokumen?',
-                        html: `Apakah Anda yakin ingin menghapus dokumen <strong>"${safeTitle}"</strong>?<br><small class="text-muted">Berkas akan dihapus secara permanen dari server.</small>`,
-                        icon: 'warning',
-                        showCancelButton: true,
-                        confirmButtonColor: '#dc3545',
-                        cancelButtonColor: '#6c757d',
-                        confirmButtonText: '<i class="iconoir-trash me-1"></i> Ya, Hapus!',
-                        cancelButtonText: 'Batal',
-                        reverseButtons: true,
-                        focusCancel: true
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            executeDelete();
-                        }
-                    });
-                } else {
-                    if (confirm(`Hapus dokumen "${docTitle}"?`)) {
-                        executeDelete();
                     }
-                }
+                });
             }
 
             // ==========================================
             // ADD DISTRIBUTOR TO LIST & UPLOAD FUNCTIONS
             // ==========================================
-            function formatDocBytes(bytes, decimals = 2) {
-                if (!bytes || bytes === 0) return '0 Bytes';
-                const k = 1024;
-                const dm = decimals < 0 ? 0 : decimals;
-                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-                const i = Math.floor(Math.log(bytes) / Math.log(k));
-                return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
-            }
 
             function resetAddDistributorFileZones() {
                 $('.distributor-file-zone').each(function() {
