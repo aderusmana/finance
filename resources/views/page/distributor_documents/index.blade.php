@@ -120,6 +120,15 @@
             border-radius: 4px;
         }
 
+        .distributor-bupot-badge {
+            font-size: 0.75rem;
+            max-width: 250px;
+        }
+
+        .distributor-transfer-range {
+            font-size: 0.72rem;
+        }
+
         /* Detail Modal Style */
         .detail-header-card {
             background: linear-gradient(135deg, #152238 0%, #1e3a5f 100%);

@@ -7,6 +7,7 @@ use App\Models\Customer\DistributorDocument;
 use App\Models\Customer\DistributorDocumentAttachment;
 use App\Models\Customer\DistributorDocumentDownload;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
@@ -42,6 +43,97 @@ class DistributorDocumentService
     }
 
     /**
+     * Build DataTables response for distributor document monitoring list.
+     */
+    public function getMonitoringDataTable(int $year): JsonResponse
+    {
+        $query = $this->getMonitoringDistributorsQuery($year);
+        $monthNames = [
+            1 => 'Jan', 2 => 'Feb', 3 => 'Mar', 4 => 'Apr', 5 => 'Mei', 6 => 'Jun',
+            7 => 'Jul', 8 => 'Agu', 9 => 'Sep', 10 => 'Okt', 11 => 'Nov', 12 => 'Des',
+        ];
+
+        return DataTables::eloquent($query)
+            ->addColumn('code', function ($distributor) {
+                return view('page.distributor_documents.partials.monitoring-code', [
+                    'distributor' => $distributor,
+                ])->render();
+            })
+            ->addColumn('name', function ($distributor) {
+                return view('page.distributor_documents.partials.monitoring-name', [
+                    'distributor' => $distributor,
+                    'bupotEmails' => $distributor->bupot_email_list,
+                ])->render();
+            })
+            ->filterColumn('code', function ($query, $keyword) {
+                $query->where('distributors.code', 'like', "%{$keyword}%");
+            })
+            ->filterColumn('name', function ($query, $keyword) {
+                $query->where(function ($q) use ($keyword) {
+                    $q->where('distributors.name', 'like', "%{$keyword}%")
+                        ->orWhere('distributors.code', 'like', "%{$keyword}%")
+                        ->orWhere('distributors.bupot_email', 'like', "%{$keyword}%");
+                });
+            })
+            ->addColumn('monthly_progress', function ($distributor) use ($year, $monthNames) {
+                return view('page.distributor_documents.partials.monitoring-progress', [
+                    'distributor' => $distributor,
+                    'year' => $year,
+                    'monthNames' => $monthNames,
+                    'monthlySummary' => $distributor->getMonthlyDocumentSummary($year),
+                ])->render();
+            })
+            ->addColumn('transfer_running', function ($distributor) use ($year) {
+                return view('page.distributor_documents.partials.monitoring-transfer', [
+                    'distributor' => $distributor,
+                    'year' => $year,
+                    'range' => $this->getDistributorTransferYearsRange($distributor),
+                ])->render();
+            })
+            ->addColumn('action', function ($distributor) use ($year) {
+                return view('page.distributor_documents.partials.monitoring-actions', [
+                    'distributor' => $distributor,
+                    'year' => $year,
+                ])->render();
+            })
+            ->rawColumns(['code', 'name', 'monthly_progress', 'transfer_running', 'action'])
+            ->make(true);
+    }
+
+    /**
+     * Helper to compute formatted transfer documents year range string (e.g. '2024-2025' or '2025').
+     */
+    public function getDistributorTransferYearsRange(Distributor $distributor): ?string
+    {
+        if ($distributor->transfer_documents_count <= 0) {
+            return null;
+        }
+
+        $transferYears = $distributor->transferDocuments->map(function ($doc) {
+            return $doc->transaction_date
+                ? (int) $doc->transaction_date->format('Y')
+                : (int) $doc->created_at->format('Y');
+        })->filter()->unique()->sort()->values();
+
+        if ($transferYears->isEmpty()) {
+            return null;
+        }
+
+        $minY = $transferYears->first();
+        $maxY = $transferYears->last();
+
+        return $minY === $maxY ? (string) $minY : "{$minY}-{$maxY}";
+    }
+
+    /**
+     * Get available distributors for dropdown/select options.
+     */
+    public function getAvailableDistributors(): Collection
+    {
+        return Distributor::orderBy('code', 'asc')->get(['id', 'code', 'name', 'email', 'bupot_email']);
+    }
+
+    /**
      * Get Eloquent query for running transfer documents of a distributor.
      */
     public function getTransferDocumentsQuery(int $distributorId, $transferYear = 'all'): Builder
@@ -66,12 +158,16 @@ class DistributorDocumentService
      * Build response for running transfer documents.
      */
     public function getTransferDataTable(
-        Distributor $distributor,
+        Distributor|int $distributor,
         $transferYear = 'all',
         bool $isPortal = false,
         bool $canManage = false
     ): JsonResponse {
-        $query = $this->getTransferDocumentsQuery($distributor->id, $transferYear);
+        $distributorModel = is_numeric($distributor)
+            ? $this->findDistributor((int) $distributor)
+            : $distributor;
+
+        $query = $this->getTransferDocumentsQuery($distributorModel->id, $transferYear);
 
         return DataTables::eloquent($query)
             ->addColumn('formatted_date', function ($doc) {
@@ -414,5 +510,214 @@ class DistributorDocumentService
         $zip->close();
 
         return response()->download($zipFilePath)->deleteFileAfterSend(true);
+    }
+
+    /**
+     * Find distributor by ID.
+     */
+    public function findDistributor(int $id): Distributor
+    {
+        return Distributor::findOrFail($id);
+    }
+
+    /**
+     * Find distributor with customer relation.
+     */
+    public function findDistributorWithCustomer(int $id): Distributor
+    {
+        return Distributor::with('customer')->findOrFail($id);
+    }
+
+    /**
+     * Find attachment by ID.
+     */
+    public function findAttachment(int $id): DistributorDocumentAttachment
+    {
+        return DistributorDocumentAttachment::findOrFail($id);
+    }
+
+    /**
+     * Get aggregated data for internal detail view and partial modal.
+     */
+    public function getDetailViewData(Distributor|int $distributor, int $year, string $tab = 'monthly', $transferYear = 'all'): array
+    {
+        $distributorModel = is_numeric($distributor)
+            ? $this->findDistributorWithCustomer((int) $distributor)
+            : $distributor;
+
+        $documentData = $this->getDetailData($distributorModel, $year, $tab, $transferYear);
+
+        return array_merge([
+            'distributor' => $distributorModel,
+            'year' => $year,
+        ], $documentData);
+    }
+
+    /**
+     * Render HTML string for public portal distributor content modal.
+     */
+    public function renderPortalContent(Distributor|int $distributor, int $year, string $tab = 'monthly', $transferYear = 'all'): string
+    {
+        $distributorModel = is_numeric($distributor)
+            ? $this->findDistributor((int) $distributor)
+            : $distributor;
+
+        $documentData = $this->getDetailData($distributorModel, $year, $tab, $transferYear);
+
+        return view('auth.partials.portal_distributor_content', array_merge([
+            'distributor' => $distributorModel,
+            'year' => $year,
+        ], $documentData))->render();
+    }
+
+    /**
+     * Build response payload for successful OTP verification in portal.
+     *
+     * @return array{success: bool, message: string, distributor: array{id: int, name: string, code: string, bupot_email: ?string}, year: int, html: string}
+     */
+    public function getPortalVerificationPayload(Distributor $distributor, ?int $year = null): array
+    {
+        $year = $year ?: now()->year;
+        $html = $this->renderPortalContent($distributor, $year, 'monthly', 'all');
+
+        return [
+            'success' => true,
+            'message' => 'Verifikasi OTP berhasil!',
+            'distributor' => [
+                'id' => $distributor->id,
+                'name' => $distributor->name,
+                'code' => $distributor->code,
+                'bupot_email' => $distributor->bupot_email,
+            ],
+            'year' => $year,
+            'html' => $html,
+        ];
+    }
+
+    /**
+     * Build response payload for portal dynamic AJAX documents fetch.
+     *
+     * @return array{success: bool, year: int, tab: string, html: string}
+     */
+    public function getPortalDocumentData(Distributor|int $distributor, int $year, string $tab = 'monthly', $transferYear = 'all'): array
+    {
+        $html = $this->renderPortalContent($distributor, $year, $tab, $transferYear);
+
+        return [
+            'success' => true,
+            'year' => $year,
+            'tab' => $tab,
+            'html' => $html,
+        ];
+    }
+
+    /**
+     * Process upload request and return structured metadata.
+     *
+     * @return array{attachment: DistributorDocumentAttachment, distributor_id: int, year: int, tab: string, is_transfer: bool, message: string}
+     */
+    public function uploadDocumentFromRequest(array $validatedData, UploadedFile $file, ?int $uploadedBy = null): array
+    {
+        $distributor = $this->findDistributor((int) $validatedData['distributor_id']);
+        $attachment = $this->uploadDocument($distributor, $validatedData, $file, $uploadedBy);
+
+        $isTransfer = $attachment->doc_type === 'transfer';
+        $year = $attachment->year ?? (int) date('Y');
+
+        return [
+            'attachment' => $attachment,
+            'distributor_id' => $distributor->id,
+            'year' => $year,
+            'tab' => $isTransfer ? 'transfer' : 'monthly',
+            'is_transfer' => $isTransfer,
+            'message' => 'Dokumen berhasil diunggah.',
+        ];
+    }
+
+    /**
+     * Delete attachment by ID and return metadata for redirection / response.
+     *
+     * @return array{distributor_id: int, year: int, tab: string, message: string}
+     */
+    public function deleteAttachmentById(int $attachmentId): array
+    {
+        $attachment = DistributorDocumentAttachment::with('document')->findOrFail($attachmentId);
+        $distributorId = $attachment->distributor_id;
+        $year = $attachment->year ?? (int) date('Y');
+        $docType = $attachment->doc_type;
+
+        $this->deleteAttachment($attachment);
+
+        return [
+            'distributor_id' => $distributorId,
+            'year' => $year,
+            'tab' => $docType === 'transfer' ? 'transfer' : 'monthly',
+            'message' => 'Dokumen berhasil dihapus.',
+        ];
+    }
+
+    /**
+     * Generate preview response by attachment ID.
+     */
+    public function previewAttachment(int $id): BinaryFileResponse
+    {
+        $attachment = $this->findAttachment($id);
+
+        return $this->previewResponse($attachment);
+    }
+
+    /**
+     * Generate download response by attachment ID.
+     */
+    public function downloadAttachment(int $id, string $via, ?Request $request = null): BinaryFileResponse
+    {
+        $attachment = $this->findAttachment($id);
+
+        return $this->downloadResponse($attachment, $via, $request);
+    }
+
+    /**
+     * Generate zip download response by distributor ID.
+     */
+    public function downloadZipByDistributorId(int $distributorId, int $year, string $via, ?Request $request = null): BinaryFileResponse
+    {
+        $distributor = $this->findDistributor($distributorId);
+
+        return $this->downloadZipResponse($distributor, $year, $via, $request);
+    }
+
+    /**
+     * Register distributor for a specific year and return result message.
+     *
+     * @return array{distributor: Distributor, year: int, message: string}
+     */
+    public function registerDistributor(
+        int $distributorId,
+        int $year,
+        bool $withUpload = false,
+        ?array $uploadData = null,
+        ?UploadedFile $file = null,
+        ?int $uploadedBy = null
+    ): array {
+        $distributor = $this->findDistributor($distributorId);
+
+        $this->registerDistributorToYear(
+            $distributor,
+            $year,
+            $withUpload,
+            $uploadData,
+            $file,
+            $uploadedBy
+        );
+
+        $message = $withUpload
+            ? "Distributor '{$distributor->name}' berhasil ditambahkan ke list tahun {$year} dan dokumen berhasil diunggah."
+            : "Distributor '{$distributor->name}' berhasil ditambahkan ke list dokumen tahun {$year}.";
+
+        return [
+            'distributor' => $distributor,
+            'year' => $year,
+            'message' => $message,
+        ];
     }
 }

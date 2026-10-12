@@ -5,8 +5,6 @@ namespace App\Http\Controllers\Customer;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Customer\RequestDistributorOtpRequest;
 use App\Http\Requests\Customer\VerifyDistributorOtpRequest;
-use App\Models\Customer\Distributor;
-use App\Models\Customer\DistributorDocumentAttachment;
 use App\Services\Distributor\DistributorDocumentService;
 use App\Services\Distributor\DistributorPortalAuthService;
 use Illuminate\Http\JsonResponse;
@@ -42,7 +40,7 @@ class PublicDistributorDocumentController extends Controller
     }
 
     /**
-     * Verify OTP and return document data HTML for modal display.
+     * Verify OTP and return document data for portal display.
      */
     public function verifyOtp(VerifyDistributorOtpRequest $request): JsonResponse
     {
@@ -52,32 +50,15 @@ class PublicDistributorDocumentController extends Controller
                 $request->input('email'),
                 $request->input('otp')
             );
+
+            $payload = $this->documentService->getPortalVerificationPayload($distributor);
+
+            return response()->json($payload);
         } catch (ValidationException $e) {
             return response()->json([
                 'message' => collect($e->errors())->flatten()->first() ?? $e->getMessage(),
             ], 422);
         }
-
-        $year = now()->year;
-        $documentData = $this->documentService->getDetailData($distributor, $year, 'monthly', 'all');
-
-        $html = view('auth.partials.portal_distributor_content', array_merge([
-            'distributor' => $distributor,
-            'year' => $year,
-        ], $documentData))->render();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Verifikasi OTP berhasil!',
-            'distributor' => [
-                'id' => $distributor->id,
-                'name' => $distributor->name,
-                'code' => $distributor->code,
-                'bupot_email' => $distributor->bupot_email,
-            ],
-            'year' => $year,
-            'html' => $html,
-        ]);
     }
 
     /**
@@ -88,13 +69,12 @@ class PublicDistributorDocumentController extends Controller
         $distributorId = (int) $request->get('distributor_id');
         $this->authService->authorizePortalAccess($distributorId);
 
-        $distributor = Distributor::findOrFail($distributorId);
         $transferYear = $request->get('transfer_year', 'all');
 
         // Return JSON response for portal transfer running table
         if ($request->has('draw') || $request->input('table') === 'transfer') {
             return $this->documentService->getTransferDataTable(
-                $distributor,
+                $distributorId,
                 $transferYear,
                 isPortal: true,
                 canManage: false
@@ -104,19 +84,9 @@ class PublicDistributorDocumentController extends Controller
         $year = (int) ($request->get('year') ?: now()->year);
         $tab = $request->get('tab', 'monthly');
 
-        $documentData = $this->documentService->getDetailData($distributor, $year, $tab, $transferYear);
+        $data = $this->documentService->getPortalDocumentData($distributorId, $year, $tab, $transferYear);
 
-        $html = view('auth.partials.portal_distributor_content', array_merge([
-            'distributor' => $distributor,
-            'year' => $year,
-        ], $documentData))->render();
-
-        return response()->json([
-            'success' => true,
-            'year' => $year,
-            'tab' => $tab,
-            'html' => $html,
-        ]);
+        return response()->json($data);
     }
 
     /**
@@ -124,7 +94,7 @@ class PublicDistributorDocumentController extends Controller
      */
     public function previewFile($id): BinaryFileResponse
     {
-        $document = DistributorDocumentAttachment::findOrFail($id);
+        $document = $this->documentService->findAttachment((int) $id);
         $this->authService->authorizePortalAccess($document->distributor_id);
 
         return $this->documentService->previewResponse($document);
@@ -135,7 +105,7 @@ class PublicDistributorDocumentController extends Controller
      */
     public function downloadFile(Request $request, $id): BinaryFileResponse
     {
-        $document = DistributorDocumentAttachment::findOrFail($id);
+        $document = $this->documentService->findAttachment((int) $id);
         $this->authService->authorizePortalAccess($document->distributor_id);
 
         return $this->documentService->downloadResponse($document, 'guest_portal', $request);
@@ -154,11 +124,13 @@ class PublicDistributorDocumentController extends Controller
         $distributorId = (int) $request->distributor_id;
         $this->authService->authorizePortalAccess($distributorId);
 
-        $distributor = Distributor::findOrFail($distributorId);
-        $year = (int) $request->year;
-
         try {
-            return $this->documentService->downloadZipResponse($distributor, $year, 'guest_portal', $request);
+            return $this->documentService->downloadZipByDistributorId(
+                $distributorId,
+                (int) $request->year,
+                'guest_portal',
+                $request
+            );
         } catch (\Symfony\Component\HttpKernel\Exception\NotFoundHttpException $e) {
             return redirect()->back()->with('error', 'Tidak ada dokumen yang dapat diunduh.');
         } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
