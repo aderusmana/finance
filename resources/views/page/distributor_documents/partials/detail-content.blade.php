@@ -232,8 +232,8 @@
             </div>
         </div>
 
-        <div class="card-body p-0">
-            <div class="table-responsive">
+        <div class="card-body p-3 pt-2">
+            <div class="table-responsive app-datatable-default">
                 <table id="{{ $transferTableId }}" class="table table-hover align-middle mb-0 w-100" style="width: 100%;">
                     <thead class="table-light">
                         <tr>

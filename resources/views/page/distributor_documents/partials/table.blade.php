@@ -1,6 +1,9 @@
 <div class="card border-0 shadow-sm" id="distributorTableCard">
-    <div class="card-header bg-white border-bottom py-2 px-3 d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2">
-        <div id="tableLengthContainer" class="d-flex align-items-center"></div>
+    <div class="card-header bg-white border-bottom py-2 px-3 d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center gap-2">
+            <i class="iconoir-table text-primary"></i>
+            <span class="fw-semibold text-dark small">Daftar Dokumen Distributor</span>
+        </div>
         <div class="d-flex align-items-center">
             <span class="badge bg-light text-primary border px-2 py-1 fw-semibold" style="font-size: 0.8rem;">
                 <i class="iconoir-calendar me-1"></i>Periode Aktif: <span id="activeYearBadge" class="fw-bold">{{ $year }}</span>
@@ -8,8 +11,8 @@
         </div>
     </div>
 
-    <div class="card-body p-0">
-        <div class="table-responsive">
+    <div class="card-body p-3 pt-2">
+        <div class="table-responsive app-datatable-default">
             <table class="table table-hover align-middle mb-0 w-100" id="distributorDocumentsTable">
                 <thead class="table-light">
                     <tr>

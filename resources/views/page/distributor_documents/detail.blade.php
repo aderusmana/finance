@@ -1,6 +1,8 @@
 <x-app-layout>
     @section('title', 'Detail Dokumen - ' . $distributor->name)
 
+    @include('components.sample-table-styles')
+
     <style>
         .detail-header-card {
             background: linear-gradient(135deg, #152238 0%, #1e3a5f 100%);
@@ -230,9 +232,6 @@
                 transferTable = tableEl.DataTable({
                     processing: true,
                     serverSide: true,
-                    dom: "<'row p-2 align-items-center'<'col-12 col-md-6'l><'col-12 col-md-6 d-flex justify-content-md-end'f>>" +
-                         "<'row'<'col-12'tr>>" +
-                         "<'row p-3 border-top align-items-center'<'col-12 col-md-6 text-muted small'i><'col-12 col-md-6 d-flex justify-content-md-end'p>>",
                     ajax: {
                         url: `{{ url('distributor-documents/detail') }}/${distributorId}`,
                         data: function (d) {
@@ -257,19 +256,8 @@
                     pageLength: 10,
                     lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
                     language: {
-                        processing: '<div class="d-flex justify-content-center align-items-center py-3"><div class="spinner-border spinner-border-sm text-primary me-2"></div>Memuat berkas transfer...</div>',
-                        emptyTable: '<div class="py-4 text-center text-muted"><i class="iconoir-empty-page fs-2 d-block mb-2"></i>Belum ada dokumen penjelasan transfer</div>',
-                        zeroRecords: '<div class="py-4 text-center text-muted"><i class="iconoir-search fs-2 d-block mb-2"></i>Tidak ada dokumen yang sesuai dengan filter / pencarian</div>',
-                        lengthMenu: '_MENU_ per halaman',
-                        info: 'Menampilkan _START_ sampai _END_ dari _TOTAL_ berkas',
-                        infoEmpty: 'Menampilkan 0 berkas',
-                        infoFiltered: '(disaring dari _MAX_ total berkas)',
-                        search: '_INPUT_',
-                        searchPlaceholder: 'Cari berkas transfer...',
-                        paginate: {
-                            previous: '<i class="iconoir-nav-arrow-left"></i>',
-                            next: '<i class="iconoir-nav-arrow-right"></i>'
-                        }
+                        search: "_INPUT_",
+                        searchPlaceholder: "🔍 Cari berkas transfer..."
                     }
                 });
             }

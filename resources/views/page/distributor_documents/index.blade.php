@@ -1,6 +1,8 @@
 <x-app-layout>
     @section('title', 'Manajemen Dokumen Distributor')
 
+    @include('components.sample-table-styles')
+
     <!-- Select2 & Select2 Bootstrap 5 Theme -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
@@ -290,33 +292,6 @@
         </div>
     </div>
 
-    {{-- Filter Search Card --}}
-    <div class="row mb-3">
-        <div class="col-12">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body p-3">
-                    <form id="searchDistributorForm" onsubmit="handleSearchSubmit(event)" class="row g-2 align-items-center">
-                        <div class="col-12 col-md-8 col-lg-9">
-                            <div class="input-group">
-                                <span class="input-group-text bg-light border-end-0">
-                                    <i class="iconoir-search"></i>
-                                </span>
-                                <input type="search" id="search" name="search" aria-label="Cari nama atau kode distributor" class="form-control border-start-0 ps-0" placeholder="Cari nama atau kode distributor...">
-                            </div>
-                        </div>
-                        <div class="col-12 col-md-4 col-lg-3 d-flex gap-2">
-                            <button type="submit" class="btn btn-primary flex-grow-1" aria-label="Cari distributor">
-                                <i class="iconoir-filter me-1"></i> Cari
-                            </button>
-                            <button type="button" onclick="handleResetFilter()" class="btn btn-light border" title="Reset filter" aria-label="Reset filter">
-                                <i class="iconoir-refresh"></i>
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
 
     {{-- Table Section --}}
     <div class="row mb-5 pb-5">
@@ -389,14 +364,15 @@
                 distributorTable = $('#distributorDocumentsTable').DataTable({
                     processing: true,
                     serverSide: true,
-                    dom: "<'d-none'l>" +
-                         "<'row'<'col-12'tr>>" +
-                         "<'row p-3 border-top align-items-center'<'col-12 col-md-6 text-muted small'i><'col-12 col-md-6 d-flex justify-content-md-end'p>>",
                     ajax: {
                         url: "{{ route('distributor.documents.index') }}",
                         data: function (d) {
                             d.year = $('#header_year').val() || currentYear;
                         }
+                    },
+                    language: {
+                        search: "_INPUT_",
+                        searchPlaceholder: "🔍 Cari distributor..."
                     },
                     columns: [
                         { data: 'code', name: 'distributors.code', className: 'ps-3', orderable: true, searchable: true },
@@ -408,26 +384,11 @@
                     order: [[1, 'asc']],
                     pageLength: 10,
                     lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
-                    initComplete: function () {
-                        const lengthEl = $('#distributorDocumentsTable_length');
-                        if (lengthEl.length) {
-                            lengthEl.appendTo('#tableLengthContainer');
-                            lengthEl.removeClass('d-none');
-                            lengthEl.find('label').addClass('d-flex align-items-center gap-2 mb-0 small text-muted');
-                            lengthEl.find('select').addClass('form-select form-select-sm').attr('aria-label', 'Jumlah baris per halaman');
-                        }
-                    },
                     drawCallback: function () {
                         var tooltipTriggerList = [].slice.call(document.querySelectorAll('#distributorDocumentsTable [data-bs-toggle="tooltip"]'));
                         tooltipTriggerList.map(function (tooltipTriggerEl) {
                             return new bootstrap.Tooltip(tooltipTriggerEl);
                         });
-                    }
-                });
-
-                $('#search').on('search', function() {
-                    if (!this.value && distributorTable) {
-                        distributorTable.search('').draw();
                     }
                 });
 
@@ -756,9 +717,6 @@
                 transferTable = tableEl.DataTable({
                     processing: true,
                     serverSide: true,
-                    dom: "<'row p-2 align-items-center'<'col-12 col-md-6'l><'col-12 col-md-6 d-flex justify-content-md-end'f>>" +
-                         "<'row'<'col-12'tr>>" +
-                         "<'row p-3 border-top align-items-center'<'col-12 col-md-6 text-muted small'i><'col-12 col-md-6 d-flex justify-content-md-end'p>>",
                     ajax: {
                         url: `{{ url('distributor-documents/detail') }}/${distributorId}`,
                         data: function (d) {
@@ -783,19 +741,8 @@
                     pageLength: 10,
                     lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
                     language: {
-                        processing: '<div class="d-flex justify-content-center align-items-center py-3"><div class="spinner-border spinner-border-sm text-primary me-2"></div>Memuat berkas transfer...</div>',
-                        emptyTable: '<div class="py-4 text-center text-muted"><i class="iconoir-empty-page fs-2 d-block mb-2"></i>Belum ada dokumen penjelasan transfer</div>',
-                        zeroRecords: '<div class="py-4 text-center text-muted"><i class="iconoir-search fs-2 d-block mb-2"></i>Tidak ada dokumen yang sesuai dengan filter / pencarian</div>',
-                        lengthMenu: '_MENU_ per halaman',
-                        info: 'Menampilkan _START_ sampai _END_ dari _TOTAL_ berkas',
-                        infoEmpty: 'Menampilkan 0 berkas',
-                        infoFiltered: '(disaring dari _MAX_ total berkas)',
-                        search: '_INPUT_',
-                        searchPlaceholder: 'Cari berkas transfer...',
-                        paginate: {
-                            previous: '<i class="iconoir-nav-arrow-left"></i>',
-                            next: '<i class="iconoir-nav-arrow-right"></i>'
-                        }
+                        search: "_INPUT_",
+                        searchPlaceholder: "🔍 Cari berkas transfer..."
                     }
                 });
             }
@@ -1264,20 +1211,6 @@
                 }
             }
 
-            function handleSearchSubmit(e) {
-                e.preventDefault();
-                const keyword = $('#search').val();
-                if (distributorTable) {
-                    distributorTable.search(keyword).draw();
-                }
-            }
-
-            function handleResetFilter() {
-                $('#search').val('');
-                if (distributorTable) {
-                    distributorTable.search('').draw();
-                }
-            }
         </script>
     @endpush
 </x-app-layout>
