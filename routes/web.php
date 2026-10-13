@@ -249,27 +249,27 @@ Route::middleware(['auth', 'permission:manage-distributor-docs'])
 // PUBLIC ROUTES FOR DISTRIBUTOR DOCUMENTS
 Route::prefix('portal-distributor')->name('portal.distributor.')->group(function () {
     Route::post('/request-otp', [PublicDistributorDocumentController::class, 'requestOtp'])
-        ->middleware('throttle:5,1')
+        ->middleware('throttle:5,1,portal_otp')
         ->name('request.otp');
 
     Route::post('/verify-otp', [PublicDistributorDocumentController::class, 'verifyOtp'])
-        ->middleware('throttle:10,1')
+        ->middleware('throttle:10,1,portal_verify')
         ->name('verify.otp');
 
     Route::get('/documents', [PublicDistributorDocumentController::class, 'getDocuments'])
-        ->middleware('throttle:120,1')
+        ->middleware('throttle:120,1,portal_docs')
         ->name('documents');
 
     Route::get('/preview/{id}', [PublicDistributorDocumentController::class, 'previewFile'])
-        ->middleware('throttle:60,1')
+        ->middleware('throttle:60,1,portal_preview')
         ->name('preview');
 
     Route::get('/download/{id}', [PublicDistributorDocumentController::class, 'downloadFile'])
-        ->middleware('throttle:30,1')
+        ->middleware('throttle:30,1,portal_download')
         ->name('download');
 
     Route::get('/download-all-zip', [PublicDistributorDocumentController::class, 'downloadAllZip'])
-        ->middleware('throttle:10,1')
+        ->middleware('throttle:15,1,portal_zip')
         ->name('download.zip');
 
     Route::post('/logout', [PublicDistributorDocumentController::class, 'portalLogout'])
