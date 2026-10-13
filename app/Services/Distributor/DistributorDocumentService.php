@@ -484,6 +484,8 @@ class DistributorDocumentService
             abort(500, 'Gagal membuat berkas ZIP.');
         }
 
+        $addedZipEntries = [];
+
         foreach ($attachments as $att) {
             if ($att->existsOnDisk()) {
                 $realPath = $att->getDiskPath();
@@ -496,7 +498,26 @@ class DistributorDocumentService
                     $zipFolder = "Dokumen Bulanan {$year}/{$monthName}/{$typeFolder}/";
                 }
 
-                $zip->addFile($realPath, $zipFolder.$att->file_name);
+                $timestamp = $att->created_at ? $att->created_at->timestamp : time();
+                $randomSuffix = $this->generateRandomStringFromTimestamp($timestamp, 6);
+
+                $pathInfo = pathinfo($att->file_name);
+                $baseName = $pathInfo['filename'];
+                $extension = ! empty($pathInfo['extension']) ? '.'.$pathInfo['extension'] : '';
+
+                $entryName = "{$baseName}_{$randomSuffix}{$extension}";
+                $fullEntryPath = $zipFolder.$entryName;
+
+                // Fallback counter in case files share the exact same timestamp and filename in this folder
+                $counter = 1;
+                while (isset($addedZipEntries[$fullEntryPath])) {
+                    $entryName = "{$baseName}_{$randomSuffix}_{$counter}{$extension}";
+                    $fullEntryPath = $zipFolder.$entryName;
+                    $counter++;
+                }
+
+                $addedZipEntries[$fullEntryPath] = true;
+                $zip->addFile($realPath, $fullEntryPath);
 
                 DistributorDocumentDownload::record(
                     $att->id,
@@ -510,6 +531,20 @@ class DistributorDocumentService
         $zip->close();
 
         return response()->download($zipFilePath)->deleteFileAfterSend(true);
+    }
+
+    /**
+     * Generate a unique pseudo-random alphanumeric string derived from a database timestamp.
+     *
+     * @param int|string $timestamp Unix timestamp or timestamp string from database
+     * @param int $length Desired string length (default: 6)
+     * @return string
+     */
+    public function generateRandomStringFromTimestamp(int|string $timestamp, int $length = 6): string
+    {
+        $alphanumeric = base_convert(substr(md5((string) $timestamp), 0, 10), 16, 36);
+
+        return substr(str_pad($alphanumeric, $length, '0', STR_PAD_RIGHT), 0, $length);
     }
 
     /**
