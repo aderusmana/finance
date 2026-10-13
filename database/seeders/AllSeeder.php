@@ -44,6 +44,8 @@ class AllSeeder extends Seeder
             'view customer dashboard', 'view bg dashboard', 'view dashboard area',
             'view logistic fees menu', 'view logistic-fees', 'create logistic-fee', 'update logistic-fee', 'delete logistic-fee',
             'view logistic-orders menu', 'view logistic-orders', 'create logistic-order', 'update logistic-order', 'delete logistic-order', 'cancel logistic-order',
+            'view customer ship to master management menu',
+            'view customer item master management menu',
         ];
 
         foreach ($permissions as $perm) {

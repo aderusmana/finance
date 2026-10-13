@@ -112,6 +112,9 @@
                         @can('view customer ship to master management menu')
                             <li><a href="{{ route('customer-ship-tos.index') }}">Customer Ship To</a></li>
                         @endcan
+                        @can('view customer item master management menu')
+                            <li><a href="{{ route('customer-items.index') }}">Customer Item</a></li>
+                        @endcan
                         @can('view export data master management menu')
                             <li><a href="{{ route('master-export.index') }}"> Export Data</a></li>
                         @endcan

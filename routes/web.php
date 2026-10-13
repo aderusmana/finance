@@ -22,6 +22,7 @@ use App\Http\Controllers\LogisticOrder\LogisticOrderController;
 use App\Http\Controllers\Master\ApprovalPathController;
 use App\Http\Controllers\Master\BgLimitRuleController;
 use App\Http\Controllers\Master\BgTaxController;
+use App\Http\Controllers\Master\CustomerItemController;
 use App\Http\Controllers\Master\CustomerShipToController;
 use App\Http\Controllers\Master\DepartmentController;
 use App\Http\Controllers\Master\DistributorController;
@@ -138,6 +139,8 @@ Route::middleware('auth')->group(function () {
     Route::resource('logistic-fees', LogisticFeeController::class);
     Route::resource('distributors', DistributorController::class);
     Route::resource('customer-ship-tos', CustomerShipToController::class);
+    Route::get('/customer-items/available-customers', [CustomerItemController::class, 'getAvailableCustomers'])->name('customer-items.available-customers');
+    Route::resource('customer-items', CustomerItemController::class);
 
     Route::get('/logistic-fees-approval', [LogisticFeeController::class, 'approvalList'])->name('logistic-fees.approval.list');
     Route::get('/logistic-fees-approval/{id}', [LogisticFeeController::class, 'approvalDetail']);

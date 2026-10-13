@@ -17,6 +17,11 @@ class CustomerItem extends Model
         'price',
     ];
 
+    protected $casts = [
+        'quantity' => 'integer',
+        'price' => 'decimal:2',
+    ];
+
     public function customer()
     {
         return $this->belongsTo(Customer::class);
