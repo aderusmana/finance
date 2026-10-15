@@ -187,27 +187,27 @@ class LogisticOrderController extends Controller
                     // TAB DOWNLOADED (Delivery Notes)
                     if ($tab === 'downloaded') {
                         $btnDownload = '<a href="' . URL::signedRoute('public.lo.download', ['id' => $row->id, 'fromEmail' => 0]) . '" target="_blank" class="btn btn-sm btn-success text-white shadow-sm px-2 rounded-pill flex-fill" title="Download DN & PO"><i class="ph-bold ph-printer"></i></a>';
-                        $btnCancel = $canCancel 
-                            ? '<button type="button" class="btn btn-sm btn-danger text-white btn-cancel shadow-sm px-2 rounded-pill flex-fill" data-id="' . $row->id . '" title="Cancel Order"><i class="ph-bold ph-x-circle"></i></button>' 
+                        $btnCancel = $canCancel
+                            ? '<button type="button" class="btn btn-sm btn-danger text-white btn-cancel shadow-sm px-2 rounded-pill flex-fill" data-id="' . $row->id . '" title="Cancel Order"><i class="ph-bold ph-x-circle"></i></button>'
                             : '';
-                        
+
                         return '<div class="d-flex flex-row gap-1 align-items-center w-100">' . $btnDetail . $btnDownload . $btnCancel . '</div>';
-                    } 
-                    
+                    }
+
                     // TAB CANCELED
                     if ($tab === 'canceled') {
                         $btnEdit = $user->can('update logistic-order')
                             ? '<button type="button" class="btn btn-sm btn-warning text-dark btn-edit shadow-sm px-2 rounded-pill flex-fill" data-id="' . $row->id . '" title="Revise/Resubmit Order"><i class="ph-bold ph-pencil-simple"></i></button>'
                             : '';
-                        
+
                         return '<div class="d-flex flex-row gap-1 align-items-center w-100">' . $btnDetail . $btnEdit . '</div>';
                     }
 
                     // TAB PENDING (Logistic Orders)
-                    $btnCancel = $canCancel 
-                        ? '<button type="button" class="btn btn-sm btn-danger text-white btn-cancel shadow-sm px-2 rounded-pill flex-fill" data-id="' . $row->id . '" title="Cancel Order"><i class="ph-bold ph-x-circle"></i></button>' 
+                    $btnCancel = $canCancel
+                        ? '<button type="button" class="btn btn-sm btn-danger text-white btn-cancel shadow-sm px-2 rounded-pill flex-fill" data-id="' . $row->id . '" title="Cancel Order"><i class="ph-bold ph-x-circle"></i></button>'
                         : '';
-                    
+
                     return '<div class="d-flex flex-row gap-1 align-items-center w-100">' . $btnDetail . $btnCancel . '</div>';
                 })
                 ->rawColumns(['checkbox', 'logistic_order_no', 'do_no', 'status_badge', 'action'])
@@ -307,7 +307,7 @@ class LogisticOrderController extends Controller
                 $q->where('name', 'LIKE', '%' . $searchCustomer . '%');
             });
         }
-        
+
         $query->join('logistic_orders', 'logistic_orders.id', '=', 'logistic_order_items.logistic_order_id')
               ->select('logistic_order_items.*');
 
@@ -316,7 +316,7 @@ class LogisticOrderController extends Controller
         } else {
             $query->orderBy('logistic_orders.created_at', 'desc');
         }
-        
+
         $query->orderBy('logistic_order_items.id', 'asc');
 
         $items = $query->get();
@@ -520,9 +520,9 @@ class LogisticOrderController extends Controller
         }
 
         $request->validate(['reason' => 'required|string']);
-        
+
         $order = LogisticOrder::with(['note', 'distributor', 'customer'])->findOrFail($id);
-            
+
             $order->update([
                 'cancel_reason' => $request->reason,
                 'canceled_at' => now(),
@@ -537,7 +537,7 @@ class LogisticOrderController extends Controller
                 dispatch(new SendLogisticOrderEmailJob($order, $distributorMail, 'cancel'));
             }
 
-            $atasanMail = Auth::user()->atasan->email ?? [EMAIL_ADDRESS]; 
+            $atasanMail = Auth::user()->atasan->email ?? null;
             if ($atasanMail) {
                 dispatch(new SendLogisticOrderEmailJob($order, $atasanMail, 'cancel'));
             }
@@ -546,7 +546,7 @@ class LogisticOrderController extends Controller
         }
 
         public function update(Request $request, $id)
-        {            
+        {
             $order = LogisticOrder::findOrFail($id);
 
             $order->update([
