@@ -73,8 +73,6 @@
                                     </tr>
                                 </table>
                                 <p style="margin: 0 0 25px 0; font-family: 'Segoe UI', Arial, sans-serif; font-size: 14px; line-height: 1.6; color: #475569; font-style: italic; text-align: center; border-top: 1px dashed #cbd5e1; padding-top: 20px;">
-                                    "Please note that our team is currently reviewing and rectifying the relevant order data. A revised Delivery Note (DN) will be sent to you once the corrections are completed."
-                                </p>
                             @else
                                 <p style="margin: 0 0 15px 0; font-family: 'Segoe UI', Arial, sans-serif; font-size: 16px; line-height: 1.6; color: #1e293b;">Halo <strong>Tim {{ $order->distributor->name }}</strong>,</p>
                                 @if($order->cancel_reason)
@@ -127,7 +125,7 @@
                                 </tr>
                             </table>
 
-                            @if($type === 'distributor')
+                            @if($type === 'distributor' || $type === 'reminder')
                                 <p style="margin: 0 0 20px 0; font-family: 'Segoe UI', Arial, sans-serif; font-size: 15px; text-align: center; color: #475569;">Please click the button below to see full details:</p>
                                 <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 25px;">
                                     <tr>

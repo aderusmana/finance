@@ -11,3 +11,4 @@ Artisan::command('inspire', function () {
 // Schedule::command('bg:check-expired')->dailyAt('08:00');
 // Schedule::command('approval:send-reminder')->dailyAt('08:00');
 // Schedule::command('approval:resend-pending')->weekdays()->dailyAt('08:00');
+Schedule::command('logistic-order:send-reminder')->dailyAt('08:00');

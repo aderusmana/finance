@@ -133,7 +133,7 @@
                                     <i class="ph-bold ph-clock me-1"></i> Has not been downloaded
                                 </span>
                             @endif
-                            <p class="text-muted small mt-2 mb-0">Tgl. Kirim: <strong class="text-dark">{{ \Carbon\Carbon::parse($order->delivery_date)->format('d F Y') }}</strong></p>
+                            <p class="text-muted small mt-2 mb-0">Delivery Date: <strong class="text-dark">{{ \Carbon\Carbon::parse($order->delivery_date)->format('d F Y') }}</strong></p>
                         </div>
                     </div>
 

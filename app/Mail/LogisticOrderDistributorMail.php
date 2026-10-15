@@ -34,6 +34,9 @@ class LogisticOrderDistributorMail extends Mailable implements ShouldQueue
         } elseif ($this->type === 'cancel') {
             return $this->subject('CANCELED - Delivery Notes & Purchase Order Notification: ' . $formattedLo)
                         ->view('mail.distributor_order');
+        } elseif ($this->type === 'reminder') {
+            return $this->subject('Reminder: New Delivery Notes & Purchase Order Notification: ' . $formattedLo)
+                        ->view('mail.distributor_order');
         }
 
         return $this->subject('New Delivery Notes & Purchase Order Notification: ' . $formattedLo)

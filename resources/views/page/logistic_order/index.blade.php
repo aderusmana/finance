@@ -481,9 +481,13 @@
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td class="text-muted pb-0">Distributor</td>
-                                        <td class="fw-semibold text-dark pb-0">: <span
+                                        <td class="text-muted pb-2">Distributor</td>
+                                        <td class="fw-semibold text-dark pb-2">: <span
                                                 id="detail_distributor">-</span></td>
+                                    </tr>
+                                    <tr id="row_detail_reminder" class="d-none">
+                                        <td class="text-muted pb-0">Reminder Info</td>
+                                        <td class="pb-0">: <span id="detail_reminder_info" class="text-warning fw-semibold">-</span></td>
                                     </tr>
                                 </table>
                             </div>
@@ -1108,6 +1112,14 @@
                         $('#detail_no_po').text(data.no_po || '-');
                         $('#detail_attention').text(data.attention || '-');
                         $('#detail_date_of_po').text(data.date_of_po || '-');
+
+                        if (data.reminder_count > 0) {
+                            let lastReminder = data.last_reminder_at ? new Date(data.last_reminder_at).toLocaleString('en-US') : '-';
+                            $('#row_detail_reminder').removeClass('d-none');
+                            $('#detail_reminder_info').html(`<b>${data.reminder_count}x Sent</b> <span class="text-muted small ms-1">(Last: ${lastReminder})</span>`);
+                        } else {
+                            $('#row_detail_reminder').addClass('d-none');
+                        }
 
                         if (data.customer_ship_to) {
                             let st = data.customer_ship_to;

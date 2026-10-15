@@ -8,7 +8,17 @@ class LogisticOrder extends Model
 {
     protected $fillable = [
         'distributor_id', 'customer_id', 'customer_ship_to_id', 'logistic_order_no',
-        'no_po', 'delivery_date', 'attention', 'date_of_po', 'created_by', 'cancel_reason', 'canceled_at'
+        'no_po', 'delivery_date', 'attention', 'date_of_po', 'created_by', 'cancel_reason', 'canceled_at',
+        'is_urgent', 'last_reminder_at', 'reminder_count'
+    ];
+
+    protected $casts = [
+        'is_urgent' => 'boolean',
+        'last_reminder_at' => 'datetime',
+        'reminder_count' => 'integer',
+        'delivery_date' => 'date',
+        'date_of_po' => 'date',
+        'canceled_at' => 'datetime',
     ];
 
     public function customer() { return $this->belongsTo(Customer::class); }

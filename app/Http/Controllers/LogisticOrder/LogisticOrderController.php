@@ -116,10 +116,16 @@ class LogisticOrderController extends Controller
                 ->editColumn('logistic_order_no', function ($row) {
                     $loNo = 'LO-' . str_pad($row->id, 4, '0', STR_PAD_LEFT);
                     $createdAt = $row->created_at->format('d M Y, H:i');
+                    $reminderInfo = '';
+                    if ($row->reminder_count > 0) {
+                        $lastRem = $row->last_reminder_at ? Carbon::parse($row->last_reminder_at)->format('d M, H:i') : '-';
+                        $reminderInfo = '<span class="text-warning fw-semibold" style="font-size: 0.72rem;"><i class="ph-bold ph-arrow-counter-clockwise me-1"></i>Reminder: ' . $row->reminder_count . 'x (' . $lastRem . ')</span>';
+                    }
                     return '
                         <div class="d-flex flex-column gap-1">
                             <span class="fw-bolder text-primary" style="font-size: 0.95rem;">' . $loNo . '</span>
                             <span class="text-secondary" style="font-size: 0.75rem;"><i class="ph-fill ph-calendar-blank text-primary opacity-75"></i> Created: ' . $createdAt . '</span>
+                            ' . $reminderInfo . '
                         </div>
                     ';
                 })
