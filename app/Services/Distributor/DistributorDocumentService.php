@@ -160,8 +160,7 @@ class DistributorDocumentService
     public function getTransferDataTable(
         Distributor|int $distributor,
         $transferYear = 'all',
-        bool $isPortal = false,
-        bool $canManage = false
+        bool $isPortal = false
     ): JsonResponse {
         $distributorModel = is_numeric($distributor)
             ? $this->findDistributor((int) $distributor)
@@ -190,11 +189,10 @@ class DistributorDocumentService
             ->addColumn('file_size_badge', function ($doc) {
                 return '<span class="badge bg-light text-dark border">'.e($doc->human_file_size).'</span>';
             })
-            ->addColumn('actions', function ($doc) use ($isPortal, $canManage) {
+            ->addColumn('actions', function ($doc) use ($isPortal) {
                 return view('page.distributor_documents.partials.document-actions', [
                     'document' => $doc,
                     'isPortal' => $isPortal,
-                    'canManage' => $canManage,
                     'year' => $doc->year ?: (int) date('Y'),
                     'tab' => 'transfer',
                 ])->render();

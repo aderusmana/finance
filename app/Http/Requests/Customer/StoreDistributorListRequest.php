@@ -11,7 +11,7 @@ class StoreDistributorListRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return $this->user()?->can('manage-distributor-docs') ?? false;
+        return $this->user()?->can('create distributor-docs') ?? false;
     }
 
     /**

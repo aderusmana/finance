@@ -13,9 +13,11 @@
                     </div>
                 </div>
                 <div class="d-flex align-items-center gap-2 ms-auto">
-                    <a href="#" id="previewPdfDownloadBtn" class="btn btn-sm btn-light text-primary fw-semibold" download>
-                        <i class="iconoir-download me-1"></i> Unduh PDF
-                    </a>
+                    @if (!auth()->check() || auth()->user()->can('download distributor-docs'))
+                        <a href="#" id="previewPdfDownloadBtn" class="btn btn-sm btn-light text-primary fw-semibold" download>
+                            <i class="iconoir-download me-1"></i> Unduh PDF
+                        </a>
+                    @endif
                     <a href="#" id="previewPdfNewTabBtn" target="_blank" class="btn btn-sm btn-outline-light" title="Buka di tab baru">
                         <i class="iconoir-open-new-window"></i>
                     </a>

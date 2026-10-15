@@ -2,7 +2,8 @@
     // SECURE BY DEFAULT:
     // Requires authenticated internal user with permission AND explicit internal mode.
     $isPortal = isset($isPortal) ? (bool) $isPortal : (!auth()->check());
-    $canManage = auth()->check() && auth()->user()->can('manage-distributor-docs') && !$isPortal;
+    $canDownload = $isPortal || (auth()->check() && auth()->user()->can('download distributor-docs'));
+    $canDelete = !$isPortal && auth()->check() && auth()->user()->can('delete distributor-docs');
     $routePrefix = $isPortal ? 'portal.distributor.' : 'distributor.documents.';
     $previewCallback = $isPortal ? 'openPublicPdfPreview' : 'openPdfPreview';
 @endphp
@@ -15,13 +16,15 @@
             onclick="{{ $previewCallback }}('{{ route($routePrefix . 'preview', $document->id) }}', '{{ addslashes($document->title ?: $document->file_name) }}', '{{ route($routePrefix . 'download', $document->id) }}')">
         <i class="iconoir-eye"></i>
     </button>
-    <a href="{{ route($routePrefix . 'download', $document->id) }}"
-       class="btn btn-sm btn-outline-primary px-2"
-       title="Download"
-       aria-label="Download">
-        <i class="iconoir-download"></i>
-    </a>
-    @if ($canManage)
+    @if ($canDownload)
+        <a href="{{ route($routePrefix . 'download', $document->id) }}"
+           class="btn btn-sm btn-outline-primary px-2"
+           title="Download"
+           aria-label="Download">
+            <i class="iconoir-download"></i>
+        </a>
+    @endif
+    @if ($canDelete)
         <button type="button"
                 class="btn btn-sm btn-outline-danger px-2"
                 title="Hapus"

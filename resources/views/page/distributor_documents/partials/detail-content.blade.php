@@ -2,7 +2,9 @@
     // SECURE BY DEFAULT:
     // Requires authenticated internal user with permission AND explicit internal mode.
     $isPortal = isset($isPortal) ? (bool) $isPortal : (!auth()->check());
-    $canManage = auth()->check() && auth()->user()->can('manage-distributor-docs') && !$isPortal;
+    $canCreate = !$isPortal && auth()->check() && auth()->user()->can('create distributor-docs');
+    $canDownload = $isPortal || (auth()->check() && auth()->user()->can('download distributor-docs'));
+    $canDelete = !$isPortal && auth()->check() && auth()->user()->can('delete distributor-docs');
 
     $routePrefix = $isPortal ? 'portal.distributor.' : 'distributor.documents.';
     $yearChangeCallback = $isPortal ? 'changePortalYear' : 'changeDetailYear';
@@ -56,12 +58,14 @@
                 </select>
             </div>
 
-            {{-- Download All .ZIP Button --}}
-            <a href="{{ route($routePrefix . 'download.zip', ['distributor_id' => $distributor->id, 'year' => $year]) }}" class="btn btn-sm btn-success text-nowrap">
-                <i class="iconoir-archive me-1"></i> Download All .ZIP
-            </a>
+            @if ($canDownload)
+                {{-- Download All .ZIP Button --}}
+                <a href="{{ route($routePrefix . 'download.zip', ['distributor_id' => $distributor->id, 'year' => $year]) }}" class="btn btn-sm btn-success text-nowrap">
+                    <i class="iconoir-archive me-1"></i> Download All .ZIP
+                </a>
+            @endif
 
-            @if ($canManage)
+            @if ($canCreate)
                 {{-- Upload Document Button --}}
                 <button type="button" class="btn btn-sm btn-light text-nowrap fw-semibold text-primary" onclick="openUploadModal('bupot', 1, {{ $distributor->id }}, {{ $year }})">
                     <i class="iconoir-upload me-1 text-primary"></i> Upload Document
@@ -140,7 +144,7 @@
                                 <span class="fw-bold small text-dark d-inline-flex align-items-center">
                                     <i class="iconoir-notes me-1 text-primary"></i> Bukti Potong ({{ $bupotDocuments->count() }} File)
                                 </span>
-                                @if ($canManage)
+                                @if ($canCreate)
                                     <button type="button" class="btn btn-outline-primary btn-add-quick d-inline-flex align-items-center" onclick="openUploadModal('bupot', {{ $monthNumber }}, {{ $distributor->id }}, {{ $year }})">
                                         <i class="iconoir-plus me-1"></i> Tambah BuPot
                                     </button>
@@ -153,7 +157,8 @@
                                     @include('page.distributor_documents.partials.document-actions', [
                                         'document' => $doc,
                                         'isPortal' => $isPortal,
-                                        'canManage' => $canManage,
+                                        'canDownload' => $canDownload,
+                                        'canDelete' => $canDelete,
                                         'year' => $year,
                                         'tab' => 'monthly'
                                     ])
@@ -171,7 +176,7 @@
                                 <span class="fw-bold small text-dark d-inline-flex align-items-center">
                                     <i class="iconoir-medal me-1 text-warning"></i> TOP Insentif ({{ $topDocuments->count() }} File)
                                 </span>
-                                @if ($canManage)
+                                @if ($canCreate)
                                     <button type="button" class="btn btn-outline-primary btn-add-quick d-inline-flex align-items-center" onclick="openUploadModal('top_insentif', {{ $monthNumber }}, {{ $distributor->id }}, {{ $year }})">
                                         <i class="iconoir-plus me-1"></i> Tambah TOP Insentif
                                     </button>
@@ -184,7 +189,8 @@
                                     @include('page.distributor_documents.partials.document-actions', [
                                         'document' => $doc,
                                         'isPortal' => $isPortal,
-                                        'canManage' => $canManage,
+                                        'canDownload' => $canDownload,
+                                        'canDelete' => $canDelete,
                                         'year' => $year,
                                         'tab' => 'monthly'
                                     ])
@@ -222,7 +228,7 @@
                         </select>
                     </div>
 
-                    @if ($canManage)
+                    @if ($canCreate)
                         {{-- Quick Upload Transfer Button --}}
                         <button type="button" class="btn btn-sm btn-primary text-nowrap" onclick="openUploadModal('transfer', null, {{ $distributor->id }}, {{ $year }})">
                             <i class="iconoir-upload me-1"></i> Upload File Transfer Baru

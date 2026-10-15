@@ -390,7 +390,7 @@ Sistem menerapkan prinsip pemisahan tanggung jawab (*Separation of Concerns*) de
 #### 1. `App\Services\Distributor\DistributorDocumentService`
 Bertanggung jawab atas seluruh proses transaksi data dan berkas:
 - **`getMonitoringDataTable(int $year): JsonResponse`**: Membangun data server-side DataTables dengan query eager-loaded dan render partial kolom blade (`monitoring-code`, `monitoring-name`, `monitoring-progress`, `monitoring-transfer`, `monitoring-actions`).
-- **`getTransferDataTable(Distributor|int $distributor, $transferYear, bool $isPortal, bool $canManage): JsonResponse`**: Menangani server-side DataTables berkas transfer running lengkap dengan pengurutan gabungan `COALESCE(transaction_date, created_at)`.
+- **`getTransferDataTable(Distributor|int $distributor, $transferYear, bool $isPortal): JsonResponse`**: Menangani server-side DataTables berkas transfer running lengkap dengan pengurutan gabungan `COALESCE(transaction_date, created_at)`.
 - **`uploadDocument(...)`**: Mengunggah file PDF, menaruhnya di direktori `distributor_docs/{code}/{doc_type}/`, memberi nama hash unik untuk mencegah overwrite, dan mencatatnya ke database.
 - **`deleteAttachment(...)`**: Menghapus file fisik dari storage public disk dan menghapus record database.
 - **`previewResponse(...)`**: Mengirimkan binary response berkas dengan header `Content-Disposition: inline` untuk pratinjau browser/modal.
@@ -431,10 +431,11 @@ Bertanggung jawab atas keamanan dan autentikasi portal publik eksternal:
 Validasi input dienkapsulasi ke dalam form request dedicated:
 
 1. **`StoreDistributorDocumentRequest`**:
-   - Hak akses: Wajib permission `manage-distributor-docs`.
+   - Hak akses: Wajib permission `create distributor-docs`.
    - Validasi: `file` wajib format PDF, ukuran maksimal 1024 KB.
    - Kondisional: Jika `doc_type` = `transfer`, kolom `month` dilarang (`prohibited_if`) dan `transaction_date` wajib. Jika `doc_type` = `bupot` atau `top_insentif`, `month` dan `year` wajib.
 2. **`StoreDistributorListRequest`**:
+   - Hak akses: Wajib permission `create distributor-docs`.
    - Validasi saat mendaftarkan distributor ke tahun berjalan via modal Quick Add.
 3. **`RequestDistributorOtpRequest`**:
    - Validasi input `code` dan `email`.
@@ -457,10 +458,14 @@ Berkas mailable di `App\Mail\DistributorOtpMail` mengirimkan email berformat HTM
 
 ### A. Rute Internal Tim Finance (`routes/web.php`)
 
-Seluruh rute internal dilindungi middleware `auth` dan permission `manage-distributor-docs`:
+Rute internal dilindungi middleware `auth` dan permission `view distributor-docs menu`, dengan kontrol hak akses granular per aksi:
+- Melihat list & detail: `view distributor-docs menu`
+- Tambah distributor & upload dokumen: `create distributor-docs`
+- Unduh dokumen & ZIP: `download distributor-docs`
+- Hapus dokumen: `delete distributor-docs`
 
 ```php
-Route::middleware(['auth', 'permission:manage-distributor-docs'])
+Route::middleware(['auth', 'permission:view distributor-docs menu'])
     ->prefix('distributor-documents')
     ->name('distributor.documents.')
     ->group(function () {

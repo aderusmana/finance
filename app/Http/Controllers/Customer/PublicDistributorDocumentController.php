@@ -76,8 +76,7 @@ class PublicDistributorDocumentController extends Controller
             return $this->documentService->getTransferDataTable(
                 $distributorId,
                 $transferYear,
-                isPortal: true,
-                canManage: false
+                isPortal: true
             );
         }
 

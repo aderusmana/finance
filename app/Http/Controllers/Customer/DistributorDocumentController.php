@@ -41,8 +41,7 @@ class DistributorDocumentController extends Controller
             return $this->documentService->getTransferDataTable(
                 (int) $distributorId,
                 $transferYear,
-                isPortal: false,
-                canManage: auth()->user()?->can('manage-distributor-docs') ?? false
+                isPortal: false
             );
         }
 
@@ -86,6 +85,10 @@ class DistributorDocumentController extends Controller
 
     public function destroy(Request $request, $id): JsonResponse|RedirectResponse
     {
+        if (!auth()->user()?->can('delete distributor-docs')) {
+            abort(403, 'Akses Ditolak. Anda tidak memiliki izin untuk menghapus dokumen distributor.');
+        }
+
         $result = $this->documentService->deleteAttachmentById((int) $id);
 
         if ($request->ajax() || $request->wantsJson()) {
@@ -112,11 +115,19 @@ class DistributorDocumentController extends Controller
 
     public function downloadFile(Request $request, $id): BinaryFileResponse
     {
+        if (!auth()->user()?->can('download distributor-docs')) {
+            abort(403, 'Akses Ditolak. Anda tidak memiliki izin untuk mengunduh dokumen distributor.');
+        }
+
         return $this->documentService->downloadAttachment((int) $id, 'internal', $request);
     }
 
     public function downloadAllZip(Request $request): BinaryFileResponse|RedirectResponse
     {
+        if (!auth()->user()?->can('download distributor-docs')) {
+            abort(403, 'Akses Ditolak. Anda tidak memiliki izin untuk mengunduh dokumen distributor.');
+        }
+
         $request->validate([
             'distributor_id' => ['required', 'exists:distributors,id'],
             'year' => ['required', 'integer'],

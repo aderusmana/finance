@@ -53,9 +53,11 @@
                         @endfor
                     </select>
                 </form>
-                <button type="button" class="btn btn-sm btn-primary text-nowrap d-flex align-items-center gap-1 shadow-sm" onclick="openAddDistributorModal()">
-                    <i class="ph-bold ph-plus"></i> Tambah Distributor
-                </button>
+                @can('create distributor-docs')
+                    <button type="button" class="btn btn-sm btn-primary text-nowrap d-flex align-items-center gap-1 shadow-sm" onclick="openAddDistributorModal()">
+                        <i class="ph-bold ph-plus"></i> Tambah Distributor
+                    </button>
+                @endcan
             </div>
         </div>
     </div>

@@ -232,7 +232,7 @@ Route::post('/approval/submit/{token}', [ApprovalProcessController::class, 'subm
 Route::get('/public/download-doc/{bg_id}/{type}', [CustomerBgPortalController::class, 'downloadExpiringPdf'])->name('public.bg.download')->middleware('signed');
 
 // DISTRIBUTOR DOCUMENTS MANAGEMENT
-Route::middleware(['auth', 'permission:manage-distributor-docs'])
+Route::middleware(['auth', 'permission:view distributor-docs menu'])
     ->prefix('distributor-documents')
     ->name('distributor.documents.')
     ->group(function () {

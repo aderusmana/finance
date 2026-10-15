@@ -166,7 +166,7 @@
                 </li>
             @endcan
 
-            @can('manage-distributor-docs')
+            @can('view distributor-docs menu')
                 <li class="menu-title text-white"><span>Distributors</span></li>
                 <li>
                     <a aria-expanded="false" data-bs-toggle="collapse" href="#distributor-docs-menu">
