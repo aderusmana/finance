@@ -445,6 +445,8 @@ class DistributorDocumentService
 
     /**
      * Generate ZIP archive download response with audit logging for all included files.
+     * Note: Monthly documents ('bupot' and 'top_insentif') are strictly filtered by the specified $year.
+     * Running transfer documents ('transfer') remain multi-year and are included without year restriction.
      */
     public function downloadZipResponse(
         Distributor $distributor,

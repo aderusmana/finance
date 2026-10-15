@@ -59,9 +59,12 @@
             </div>
 
             @if ($canDownload)
-                {{-- Download All .ZIP Button --}}
-                <a href="{{ route($routePrefix . 'download.zip', ['distributor_id' => $distributor->id, 'year' => $year]) }}" class="btn btn-sm btn-success text-nowrap">
-                    <i class="iconoir-archive me-1"></i> Download All .ZIP
+                {{-- Download ZIP (Per Tahun Filter) Button --}}
+                <a href="{{ route($routePrefix . 'download.zip', ['distributor_id' => $distributor->id, 'year' => $year]) }}"
+                   class="btn btn-sm btn-success text-nowrap"
+                   title="Unduh Berkas Tahun {{ $year }} & Transfer Running (.ZIP)"
+                   aria-label="Unduh Berkas Tahun {{ $year }} dan Transfer Running (.ZIP)">
+                    <i class="iconoir-archive me-1"></i> Download ZIP ({{ $year }})
                 </a>
             @endif
 

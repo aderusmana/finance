@@ -94,8 +94,8 @@ graph TD
     E1 --> E3[Upload Berkas Transfer: Wajib Tanggal Transfer + Catatan]
     E1 --> E4[Aksi Berkas: Preview PDF, Unduh, atau Hapus via SweetAlert2]
     
-    C1 --> F1[Tombol Unduh Semua ZIP]
-    F1 --> F2[Streaming ZIP: Folder Dokumen Bulanan + Folder Penjelasan Transfer atau Transfer Running]
+    C1 --> F1[Tombol Unduh ZIP per Tahun]
+    F1 --> F2[Streaming ZIP: Folder Dokumen Bulanan Tahun terpilih + Folder Penjelasan Transfer Running]
 ```
 
 ### B. Sisi Eksternal Distributor (Portal Akses Mandiri Berbasis OTP Email)
@@ -163,7 +163,7 @@ Pengelolaan dokumen dibuka melalui modal AJAX (`detail-content.blade.php`) tanpa
 
 ```text
 +----------------------------------------------------------------------------------------------------+
-| 🏢 PT Sinar Abadi Jaya (DST-001)                                              [ 💾 Download All .ZIP ]
+| 🏢 PT Sinar Abadi Jaya (DST-001)                                              [ 💾 Download ZIP (2026) ]
 | NPWP: 01.234.567.8-901.000 | Email BuPot: bupot@sinarabadi.co.id
 +----------------------------------------------------------------------------------------------------+
 |  [ TAB 1: Dokumen Bulanan (BuPot & TOP Insentif) ]  |  [ TAB 2: Penjelasan Transfer (Running) ]    |
@@ -239,7 +239,7 @@ TANGGAL / TAHUN | NAMA FILE / JUDUL          | CATATAN TRANSAKSI                
 +---------------------------------------------------------------------------------+
 |  [ 🧾 Bukti Potong & TOP Insentif ]   |   [ 💸 Penjelasan Transfer Running ]    |
 +---------------------------------------------------------------------------------+
-|  Pilih Tahun Dokumen: [ 2026 v ]                          [ 📦 Unduh Semua ZIP ]|
+|  Pilih Tahun Dokumen: [ 2026 v ]                          [ 📦 Unduh ZIP (2026) ]|
 |                                                                                 |
 |  • Januari 2026:                                                                |
 |    - Bukti Potong PPh 23 (420 KB)                     [ 👁️ Preview ] [ ⬇️ Unduh ]|
