@@ -1084,9 +1084,36 @@
                                     sampleTable.ajax.reload();
                                     Swal.fire('Success!', res.message, 'success');
                                 },
-                                error: function() {
-                                    Swal.fire('Failed', 'An error occurred or data is incomplete.',
-                                        'error');
+                                error: function(xhr) {
+                                    let errorMsg = 'An error occurred or data is incomplete.';
+                                    if (xhr.responseJSON) {
+                                        if (xhr.responseJSON.errors) {
+                                            let errorList = [];
+                                            $.each(xhr.responseJSON.errors, function(key, errors) {
+                                                if (Array.isArray(errors)) {
+                                                    errorList.push(...errors);
+                                                } else {
+                                                    errorList.push(errors);
+                                                }
+                                            });
+                                            errorMsg = '<div class="text-start mt-2"><ul class="mb-0 ps-3">' + 
+                                                errorList.map(err => `<li>${err}</li>`).join('') + 
+                                                '</ul></div>';
+                                        } else if (xhr.responseJSON.message) {
+                                            errorMsg = xhr.responseJSON.message;
+                                        }
+                                    } else if (xhr.status === 405) {
+                                        errorMsg = 'Method Not Allowed (405). Request method is not supported.';
+                                    } else if (xhr.statusText) {
+                                        errorMsg = `Error ${xhr.status}: ${xhr.statusText}`;
+                                    }
+
+                                    Swal.fire({
+                                        title: 'Failed to Save Order',
+                                        html: errorMsg,
+                                        icon: 'error',
+                                        confirmButtonText: 'OK'
+                                    });
                                 }
                             });
                         }
