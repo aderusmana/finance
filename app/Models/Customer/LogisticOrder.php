@@ -16,8 +16,8 @@ class LogisticOrder extends Model
         'is_urgent' => 'boolean',
         'last_reminder_at' => 'datetime',
         'reminder_count' => 'integer',
-        'delivery_date' => 'date',
-        'date_of_po' => 'date',
+        'delivery_date' => 'date:Y-m-d',
+        'date_of_po' => 'date:Y-m-d',
         'canceled_at' => 'datetime',
     ];
 

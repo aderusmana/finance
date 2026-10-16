@@ -371,9 +371,8 @@
                                             id="itemTable">
                                             <thead class="table-light position-sticky top-0 shadow-sm" style="z-index: 10;">
                                                 <tr>
-                                                    <th width="12%">Item Code <span class="text-danger">*</span></th>
-                                                    <th width="23%">Item Name <span class="text-danger">*</span></th>
-                                                    <!-- <th width="15%">Pack Size</th> -->
+                                                    <th width="15%">Item Code <span class="text-danger">*</span></th>
+                                                    <th width="35%">Item Name <span class="text-danger">*</span></th>
                                                     <th width="15%">Price List <span class="text-danger">*</span></th>
                                                     <th width="10%">Qty <span class="text-danger">*</span></th>
                                                     <th width="15%">Amount</th>
@@ -537,11 +536,10 @@
                                             <tr>
                                                 <th width="5%" class="text-center text-muted py-3">NO</th>
                                                 <th width="15%" class="text-muted py-3">ITEM CODE</th>
-                                                <th width="25%" class="text-muted py-3">ITEM NAME</th>
-                                                <!-- <th width="15%" class="text-muted py-3">PACK SIZE</th> -->
+                                                <th width="35%" class="text-muted py-3">ITEM NAME</th>
                                                 <th width="15%" class="text-muted py-3">PRICE LIST</th>
                                                 <th width="10%" class="text-center text-muted py-3">QTY</th>
-                                                <th width="15%" class="text-muted py-3">AMOUNT</th>
+                                                <th width="20%" class="text-muted py-3">AMOUNT</th>
                                             </tr>
                                         </thead>
                                         <tbody id="detail_items_table">
@@ -549,7 +547,7 @@
                                         </tbody>
                                         <tfoot id="detail_items_footer" style="display: none;">
                                             <tr class="table-light">
-                                                <td colspan="6" class="text-end fw-bold align-middle">Total Amount Claim :</td>
+                                                <td colspan="5" class="text-end fw-bold align-middle">Total Amount Claim :</td>
                                                 <td class="fw-bold text-success" id="detail_grand_total">Rp 0</td>
                                             </tr>
                                         </tfoot>
@@ -614,6 +612,31 @@
                     rupiah += separator + ribuan.join('.');
                 }
                 return rupiah ? 'Rp ' + rupiah : 'Rp 0';
+            }
+
+            function formatDisplayDate(dateStr) {
+                if (!dateStr) return '-';
+                let clean = String(dateStr).split('T')[0].split(' ')[0];
+                let parts = clean.split('-');
+                if (parts.length === 3) {
+                    let year = parseInt(parts[0], 10);
+                    let month = parseInt(parts[1], 10) - 1;
+                    let day = parseInt(parts[2], 10);
+                    if (!isNaN(year) && !isNaN(month) && !isNaN(day)) {
+                        let d = new Date(year, month, day);
+                        return d.toLocaleDateString('id-ID', {
+                            day: 'numeric',
+                            month: 'long',
+                            year: 'numeric'
+                        });
+                    }
+                }
+                let d = new Date(dateStr);
+                return isNaN(d.getTime()) ? dateStr : d.toLocaleDateString('id-ID', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric'
+                });
             }
 
             function handlePriceInput(input) {
@@ -1106,12 +1129,12 @@
                             }
                         }
 
-                        $('#detail_delivery_date').text(data.delivery_date || '-');
+                        $('#detail_delivery_date').text(formatDisplayDate(data.delivery_date));
                         $('#detail_customer').text(data.customer ? data.customer.name : '-');
                         $('#detail_distributor').text(data.distributor ? data.distributor.name : '-');
                         $('#detail_no_po').text(data.no_po || '-');
                         $('#detail_attention').text(data.attention || '-');
-                        $('#detail_date_of_po').text(data.date_of_po || '-');
+                        $('#detail_date_of_po').text(formatDisplayDate(data.date_of_po));
 
                         if (data.reminder_count > 0) {
                             let lastReminder = data.last_reminder_at ? new Date(data.last_reminder_at).toLocaleString('en-US') : '-';
@@ -1159,7 +1182,7 @@
                             $('#detail_items_footer').show();
                         } else {
                             tbody.append(
-                                '<tr><td colspan="7" class="text-center text-muted py-4">No item details available.</td></tr>'
+                                '<tr><td colspan="6" class="text-center text-muted py-4">No item details available.</td></tr>'
                             );
                             $('#detail_items_footer').hide();
                         }
@@ -1308,10 +1331,10 @@
                         $('#canceledDateText').text(new Date(data.canceled_at).toLocaleString('id-ID'));
                         $('#cancelReasonText').text(data.cancel_reason);
 
-                        $('#delivery_date').val(data.delivery_date);
+                        $('#delivery_date').val(data.delivery_date ? data.delivery_date.split('T')[0] : '');
                         $('#no_po').val(data.no_po);
                         $('#attention').val(data.attention);
-                        $('#date_of_po').val(data.date_of_po);
+                        $('#date_of_po').val(data.date_of_po ? data.date_of_po.split('T')[0] : '');
 
                         editDataBuffer = data; 
                         $('#customer_id').val(data.customer_id).trigger('change');

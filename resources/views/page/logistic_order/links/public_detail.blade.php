@@ -133,7 +133,7 @@
                                     <i class="ph-bold ph-clock me-1"></i> Has not been downloaded
                                 </span>
                             @endif
-                            <p class="text-muted small mt-2 mb-0">Delivery Date: <strong class="text-dark">{{ \Carbon\Carbon::parse($order->delivery_date)->format('d F Y') }}</strong></p>
+                            <p class="text-muted small mt-2 mb-0">Delivery Date: <strong class="text-dark">{{ $order->delivery_date ? \Carbon\Carbon::parse($order->delivery_date)->locale('id')->translatedFormat('d F Y') : '-' }}</strong></p>
                         </div>
                     </div>
 
@@ -156,7 +156,7 @@
                                 </div>
                                 <div class="mb-2">
                                     <div class="info-label">Date of PO</div>
-                                    <div class="info-value">{{ $order->date_of_po ? \Carbon\Carbon::parse($order->date_of_po)->format('d F Y') : '-' }}</div>
+                                    <div class="info-value">{{ $order->date_of_po ? \Carbon\Carbon::parse($order->date_of_po)->locale('id')->translatedFormat('d F Y') : '-' }}</div>
                                 </div>
                                 <div class="mb-2">
                                     <div class="info-label">Attention</div>
